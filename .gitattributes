@@ -13,4 +13,5 @@
 *.ogg binary
 *.mp3 binary
 *.glb binary
+*.fbx binary
 *.res binary
