@@ -10,9 +10,7 @@ namespace Game.Sim;
 /// </summary>
 public sealed class Simulation
 {
-    // Grid definition. Buildings will later snap to this; for now it defines the
-    // walkable extent and drives the rendered ground. The grid is centered on
-    // the world origin.
+    // Grid definition. Buildings snap to this grid; it is centered on the origin.
     public int GridWidth { get; } = 32;
     public int GridHeight { get; } = 32;
     public float TileSize { get; } = 1f;
@@ -25,14 +23,21 @@ public sealed class Simulation
     private readonly List<ResourceNode> _nodes = new();
     public IReadOnlyList<ResourceNode> Nodes => _nodes;
 
+    private readonly List<Building> _buildings = new();
+    public IReadOnlyList<Building> Buildings => _buildings;
+
+    private readonly HashSet<(int X, int Z)> _occupied = new();
+
     private readonly Dictionary<ResourceType, float> _stockpile = new();
     public IReadOnlyDictionary<ResourceType, float> Stockpile => _stockpile;
 
-    /// <summary>The node currently in range to harvest, or null.</summary>
+    /// <summary>The node currently in range to hand-harvest, or null.</summary>
     public ResourceNode? HarvestTarget { get; private set; }
 
+    private int _nextBuildingId;
+
     private const float HarvestRange = 1.5f;
-    private const float HarvestRate = 10f; // units per second
+    private const float HarvestRate = 10f;
 
     public float WorldSizeX => GridWidth * TileSize;
     public float WorldSizeZ => GridHeight * TileSize;
@@ -50,7 +55,77 @@ public sealed class Simulation
         {
             Harvest(dt);
         }
+        StepBuildings(dt);
     }
+
+    // ---- Placement -------------------------------------------------------
+
+    public bool InBounds(int gridX, int gridZ)
+    {
+        int halfX = GridWidth / 2;
+        int halfZ = GridHeight / 2;
+        return gridX >= -halfX && gridX <= halfX && gridZ >= -halfZ && gridZ <= halfZ;
+    }
+
+    public Vector3 TileCenter(int gridX, int gridZ)
+    {
+        return new Vector3(gridX * TileSize, 0f, gridZ * TileSize);
+    }
+
+    public bool CanPlace(BuildingType type, int gridX, int gridZ)
+    {
+        if (!InBounds(gridX, gridZ))
+        {
+            return false;
+        }
+        if (_occupied.Contains((gridX, gridZ)))
+        {
+            return false;
+        }
+
+        // Extractors need a node to draw from; processors need a clear tile.
+        bool hasNode = NodeAt(gridX, gridZ) is not null;
+        return type == BuildingType.Extractor ? hasNode : !hasNode;
+    }
+
+    public bool TryPlaceBuilding(BuildingType type, int gridX, int gridZ)
+    {
+        if (!CanPlace(type, gridX, gridZ))
+        {
+            return false;
+        }
+
+        var building = new Building(
+            _nextBuildingId++,
+            type,
+            gridX,
+            gridZ,
+            TileCenter(gridX, gridZ),
+            Recipes.For(type))
+        {
+            Source = type == BuildingType.Extractor ? NodeAt(gridX, gridZ) : null
+        };
+
+        _buildings.Add(building);
+        _occupied.Add((gridX, gridZ));
+        return true;
+    }
+
+    private ResourceNode? NodeAt(int gridX, int gridZ)
+    {
+        foreach (ResourceNode node in _nodes)
+        {
+            int nx = Mathf.RoundToInt(node.Position.X / TileSize);
+            int nz = Mathf.RoundToInt(node.Position.Z / TileSize);
+            if (nx == gridX && nz == gridZ)
+            {
+                return node;
+            }
+        }
+        return null;
+    }
+
+    // ---- Player hand-harvest --------------------------------------------
 
     private void MovePlayer(double dt)
     {
@@ -99,8 +174,97 @@ public sealed class Simulation
 
         if (node.Depleted)
         {
-            _nodes.Remove(node);
-            HarvestTarget = null;
+            RemoveNode(node);
+        }
+    }
+
+    // ---- Buildings -------------------------------------------------------
+
+    private void StepBuildings(double dt)
+    {
+        foreach (Building building in _buildings)
+        {
+            if (building.Type == BuildingType.Extractor)
+            {
+                StepExtractor(building, dt);
+                continue;
+            }
+
+            Recipe? recipe = building.Recipe;
+            if (recipe is not null)
+            {
+                StepProcessor(building, recipe, dt);
+            }
+        }
+    }
+
+    private void StepExtractor(Building building, double dt)
+    {
+        ResourceNode? node = building.Source;
+        if (node is null || node.Depleted)
+        {
+            return;
+        }
+
+        float take = Mathf.Min(node.Amount, Recipes.ExtractorRate * (float)dt);
+        node.Amount -= take;
+        AddToStockpile(node.Type, take);
+
+        if (node.Depleted)
+        {
+            RemoveNode(node);
+            building.Source = null;
+        }
+    }
+
+    private void StepProcessor(Building building, Recipe recipe, double dt)
+    {
+        if (!building.Crafting)
+        {
+            if (!HasInputs(recipe))
+            {
+                return;
+            }
+            ConsumeInputs(recipe);
+            building.Crafting = true;
+            building.Progress = 0f;
+        }
+
+        building.Progress += (float)dt;
+        if (building.Progress >= recipe.CycleTime)
+        {
+            ProduceOutputs(recipe);
+            building.Crafting = false;
+            building.Progress = 0f;
+        }
+    }
+
+    private bool HasInputs(Recipe recipe)
+    {
+        foreach (ResourceAmount input in recipe.Inputs)
+        {
+            _stockpile.TryGetValue(input.Type, out float have);
+            if (have < input.Amount)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void ConsumeInputs(Recipe recipe)
+    {
+        foreach (ResourceAmount input in recipe.Inputs)
+        {
+            AddToStockpile(input.Type, -input.Amount);
+        }
+    }
+
+    private void ProduceOutputs(Recipe recipe)
+    {
+        foreach (ResourceAmount output in recipe.Outputs)
+        {
+            AddToStockpile(output.Type, output.Amount);
         }
     }
 
@@ -110,9 +274,17 @@ public sealed class Simulation
         _stockpile[type] = current + amount;
     }
 
+    private void RemoveNode(ResourceNode node)
+    {
+        _nodes.Remove(node);
+        if (ReferenceEquals(HarvestTarget, node))
+        {
+            HarvestTarget = null;
+        }
+    }
+
     private void SpawnInitialNodes()
     {
-        // A few deterministic clusters; procedural generation comes later.
         (ResourceType Type, int X, int Z)[] placements =
         {
             (ResourceType.Ore, 6, 4),
@@ -128,8 +300,7 @@ public sealed class Simulation
         int id = 0;
         foreach ((ResourceType type, int x, int z) in placements)
         {
-            var position = new Vector3(x * TileSize, 0f, z * TileSize);
-            _nodes.Add(new ResourceNode(id++, type, position, 100f));
+            _nodes.Add(new ResourceNode(id++, type, TileCenter(x, z), 100f));
         }
     }
 }

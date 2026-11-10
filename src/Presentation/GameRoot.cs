@@ -19,6 +19,8 @@ public partial class GameRoot : Node3D
     private MeshInstance3D _playerView = null!;
     private CameraRig _camera = null!;
     private ResourceNodeViews _nodeViews = null!;
+    private BuildingViews _buildingViews = null!;
+    private BuildController _buildController = null!;
     private Hud _hud = null!;
 
     public override void _Ready()
@@ -43,7 +45,8 @@ public partial class GameRoot : Node3D
         _playerView.Position = _sim.Player.Position + PlayerVisualLift;
         _camera.SetTarget(_sim.Player.Position);
         _nodeViews.Sync(_sim.Nodes);
-        _hud.Refresh(_sim.Stockpile, _sim.HarvestTarget);
+        _buildingViews.Sync(_sim.Buildings);
+        _hud.Refresh(_sim.Stockpile, _sim.HarvestTarget, _buildController.Selected);
     }
 
     public override void _UnhandledInput(InputEvent @event)
@@ -114,6 +117,12 @@ public partial class GameRoot : Node3D
         };
         AddChild(_nodeViews);
 
+        _buildingViews = new BuildingViews
+        {
+            Name = "Buildings"
+        };
+        AddChild(_buildingViews);
+
         _playerView = new MeshInstance3D
         {
             Name = "Player",
@@ -133,6 +142,13 @@ public partial class GameRoot : Node3D
         _camera = new CameraRig();
         _camera.SetTarget(_sim.Player.Position);
         AddChild(_camera);
+
+        _buildController = new BuildController
+        {
+            Name = "BuildController"
+        };
+        _buildController.Initialize(_sim, _camera);
+        AddChild(_buildController);
 
         _hud = new Hud
         {

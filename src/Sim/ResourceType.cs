@@ -4,5 +4,7 @@ namespace Game.Sim;
 public enum ResourceType
 {
     Ore,
-    Wood
+    Wood,
+    Metal,
+    Fuel
 }
