@@ -18,10 +18,13 @@ repo root. This file is git-ignored and differs per machine.
 
 Use the Godot editor path from `tools.json` wherever `<godot.editor>` appears below.
 
-- Build without the editor: `dotnet build Game.csproj -c Debug`
-- Open the editor: `<godot.editor> --editor --path .`
-- Run the game: `<godot.editor> --path .`
-- Headless runtime check: `<godot.editor> --headless --path . --quit-after 20` (stderr should
+The Godot project root is the `src/` folder (that is where `project.godot` and `Game.csproj`
+live), so Godot commands take `--path src`.
+
+- Build without the editor: `dotnet build src/Game.csproj -c Debug`
+- Open the editor: `<godot.editor> --editor --path src`
+- Run the game: `<godot.editor> --path src`
+- Headless runtime check: `<godot.editor> --headless --path src --quit-after 20` (stderr should
   be empty on success)
 
 Avoid the headless editor `--build-solutions --quit` flow; it can hang after building. Prefer

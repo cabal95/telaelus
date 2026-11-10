@@ -18,7 +18,7 @@ build/
 
 # Godot 4 (.NET)
 .godot/
-/android/
+android/
 *.translation
 
 # Machine-specific tool paths (copy tools.template.json -> tools.json)
