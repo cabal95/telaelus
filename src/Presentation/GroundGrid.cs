@@ -11,7 +11,10 @@ public static class GroundGrid
 {
     public static Node3D Build(int width, int height, float tile)
     {
-        var root = new Node3D { Name = "Ground" };
+        var root = new Node3D
+        {
+            Name = "Ground"
+        };
 
         float sizeX = width * tile;
         float sizeZ = height * tile;
@@ -19,14 +22,20 @@ public static class GroundGrid
         root.AddChild(new MeshInstance3D
         {
             Name = "GroundPlane",
-            Mesh = new PlaneMesh { Size = new Vector2(sizeX, sizeZ) },
-            MaterialOverride = new StandardMaterial3D { AlbedoColor = new Color(0.20f, 0.23f, 0.20f) },
+            Mesh = new PlaneMesh
+            {
+                Size = new Vector2(sizeX, sizeZ)
+            },
+            MaterialOverride = new StandardMaterial3D
+            {
+                AlbedoColor = new Color(0.20f, 0.23f, 0.20f)
+            }
         });
 
         var lineMat = new StandardMaterial3D
         {
             ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
-            AlbedoColor = new Color(0.32f, 0.36f, 0.32f),
+            AlbedoColor = new Color(0.32f, 0.36f, 0.32f)
         };
 
         float hx = sizeX * 0.5f;
@@ -49,7 +58,11 @@ public static class GroundGrid
         }
         lines.SurfaceEnd();
 
-        root.AddChild(new MeshInstance3D { Name = "GridLines", Mesh = lines });
+        root.AddChild(new MeshInstance3D
+        {
+            Name = "GridLines",
+            Mesh = lines
+        });
 
         return root;
     }

@@ -28,7 +28,9 @@ public sealed class SimClock
         // catch-up loop ("spiral of death").
         double max = FixedDelta * 8;
         if (_accumulator > max)
+        {
             _accumulator = max;
+        }
 
         int steps = 0;
         while (_accumulator >= FixedDelta)

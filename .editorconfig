@@ -1,0 +1,14 @@
+# EditorConfig for the game project. Code-style rules enforced in build via
+# EnforceCodeStyleInBuild in src/Game.csproj.
+root = true
+
+[*.cs]
+# Require braces on all control-flow blocks, even single-line bodies.
+csharp_prefer_braces = true
+dotnet_diagnostic.IDE0011.severity = warning
+
+# Allman braces: opening brace on its own line everywhere (catches "if (x) {").
+# Note: this does not force an inline object initializer to expand; that is a
+# hand-followed convention (see docs/code-style.md).
+csharp_new_line_before_open_brace = all
+dotnet_diagnostic.IDE0055.severity = warning

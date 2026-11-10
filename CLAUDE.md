@@ -37,3 +37,9 @@ fixed-timestep clock. The presentation (`src/Presentation`) reads sim state and 
 nodes. Keep game logic in the sim and rendering/input in the presentation. This separation is
 what makes the planned co-op multiplayer feasible. See the "Architecture Posture" section of
 [docs/game-plan.md](docs/game-plan.md).
+
+## Code style
+
+Follow [docs/code-style.md](docs/code-style.md): Allman braces and braces on every control-flow
+body (both enforced via analyzers in `.editorconfig`), and always-multi-line object initializers
+(a hand-followed convention the editor cannot enforce).

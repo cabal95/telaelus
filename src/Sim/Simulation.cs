@@ -28,7 +28,9 @@ public sealed class Simulation
     {
         Vector2 move = Intent.Move;
         if (move.LengthSquared() > 1f)
+        {
             move = move.Normalized();
+        }
 
         Vector3 p = Player.Position + new Vector3(move.X, 0f, move.Y) * Player.Speed * (float)dt;
 
