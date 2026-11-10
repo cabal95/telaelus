@@ -3,18 +3,15 @@ using Godot;
 namespace Game.Presentation;
 
 /// <summary>
-/// Renders the player. Prefers a pre-assembled character.tscn; otherwise assembles
-/// the character in code from the model FBX plus separate animation FBX files,
-/// merging their idle/run clips onto one AnimationPlayer; otherwise a capsule.
-/// Faces the movement direction and plays idle/walk based on movement.
+/// Renders the player from the assembled character scene (character.tscn) when
+/// present, otherwise a capsule. Faces the movement direction and plays idle/walk
+/// based on movement. All model-specific wiring (skeleton, animations, skin) lives
+/// in the scene, so swapping the character is an asset change, not a code change.
+/// Clips are matched by name containing "idle" and "walk"/"run" (case-insensitive).
 /// </summary>
 public partial class PlayerView : Node3D
 {
     private const string ScenePath = "res://assets/models/character/character.tscn";
-    private const string ModelPath = "res://assets/models/character/character.fbx";
-    private const string IdlePath = "res://assets/models/character/character-idle.fbx";
-    private const string RunPath = "res://assets/models/character/character-run.fbx";
-    private const string SkinPath = "res://assets/models/character/character-male.png";
 
     private Node3D _visual = null!;
     private AnimationPlayer? _anim;
@@ -54,7 +51,7 @@ public partial class PlayerView : Node3D
 
     private void Build()
     {
-        if (TryBuildFromScene() || TryBuildFromParts())
+        if (TryLoadCharacter())
         {
             return;
         }
@@ -62,71 +59,22 @@ public partial class PlayerView : Node3D
         AddChild(_visual);
     }
 
-    private bool TryBuildFromScene()
+    private bool TryLoadCharacter()
     {
-        if (!TryInstance(ScenePath, out Node3D? scene))
+        if (!ResourceLoader.Exists(ScenePath))
         {
             return false;
         }
-        _visual = scene!;
+        if (GD.Load<PackedScene>(ScenePath) is not PackedScene scene || scene.Instantiate() is not Node3D model)
+        {
+            return false;
+        }
+
+        _visual = model;
         AddChild(_visual);
         _anim = FindAnimationPlayer(_visual);
         ResolveAnimationNames();
         return true;
-    }
-
-    private bool TryBuildFromParts()
-    {
-        if (!TryInstance(ModelPath, out Node3D? model))
-        {
-            return false;
-        }
-        _visual = model!;
-        AddChild(_visual);
-        ApplySkin(_visual);
-
-        var player = new AnimationPlayer
-        {
-            Name = "AnimationPlayer",
-            RootNode = ".."
-        };
-        _visual.AddChild(player);
-        _anim = player;
-
-        MergeClip(IdlePath, "idle", "idle", player);
-        MergeClip(RunPath, "run", "run", player);
-        ResolveAnimationNames();
-        return true;
-    }
-
-    private static void MergeClip(string path, string wantSubstring, string targetName, AnimationPlayer target)
-    {
-        if (!TryInstance(path, out Node3D? root) || root is null)
-        {
-            return;
-        }
-
-        AnimationPlayer? source = FindAnimationPlayer(root);
-        if (source is not null)
-        {
-            foreach (string name in source.GetAnimationList())
-            {
-                if (!name.ToLowerInvariant().Contains(wantSubstring))
-                {
-                    continue;
-                }
-
-                StringName defaultLibrary = "";
-                if (!target.HasAnimationLibrary(defaultLibrary))
-                {
-                    target.AddAnimationLibrary(defaultLibrary, new AnimationLibrary());
-                }
-                target.GetAnimationLibrary(defaultLibrary).AddAnimation(targetName, source.GetAnimation(name));
-                break;
-            }
-        }
-
-        root.QueueFree();
     }
 
     private void ResolveAnimationNames()
@@ -149,21 +97,6 @@ public partial class PlayerView : Node3D
         }
     }
 
-    private static bool TryInstance(string path, out Node3D? node)
-    {
-        node = null;
-        if (!ResourceLoader.Exists(path))
-        {
-            return false;
-        }
-        if (GD.Load<PackedScene>(path) is not PackedScene scene || scene.Instantiate() is not Node3D instanced)
-        {
-            return false;
-        }
-        node = instanced;
-        return true;
-    }
-
     private static AnimationPlayer? FindAnimationPlayer(Node node)
     {
         if (node is AnimationPlayer player)
@@ -179,36 +112,6 @@ public partial class PlayerView : Node3D
             }
         }
         return null;
-    }
-
-    private static void ApplySkin(Node root)
-    {
-        if (!ResourceLoader.Exists(SkinPath))
-        {
-            return;
-        }
-        if (GD.Load<Texture2D>(SkinPath) is not Texture2D texture)
-        {
-            return;
-        }
-
-        var material = new StandardMaterial3D
-        {
-            AlbedoTexture = texture
-        };
-        ApplyMaterialOverride(root, material);
-    }
-
-    private static void ApplyMaterialOverride(Node node, Material material)
-    {
-        if (node is MeshInstance3D mesh)
-        {
-            mesh.MaterialOverride = material;
-        }
-        foreach (Node child in node.GetChildren())
-        {
-            ApplyMaterialOverride(child, material);
-        }
     }
 
     private static MeshInstance3D CreateCapsule()

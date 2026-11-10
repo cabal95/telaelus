@@ -1,39 +1,28 @@
-# Animated character (place your character set here)
+# Animated character
 
-The player renders an imported character scene when `character.tscn` exists in this folder, and
-falls back to a capsule otherwise, so the build stays green until the asset is ready.
+The player loads `character.tscn` from this folder. `PlayerView` finds its `AnimationPlayer` and
+plays clips whose names contain "idle" and "walk"/"run" (case-insensitive). All model-specific
+wiring (skeleton, animations, skin) lives in the scene, so swapping the character is an asset
+change, not a code change. If `character.tscn` is absent, the player falls back to a capsule.
 
-## What the code expects
+## Source files
 
-`src/assets/models/character/character.tscn` whose tree contains:
+- `character.fbx` - the rigged model (`Root/Skeleton3D/characterMedium`).
+- `character-idle.fbx`, `character-run.fbx` - animation clips on the same skeleton.
+- `character-male.png` - the skin texture.
 
-- the skinned mesh (a `Skeleton3D` with a `MeshInstance3D`), and
-- an `AnimationPlayer` with at least an idle and a walk clip. `PlayerView` picks clips whose
-  names contain "idle" and "walk"/"run" (case-insensitive), so exact names do not matter.
+## character.tscn
 
-## Assembling it from an FBX model + FBX animations + PNG (Godot editor)
+`character.tscn` was assembled from the files above: an instance of `character.fbx`, an
+`AnimationPlayer` holding the merged `idle` and `run` clips, and a `StandardMaterial3D` material
+override carrying the skin. Open and edit it in the Godot editor like any scene.
 
-1. Copy the files into this folder: the model `.fbx`, each animation `.fbx`, and the skin `.png`.
-2. Open the editor (`--editor --path src`). Godot 4.7 imports FBX natively (via ufbx). If the
-   character comes in huge or tiny, select the model `.fbx` in the FileSystem dock, open the
-   Import dock, and set the import scale (FBX is often in centimeters, so `0.01` is common), then
-   Reimport.
-3. For each animation `.fbx`: select it, in the Import dock set **Import As = Animation Library**,
-   then Reimport.
-4. Open the model `.fbx` as a scene (or instance it in a new scene). Add an `AnimationPlayer` if
-   the model has none. In its Animation panel, use the **Animation Libraries** list to load each
-   imported animation library.
-5. If the skin did not come through, assign the `.png` as the mesh material's albedo texture.
-6. Save the scene as `character.tscn` in this folder, then run the game.
+To rebuild it by hand (for example after swapping the model): right-click `character.fbx` ->
+New Inherited Scene, add an `AnimationPlayer`, load the animation FBXs (imported with
+Import As = Animation Library) into it, set the mesh's surface material override to a
+`StandardMaterial3D` whose albedo texture is the skin, and save as `character.tscn`.
 
-## If the animations do not match the model (e.g., Mixamo)
+## Scale
 
-The animation and model skeletons must line up. For Mixamo-style humanoid rigs, use Godot's
-retargeting: on both the model and animation imports, set the skeleton to **Retarget** with a
-BoneMap using the `SkeletonProfileHumanoid` profile. See Godot's "Retargeting 3D Skeletons" docs.
-
-## Scale reference
-
-Player is about 1.4 world units tall (1 tile is about 2 m). Match the character to roughly that
-height; `PlayerView` does not auto-scale the character the way node models are scaled, so set the
-size via the FBX import scale.
+The model uses the FBX importer's centimeter conversion (`Root` scale 100). Tune the character's
+overall size on the scene root or via the FBX import scale; `PlayerView` does not rescale it.
