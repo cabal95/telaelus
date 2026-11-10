@@ -18,25 +18,57 @@
 ## The Game (concept)
 
 A two-part game sharing one fiction: you keep a fleet of ships fueled and supplied, and you
-use that fleet to explore and fight in space.
+use that fleet to explore and fight in space. Single-player first, but built with a co-op
+multiplayer future in mind (see Architecture Posture).
 
 ### Part A: On-Planet (build this first)
 
-A 2.5D top-down game at a slightly tilted camera angle (think the Age of Empires isometric
-or dimetric look). Core loop:
+A 2.5D game rendered as real 3D geometry under an angled orthographic camera (the Age of
+Empires style tilt comes from the camera, not the art). Core loop:
 
-- Land on a planet.
-- Harvest raw resources from the terrain.
-- Route those resources through a **factory / production chain** to refine fuel and other
-  goods the ship needs.
-- Load the goods back onto the ship.
+- Land on a planet whose map starts hidden (fog of war).
+- A **player-controlled character** explores and reveals the map.
+- The player builds **extraction facilities** (ore mines, tree harvesters, and similar) on
+  resource sites to gather raw resources, and **processing facilities** to refine them.
+- **Vehicle worker units** haul resources between facilities (see Logistics below).
+- Refined goods (fuel and other outputs) are loaded back onto the ship.
 
-Think of it as a focused factory and logistics mini-game (in the spirit of Factorio or
-Satisfactory, scoped down) that feeds the space game.
+Think of it as a focused extraction, logistics, and production game (Factorio and
+Satisfactory in spirit, plus vehicle hauling in the vein of Captain of Industry), scoped
+down, that feeds the space game.
 
-Planets can vary later. Procedural generation of terrain and resource distribution fits
-cleanly on top of this once the core loop works, so we treat it as a later layer rather
-than a day-one requirement.
+**Control model (hybrid):**
+
+- A **player character** you drive directly. Its primary early job is exploration (the map is
+  dark until explored) and placing buildings.
+- **Facilities** are placed by the player: extraction facilities on resource sites, and
+  processing facilities to refine raw resources into intermediates and fuel.
+- **Vehicle worker units** are the RTS-flavored part. They are not micromanaged moment to
+  moment; they run hauling loops. Vehicles are buildable (build more for more throughput) and
+  upgradeable (more capacity, more speed).
+
+**Logistics model (two transport types):**
+
+- **Vehicles** haul over distance, especially from extraction to processing. A vehicle has a
+  weight capacity and a load / unload time. A typical loop: drive to the mine, load ore,
+  pathfind to the refinery, unload, drive back, repeat. Throughput scales with vehicle count,
+  capacity, and speed.
+- **Belts** explicitly link two fixed processing facilities that sit close together (for
+  example refinery to a downstream production facility). Belts are for tight, fixed factory
+  interconnects; vehicles are for the longer, more distributed hauls.
+
+**Decided early specifics:**
+
+- Vehicles use **free navmesh pathfinding** (Godot NavigationServer) over walkable terrain,
+  avoiding water and obstacles. No road building to start; roads can be added later as a
+  speed bonus.
+- Vehicles start with **explicit player-assigned routes** (a source and a destination it
+  loops). Demand-based auto-dispatch is a later upgrade.
+- Buildings are placed on a **tile grid** (belts want alignment, and grids simplify
+  pathfinding and saves). Finer placement can come later if needed.
+
+**Later layers:** procedural terrain and resource distribution (varied planets) sit cleanly on
+top of this once the core loop works, so they remain a later layer rather than a day-one need.
 
 ### Part B: In-Space (build this second)
 
@@ -120,11 +152,50 @@ proves the core loop is fun.
 - **Saves:** start with Godot's Resource system or System.Text.Json; revisit if state grows
   complex.
 
+## Architecture Posture (multiplayer-ready)
+
+The game ships single-player first but is structured so future multiplayer does not require a
+rewrite. The co-op fantasy: one player can spend most of their time on a planet while another
+operates in space, and multiple players can converge in space for a large battle. We adopt the
+structure below now and write no actual networking code yet.
+
+### Decided
+
+- **Authoritative simulation separated from presentation.** All game state and logic live in a
+  simulation that advances on its own tick and owns the truth. Rendering, camera, input, and UI
+  are a separate presentation layer that reads the sim and sends it commands. In single-player
+  both run in one process (a local server plus a local client). This also makes the sim testable
+  without a window and keeps saves clean.
+- **Player actions are explicit commands** applied to the sim (for example "build refinery at
+  tile X" or "assign vehicle V the route mine A to refinery B"), not direct state mutation from
+  input handlers. Commands are the natural network message unit later and improve testing and
+  replay now.
+- **Fixed-timestep simulation tick** (target around 20 to 30 Hz) decoupled from the render
+  framerate, so production rates stay consistent and saves / replays are reproducible.
+- **One shared session.** The planet (Part A) and space (Part B) are contexts within a single
+  simulation / session, not separate games. The fuel and resource handoff between them is shared
+  state, not a scene reload.
+- **Stable entity IDs and serializable sim state**, kept distinct from Godot presentation nodes.
+  This serves saves now and networking later, and dovetails with the possible ECS move if entity
+  counts grow.
+- **Target networking model: server-authoritative state replication** (Godot's built-in
+  high-level multiplayer API: RPC, MultiplayerSynchronizer, MultiplayerSpawner over ENet). We
+  deliberately do NOT target deterministic lockstep, so we pay no strict-determinism tax (no
+  fixed-point math or deterministic-navmesh requirements).
+
+### Explicitly deferred
+
+Any real network transport, client-side prediction, and interpolation. We build those when
+multiplayer actually arrives, on top of the structure above.
+
 ## Open Questions
 
 - Space game genre (turn-based / RTS / action).
 - Art style and how we source art (programmer art first; real art later).
-- 2.5D rendering: real 3D geometry with an angled camera, or 2D isometric sprites.
+- Resource / production chain: which raw resources, intermediates, and final outputs (fuel
+  and others), and the recipes between them.
+- Fog of war: how the map is hidden and what reveals it (character proximity, sensor
+  buildings).
 
 ## How We Work
 
