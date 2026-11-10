@@ -14,4 +14,7 @@ public struct PlayerIntent
     /// X, Y maps to world Z. Magnitude above 1 is clamped by the sim.
     /// </summary>
     public Vector2 Move;
+
+    /// <summary>True while the player is holding the harvest input.</summary>
+    public bool Harvest;
 }

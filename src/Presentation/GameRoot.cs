@@ -18,6 +18,8 @@ public partial class GameRoot : Node3D
 
     private MeshInstance3D _playerView = null!;
     private CameraRig _camera = null!;
+    private ResourceNodeViews _nodeViews = null!;
+    private Hud _hud = null!;
 
     public override void _Ready()
     {
@@ -28,7 +30,8 @@ public partial class GameRoot : Node3D
     {
         _sim.Intent = new PlayerIntent
         {
-            Move = ReadWorldMoveInput()
+            Move = ReadWorldMoveInput(),
+            Harvest = Input.IsPhysicalKeyPressed(Key.E)
         };
 
         int steps = _clock.Advance(delta);
@@ -39,6 +42,8 @@ public partial class GameRoot : Node3D
 
         _playerView.Position = _sim.Player.Position + PlayerVisualLift;
         _camera.SetTarget(_sim.Player.Position);
+        _nodeViews.Sync(_sim.Nodes);
+        _hud.Refresh(_sim.Stockpile, _sim.HarvestTarget);
     }
 
     public override void _UnhandledInput(InputEvent @event)
@@ -103,6 +108,12 @@ public partial class GameRoot : Node3D
         light.RotationDegrees = new Vector3(-50, -40, 0);
         AddChild(light);
 
+        _nodeViews = new ResourceNodeViews
+        {
+            Name = "ResourceNodes"
+        };
+        AddChild(_nodeViews);
+
         _playerView = new MeshInstance3D
         {
             Name = "Player",
@@ -122,5 +133,11 @@ public partial class GameRoot : Node3D
         _camera = new CameraRig();
         _camera.SetTarget(_sim.Player.Position);
         AddChild(_camera);
+
+        _hud = new Hud
+        {
+            Name = "Hud"
+        };
+        AddChild(_hud);
     }
 }
