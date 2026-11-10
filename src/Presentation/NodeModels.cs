@@ -118,13 +118,22 @@ public static class NodeModels
         };
     }
 
+    // Keep a node within its single grid cell so its collision (one tile) matches
+    // its footprint. The model is scaled to the target height unless that would
+    // make it wider than this, in which case width wins and it shrinks to fit.
+    private const float MaxFootprint = 0.85f;
+
     private static void SeatAndNormalize(Node3D model, float targetHeight)
     {
         Aabb bounds = MeshBounds(model);
         float height = bounds.Size.Y;
-        float scale = height > 0.0001f ? targetHeight / height : 1f;
-        Vector3 center = bounds.Position + bounds.Size * 0.5f;
+        float footprint = Mathf.Max(bounds.Size.X, bounds.Size.Z);
 
+        float heightScale = height > 0.0001f ? targetHeight / height : 1f;
+        float footprintScale = footprint > 0.0001f ? MaxFootprint / footprint : heightScale;
+        float scale = Mathf.Min(heightScale, footprintScale);
+
+        Vector3 center = bounds.Position + bounds.Size * 0.5f;
         model.Scale = new Vector3(scale, scale, scale);
         model.Position = new Vector3(-center.X * scale, -bounds.Position.Y * scale, -center.Z * scale);
     }

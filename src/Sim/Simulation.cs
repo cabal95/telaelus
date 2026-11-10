@@ -355,12 +355,13 @@ public sealed class Simulation
     }
 
     /// <summary>
-    /// Walkable = passable terrain and no resource node on the tile. A node blocks
-    /// movement until it depletes and is removed, which reopens the tile.
+    /// Walkable = passable terrain, no resource node, and no building on the tile.
+    /// A node blocks movement until it depletes and is removed, which reopens the
+    /// tile; a building blocks for as long as it stands.
     /// </summary>
     public bool IsWalkable(int x, int z)
     {
-        return IsPassable(x, z) && NodeAt(x, z) is null;
+        return IsPassable(x, z) && NodeAt(x, z) is null && !_occupied.Contains((x, z));
     }
 
     private bool IsWalkableAt(float worldX, float worldZ)
