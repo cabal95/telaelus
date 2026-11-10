@@ -14,6 +14,7 @@ public partial class PlayerView : Node3D
     private const string ModelPath = "res://assets/models/character/character.fbx";
     private const string IdlePath = "res://assets/models/character/character-idle.fbx";
     private const string RunPath = "res://assets/models/character/character-run.fbx";
+    private const string SkinPath = "res://assets/models/character/character-male.png";
 
     private Node3D _visual = null!;
     private AnimationPlayer? _anim;
@@ -82,6 +83,7 @@ public partial class PlayerView : Node3D
         }
         _visual = model!;
         AddChild(_visual);
+        ApplySkin(_visual);
 
         var player = new AnimationPlayer
         {
@@ -177,6 +179,36 @@ public partial class PlayerView : Node3D
             }
         }
         return null;
+    }
+
+    private static void ApplySkin(Node root)
+    {
+        if (!ResourceLoader.Exists(SkinPath))
+        {
+            return;
+        }
+        if (GD.Load<Texture2D>(SkinPath) is not Texture2D texture)
+        {
+            return;
+        }
+
+        var material = new StandardMaterial3D
+        {
+            AlbedoTexture = texture
+        };
+        ApplyMaterialOverride(root, material);
+    }
+
+    private static void ApplyMaterialOverride(Node node, Material material)
+    {
+        if (node is MeshInstance3D mesh)
+        {
+            mesh.MaterialOverride = material;
+        }
+        foreach (Node child in node.GetChildren())
+        {
+            ApplyMaterialOverride(child, material);
+        }
     }
 
     private static MeshInstance3D CreateCapsule()
