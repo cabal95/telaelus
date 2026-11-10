@@ -34,7 +34,9 @@ public partial class PlayerView : Node3D
             float target = Mathf.Atan2(moveDir.X, moveDir.Y);
             float weight = (float)System.Math.Min(1.0, 12.0 * delta);
             _yaw = Mathf.LerpAngle(_yaw, target, weight);
-            _visual.Rotation = new Vector3(0f, _yaw, 0f);
+            // Rotate this wrapper, not the character node, so the scene's own
+            // transform (its upright orientation and scale) is preserved.
+            Rotation = new Vector3(0f, _yaw, 0f);
         }
 
         PlayAnimation(moving ? _walkAnim : _idleAnim);
