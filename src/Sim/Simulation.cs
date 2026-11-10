@@ -178,12 +178,12 @@ public sealed class Simulation
         // Move each axis independently so the player slides along impassable
         // terrain instead of sticking on it.
         float nextX = p.X + step.X;
-        if (IsPassableAt(nextX, p.Z))
+        if (IsWalkableAt(nextX, p.Z))
         {
             p.X = nextX;
         }
         float nextZ = p.Z + step.Z;
-        if (IsPassableAt(p.X, nextZ))
+        if (IsWalkableAt(p.X, nextZ))
         {
             p.Z = nextZ;
         }
@@ -348,17 +348,26 @@ public sealed class Simulation
         return _terrain[x + HalfX, z + HalfZ];
     }
 
-    /// <summary>Only grass is walkable and buildable; water and mountain block.</summary>
+    /// <summary>Only grass is buildable terrain; water and mountain block.</summary>
     public bool IsPassable(int x, int z)
     {
         return TerrainAt(x, z) == TerrainType.Grass;
     }
 
-    private bool IsPassableAt(float worldX, float worldZ)
+    /// <summary>
+    /// Walkable = passable terrain and no resource node on the tile. A node blocks
+    /// movement until it depletes and is removed, which reopens the tile.
+    /// </summary>
+    public bool IsWalkable(int x, int z)
+    {
+        return IsPassable(x, z) && NodeAt(x, z) is null;
+    }
+
+    private bool IsWalkableAt(float worldX, float worldZ)
     {
         int tileX = Mathf.RoundToInt(worldX / TileSize);
         int tileZ = Mathf.RoundToInt(worldZ / TileSize);
-        return IsPassable(tileX, tileZ);
+        return IsWalkable(tileX, tileZ);
     }
 
     private void SetTerrain(int x, int z, TerrainType type)
