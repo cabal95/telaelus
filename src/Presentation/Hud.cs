@@ -26,13 +26,26 @@ public partial class Hud : CanvasLayer
     public void Refresh(
         IReadOnlyDictionary<ResourceType, float> stockpile,
         ResourceNode? harvestTarget,
-        BuildingType? selectedBuild)
+        BuildingType? selectedBuild,
+        bool canLaunch,
+        int shipsLaunched)
     {
         var text = new StringBuilder();
         text.Append("Ore: ").Append(Amount(stockpile, ResourceType.Ore));
         text.Append("   Wood: ").Append(Amount(stockpile, ResourceType.Wood));
         text.Append("   Metal: ").Append(Amount(stockpile, ResourceType.Metal));
         text.Append("   Fuel: ").Append(Amount(stockpile, ResourceType.Fuel));
+
+        text.Append("\nLaunch: Fuel ").Append(Amount(stockpile, ResourceType.Fuel)).Append('/').Append((int)Simulation.LaunchFuelCost);
+        text.Append("   Metal ").Append(Amount(stockpile, ResourceType.Metal)).Append('/').Append((int)Simulation.LaunchMetalCost);
+        if (canLaunch)
+        {
+            text.Append("   [L] LAUNCH SHIP");
+        }
+        if (shipsLaunched > 0)
+        {
+            text.Append("   (launched: ").Append(shipsLaunched).Append(')');
+        }
 
         if (selectedBuild is not null)
         {

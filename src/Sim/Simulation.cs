@@ -34,10 +34,16 @@ public sealed class Simulation
     /// <summary>The node currently in range to hand-harvest, or null.</summary>
     public ResourceNode? HarvestTarget { get; private set; }
 
+    /// <summary>How many ships have been launched (the initial win condition).</summary>
+    public int ShipsLaunched { get; private set; }
+
     private int _nextBuildingId;
 
     private const float HarvestRange = 1.5f;
     private const float HarvestRate = 10f;
+
+    public const float LaunchFuelCost = 500f;
+    public const float LaunchMetalCost = 100f;
 
     public float WorldSizeX => GridWidth * TileSize;
     public float WorldSizeZ => GridHeight * TileSize;
@@ -108,6 +114,29 @@ public sealed class Simulation
 
         _buildings.Add(building);
         _occupied.Add((gridX, gridZ));
+        return true;
+    }
+
+    // ---- Ship launch (initial win condition) -----------------------------
+
+    public bool CanLaunchShip()
+    {
+        _stockpile.TryGetValue(ResourceType.Fuel, out float fuel);
+        _stockpile.TryGetValue(ResourceType.Metal, out float metal);
+        return fuel >= LaunchFuelCost && metal >= LaunchMetalCost;
+    }
+
+    /// <summary>Consume the launch cost and record a launched ship. The initial win.</summary>
+    public bool TryLaunchShip()
+    {
+        if (!CanLaunchShip())
+        {
+            return false;
+        }
+
+        AddToStockpile(ResourceType.Fuel, -LaunchFuelCost);
+        AddToStockpile(ResourceType.Metal, -LaunchMetalCost);
+        ShipsLaunched++;
         return true;
     }
 

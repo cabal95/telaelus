@@ -46,7 +46,7 @@ public partial class GameRoot : Node3D
         _camera.SetTarget(_sim.Player.Position);
         _nodeViews.Sync(_sim.Nodes);
         _buildingViews.Sync(_sim.Buildings);
-        _hud.Refresh(_sim.Stockpile, _sim.HarvestTarget, _buildController.Selected);
+        _hud.Refresh(_sim.Stockpile, _sim.HarvestTarget, _buildController.Selected, _sim.CanLaunchShip(), _sim.ShipsLaunched);
     }
 
     public override void _UnhandledInput(InputEvent @event)
@@ -61,6 +61,10 @@ public partial class GameRoot : Node3D
             {
                 _camera.Zoom(1f); // zoom out
             }
+        }
+        else if (@event is InputEventKey key && key.Pressed && !key.Echo && key.PhysicalKeycode == Key.L)
+        {
+            _sim.TryLaunchShip();
         }
     }
 
