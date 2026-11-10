@@ -131,12 +131,11 @@ public static class NodeModels
 
     private static Aabb MeshBounds(Node3D root)
     {
-        Transform3D rootInverse = root.GlobalTransform.AffineInverse();
         var total = new Aabb();
         bool started = false;
         foreach (MeshInstance3D mesh in MeshInstances(root))
         {
-            Transform3D relative = rootInverse * mesh.GlobalTransform;
+            Transform3D relative = RelativeTransform(root, mesh);
             Aabb transformed = TransformAabb(relative, mesh.GetAabb());
             if (!started)
             {
@@ -149,6 +148,24 @@ public static class NodeModels
             }
         }
         return total;
+    }
+
+    // Transform of a descendant relative to an ancestor, by accumulating local
+    // transforms. Avoids GlobalTransform, which is invalid while the subtree is
+    // not yet inside the scene tree.
+    private static Transform3D RelativeTransform(Node3D ancestor, Node descendant)
+    {
+        Transform3D transform = Transform3D.Identity;
+        Node? current = descendant;
+        while (current is not null && current != ancestor)
+        {
+            if (current is Node3D node3d)
+            {
+                transform = node3d.Transform * transform;
+            }
+            current = current.GetParent();
+        }
+        return transform;
     }
 
     private static Aabb TransformAabb(Transform3D transform, Aabb box)
