@@ -92,6 +92,10 @@ public sealed class Simulation
         {
             return false;
         }
+        if (!IsPassable(gridX, gridZ))
+        {
+            return false;
+        }
 
         // Extractors need a node to draw from; processors need a clear tile.
         bool hasNode = NodeAt(gridX, gridZ) is not null;
@@ -168,7 +172,21 @@ public sealed class Simulation
             move = move.Normalized();
         }
 
-        Vector3 p = Player.Position + new Vector3(move.X, 0f, move.Y) * Player.Speed * (float)dt;
+        Vector3 step = new Vector3(move.X, 0f, move.Y) * Player.Speed * (float)dt;
+        Vector3 p = Player.Position;
+
+        // Move each axis independently so the player slides along impassable
+        // terrain instead of sticking on it.
+        float nextX = p.X + step.X;
+        if (IsPassableAt(nextX, p.Z))
+        {
+            p.X = nextX;
+        }
+        float nextZ = p.Z + step.Z;
+        if (IsPassableAt(p.X, nextZ))
+        {
+            p.Z = nextZ;
+        }
 
         float halfX = WorldSizeX * 0.5f;
         float halfZ = WorldSizeZ * 0.5f;
@@ -328,6 +346,19 @@ public sealed class Simulation
             return TerrainType.Grass;
         }
         return _terrain[x + HalfX, z + HalfZ];
+    }
+
+    /// <summary>Only grass is walkable and buildable; water and mountain block.</summary>
+    public bool IsPassable(int x, int z)
+    {
+        return TerrainAt(x, z) == TerrainType.Grass;
+    }
+
+    private bool IsPassableAt(float worldX, float worldZ)
+    {
+        int tileX = Mathf.RoundToInt(worldX / TileSize);
+        int tileZ = Mathf.RoundToInt(worldZ / TileSize);
+        return IsPassable(tileX, tileZ);
     }
 
     private void SetTerrain(int x, int z, TerrainType type)
