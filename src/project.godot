@@ -1,5 +1,10 @@
 ; Engine configuration file.
-; Hand-maintained for now; Godot will add generated keys on first open.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
 
 config_version=5
 
@@ -15,7 +20,5 @@ project/assembly_name="Game"
 
 [rendering]
 
-; Compatibility renderer = OpenGL (ES 3 / 3.3). Chosen for broad hardware
-; support (including Windows on ARM) and as a hands-on OpenGL refresher.
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"

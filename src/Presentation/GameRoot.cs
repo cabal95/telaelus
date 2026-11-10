@@ -5,16 +5,19 @@ namespace Game.Presentation;
 
 /// <summary>
 /// Entry point node (attached to the Main scene root). It owns the simulation
-/// and the presentation, steps the sim on a fixed clock, and mirrors sim state
-/// onto visible nodes. For now this single place is where the "server" and
-/// "client" meet; when multiplayer arrives they split along this seam.
+/// and the presentation, reads input into per-tick intent, steps the sim on a
+/// fixed clock, and mirrors sim state onto visible nodes.
 /// </summary>
 public partial class GameRoot : Node3D
 {
     private readonly Simulation _sim = new();
     private readonly SimClock _clock = new(30.0); // 30 Hz simulation tick
 
-    private MeshInstance3D _mover = null!;
+    // Lift the player capsule so it rests on the ground (capsule is centered).
+    private static readonly Vector3 PlayerVisualLift = new(0, 0.7f, 0);
+
+    private MeshInstance3D _playerView = null!;
+    private CameraRig _camera = null!;
 
     public override void _Ready()
     {
@@ -23,48 +26,64 @@ public partial class GameRoot : Node3D
 
     public override void _Process(double delta)
     {
-        // Advance the simulation in fixed steps, independent of framerate.
+        _sim.Intent = new PlayerIntent { Move = ReadWorldMoveInput() };
+
         int steps = _clock.Advance(delta);
         for (int i = 0; i < steps; i++)
             _sim.Step(_clock.FixedDelta);
 
-        // Presentation simply mirrors the authoritative state.
-        _mover.Position = _sim.MoverPosition;
+        _playerView.Position = _sim.Player.Position + PlayerVisualLift;
+        _camera.SetTarget(_sim.Player.Position);
+    }
+
+    public override void _UnhandledInput(InputEvent @event)
+    {
+        if (@event is InputEventMouseButton mb && mb.Pressed)
+        {
+            if (mb.ButtonIndex == MouseButton.WheelUp) _camera.Zoom(-1f);      // zoom in
+            else if (mb.ButtonIndex == MouseButton.WheelDown) _camera.Zoom(1f); // zoom out
+        }
     }
 
     /// <summary>
-    /// Builds the Milestone 0 scene in code: an angled orthographic camera for
-    /// the 2.5D look, a light, a ground plane, and the sim-driven mover.
+    /// Reads WASD / arrows as screen-relative input and rotates it into world
+    /// space using the camera's orientation, so "up" moves away from the camera
+    /// regardless of the fixed view angle.
     /// </summary>
+    private Vector2 ReadWorldMoveInput()
+    {
+        var raw = Vector2.Zero; // x = screen right, y = screen up (forward)
+        if (Input.IsPhysicalKeyPressed(Key.W) || Input.IsPhysicalKeyPressed(Key.Up)) raw.Y += 1;
+        if (Input.IsPhysicalKeyPressed(Key.S) || Input.IsPhysicalKeyPressed(Key.Down)) raw.Y -= 1;
+        if (Input.IsPhysicalKeyPressed(Key.D) || Input.IsPhysicalKeyPressed(Key.Right)) raw.X += 1;
+        if (Input.IsPhysicalKeyPressed(Key.A) || Input.IsPhysicalKeyPressed(Key.Left)) raw.X -= 1;
+
+        Basis b = _camera.GlobalTransform.Basis;
+        Vector3 forward = -b.Z; forward.Y = 0; forward = forward.Normalized();
+        Vector3 right = b.X; right.Y = 0; right = right.Normalized();
+        Vector3 world = right * raw.X + forward * raw.Y;
+        return new Vector2(world.X, world.Z);
+    }
+
     private void BuildWorld()
     {
-        var camera = new Camera3D
-        {
-            Projection = Camera3D.ProjectionType.Orthogonal,
-            Size = 16f, // orthographic view height in world units (zoom)
-            Position = new Vector3(12, 12, 12),
-            Current = true,
-        };
-        AddChild(camera);
-        // LookAt must run after the node is in the tree (it works in global space).
-        camera.LookAt(Vector3.Zero, Vector3.Up);
+        AddChild(GroundGrid.Build(_sim.GridWidth, _sim.GridHeight, _sim.TileSize));
 
-        var light = new DirectionalLight3D();
+        var light = new DirectionalLight3D { ShadowEnabled = true };
         light.RotationDegrees = new Vector3(-50, -40, 0);
         AddChild(light);
 
-        var ground = new MeshInstance3D
+        _playerView = new MeshInstance3D
         {
-            Mesh = new PlaneMesh { Size = new Vector2(24, 24) },
-            MaterialOverride = new StandardMaterial3D { AlbedoColor = new Color(0.22f, 0.25f, 0.22f) },
+            Name = "Player",
+            Mesh = new CapsuleMesh { Radius = 0.35f, Height = 1.4f },
+            MaterialOverride = new StandardMaterial3D { AlbedoColor = new Color(0.90f, 0.55f, 0.20f) },
+            Position = _sim.Player.Position + PlayerVisualLift,
         };
-        AddChild(ground);
+        AddChild(_playerView);
 
-        _mover = new MeshInstance3D
-        {
-            Mesh = new BoxMesh { Size = new Vector3(1, 1, 1) },
-            MaterialOverride = new StandardMaterial3D { AlbedoColor = new Color(0.85f, 0.5f, 0.2f) },
-        };
-        AddChild(_mover);
+        _camera = new CameraRig();
+        _camera.SetTarget(_sim.Player.Position);
+        AddChild(_camera);
     }
 }
