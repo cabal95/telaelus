@@ -1,0 +1,7 @@
+{
+  "_README": "Copy this file to 'tools.json' (same folder) and set the paths for YOUR machine. tools.json is git-ignored and machine-specific. Claude and scripts read tools.json to locate local tools. Use forward slashes to avoid escaping.",
+  "godot": {
+    "editor": "D:/Path/To/Godot_v4.7.2-stable_mono_<platform>.exe",
+    "console": "D:/Path/To/Godot_v4.7.2-stable_mono_<platform>_console.exe"
+  }
+}

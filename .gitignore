@@ -20,3 +20,6 @@ build/
 .godot/
 /android/
 *.translation
+
+# Machine-specific tool paths (copy tools.template.json -> tools.json)
+tools.json
