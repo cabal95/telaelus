@@ -13,10 +13,7 @@ public partial class GameRoot : Node3D
     private readonly Simulation _sim = new();
     private readonly SimClock _clock = new(30.0); // 30 Hz simulation tick
 
-    // Lift the player capsule so it rests on the ground (capsule is centered).
-    private static readonly Vector3 PlayerVisualLift = new(0, 0.7f, 0);
-
-    private MeshInstance3D _playerView = null!;
+    private PlayerView _playerView = null!;
     private CameraRig _camera = null!;
     private ResourceNodeViews _nodeViews = null!;
     private BuildingViews _buildingViews = null!;
@@ -30,9 +27,10 @@ public partial class GameRoot : Node3D
 
     public override void _Process(double delta)
     {
+        Vector2 moveDir = ReadWorldMoveInput();
         _sim.Intent = new PlayerIntent
         {
-            Move = ReadWorldMoveInput(),
+            Move = moveDir,
             Harvest = Input.IsPhysicalKeyPressed(Key.E)
         };
 
@@ -42,7 +40,7 @@ public partial class GameRoot : Node3D
             _sim.Step(_clock.FixedDelta);
         }
 
-        _playerView.Position = _sim.Player.Position + PlayerVisualLift;
+        _playerView.UpdateFrom(_sim.Player.Position, moveDir, delta);
         _camera.SetTarget(_sim.Player.Position);
         _nodeViews.Sync(_sim.Nodes);
         _buildingViews.Sync(_sim.Buildings);
@@ -127,19 +125,9 @@ public partial class GameRoot : Node3D
         };
         AddChild(_buildingViews);
 
-        _playerView = new MeshInstance3D
+        _playerView = new PlayerView
         {
-            Name = "Player",
-            Mesh = new CapsuleMesh
-            {
-                Radius = 0.35f,
-                Height = 1.4f
-            },
-            MaterialOverride = new StandardMaterial3D
-            {
-                AlbedoColor = new Color(0.90f, 0.55f, 0.20f)
-            },
-            Position = _sim.Player.Position + PlayerVisualLift
+            Name = "Player"
         };
         AddChild(_playerView);
 
