@@ -1,15 +1,15 @@
 [remap]
 
-importer="scene"
+importer="animation_library"
 importer_version=1
-type="PackedScene"
+type="AnimationLibrary"
 uid="uid://daaqjwd7ske05"
-path="res://.godot/imported/character-run.fbx-3935490f766e0b07e6655b672b93cae3.scn"
+path="res://.godot/imported/character-run.fbx-3935490f766e0b07e6655b672b93cae3.res"
 
 [deps]
 
 source_file="res://assets/models/character/character-run.fbx"
-dest_files=["res://.godot/imported/character-run.fbx-3935490f766e0b07e6655b672b93cae3.scn"]
+dest_files=["res://.godot/imported/character-run.fbx-3935490f766e0b07e6655b672b93cae3.res"]
 
 [params]
 

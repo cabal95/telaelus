@@ -85,16 +85,35 @@ public partial class PlayerView : Node3D
         }
         foreach (string name in _anim.GetAnimationList())
         {
-            string lower = name.ToLowerInvariant();
-            if (_idleAnim.Length == 0 && lower.Contains("idle"))
+            string clip = ClipName(name);
+            if (_idleAnim.Length == 0 && clip.Contains("idle"))
             {
                 _idleAnim = name;
             }
-            if (_walkAnim.Length == 0 && (lower.Contains("walk") || lower.Contains("run")))
+            if (_walkAnim.Length == 0 && (clip.Contains("walk") || clip.Contains("run")))
             {
                 _walkAnim = name;
             }
         }
+    }
+
+    // The leaf clip name, lowercased: strips a "library/" prefix and a "Root|"
+    // style prefix so matching ignores the library name (e.g.
+    // "character-idle/Root|Idle" -> "idle").
+    private static string ClipName(string animationName)
+    {
+        string tail = animationName;
+        int slash = tail.LastIndexOf('/');
+        if (slash >= 0)
+        {
+            tail = tail[(slash + 1)..];
+        }
+        int bar = tail.LastIndexOf('|');
+        if (bar >= 0)
+        {
+            tail = tail[(bar + 1)..];
+        }
+        return tail.ToLowerInvariant();
     }
 
     private static AnimationPlayer? FindAnimationPlayer(Node node)
