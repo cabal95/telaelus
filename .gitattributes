@@ -1,0 +1,16 @@
+# Normalize line endings: store text as LF and check out as LF everywhere.
+* text=auto eol=lf
+
+# Common binary assets (none tracked yet; future-proofing so Git never munges them).
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.ttf binary
+*.otf binary
+*.wav binary
+*.ogg binary
+*.mp3 binary
+*.glb binary
+*.res binary
