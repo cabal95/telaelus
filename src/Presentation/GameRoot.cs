@@ -104,7 +104,12 @@ public partial class GameRoot : Node3D
 
     private void BuildWorld()
     {
-        AddChild(GroundGrid.Build(_sim.GridWidth, _sim.GridHeight, _sim.TileSize));
+        var terrain = new TerrainView
+        {
+            Name = "Terrain"
+        };
+        AddChild(terrain);
+        terrain.Build(_sim);
 
         var light = new DirectionalLight3D
         {

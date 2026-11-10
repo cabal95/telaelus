@@ -31,6 +31,8 @@ public sealed class Simulation
     private readonly Dictionary<ResourceType, float> _stockpile = new();
     public IReadOnlyDictionary<ResourceType, float> Stockpile => _stockpile;
 
+    private readonly TerrainType[,] _terrain;
+
     /// <summary>The node currently in range to hand-harvest, or null.</summary>
     public ResourceNode? HarvestTarget { get; private set; }
 
@@ -50,6 +52,8 @@ public sealed class Simulation
 
     public Simulation()
     {
+        _terrain = new TerrainType[GridWidth + 1, GridHeight + 1];
+        GenerateTerrain();
         SpawnInitialNodes();
     }
 
@@ -309,6 +313,51 @@ public sealed class Simulation
         if (ReferenceEquals(HarvestTarget, node))
         {
             HarvestTarget = null;
+        }
+    }
+
+    // ---- Terrain ---------------------------------------------------------
+
+    private int HalfX => GridWidth / 2;
+    private int HalfZ => GridHeight / 2;
+
+    public TerrainType TerrainAt(int x, int z)
+    {
+        if (!InBounds(x, z))
+        {
+            return TerrainType.Grass;
+        }
+        return _terrain[x + HalfX, z + HalfZ];
+    }
+
+    private void SetTerrain(int x, int z, TerrainType type)
+    {
+        if (InBounds(x, z))
+        {
+            _terrain[x + HalfX, z + HalfZ] = type;
+        }
+    }
+
+    private void GenerateTerrain()
+    {
+        // Fixed test layout: a water pond and a small mountain cluster on grass.
+        for (int x = 2; x <= 6; x++)
+        {
+            for (int z = -4; z <= 0; z++)
+            {
+                SetTerrain(x, z, TerrainType.Water);
+            }
+        }
+
+        (int X, int Z)[] mountains =
+        {
+            (-6, 2),
+            (-6, 3),
+            (-5, 2)
+        };
+        foreach ((int mountainX, int mountainZ) in mountains)
+        {
+            SetTerrain(mountainX, mountainZ, TerrainType.Mountain);
         }
     }
 

@@ -14,7 +14,7 @@ public partial class CameraRig : Camera3D
 
     [Export] public float FollowSpeed = 10f;
     [Export] public float ZoomStep = 1.5f;
-    [Export] public float MinSize = 6f;
+    [Export] public float MinSize = 16f;
     [Export] public float MaxSize = 40f;
 
     private Vector3 _target;
@@ -22,7 +22,7 @@ public partial class CameraRig : Camera3D
     public override void _Ready()
     {
         Projection = ProjectionType.Orthogonal;
-        Size = 16f;
+        Size = 28;
         Position = _target + Offset;
         LookAt(_target, Vector3.Up);
         Current = true;
