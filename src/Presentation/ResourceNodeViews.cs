@@ -5,12 +5,13 @@ using Godot;
 namespace Game.Presentation;
 
 /// <summary>
-/// Mirrors the simulation's resource nodes onto meshes, creating and freeing
-/// them as nodes appear or deplete. A node's mesh shrinks as it is used up.
+/// Mirrors the simulation's resource nodes onto visuals (CC0 models when present,
+/// colored boxes otherwise), creating and freeing them as nodes appear or deplete.
+/// A node's visual shrinks as it is used up.
 /// </summary>
 public partial class ResourceNodeViews : Node3D
 {
-    private readonly Dictionary<int, MeshInstance3D> _views = new();
+    private readonly Dictionary<int, Node3D> _views = new();
 
     public void Sync(IReadOnlyList<ResourceNode> nodes)
     {
@@ -18,16 +19,16 @@ public partial class ResourceNodeViews : Node3D
         foreach (ResourceNode node in nodes)
         {
             present.Add(node.Id);
-            if (!_views.TryGetValue(node.Id, out MeshInstance3D? view))
+            if (!_views.TryGetValue(node.Id, out Node3D? view))
             {
-                view = CreateView(node);
+                view = NodeModels.CreateVisual(node);
+                view.Position = node.Position;
                 _views[node.Id] = view;
                 AddChild(view);
             }
 
-            float fraction = Mathf.Max(0.1f, node.RemainingFraction);
-            view!.Scale = new Vector3(1f, fraction, 1f);
-            view.Position = node.Position + new Vector3(0f, 0.4f * fraction, 0f);
+            float fraction = Mathf.Max(0.15f, node.RemainingFraction);
+            view!.Scale = new Vector3(fraction, fraction, fraction);
         }
 
         RemoveMissing(present);
@@ -49,28 +50,5 @@ public partial class ResourceNodeViews : Node3D
             _views[id].QueueFree();
             _views.Remove(id);
         }
-    }
-
-    private static MeshInstance3D CreateView(ResourceNode node)
-    {
-        Color color = node.Type switch
-        {
-            ResourceType.Ore => new Color(0.55f, 0.57f, 0.62f),
-            ResourceType.Wood => new Color(0.32f, 0.44f, 0.22f),
-            _ => Colors.White
-        };
-
-        return new MeshInstance3D
-        {
-            Name = $"Node{node.Id}",
-            Mesh = new BoxMesh
-            {
-                Size = new Vector3(0.8f, 0.8f, 0.8f)
-            },
-            MaterialOverride = new StandardMaterial3D
-            {
-                AlbedoColor = color
-            }
-        };
     }
 }
