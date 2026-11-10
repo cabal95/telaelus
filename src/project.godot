@@ -18,6 +18,10 @@ config/features=PackedStringArray("4.7", "C#", "GL Compatibility")
 
 project/assembly_name="Game"
 
+[filesystem]
+
+import/blender/enabled=false
+
 [rendering]
 
 renderer/rendering_method="gl_compatibility"
