@@ -1,0 +1,22 @@
+# OS / editor cruft
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+*.swp
+*~
+
+# IDE / editor folders (keep until we commit to a toolchain)
+.vs/
+.vscode/
+.idea/
+
+# Build output
+bin/
+obj/
+build/
+
+# Godot 4 (.NET)
+.godot/
+/android/
+*.translation
