@@ -31,23 +31,26 @@ repo root. This file is git-ignored and differs per machine.
 
 Use the Godot editor path from `tools.json` wherever `<godot.editor>` appears below.
 
-The Godot project root is the `src/` folder (that is where `project.godot` and `Game.csproj`
-live), so Godot commands take `--path src`.
+`src/` holds one folder per C# project. The Godot project root is `src/Game` (that is where
+`project.godot` and `Game.csproj` live), so Godot commands take `--path src/Game`. The
+simulation is a separate class library in `src/Game.Sim`, referenced by `Game.csproj`.
+`game.slnx` at the repo root lists every project.
 
-- Build without the editor: `dotnet build src/Game.csproj -c Debug`
-- Open the editor: `<godot.editor> --editor --path src`
-- Run the game: `<godot.editor> --path src`
-- Headless runtime check: `<godot.editor> --headless --path src --quit-after 20` (stderr should
-  be empty on success)
+- Build without the editor: `dotnet build game.slnx -c Debug`
+- Open the editor: `<godot.editor> --editor --path src/Game`
+- Run the game: `<godot.editor> --path src/Game`
+- Headless runtime check: `<godot.editor> --headless --path src/Game --quit-after 20` (stderr
+  should be empty on success)
 
 Avoid the headless editor `--build-solutions --quit` flow; it can hang after building. Prefer
 `dotnet build` for compile checks.
 
 ## Architecture (keep this seam intact)
 
-The simulation (`src/Sim`) is authoritative and free of Godot nodes, advanced on a
-fixed-timestep clock. The presentation (`src/Presentation`) reads sim state and mirrors it onto
-nodes. Keep game logic in the sim and rendering/input in the presentation. This separation is
+The simulation (`src/Game.Sim`, its own project) is authoritative and free of Godot nodes,
+advanced on a fixed-timestep clock. The presentation (`src/Game/Presentation`) reads sim state and
+mirrors it onto nodes. The project reference runs one way (the game references the sim), so the
+compiler stops the sim from depending on presentation code. Keep game logic in the sim and rendering/input in the presentation. This separation is
 what makes the planned co-op multiplayer feasible. See the "Architecture Posture" section of
 [docs/game-plan.md](docs/game-plan.md).
 

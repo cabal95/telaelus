@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/src/">
-    <Project Path="src/Game.csproj" />
+    <Project Path="src/Game/Game.csproj" />
+    <Project Path="src/Game.Sim/Game.Sim.csproj" />
   </Folder>
 </Solution>

@@ -29,6 +29,8 @@ Newest last. One line each; open the file for the full spec.
 - **2611110949-world-map-cells** - Splits the world into map cells (terrain, resource fields) and
   fine cells (buildings, movement); adds staged resource fields, building footprints and facing,
   and extractor work areas.
+- **2611111121-sim-project-split** - Moves the Godot project to `src/Game` and the simulation into its
+  own `Game.Sim` class library, which the game references.
 
 ## Adding a changeset
 

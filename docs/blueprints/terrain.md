@@ -35,7 +35,7 @@ the player can walk and build.
   cell), previewing the grass-to-water transitions that real CC0 edge and corner tiles will
   provide.
 - Real CC0 terrain tile models are pending; the expected set and conventions are in
-  `src/assets/models/terrain/README.md`.
+  `src/Game/assets/models/terrain/README.md`.
 
 ## Related
 

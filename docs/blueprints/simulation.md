@@ -9,6 +9,14 @@ and mirrors it onto nodes.
 
 ## Current state
 
+### Project and dependencies
+
+- The simulation is the `Game.Sim` class library in `src/Game.Sim` (namespace `Game.Sim`). It
+  references only the `GodotSharp` package, for Godot's math types (`Vector2`, `Vector3`,
+  `Mathf`); that package version matches the Godot.NET.Sdk version of the game project.
+- The game project (`src/Game/Game.csproj`) references `Game.Sim`; `Game.Sim` never references
+  the game, so the compiler keeps the sim free of presentation code.
+
 ### Ownership and the loop
 
 - `GameRoot` (presentation) owns a single `Simulation` and a `SimClock`. Each rendered frame it

@@ -19,7 +19,7 @@ deterministically per slot):
 
 Each model is auto-scaled to its target height from its bounding box (shrunk if needed to fit
 its 1.2-unit slot), seated on the ground, and given a deterministic random yaw per slot. The scale targets and file names live in
-`src/Presentation/NodeModels.cs`.
+`src/Game/Presentation/NodeModels.cs`.
 
 **Scale reference:** 1 fine cell = 1 world unit; 1 map cell = 4 units; player ~1.4 units; buildings ~1 unit; trees
 ~2.5 units; ore clusters ~0.8 units.

@@ -7,4 +7,7 @@
     <!-- Run code-style (IDE*) analyzers, configured in .editorconfig, during build. -->
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
   </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Game.Sim/Game.Sim.csproj" />
+  </ItemGroup>
 </Project>

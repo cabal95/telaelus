@@ -10,7 +10,7 @@ planned multiplayer feasible.
 
 ### Entry point and the frame loop
 
-- The main scene (`src/scenes/Main.tscn`) has a single root node running `GameRoot`. `GameRoot`
+- The main scene (`src/Game/scenes/Main.tscn`) has a single root node running `GameRoot`. `GameRoot`
   builds the world in code and owns the `Simulation` and `SimClock`.
 - Each `_Process(delta)`: read input into `PlayerIntent` (camera-relative move, held `E` harvest),
   advance the clock and step the simulation, then sync the views from read-only simulation state.
@@ -29,7 +29,7 @@ planned multiplayer feasible.
 
 ### Asset and model pipeline
 
-- Models are CC0 glTF assets under `src/assets/models/<area>/`, loaded in code with a placeholder
+- Models are CC0 glTF assets under `src/Game/assets/models/<area>/`, loaded in code with a placeholder
   fallback so the build and game stay green before assets are added.
 - `NodeModels` scales a loaded model to a target height from its bounding box, caps its footprint to
   a caller-given size (a resource field's slot), seats it on the ground, and gives it a
@@ -40,7 +40,8 @@ planned multiplayer feasible.
 ### Rendering
 
 - The project uses Godot 4.7 with C# and the **Compatibility (OpenGL)** renderer. The Godot project
-  root is the `src/` folder.
+  root is `src/Game`; `Game.csproj` references the `Game.Sim` project (see simulation.md), whose
+  `Game.Sim.dll` is built beside `Game.dll` and loaded by the engine.
 
 ## Related
 

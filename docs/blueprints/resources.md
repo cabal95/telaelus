@@ -54,7 +54,7 @@ buildings.md). A single global stockpile holds all amounts.
   scaling to a target height (Ore ~0.8, Wood ~2.5 units) but capping the footprint to the slot size
   (1.2 units); it seats the model on the ground with a deterministic yaw and variant per slot. When
   a model file is absent it falls back to a colored box. Assets and conventions live in
-  `src/assets/models/nature/README.md`.
+  `src/Game/assets/models/nature/README.md`.
 - The HUD shows resource totals and an `[E] harvest` hint when a field is in range.
 
 ## Related

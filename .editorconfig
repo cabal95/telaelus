@@ -1,5 +1,5 @@
 # EditorConfig for the game project. Code-style rules enforced in build via
-# EnforceCodeStyleInBuild in src/Game.csproj.
+# EnforceCodeStyleInBuild in each project file (src/Game/Game.csproj, src/Game.Sim/Game.Sim.csproj).
 root = true
 
 [*.cs]
