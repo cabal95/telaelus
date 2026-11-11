@@ -163,7 +163,8 @@ pausing it and stepping frame by frame.
   click places a Mine at the expected anchor; the ghost counts an Ore field in range),
   `harvest-input` (holding E harvests), `field-stage-views` (visible models track the stage and
   vanish with the field), `pause-step` (paused input waits for `step`, and steps advance exact
-  ticks).
+  ticks), `place-on-player` (a building cannot be placed on the player; right beside them it can,
+  and the player can still walk).
 
 ### Live control channel
 

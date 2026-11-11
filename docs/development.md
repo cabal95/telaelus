@@ -54,6 +54,18 @@ See `docs/changesets/INDEX.md` for the completed-changeset index and the templat
 
 Once committed, an Implemented changeset is immutable; a later change is a new changeset.
 
+### When a change needs a changeset
+
+- A changeset is required when a change alters what the blueprints describe: new behavior, a new
+  or changed rule, or a design change.
+- A fix that brings the code in line with what a blueprint already says needs no changeset. It is
+  a normal commit with a regression test (a unit test, or a scenario for input or presentation),
+  and the commit message names the bug and the blueprint it restores.
+- If the blueprint is silent on the behavior, or describes the buggy behavior as the rule, the fix
+  changes the rule, so it is a changeset.
+- Reproducing a bug first (a test, an ad hoc scenario, or the live channel) changes no code and
+  can happen before any changeset is drafted.
+
 ### Tests
 
 - New or changed sim behavior gets unit tests in the same changeset.

@@ -1,0 +1,27 @@
+{
+  "$schema": "../scenario.schema.json",
+  "name": "place-on-player",
+  "description": "A building cannot be placed with the player inside its footprint; the ghost shows it, a click does nothing, and the player can still walk. Placing right next to the player works.",
+  "steps": [
+    { "initMap": {} },
+    { "wait": 2 },
+    { "press": "Key3" },
+    { "comment": "The player stands in cell (32, 32); a Smelter aimed there covers it.", "aimAt": { "cell": [32, 32] } },
+    { "wait": 2 },
+    { "screenshot": "ghost-over-player" },
+    { "expect": "build.ghost.placeable", "equals": false },
+    { "click": {} },
+    { "wait": 2 },
+    { "expect": "buildings", "equals": [] },
+    { "comment": "Cell (35, 32) puts the 3x3 Smelter at anchor (34, 31), just clear of the player.", "aimAt": { "cell": [35, 32] } },
+    { "wait": 2 },
+    { "expect": "build.ghost.placeable", "equals": true },
+    { "click": {} },
+    { "wait": 2 },
+    { "screenshot": "placed-beside-player" },
+    { "expect": "buildings[0].anchor", "equals": [34, 31] },
+    { "press": "Escape" },
+    { "hold": { "key": "A", "frames": 15 } },
+    { "comment": "The player walked away (screen-left is world -X, +Z).", "expect": "player.position[0]", "lte": 31.5 }
+  ]
+}

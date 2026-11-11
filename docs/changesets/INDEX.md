@@ -37,6 +37,8 @@ Newest last. One line each; open the file for the full spec.
   screenshots, expectations), `Simulation.Debug`, and headless integration tests, one per scenario.
 - **2611111216-live-control** - Adds a loopback HTTP control channel that drives a running game with the
   scenario commands, plus `pause`, `resume`, and frame-exact `step`.
+- **2611111234-block-placement-on-player** - Blocks placing a building with the player inside its
+  footprint, and records when a change needs a changeset.
 
 ## Adding a changeset
 

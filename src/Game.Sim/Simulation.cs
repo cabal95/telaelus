@@ -126,17 +126,25 @@ public sealed partial class Simulation
 
     /// <summary>
     /// The standard placement rule: every footprint cell is in bounds, grass,
-    /// unoccupied, and not covered by a resource field. Extractors follow the
-    /// same rule and may be placed with no field in range (they idle).
+    /// unoccupied, and not covered by a resource field, and no unit is inside the
+    /// footprint (today, the player's cell). Extractors follow the same rule and
+    /// may be placed with no field in range (they idle).
     /// </summary>
     public bool CanPlace(BuildingType type, int anchorX, int anchorZ, Facing facing)
     {
+        // The player's cell, by the same point test movement collision uses.
+        (int playerX, int playerZ) = CellAt(Player.Position.X, Player.Position.Z);
+
         (int width, int depth) = BuildingDefs.For(type).Footprint(facing);
         for (int x = anchorX; x < anchorX + width; x++)
         {
             for (int z = anchorZ; z < anchorZ + depth; z++)
             {
                 if (!InBounds(x, z) || _occupied.Contains((x, z)) || !IsPassable(x, z) || FieldAt(x, z) is not null)
+                {
+                    return false;
+                }
+                if (x == playerX && z == playerZ)
                 {
                     return false;
                 }

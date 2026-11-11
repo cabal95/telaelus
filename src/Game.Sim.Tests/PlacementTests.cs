@@ -128,4 +128,59 @@ public class PlacementTests
         Assert.False(sim.TryPlaceBuilding(BuildingType.Smelter, 36, 20, Facing.North));
         Assert.Empty(sim.Buildings);
     }
+
+    // The player stands in fine cell (32, 32) for these tests.
+    [Theory]
+    [InlineData(31, 31)]
+    [InlineData(32, 32)]
+    [InlineData(30, 30)]
+    [InlineData(30, 31)]
+    public void CanPlace_RejectsAFootprintContainingThePlayer(int anchorX, int anchorZ)
+    {
+        // A 3x3 Smelter: centered on the player, and with the player on a corner or an edge.
+        var sim = new Simulation();
+        sim.Debug.TeleportPlayer(32.5f, 32.5f);
+        Assert.False(sim.CanPlace(BuildingType.Smelter, anchorX, anchorZ, Facing.North));
+    }
+
+    [Theory]
+    [InlineData(33, 31)]
+    [InlineData(29, 31)]
+    [InlineData(31, 33)]
+    [InlineData(31, 29)]
+    public void CanPlace_AllowsAFootprintRightNextToThePlayer(int anchorX, int anchorZ)
+    {
+        var sim = new Simulation();
+        sim.Debug.TeleportPlayer(32.5f, 32.5f);
+        Assert.True(sim.CanPlace(BuildingType.Smelter, anchorX, anchorZ, Facing.North));
+    }
+
+    [Fact]
+    public void TryPlaceBuilding_OnThePlayer_FailsWithoutChangingState()
+    {
+        var sim = new Simulation();
+        sim.Debug.TeleportPlayer(32.5f, 32.5f);
+        Assert.False(sim.TryPlaceBuilding(BuildingType.Smelter, 31, 31, Facing.North));
+        Assert.Empty(sim.Buildings);
+        Assert.True(sim.IsWalkable(32, 32));
+    }
+
+    [Fact]
+    public void PlayerOnACellBoundary_CountsAsTheCellTheirPositionFloorsTo()
+    {
+        // At exactly (32, 32) the player is in cell (32, 32), not (31, 31).
+        var sim = new Simulation();
+        sim.Debug.TeleportPlayer(32f, 32f);
+        Assert.True(sim.CanPlace(BuildingType.Smelter, 29, 29, Facing.North));
+        Assert.False(sim.CanPlace(BuildingType.Smelter, 32, 32, Facing.North));
+    }
+
+    [Fact]
+    public void DebugPlaceBuilding_OnThePlayer_Throws()
+    {
+        var sim = new Simulation();
+        sim.Debug.TeleportPlayer(32.5f, 32.5f);
+        Assert.Throws<System.InvalidOperationException>(
+            () => sim.Debug.PlaceBuilding(BuildingType.Mine, 32, 32, Facing.North));
+    }
 }

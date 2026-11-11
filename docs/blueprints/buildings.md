@@ -41,8 +41,11 @@ loop.
 ### Placement
 
 - `CanPlace(type, anchorX, anchorZ, facing)` applies the standard rule: every footprint cell is in
-  bounds, grass, unoccupied, and not covered by a resource field. No building may sit on a
-  resource. Placement rules belong to the definition, so a future exception (a water wheel that
+  bounds, grass, unoccupied, and not covered by a resource field, and no unit is inside the
+  footprint. Today the only unit is the player, whose cell is the fine cell their position floors
+  to (`CellAt`), the same point test movement collision uses, so a building can go exactly where
+  the player could not walk into. A building may be placed right next to the player. No building
+  may sit on a resource. Placement rules belong to the definition, so a future exception (a water wheel that
   overhangs water) is a new rule on that one definition.
 - An extractor may be placed with no matching field in its work area; it idles until one is in
   range. This allows planning ahead and later lets resources be created around a building.
