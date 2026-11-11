@@ -1,8 +1,11 @@
 # Game Plan
 
 > Living design document. This is a learning project first and a playable game second.
-> Decisions here are provisional and will change as we learn. When we change a decision,
-> we update this file and note why.
+> This file holds the long-term vision and roadmap (the "why" and "where we are going").
+> The **current state** of how each system actually works lives in the blueprints
+> (`docs/blueprints/`), which are authoritative for "what is"; how we work is in
+> `docs/development.md`. Sections below that duplicate current-state detail are kept for
+> context and will be trimmed toward the blueprints over time.
 
 ## Goals
 

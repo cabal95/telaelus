@@ -1,0 +1,44 @@
+# Blueprints
+
+A blueprint is a living description of the current state of one area of the project: how it works
+and the decisions behind it, right now. Blueprints are present tense with no history, and they
+change only through changesets. (The process is described in ../development.md.)
+
+Read this index to find the right area, then open that blueprint for the detail.
+
+## Areas
+
+- **[simulation.md](simulation.md)** - The authoritative simulation framework: the fixed-timestep
+  loop and clock, the intent-and-command input seam, the tile grid, and the multiplayer-ready
+  architecture posture.
+- **[terrain.md](terrain.md)** - The per-cell terrain types (grass, water, mountain), the current
+  fixed layout, passability rules, and tile rendering with shoreline previews.
+- **[resources.md](resources.md)** - Resource types, the harvestable nodes on the map, the global
+  stockpile, hand-harvesting, and node rendering.
+- **[buildings.md](buildings.md)** - Building types and recipes, grid placement, the production
+  chain, the ship launch win, and the build UI.
+- **[player.md](player.md)** - The player's simulation state and movement, camera-relative input,
+  and the on-screen character and follow camera.
+- **[presentation.md](presentation.md)** - The presentation layer: the frame loop and view-sync
+  pattern, the views, the asset and model pipeline, and the renderer.
+
+## Adding a blueprint
+
+Copy the template below to `docs/blueprints/<area>.md`, fill it in, and add a line for it under
+Areas.
+
+```markdown
+# <Area> Blueprint
+
+## Overview
+
+What this area is and its role in the game.
+
+## Current state
+
+The authoritative description of how it works today: types, data, behavior, and key values.
+
+## Related
+
+Links to related blueprints.
+```

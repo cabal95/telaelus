@@ -4,6 +4,19 @@ A 2.5D on-planet resource/factory game (Part A) that feeds a space exploration a
 (Part B), built in Godot 4.7 with C#. See [docs/game-plan.md](docs/game-plan.md) for the full
 design, milestone roadmap, and architecture decisions.
 
+## Development process (spec-driven)
+
+We develop spec-first; the process is described in [docs/development.md](docs/development.md).
+There are two kinds of spec:
+
+- **Blueprints** (start at [docs/blueprints/INDEX.md](docs/blueprints/INDEX.md)) are the living,
+  present-tense description of how each area works right now, and are authoritative for "what is".
+  Consult the relevant blueprint before changing an area, and keep it accurate.
+- **Changesets** (see [docs/changesets/INDEX.md](docs/changesets/INDEX.md)) are the units of
+  change: a change is drafted as a changeset and approved before code is written; after
+  implementing, update the affected blueprint(s) and move the changeset to `completed/` with its
+  stamped prefix. One changeset per commit.
+
 ## Local tool paths
 
 Machine-specific tool paths (such as the Godot editor executable) live in `tools.json` at the
