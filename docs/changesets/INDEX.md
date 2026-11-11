@@ -41,6 +41,9 @@ Newest last. One line each; open the file for the full spec.
   footprint, and records when a change needs a changeset.
 - **2611111238-scenario-schema-checks** - Fixes the scenario schema's duplicate `step` definition and
   adds tests that check the schema and validate every scenario against it.
+- **2611111426-biome-terrain-model** - Adds eight terrain types with rules in a `TerrainDef` table, eight
+  biomes per map cell, mountain and river features (rivers with stored flow and derived shape and
+  channel), and a test map repainted to show every biome.
 
 ## Adding a changeset
 

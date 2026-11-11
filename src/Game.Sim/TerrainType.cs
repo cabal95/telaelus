@@ -1,9 +1,17 @@
 namespace Game.Sim;
 
-/// <summary>Terrain kind of a grid cell. Grass is the default (enum value 0).</summary>
+/// <summary>
+/// The ground of a map cell. Grass is the default (enum value 0). Mountains and
+/// rivers are features on top of terrain, not terrain (see <see cref="MapFeature"/>).
+/// </summary>
 public enum TerrainType
 {
     Grass,
-    Water,
-    Mountain
+    Sand,
+    Snow,
+    Rock,
+    Mud,
+    ShallowWater,
+    DeepWater,
+    Lava
 }

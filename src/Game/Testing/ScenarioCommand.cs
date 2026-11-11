@@ -96,11 +96,22 @@ public sealed class ScenarioCommand
                 }
             case "changeTiles":
                 {
-                    TerrainType type = ParseEnum<TerrainType>(Required(arg, "type"));
+                    TerrainType? type = arg.TryGetProperty("type", out JsonElement t) ? ParseEnum<TerrainType>(t) : null;
+                    BiomeType? biome = arg.TryGetProperty("biome", out JsonElement b) ? ParseEnum<BiomeType>(b) : null;
+                    MapFeature? feature = arg.TryGetProperty("feature", out JsonElement f) ? ParseEnum<MapFeature>(f) : null;
+                    Facing? flow = arg.TryGetProperty("flow", out JsonElement fl) ? ParseEnum<Facing>(fl) : null;
+                    if (type is null && biome is null && feature is null)
+                    {
+                        throw new FormatException("changeTiles needs at least one of type, biome, or feature");
+                    }
+                    if (flow is not null && feature is null)
+                    {
+                        throw new FormatException("changeTiles takes a flow only with a feature");
+                    }
                     List<(int X, int Z)> cells = arg.TryGetProperty("cells", out JsonElement list)
                         ? list.EnumerateArray().Select(c => Pair(c, "cells")).ToList()
                         : Rectangle(Pair(Required(arg, "from"), "from"), Pair(Required(arg, "to"), "to"));
-                    return e => e.ChangeTiles(type, cells);
+                    return e => e.ChangeTiles(cells, type, biome, feature, flow);
                 }
             case "placeResource":
                 {

@@ -11,8 +11,9 @@ Read this index to find the right area, then open that blueprint for the detail.
 - **[simulation.md](simulation.md)** - The authoritative simulation framework: the fixed-timestep
   loop and clock, the intent-and-command input seam, the two-level grid (fine cells and map
   cells), and the multiplayer-ready architecture posture.
-- **[terrain.md](terrain.md)** - The per-map-cell terrain types (grass, water, mountain), the current
-  fixed layout, passability rules, and tile rendering with shoreline previews.
+- **[terrain.md](terrain.md)** - The per-map-cell layers (terrain types and their rules, biomes,
+  and mountain and river features with river flow and channels), the walk and build rules, the
+  fixed test layout, and tile rendering with priority transitions.
 - **[resources.md](resources.md)** - Resource types, the map-cell resource fields and their
   depletion stages, the global stockpile, hand-harvesting, and field rendering.
 - **[buildings.md](buildings.md)** - Building types, footprints, and recipes, anchor and facing

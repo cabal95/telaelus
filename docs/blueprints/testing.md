@@ -35,7 +35,7 @@ pausing it and stepping frame by frame.
 - Tests drive the sim the way the presentation does: set `Intent`, call commands, call `Step`.
 - Where setup would mean playing out a long sequence, tests use `Simulation.Debug` (see
   simulation.md), the same setup surface scenarios use.
-- Tests use the fixed test map's known layout (pond, mountains, and the eight fields) for
+- Tests use the fixed test map's known layout (pond, mountains, rivers, biomes, and the eight fields) for
   coordinates. `SimTestHelpers` holds tick helpers and a known clear grass spot near the spawn.
 
 ### Test classes
@@ -44,6 +44,13 @@ pausing it and stepping frame by frame.
   `InBounds`, terrain lookup, and the spawn point.
 - `FieldTests`: stages, depletion, field bounds, distance to a field, `FieldAt` coverage,
   `FieldsInRange`, and that the starting fields hold enough for a launch.
+- `TerrainModelTests`: every terrain and biome has a definition, walk and build rules per
+  terrain, player speed per terrain, mountains blocking their map cell over Grass and Snow,
+  biome field amounts and the default, and the test map's biomes.
+- `RiverTests`: river connections and shapes (pool, end, straight, bend, junction, mouths into
+  water and off the map, a flow edge facing dry land, parallel rivers staying separate), the
+  channel blocking while banks keep their terrain on Grass, Sand, and Snow, the test map's river
+  shapes, `SetFeature` rejections, and reset clearing biomes and features.
 - `PlacementTests`: footprints by facing, each `CanPlace` rejection (water, mountain, field,
   occupied, out of bounds, rotated footprint), extractors placeable with no field in range,
   occupancy, and derived size and center.
@@ -63,10 +70,12 @@ pausing it and stepping frame by frame.
   trailing commas in the file are tolerated. `src/Game.Integration.Tests/scenario.schema.json`
   defines the format; scenarios reference it with `$schema`.
 - **Commands:**
-  - Map setup: `initMap` `{}` (empty all-grass map, player at the center, and build mode reset:
-    nothing selected, facing North, no aim override), `changeTiles`
-    `{ type, cells: [[x, z], ...] }` or `{ type, from, to }` (map cells, inclusive),
-    `placeResource` `{ type, mapCell, amount? }` (default 250), `setResourceAmount`
+  - Map setup: `initMap` `{}` (empty all-Grassland grass map with no features, player at the
+    center, and build mode reset: nothing selected, facing North, no aim override), `changeTiles`
+    `{ type?, biome?, feature?, flow?, cells: [[x, z], ...] }` or the same with `from, to` (map
+    cells, inclusive; at least one of `type`, `biome`, `feature`; `flow` goes with a River and
+    sets biome, then terrain, then feature),
+    `placeResource` `{ type, mapCell, amount? }` (default: the biome's amount), `setResourceAmount`
     `{ mapCell, amount }` (0 removes), `removeResource` `{ mapCell }`, `removeBuilding`
     `{ anchor }`.
   - Other setup: `placeBuilding` `{ type, anchor, facing? }` (normal placement rules),
@@ -88,7 +97,8 @@ pausing it and stepping frame by frame.
 - **The state snapshot** (`StateSnapshot`) is the contract for `expect`, the report, and the live
   channel: `frame` (game frames processed since the executor started; paused frames do not
   count); `paused`; `input` (`heldKeys`: keys the executor pressed that are still down); `player`
-  (`position` [x, z], `harvestTarget` field id or null); `build` (null when not in build
+  (`position` [x, z], `harvestTarget` field id or null, and the `terrain`, `biome`, and `feature`
+  under the player); `build` (null when not in build
   mode, else `selected`, `facing`, `fieldsInRange`, and `ghost`: `anchor`, `width`, `depth`,
   `placeable`, or null); `buildings` (`id`, `type`, `anchor`, `facing`, `width`, `depth`,
   `currentField`); `fields` (`id`, `type`, `mapCell`, `amount`, `stage`, `visibleModels`);
@@ -168,7 +178,9 @@ pausing it and stepping frame by frame.
   `harvest-input` (holding E harvests), `field-stage-views` (visible models track the stage and
   vanish with the field), `pause-step` (paused input waits for `step`, and steps advance exact
   ticks), `place-on-player` (a building cannot be placed on the player; right beside them it can,
-  and the player can still walk).
+  and the player can still walk), `terrain-types` (every terrain, a mountain on snow, and a river
+  from grass into sand render; the ghost is blocked on a river channel and allowed on its bank;
+  the snapshot reports the terrain, biome, and feature under the player).
 
 ### Live control channel
 

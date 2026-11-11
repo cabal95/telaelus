@@ -22,13 +22,17 @@ and mirrors it onto nodes.
 ### Debug surface and map changes
 
 - `Simulation.Debug` (a `DebugTools` instance) holds setup operations the normal game never
-  performs: `ResetToEmptyMap` (all grass, no fields, buildings, stockpile, or launches, player at
-  the map center), `SetTerrain`, `PlaceField`, `SetFieldAmount` (0 or less removes the field),
+  performs: `ResetToEmptyMap` (all Grassland grass with no features, no fields, buildings,
+  stockpile, or launches, player at the map center), `SetTerrain` (throws if the cell's feature
+  cannot sit on the new terrain), `SetBiome`, `SetFeature` (a River needs a flow, other features
+  take none; throws on terrain that cannot take a feature or on a field), `PlaceField` (amount
+  optional, defaulting to the biome's; throws on a feature cell), `SetFieldAmount` (0 or less removes the field),
   `RemoveField`, `PlaceBuilding` (through the normal placement rules), `RemoveBuilding` (freeing
   its cells), `TeleportPlayer`, and `SeedStockpile`. Invalid requests throw
   `InvalidOperationException`. It is used by the unit tests, scenarios, and (later) the live
   control channel.
-- The `MapChanged` event is raised by the debug operations that change terrain or fields, so views
+- The `MapChanged` event is raised by the debug operations that change terrain, biomes, features,
+  or fields, so views
   built once at startup (the terrain) can rebuild.
 - Field and building ids keep counting up across `ResetToEmptyMap`, so a view never mistakes a new
   field for an old one.
@@ -57,8 +61,9 @@ and mirrors it onto nodes.
 
 - A **fine cell** is 1 x 1 world unit. Buildings, collision, movement, and placement live on fine
   cells.
-- A **map cell** is `FineCellsPerMapCell` x `FineCellsPerMapCell` (4 x 4) fine cells. Terrain and
-  resource fields live on map cells.
+- A **map cell** is `FineCellsPerMapCell` x `FineCellsPerMapCell` (4 x 4) fine cells. Terrain,
+  biomes, features (mountains and rivers), and resource fields live on map cells; a river's
+  channel is the one rule that resolves to individual fine cells.
 - Coordinates are signed integers. Fine cell `(x, z)` spans `[x, x+1) x [z, z+1)`;
   `CellCenter(x, z)` is `(x + 0.5, 0, z + 0.5)` and `CellAt` maps a world point to its fine cell
   by floor. `MapCellOf` converts a fine coordinate to its map coordinate by floor division, so
@@ -68,7 +73,7 @@ and mirrors it onto nodes.
   origin at its corner. `InBounds` and `MapInBounds` test against it. Nothing else assumes a fixed
   size; procedural generation will replace this bound.
 - The player spawns at the test map's center, `(32, 0, 32)`.
-- Terrain-derived passability (`IsPassable`, `IsWalkable`) is defined in terrain.md.
+- The walk and build rules (`IsWalkable`, `IsBuildable`) are defined in terrain.md.
 
 ### Architecture posture (single-player now, multiplayer-ready)
 

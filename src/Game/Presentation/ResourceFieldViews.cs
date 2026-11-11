@@ -64,7 +64,7 @@ public partial class ResourceFieldViews : Node3D
             float jitterX = rng.RandfRange(-SlotJitter, SlotJitter);
             float jitterZ = rng.RandfRange(-SlotJitter, SlotJitter);
 
-            Node3D slot = NodeModels.CreateVisual(field.Type, field.Id * ResourceField.StageCount + i, SlotFootprint);
+            Node3D slot = NodeModels.CreateVisual(field.Type, field.Id * ResourceField.StageCount + i, SlotFootprint, field.InitialAmount);
             slot.Position = field.Center + new Vector3(offset.X + jitterX, 0f, offset.Y + jitterZ);
             AddChild(slot);
             slots[i] = slot;

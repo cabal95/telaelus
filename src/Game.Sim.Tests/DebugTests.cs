@@ -35,10 +35,10 @@ public class DebugTests
         var sim = new Simulation();
         sim.Debug.ResetToEmptyMap();
 
-        sim.Debug.SetTerrain(2, 3, TerrainType.Water);
+        sim.Debug.SetTerrain(2, 3, TerrainType.ShallowWater);
 
-        Assert.Equal(TerrainType.Water, sim.TerrainAt(8, 12));
-        Assert.Equal(TerrainType.Water, sim.TerrainAt(11, 15));
+        Assert.Equal(TerrainType.ShallowWater, sim.TerrainAt(8, 12));
+        Assert.Equal(TerrainType.ShallowWater, sim.TerrainAt(11, 15));
         Assert.Equal(TerrainType.Grass, sim.TerrainAt(12, 15));
     }
 
@@ -110,7 +110,7 @@ public class DebugTests
         sim.MapChanged += () => raised++;
 
         sim.Debug.ResetToEmptyMap();
-        sim.Debug.SetTerrain(1, 1, TerrainType.Mountain);
+        sim.Debug.SetTerrain(1, 1, TerrainType.Sand);
         sim.Debug.PlaceField(ResourceType.Ore, 3, 3);
         sim.Debug.SetFieldAmount(3, 3, 50f);
         sim.Debug.RemoveField(3, 3);
@@ -122,7 +122,7 @@ public class DebugTests
     public void OutOfBoundsMapCells_Throw()
     {
         var sim = new Simulation();
-        Assert.Throws<InvalidOperationException>(() => sim.Debug.SetTerrain(-1, 0, TerrainType.Water));
+        Assert.Throws<InvalidOperationException>(() => sim.Debug.SetTerrain(-1, 0, TerrainType.ShallowWater));
         Assert.Throws<InvalidOperationException>(() => sim.Debug.PlaceField(ResourceType.Ore, 16, 0));
     }
 }

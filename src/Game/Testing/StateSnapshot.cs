@@ -29,16 +29,25 @@ public static class StateSnapshot
             {
                 ["heldKeys"] = heldKeys
             },
-            ["player"] = new JsonObject
-            {
-                ["position"] = Pair(sim.Player.Position.X, sim.Player.Position.Z),
-                ["harvestTarget"] = sim.HarvestTarget?.Id
-            },
+            ["player"] = Player(sim),
             ["build"] = Build(root.Builder),
             ["buildings"] = Buildings(sim),
             ["fields"] = Fields(sim, root.FieldViews),
             ["stockpile"] = Stockpile(sim),
             ["shipsLaunched"] = sim.ShipsLaunched
+        };
+    }
+
+    private static JsonObject Player(Simulation sim)
+    {
+        (int x, int z) = Simulation.CellAt(sim.Player.Position.X, sim.Player.Position.Z);
+        return new JsonObject
+        {
+            ["position"] = Pair(sim.Player.Position.X, sim.Player.Position.Z),
+            ["harvestTarget"] = sim.HarvestTarget?.Id,
+            ["terrain"] = sim.TerrainAt(x, z).ToString(),
+            ["biome"] = sim.BiomeAt(x, z).ToString(),
+            ["feature"] = sim.FeatureAt(x, z).ToString()
         };
     }
 

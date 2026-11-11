@@ -177,11 +177,26 @@ public sealed class CommandExecutor
         return StepOutcome.Ok;
     }
 
-    public StepOutcome ChangeTiles(TerrainType type, IReadOnlyList<(int X, int Z)> cells)
+    /// <summary>
+    /// Sets the given layers of each map cell: biome, then terrain, then feature, so
+    /// one step can paint a cell's ground and put a mountain or river on it.
+    /// </summary>
+    public StepOutcome ChangeTiles(IReadOnlyList<(int X, int Z)> cells, TerrainType? type, BiomeType? biome, MapFeature? feature, Facing? flow)
     {
         foreach ((int x, int z) in cells)
         {
-            _root.Sim.Debug.SetTerrain(x, z, type);
+            if (biome is BiomeType b)
+            {
+                _root.Sim.Debug.SetBiome(x, z, b);
+            }
+            if (type is TerrainType t)
+            {
+                _root.Sim.Debug.SetTerrain(x, z, t);
+            }
+            if (feature is MapFeature f)
+            {
+                _root.Sim.Debug.SetFeature(x, z, f, flow);
+            }
         }
         return StepOutcome.Ok;
     }

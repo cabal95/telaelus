@@ -24,9 +24,13 @@ buildings.md). A single global stockpile holds all amounts.
 - The field owns its placement. The simulation keeps a list of fields (stable order for stepping
   and view sync) and an index from map cell to field; `FieldAt(x, z)` finds the field covering a
   fine cell with one lookup. Adding or removing a field updates both.
-- The simulation spawns a fixed set of eight fields of 250 each: Ore at map cells `(10, 9)`,
-  `(11, 10)`, `(9, 11)`, `(4, 12)`; Wood at `(3, 4)`, `(4, 3)`, `(2, 5)`, `(12, 3)`. That is 1000
-  of each, enough for a ship launch.
+- A field placed without an explicit amount takes its biome's amount for its type, or the global
+  default of 250 (`BiomeDef.DefaultFieldAmount`) when the biome does not list the type (see
+  terrain.md). A field may not sit on a map cell with a feature.
+- The simulation spawns a fixed set of eight fields, each at its biome's amount: Ore at map cells
+  `(10, 9)`, `(11, 10)`, `(9, 11)` (Grassland, 250 each) and `(4, 12)` (Highlands, 400); Wood at
+  `(3, 4)`, `(4, 3)`, `(2, 5)` (Forest, 500 each) and `(12, 3)` (Grassland, 250). That is 1150 Ore
+  and 1750 Wood, enough for a ship launch.
 - A field blocks movement and placement on all its fine cells until it depletes and is removed,
   which reopens them.
 
@@ -51,7 +55,8 @@ buildings.md). A single global stockpile holds all amounts.
   shows the first `Stage` slots, so a field loses one model per stage. Visuals are freed when the
   field is removed.
 - `NodeModels` builds each slot's model from CC0 glTF models when present (Ore rocks, Wood trees),
-  scaling to a target height (Ore ~0.8, Wood ~2.5 units) but capping the footprint to the slot size
+  scaling to a target height (Ore ~0.8 units; Wood 2.5 units for a field of 250 or less, rising
+  to 3.5 at 500 or more, so larger fields look larger) but capping the footprint to the slot size
   (1.2 units); it seats the model on the ground with a deterministic yaw and variant per slot. When
   a model file is absent it falls back to a colored box. Assets and conventions live in
   `src/Game/assets/models/nature/README.md`.

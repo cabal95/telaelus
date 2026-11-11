@@ -25,7 +25,7 @@ planned multiplayer feasible.
 
 `GameRoot` creates and syncs these presentation nodes, each reading simulation state:
 
-- `TerrainView` (one terrain tile per map cell, rebuilt from scratch on the sim's `MapChanged`),
+- `TerrainView` (one terrain tile per map cell, rebuilt from scratch once on the frame after the sim's `MapChanged`, so many edits in one frame cost one rebuild; it processes while paused),
   `ResourceFieldViews` (staged resource field visuals; reports each field's visible model count),
   `BuildingViews` (footprint-sized building boxes, created and freed as buildings appear and are
   removed), `PlayerView` (the character), `CameraRig` (the orthographic follow camera, with

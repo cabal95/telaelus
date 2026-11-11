@@ -73,6 +73,39 @@ down, that feeds the space game.
 **Later layers:** procedural terrain and resource distribution (varied planets) sit cleanly on
 top of this once the core loop works, so they remain a later layer rather than a day-one need.
 
+#### World: planets, biomes and terrain
+
+The current model (terrain types, biomes, mountain and river features) is in
+[blueprints/terrain.md](blueprints/terrain.md). This is the intent it is building toward.
+
+- **Planets weight biomes.** Part A starts on one planet. Each planet has its own biome
+  probabilities, so a frozen planet is mostly tundra and becomes the long-term uranium source.
+  Procedural generation picks biomes from the planet's weights.
+- **Signature resources** give each biome a reason to explore and expand:
+
+  | Biome | Signature resources |
+  |---|---|
+  | Grassland | wood, stone, iron (starting biome) |
+  | Forest | wood in quantity |
+  | Highlands | iron, copper, coal |
+  | Desert | oil, sand, copper (the fuel chain) |
+  | Swamp | biomass, sulfur |
+  | Tundra | rare metals, uranium |
+  | Volcanic | sulfur, crystals, geothermal (end game) |
+  | Ocean | water, later offshore oil |
+
+- **Two kinds of extraction.** Finite deposits (resource fields) deplete. Terrain-sourced
+  resources never run out but need a building on or beside the right terrain: water from a pump
+  on ShallowWater, sand from a collector on Sand, power from a geothermal tap at Lava, and a
+  water wheel on a river channel (flowing water).
+- **Infrastructure reads terrain and features.** Roads go on any walkable land (costlier on Sand,
+  Snow, and Mud) and are the only paving. Pipes go on land, ShallowWater, and river channels.
+  Bridges cross ShallowWater, and river cells only where the river is Straight, at right angles to
+  its flow. DeepWater, Lava, and mountains block all three.
+- **Fixed decisions:** the world is flat (a mountain range is the only hard land barrier); terrain
+  is permanent once generated (no landfill); clearing a forest means depleting its Wood fields;
+  decorative trees, when they come, never block and are never harvested.
+
 ### Part B: In-Space (build this second)
 
 Space exploration and combat. The style is still open:

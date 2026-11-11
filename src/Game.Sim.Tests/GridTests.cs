@@ -48,13 +48,14 @@ public class GridTests
         var sim = new Simulation();
 
         // Water covers map cells x 9..11, z 5..6, i.e. fine x 36..47, z 20..27.
-        Assert.Equal(TerrainType.Water, sim.TerrainAt(36, 20));
-        Assert.Equal(TerrainType.Water, sim.TerrainAt(47, 27));
+        Assert.Equal(TerrainType.ShallowWater, sim.TerrainAt(36, 20));
+        Assert.Equal(TerrainType.ShallowWater, sim.TerrainAt(47, 27));
         Assert.Equal(TerrainType.Grass, sim.TerrainAt(35, 20));
         Assert.Equal(TerrainType.Grass, sim.TerrainAt(36, 28));
 
-        // Mountain at map cell (4, 9).
-        Assert.Equal(TerrainType.Mountain, sim.TerrainAt(16, 36));
+        // Map cell (4, 9) is highland rock with a mountain on it.
+        Assert.Equal(TerrainType.Rock, sim.TerrainAt(16, 36));
+        Assert.Equal(MapFeature.Mountain, sim.FeatureAt(16, 36));
 
         // Out of bounds reads as grass.
         Assert.Equal(TerrainType.Grass, sim.TerrainAt(-10, -10));

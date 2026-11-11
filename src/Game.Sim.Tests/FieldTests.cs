@@ -90,8 +90,8 @@ public class FieldTests
         }
 
         Assert.Equal(8, sim.Fields.Count);
-        Assert.Equal(1000f, ore);
-        Assert.Equal(1000f, wood);
+        Assert.Equal(1150f, ore);
+        Assert.Equal(1750f, wood);
 
         // A launch needs 600 Metal (500 into Fuel, 100 for the launch) and 500 Wood.
         Assert.True(ore >= Simulation.LaunchFuelCost + Simulation.LaunchMetalCost);

@@ -15,8 +15,10 @@ on-screen character and camera.
 - Movement is applied each tick from `PlayerIntent.Move` (a world-space ground direction). Each axis
   is moved independently and only if the target fine cell is walkable, so the player slides along
   obstacles rather than sticking. The result is clamped to the test map's extent.
-- Walkability (see terrain.md) blocks water, mountain, resource fields (all their fine cells,
-  until depleted), and buildings.
+- The speed each tick is `Speed` times the speed multiplier of the terrain under the player (Sand
+  and Snow 0.75, Mud 0.6, others 1; see terrain.md). A river bank moves at its terrain's speed.
+- Walkability (see terrain.md) blocks water, lava, mountains, river channels, resource fields (all
+  their fine cells, until depleted), and buildings.
 
 ### Input
 

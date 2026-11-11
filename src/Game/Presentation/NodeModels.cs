@@ -43,12 +43,21 @@ public static class NodeModels
     /// Builds one resource model. The variant and yaw are chosen deterministically
     /// from <paramref name="seedId"/>, and the model's footprint is capped to
     /// <paramref name="maxFootprint"/> world units so it stays inside its slot.
+    /// Larger fields look larger: a Wood model's height grows with the field's
+    /// <paramref name="initialAmount"/> (see <see cref="WoodHeight"/>).
     /// </summary>
-    public static Node3D CreateVisual(ResourceType type, int seedId, float maxFootprint)
+    public static Node3D CreateVisual(ResourceType type, int seedId, float maxFootprint, float initialAmount)
     {
         if (!Specs.TryGetValue(type, out ModelSpec? spec))
         {
             spec = new ModelSpec(System.Array.Empty<string>(), 0.8f, Colors.White, 0.7f);
+        }
+        if (type == ResourceType.Wood)
+        {
+            spec = spec with
+            {
+                TargetHeight = WoodHeight(initialAmount)
+            };
         }
 
         var root = new Node3D
@@ -60,6 +69,12 @@ public static class NodeModels
         Node3D visual = TryInstanceModel(spec, seedId, maxFootprint) ?? CreateFallback(spec, maxFootprint);
         root.AddChild(visual);
         return root;
+    }
+
+    /// <summary>Tree height for a Wood field: 2.5 units at 250 or less, rising to 3.5 at 500 or more.</summary>
+    public static float WoodHeight(float initialAmount)
+    {
+        return 2.5f + Mathf.Clamp((initialAmount - 250f) / 250f, 0f, 1f);
     }
 
     private static float DeterministicYaw(int seedId)

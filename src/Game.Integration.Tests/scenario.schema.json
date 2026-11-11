@@ -33,7 +33,9 @@
       "description": "A Godot Key enum name, such as R, E, Key1, Escape."
     },
     "label": { "type": "string", "minLength": 1 },
-    "terrain": { "enum": ["Grass", "Water", "Mountain"] },
+    "terrain": { "enum": ["Grass", "Sand", "Snow", "Rock", "Mud", "ShallowWater", "DeepWater", "Lava"] },
+    "biome": { "enum": ["Grassland", "Forest", "Highlands", "Desert", "Swamp", "Tundra", "Volcanic", "Ocean"] },
+    "feature": { "enum": ["None", "Mountain", "River"] },
     "resource": { "enum": ["Ore", "Wood", "Metal", "Fuel"] },
     "building": { "enum": ["Mine", "LumberCamp", "Smelter", "Refinery"] },
     "facing": { "enum": ["North", "East", "South", "West"] },
@@ -77,17 +79,19 @@
       }
     },
     "changeTiles": {
-      "description": "Set the terrain of map cells, given as a list or an inclusive from/to rectangle.",
+      "description": "Set the biome, terrain, and/or feature of map cells, given as a list or an inclusive from/to rectangle. A River feature needs a flow (the edge its water leaves by).",
       "type": "object",
       "required": ["changeTiles"],
       "additionalProperties": false,
       "properties": {
         "changeTiles": {
           "type": "object",
-          "required": ["type"],
           "additionalProperties": false,
           "properties": {
             "type": { "$ref": "#/definitions/terrain" },
+            "biome": { "$ref": "#/definitions/biome" },
+            "feature": { "$ref": "#/definitions/feature" },
+            "flow": { "$ref": "#/definitions/facing" },
             "cells": { "type": "array", "items": { "$ref": "#/definitions/pair" } },
             "from": { "$ref": "#/definitions/pair" },
             "to": { "$ref": "#/definitions/pair" }
@@ -95,13 +99,19 @@
           "oneOf": [
             { "required": ["cells"] },
             { "required": ["from", "to"] }
-          ]
+          ],
+          "anyOf": [
+            { "required": ["type"] },
+            { "required": ["biome"] },
+            { "required": ["feature"] }
+          ],
+          "dependencies": { "flow": ["feature"] }
         },
         "comment": { "$ref": "#/definitions/comment" }
       }
     },
     "placeResource": {
-      "description": "Add a resource field on an empty map cell (default amount 250).",
+      "description": "Add a resource field on an empty, featureless map cell (default amount: the biome's amount for the type, or 250).",
       "type": "object",
       "required": ["placeResource"],
       "additionalProperties": false,

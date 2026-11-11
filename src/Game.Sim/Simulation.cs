@@ -44,8 +44,6 @@ public sealed partial class Simulation
     private readonly Dictionary<ResourceType, float> _stockpile = new();
     public IReadOnlyDictionary<ResourceType, float> Stockpile => _stockpile;
 
-    private readonly TerrainType[,] _terrain;
-
     /// <summary>The field currently in range to hand-harvest, or null.</summary>
     public ResourceField? HarvestTarget { get; private set; }
 
@@ -57,7 +55,6 @@ public sealed partial class Simulation
 
     private const float HarvestRange = 1.5f;
     private const float HarvestRate = 10f;
-    private const float FieldAmount = 250f;
 
     public const float LaunchFuelCost = 500f;
     public const float LaunchMetalCost = 100f;
@@ -66,6 +63,9 @@ public sealed partial class Simulation
     {
         Debug = new DebugTools(this);
         _terrain = new TerrainType[MapWidth, MapHeight];
+        _biomes = new BiomeType[MapWidth, MapHeight];
+        _features = new MapFeature[MapWidth, MapHeight];
+        _riverFlow = new Facing?[MapWidth, MapHeight];
         GenerateTerrain();
         SpawnInitialFields();
         Player.Position = new Vector3(GridWidth * 0.5f, 0f, GridHeight * 0.5f);
@@ -125,8 +125,8 @@ public sealed partial class Simulation
     // ---- Placement -------------------------------------------------------
 
     /// <summary>
-    /// The standard placement rule: every footprint cell is in bounds, grass,
-    /// unoccupied, and not covered by a resource field, and no unit is inside the
+    /// The standard placement rule: every footprint cell is in bounds, buildable
+    /// (buildable terrain with no blocking feature), unoccupied, and not covered by a resource field, and no unit is inside the
     /// footprint (today, the player's cell). Extractors follow the same rule and
     /// may be placed with no field in range (they idle).
     /// </summary>
@@ -140,7 +140,7 @@ public sealed partial class Simulation
         {
             for (int z = anchorZ; z < anchorZ + depth; z++)
             {
-                if (!InBounds(x, z) || _occupied.Contains((x, z)) || !IsPassable(x, z) || FieldAt(x, z) is not null)
+                if (!InBounds(x, z) || _occupied.Contains((x, z)) || !IsBuildable(x, z) || FieldAt(x, z) is not null)
                 {
                     return false;
                 }
@@ -227,9 +227,11 @@ public sealed partial class Simulation
         return result;
     }
 
-    private ResourceField AddField(ResourceType type, int mapX, int mapZ, float amount = FieldAmount)
+    /// <summary>Adds a field; without an amount it takes its biome's amount for the type.</summary>
+    private ResourceField AddField(ResourceType type, int mapX, int mapZ, float? amount = null)
     {
-        var field = new ResourceField(_nextFieldId++, type, mapX, mapZ, amount);
+        float initial = amount ?? BiomeDefs.For(MapBiomeAt(mapX, mapZ)).FieldAmount(type);
+        var field = new ResourceField(_nextFieldId++, type, mapX, mapZ, initial);
         _fields.Add(field);
         _fieldsByMapCell[(mapX, mapZ)] = field;
         return field;
@@ -255,8 +257,8 @@ public sealed partial class Simulation
             move = move.Normalized();
         }
 
-        Vector3 step = new Vector3(move.X, 0f, move.Y) * Player.Speed * (float)dt;
         Vector3 p = Player.Position;
+        Vector3 step = new Vector3(move.X, 0f, move.Y) * Player.Speed * TerrainSpeedAt(p.X, p.Z) * (float)dt;
 
         // Move each axis independently so the player slides along impassable
         // terrain instead of sticking on it.
@@ -427,97 +429,5 @@ public sealed partial class Simulation
     {
         _stockpile.TryGetValue(type, out float current);
         _stockpile[type] = current + amount;
-    }
-
-    // ---- Terrain ---------------------------------------------------------
-
-    /// <summary>Terrain of a map cell; out-of-bounds reads return Grass.</summary>
-    public TerrainType MapTerrainAt(int mapX, int mapZ)
-    {
-        if (!MapInBounds(mapX, mapZ))
-        {
-            return TerrainType.Grass;
-        }
-        return _terrain[mapX, mapZ];
-    }
-
-    /// <summary>Terrain of a fine cell: its map cell's terrain.</summary>
-    public TerrainType TerrainAt(int x, int z)
-    {
-        return MapTerrainAt(MapCellOf(x), MapCellOf(z));
-    }
-
-    /// <summary>Only grass is buildable terrain; water and mountain block.</summary>
-    public bool IsPassable(int x, int z)
-    {
-        return TerrainAt(x, z) == TerrainType.Grass;
-    }
-
-    /// <summary>
-    /// Walkable = passable terrain, no resource field, and no building on the
-    /// fine cell. A field blocks all its cells until it depletes and is removed;
-    /// a building blocks for as long as it stands.
-    /// </summary>
-    public bool IsWalkable(int x, int z)
-    {
-        return IsPassable(x, z) && FieldAt(x, z) is null && !_occupied.Contains((x, z));
-    }
-
-    private bool IsWalkableAt(float worldX, float worldZ)
-    {
-        (int x, int z) = CellAt(worldX, worldZ);
-        return IsWalkable(x, z);
-    }
-
-    private void SetMapTerrain(int mapX, int mapZ, TerrainType type)
-    {
-        if (MapInBounds(mapX, mapZ))
-        {
-            _terrain[mapX, mapZ] = type;
-        }
-    }
-
-    private void GenerateTerrain()
-    {
-        // Fixed test layout in map cells: a water pond and a small mountain
-        // cluster on grass. The center map cells stay clear for the spawn.
-        for (int mapX = 9; mapX <= 11; mapX++)
-        {
-            for (int mapZ = 5; mapZ <= 6; mapZ++)
-            {
-                SetMapTerrain(mapX, mapZ, TerrainType.Water);
-            }
-        }
-
-        (int X, int Z)[] mountains =
-        {
-            (4, 9),
-            (4, 10),
-            (5, 9)
-        };
-        foreach ((int mapX, int mapZ) in mountains)
-        {
-            SetMapTerrain(mapX, mapZ, TerrainType.Mountain);
-        }
-    }
-
-    private void SpawnInitialFields()
-    {
-        (ResourceType Type, int MapX, int MapZ)[] placements =
-        {
-            (ResourceType.Ore, 10, 9),
-            (ResourceType.Ore, 11, 10),
-            (ResourceType.Ore, 9, 11),
-            (ResourceType.Ore, 4, 12),
-            (ResourceType.Wood, 3, 4),
-            (ResourceType.Wood, 4, 3),
-            (ResourceType.Wood, 2, 5),
-            (ResourceType.Wood, 12, 3)
-        };
-
-        foreach ((ResourceType type, int mapX, int mapZ) in placements)
-        {
-            AddField(type, mapX, mapZ);
-        }
     }
 }

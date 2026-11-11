@@ -123,11 +123,12 @@ public partial class GameRoot : Node3D
     {
         _terrainView = new TerrainView
         {
-            Name = "Terrain"
+            Name = "Terrain",
+            ProcessMode = ProcessModeEnum.Always
         };
         AddChild(_terrainView);
         _terrainView.Build(_sim);
-        _sim.MapChanged += () => _terrainView.Build(_sim);
+        _sim.MapChanged += _terrainView.MarkDirty;
 
         var light = new DirectionalLight3D
         {

@@ -29,8 +29,8 @@ public sealed partial class Simulation
         }
 
         /// <summary>
-        /// Resets to an empty, all-grass map: no fields or buildings, an empty
-        /// stockpile, no launches, and the player at the map center.
+        /// Resets to an empty, all-grass Grassland map with no features: no fields or
+        /// buildings, an empty stockpile, no launches, and the player at the map center.
         /// </summary>
         public void ResetToEmptyMap()
         {
@@ -39,6 +39,9 @@ public sealed partial class Simulation
                 for (int mapZ = 0; mapZ < _sim.MapHeight; mapZ++)
                 {
                     _sim._terrain[mapX, mapZ] = TerrainType.Grass;
+                    _sim._biomes[mapX, mapZ] = BiomeType.Grassland;
+                    _sim._features[mapX, mapZ] = MapFeature.None;
+                    _sim._riverFlow[mapX, mapZ] = null;
                 }
             }
 
@@ -53,21 +56,75 @@ public sealed partial class Simulation
             _sim.MapChanged?.Invoke();
         }
 
-        /// <summary>Sets the terrain of one map cell.</summary>
+        /// <summary>Sets the terrain of one map cell; throws if its feature cannot sit on the new terrain.</summary>
         public void SetTerrain(int mapX, int mapZ, TerrainType type)
         {
             RequireMapCell(mapX, mapZ);
+            MapFeature feature = _sim._features[mapX, mapZ];
+            if (feature != MapFeature.None && !TerrainDefs.For(type).TakesFeatures)
+            {
+                throw new InvalidOperationException($"map cell ({mapX}, {mapZ}) has a {feature}, which cannot sit on {type}");
+            }
             _sim._terrain[mapX, mapZ] = type;
             _sim.MapChanged?.Invoke();
         }
 
-        /// <summary>Adds a field on an empty map cell.</summary>
-        public ResourceField PlaceField(ResourceType type, int mapX, int mapZ, float amount = FieldAmount)
+        /// <summary>Sets the biome of one map cell.</summary>
+        public void SetBiome(int mapX, int mapZ, BiomeType biome)
+        {
+            RequireMapCell(mapX, mapZ);
+            _sim._biomes[mapX, mapZ] = biome;
+            _sim.MapChanged?.Invoke();
+        }
+
+        /// <summary>
+        /// Sets the feature of one map cell. A River needs a flow (the edge its
+        /// water leaves by); other features take none. A feature needs terrain that
+        /// takes features and a map cell with no field.
+        /// </summary>
+        public void SetFeature(int mapX, int mapZ, MapFeature feature, Facing? flow = null)
+        {
+            RequireMapCell(mapX, mapZ);
+            if (feature == MapFeature.River && flow is null)
+            {
+                throw new InvalidOperationException("a River needs a flow");
+            }
+            if (feature != MapFeature.River && flow is not null)
+            {
+                throw new InvalidOperationException($"only a River takes a flow, not {feature}");
+            }
+            if (feature != MapFeature.None)
+            {
+                TerrainType terrain = _sim._terrain[mapX, mapZ];
+                if (!TerrainDefs.For(terrain).TakesFeatures)
+                {
+                    throw new InvalidOperationException($"a {feature} cannot sit on {terrain} at map cell ({mapX}, {mapZ})");
+                }
+                if (_sim._fieldsByMapCell.ContainsKey((mapX, mapZ)))
+                {
+                    throw new InvalidOperationException($"map cell ({mapX}, {mapZ}) has a field");
+                }
+            }
+
+            _sim._features[mapX, mapZ] = feature;
+            _sim._riverFlow[mapX, mapZ] = flow;
+            _sim.MapChanged?.Invoke();
+        }
+
+        /// <summary>
+        /// Adds a field on an empty, featureless map cell. Without an amount it takes
+        /// its biome's amount for the type (or the global default).
+        /// </summary>
+        public ResourceField PlaceField(ResourceType type, int mapX, int mapZ, float? amount = null)
         {
             RequireMapCell(mapX, mapZ);
             if (_sim._fieldsByMapCell.ContainsKey((mapX, mapZ)))
             {
                 throw new InvalidOperationException($"map cell ({mapX}, {mapZ}) already has a field");
+            }
+            if (_sim._features[mapX, mapZ] != MapFeature.None)
+            {
+                throw new InvalidOperationException($"map cell ({mapX}, {mapZ}) has a {_sim._features[mapX, mapZ]}");
             }
             if (amount <= 0f)
             {
