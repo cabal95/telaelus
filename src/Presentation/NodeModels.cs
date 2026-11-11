@@ -5,7 +5,7 @@ using Godot;
 namespace Game.Presentation;
 
 /// <summary>
-/// Builds a visual for a resource node from CC0 glTF models when present, and
+/// Builds a visual for one resource model (a slot in a resource field) from CC0 glTF models when present, and
 /// falls back to a colored box when the model files are not yet in the project.
 /// A model is scaled to a target height from its bounding box, so differently
 /// sized source models all render at the right in-world size (our render-scaling
@@ -39,34 +39,39 @@ public static class NodeModels
             0.5f)
     };
 
-    public static Node3D CreateVisual(ResourceNode node)
+    /// <summary>
+    /// Builds one resource model. The variant and yaw are chosen deterministically
+    /// from <paramref name="seedId"/>, and the model's footprint is capped to
+    /// <paramref name="maxFootprint"/> world units so it stays inside its slot.
+    /// </summary>
+    public static Node3D CreateVisual(ResourceType type, int seedId, float maxFootprint)
     {
-        if (!Specs.TryGetValue(node.Type, out ModelSpec? spec))
+        if (!Specs.TryGetValue(type, out ModelSpec? spec))
         {
             spec = new ModelSpec(System.Array.Empty<string>(), 0.8f, Colors.White, 0.7f);
         }
 
         var root = new Node3D
         {
-            Name = $"NodeVisual{node.Id}"
+            Name = $"ResourceVisual{seedId}"
         };
-        root.RotationDegrees = new Vector3(0f, DeterministicYaw(node.Id), 0f);
+        root.RotationDegrees = new Vector3(0f, DeterministicYaw(seedId), 0f);
 
-        Node3D visual = TryInstanceModel(spec, node.Id) ?? CreateFallback(spec);
+        Node3D visual = TryInstanceModel(spec, seedId, maxFootprint) ?? CreateFallback(spec, maxFootprint);
         root.AddChild(visual);
         return root;
     }
 
-    private static float DeterministicYaw(int nodeId)
+    private static float DeterministicYaw(int seedId)
     {
         var rng = new RandomNumberGenerator
         {
-            Seed = (ulong)nodeId * 2654435761UL + 1UL
+            Seed = (ulong)seedId * 2654435761UL + 1UL
         };
         return rng.RandfRange(0f, 360f);
     }
 
-    private static Node3D? TryInstanceModel(ModelSpec spec, int nodeId)
+    private static Node3D? TryInstanceModel(ModelSpec spec, int nodeId, float maxFootprint)
     {
         var existing = new List<string>();
         foreach (string path in spec.Paths)
@@ -95,14 +100,14 @@ public static class NodeModels
             return null;
         }
 
-        SeatAndNormalize(model, spec.TargetHeight);
+        SeatAndNormalize(model, spec.TargetHeight, maxFootprint);
         return model;
     }
 
-    private static Node3D CreateFallback(ModelSpec spec)
+    private static Node3D CreateFallback(ModelSpec spec, float maxFootprint)
     {
         float height = spec.TargetHeight;
-        float width = spec.FallbackWidth;
+        float width = Mathf.Min(spec.FallbackWidth, maxFootprint);
         return new MeshInstance3D
         {
             Name = "Fallback",
@@ -118,19 +123,16 @@ public static class NodeModels
         };
     }
 
-    // Keep a node within its single grid cell so its collision (one tile) matches
-    // its footprint. The model is scaled to the target height unless that would
-    // make it wider than this, in which case width wins and it shrinks to fit.
-    private const float MaxFootprint = 0.85f;
-
-    private static void SeatAndNormalize(Node3D model, float targetHeight)
+    // The model is scaled to the target height unless that would make it wider
+    // than maxFootprint, in which case width wins and it shrinks to fit its slot.
+    private static void SeatAndNormalize(Node3D model, float targetHeight, float maxFootprint)
     {
         Aabb bounds = MeshBounds(model);
         float height = bounds.Size.Y;
         float footprint = Mathf.Max(bounds.Size.X, bounds.Size.Z);
 
         float heightScale = height > 0.0001f ? targetHeight / height : 1f;
-        float footprintScale = footprint > 0.0001f ? MaxFootprint / footprint : heightScale;
+        float footprintScale = footprint > 0.0001f ? maxFootprint / footprint : heightScale;
         float scale = Mathf.Min(heightScale, footprintScale);
 
         Vector3 center = bounds.Position + bounds.Size * 0.5f;

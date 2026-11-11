@@ -9,14 +9,14 @@ Read this index to find the right area, then open that blueprint for the detail.
 ## Areas
 
 - **[simulation.md](simulation.md)** - The authoritative simulation framework: the fixed-timestep
-  loop and clock, the intent-and-command input seam, the tile grid, and the multiplayer-ready
-  architecture posture.
-- **[terrain.md](terrain.md)** - The per-cell terrain types (grass, water, mountain), the current
+  loop and clock, the intent-and-command input seam, the two-level grid (fine cells and map
+  cells), and the multiplayer-ready architecture posture.
+- **[terrain.md](terrain.md)** - The per-map-cell terrain types (grass, water, mountain), the current
   fixed layout, passability rules, and tile rendering with shoreline previews.
-- **[resources.md](resources.md)** - Resource types, the harvestable nodes on the map, the global
-  stockpile, hand-harvesting, and node rendering.
-- **[buildings.md](buildings.md)** - Building types and recipes, grid placement, the production
-  chain, the ship launch win, and the build UI.
+- **[resources.md](resources.md)** - Resource types, the map-cell resource fields and their
+  depletion stages, the global stockpile, hand-harvesting, and field rendering.
+- **[buildings.md](buildings.md)** - Building types, footprints, and recipes, anchor and facing
+  placement, extractor work areas, the production chain, the ship launch win, and the build UI.
 - **[player.md](player.md)** - The player's simulation state and movement, camera-relative input,
   and the on-screen character and follow camera.
 - **[presentation.md](presentation.md)** - The presentation layer: the frame loop and view-sync

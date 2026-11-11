@@ -10,12 +10,13 @@ on-screen character and camera.
 
 ### State and movement
 
-- The simulation holds a `Player` with a world `Position` and a `Speed` (6 units per second).
+- The simulation holds a `Player` with a world `Position` and a `Speed` (6 units per second). The
+  player spawns at the test map's center, `(32, 0, 32)`.
 - Movement is applied each tick from `PlayerIntent.Move` (a world-space ground direction). Each axis
-  is moved independently and only if the target tile is walkable, so the player slides along
-  obstacles rather than sticking. The result is clamped to the grid extent.
-- Walkability (see terrain.md) blocks water, mountain, resource nodes (until depleted), and
-  buildings.
+  is moved independently and only if the target fine cell is walkable, so the player slides along
+  obstacles rather than sticking. The result is clamped to the test map's extent.
+- Walkability (see terrain.md) blocks water, mountain, resource fields (all their fine cells,
+  until depleted), and buildings.
 
 ### Input
 

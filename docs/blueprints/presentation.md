@@ -20,10 +20,11 @@ planned multiplayer feasible.
 
 `GameRoot` creates and syncs these presentation nodes, each reading simulation state:
 
-- `TerrainView` (terrain tiles), `ResourceNodeViews` (resource node visuals), `BuildingViews`
-  (building boxes), `PlayerView` (the character), `CameraRig` (the orthographic follow camera),
-  `Hud` (a `CanvasLayer` label with resource totals, launch status, build selection, and the
-  harvest hint), and `BuildController` (build-mode selection, the placement ghost, and the place
+- `TerrainView` (one terrain tile per map cell), `ResourceFieldViews` (staged resource field
+  visuals), `BuildingViews` (footprint-sized building boxes), `PlayerView` (the character), `CameraRig` (the orthographic follow camera),
+  `Hud` (a `CanvasLayer` label with resource totals, launch status, build selection with facing
+  and fields in range, and the harvest hint), and `BuildController` (build-mode selection and
+  rotation, the footprint ghost, the extractor work-area disc and field highlights, and the place
   command).
 
 ### Asset and model pipeline
@@ -31,8 +32,8 @@ planned multiplayer feasible.
 - Models are CC0 glTF assets under `src/assets/models/<area>/`, loaded in code with a placeholder
   fallback so the build and game stay green before assets are added.
 - `NodeModels` scales a loaded model to a target height from its bounding box, caps its footprint to
-  stay within one cell, seats it on the ground, and gives it a deterministic yaw; absent a model it
-  builds a colored box.
+  a caller-given size (a resource field's slot), seats it on the ground, and gives it a
+  deterministic variant and yaw; absent a model it builds a colored box.
 - The character is a hand-assembled Godot scene (`character.tscn`) that `PlayerView` loads; terrain
   tiles are currently colored placeholders awaiting CC0 models (see terrain.md).
 

@@ -25,8 +25,10 @@ public partial class Hud : CanvasLayer
 
     public void Refresh(
         IReadOnlyDictionary<ResourceType, float> stockpile,
-        ResourceNode? harvestTarget,
+        ResourceField? harvestTarget,
         BuildingType? selectedBuild,
+        Facing facing,
+        int fieldsInRange,
         bool canLaunch,
         int shipsLaunched)
     {
@@ -49,11 +51,17 @@ public partial class Hud : CanvasLayer
 
         if (selectedBuild is not null)
         {
-            text.Append("\nBuild: ").Append(selectedBuild.Value).Append("   (left-click to place, Esc to cancel)");
+            BuildingDef def = BuildingDefs.For(selectedBuild.Value);
+            text.Append("\nBuild: ").Append(def.Name).Append("   facing ").Append(facing);
+            if (def.IsExtractor)
+            {
+                text.Append("   fields in range: ").Append(fieldsInRange);
+            }
+            text.Append("   (left-click to place, R to rotate, Esc to cancel)");
         }
         else
         {
-            text.Append("\nBuild:  [1] Extractor   [2] Smelter   [3] Refinery");
+            text.Append("\nBuild:  [1] Mine   [2] Lumber Camp   [3] Smelter   [4] Refinery");
         }
 
         if (harvestTarget is not null)

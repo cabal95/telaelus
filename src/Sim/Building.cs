@@ -3,32 +3,44 @@ using Godot;
 namespace Game.Sim;
 
 /// <summary>
-/// A placed building. An Extractor draws from a bound resource node; a processor
-/// (Smelter, Refinery) runs a Recipe against the shared stockpile.
+/// A placed building. Its anchor (minimum-corner fine cell) and facing are its
+/// authoritative placement; the footprint size and center Position are derived
+/// from them. An extractor (Mine, Lumber Camp) works resource fields within its
+/// work area; a processor (Smelter, Refinery) runs a Recipe against the shared
+/// stockpile.
 /// </summary>
 public sealed class Building
 {
     public int Id { get; }
     public BuildingType Type { get; }
-    public int GridX { get; }
-    public int GridZ { get; }
-    public Vector3 Position { get; }
+    public BuildingDef Def { get; }
+    public int AnchorX { get; }
+    public int AnchorZ { get; }
+    public Facing Facing { get; }
     public Recipe? Recipe { get; }
 
-    // Extractor: the node it draws from (null once that node is depleted).
-    public ResourceNode? Source { get; set; }
+    // Extractor: the field it is currently working (null when idle).
+    public ResourceField? CurrentField { get; set; }
 
     // Processor: current cycle state.
     public bool Crafting { get; set; }
     public float Progress { get; set; }
 
-    public Building(int id, BuildingType type, int gridX, int gridZ, Vector3 position, Recipe? recipe)
+    public Building(int id, BuildingType type, int anchorX, int anchorZ, Facing facing, Recipe? recipe)
     {
         Id = id;
         Type = type;
-        GridX = gridX;
-        GridZ = gridZ;
-        Position = position;
+        Def = BuildingDefs.For(type);
+        AnchorX = anchorX;
+        AnchorZ = anchorZ;
+        Facing = facing;
         Recipe = recipe;
     }
+
+    public int Width => Def.Footprint(Facing).Width;
+
+    public int Depth => Def.Footprint(Facing).Depth;
+
+    /// <summary>World-space center of the footprint (derived, not stored).</summary>
+    public Vector3 Position => Def.Center(AnchorX, AnchorZ, Facing);
 }

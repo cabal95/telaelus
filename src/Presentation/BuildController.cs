@@ -1,24 +1,39 @@
+using System.Collections.Generic;
 using Game.Sim;
 using Godot;
 
 namespace Game.Presentation;
 
 /// <summary>
-/// Handles build mode: selecting a building type with the number keys, showing a
-/// ghost at the mouse tile, and issuing a placement command to the simulation on
-/// a left click. Placement itself is decided by the sim (CanPlace / TryPlace).
+/// Handles build mode: selecting a building type with the number keys, rotating
+/// with R, showing a footprint-sized ghost centered on the mouse, and issuing a
+/// placement command to the simulation on a left click. For an extractor, it also
+/// shows the work area as a translucent disc and highlights the matching fields
+/// in range. Placement itself is decided by the sim (CanPlace / TryPlace).
 /// </summary>
 public partial class BuildController : Node3D
 {
     private Simulation _sim = null!;
     private Camera3D _camera = null!;
     private MeshInstance3D _ghost = null!;
+    private BoxMesh _ghostMesh = null!;
     private StandardMaterial3D _ghostMaterial = null!;
+    private MeshInstance3D _workArea = null!;
+    private CylinderMesh _workAreaMesh = null!;
+    private StandardMaterial3D _highlightMaterial = null!;
+    private readonly List<MeshInstance3D> _highlights = new();
 
     public BuildingType? Selected { get; private set; }
 
+    public Facing Facing { get; private set; } = Facing.North;
+
+    /// <summary>Matching fields in the ghost's work area (extractors only; 0 otherwise).</summary>
+    public int FieldsInRange { get; private set; }
+
     private static readonly Color ValidColor = new(0.3f, 0.9f, 0.4f, 0.5f);
     private static readonly Color InvalidColor = new(0.9f, 0.3f, 0.3f, 0.5f);
+    private static readonly Color WorkAreaColor = new(0.95f, 0.85f, 0.35f, 0.18f);
+    private static readonly Color HighlightColor = new(0.95f, 0.85f, 0.35f, 0.35f);
 
     public void Initialize(Simulation sim, Camera3D camera)
     {
@@ -33,30 +48,70 @@ public partial class BuildController : Node3D
             Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
             AlbedoColor = ValidColor
         };
+        _ghostMesh = new BoxMesh();
         _ghost = new MeshInstance3D
         {
             Name = "BuildGhost",
-            Mesh = new BoxMesh
-            {
-                Size = new Vector3(0.9f, 0.9f, 0.9f)
-            },
+            Mesh = _ghostMesh,
             MaterialOverride = _ghostMaterial,
             Visible = false
         };
         AddChild(_ghost);
+
+        _workAreaMesh = new CylinderMesh
+        {
+            Height = 0.02f,
+            RadialSegments = 48
+        };
+        _workArea = new MeshInstance3D
+        {
+            Name = "WorkArea",
+            Mesh = _workAreaMesh,
+            MaterialOverride = new StandardMaterial3D
+            {
+                Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
+                ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
+                AlbedoColor = WorkAreaColor
+            },
+            Visible = false
+        };
+        AddChild(_workArea);
+
+        _highlightMaterial = new StandardMaterial3D
+        {
+            Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
+            ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
+            AlbedoColor = HighlightColor
+        };
     }
 
     public override void _Process(double delta)
     {
-        if (Selected is null || !TryGetMouseTile(out int gridX, out int gridZ))
+        FieldsInRange = 0;
+        if (Selected is null || !TryGetMouseAnchor(Selected.Value, out int anchorX, out int anchorZ))
         {
-            _ghost.Visible = false;
+            HideGhost();
             return;
         }
 
+        BuildingDef def = BuildingDefs.For(Selected.Value);
+        (int width, int depth) = def.Footprint(Facing);
+        Vector3 center = def.Center(anchorX, anchorZ, Facing);
+
         _ghost.Visible = true;
-        _ghost.Position = _sim.TileCenter(gridX, gridZ) + new Vector3(0f, 0.45f, 0f);
-        _ghostMaterial.AlbedoColor = _sim.CanPlace(Selected.Value, gridX, gridZ) ? ValidColor : InvalidColor;
+        _ghostMesh.Size = BuildingViews.BoxSize(width, depth);
+        _ghost.Position = center + new Vector3(0f, BuildingViews.BoxHeight * 0.5f, 0f);
+        _ghostMaterial.AlbedoColor = _sim.CanPlace(Selected.Value, anchorX, anchorZ, Facing) ? ValidColor : InvalidColor;
+
+        if (def.Extracts is ResourceType extracts)
+        {
+            ShowWorkArea(center, def.WorkRadius, extracts);
+        }
+        else
+        {
+            _workArea.Visible = false;
+            ShowHighlights(new List<ResourceField>());
+        }
     }
 
     public override void _UnhandledInput(InputEvent @event)
@@ -71,18 +126,71 @@ public partial class BuildController : Node3D
         }
     }
 
+    private void ShowWorkArea(Vector3 center, float radius, ResourceType type)
+    {
+        _workArea.Visible = true;
+        _workAreaMesh.TopRadius = radius;
+        _workAreaMesh.BottomRadius = radius;
+        _workArea.Position = center + new Vector3(0f, 0.03f, 0f);
+
+        List<ResourceField> fields = _sim.FieldsInRange(center, radius, type);
+        FieldsInRange = fields.Count;
+        ShowHighlights(fields);
+    }
+
+    private void ShowHighlights(List<ResourceField> fields)
+    {
+        while (_highlights.Count < fields.Count)
+        {
+            var highlight = new MeshInstance3D
+            {
+                Name = "FieldHighlight",
+                Mesh = new BoxMesh
+                {
+                    Size = new Vector3(Simulation.FineCellsPerMapCell, 0.04f, Simulation.FineCellsPerMapCell)
+                },
+                MaterialOverride = _highlightMaterial
+            };
+            AddChild(highlight);
+            _highlights.Add(highlight);
+        }
+
+        for (int i = 0; i < _highlights.Count; i++)
+        {
+            bool used = i < fields.Count;
+            _highlights[i].Visible = used;
+            if (used)
+            {
+                _highlights[i].Position = fields[i].Center + new Vector3(0f, 0.05f, 0f);
+            }
+        }
+    }
+
+    private void HideGhost()
+    {
+        _ghost.Visible = false;
+        _workArea.Visible = false;
+        ShowHighlights(new List<ResourceField>());
+    }
+
     private void HandleKey(Key key)
     {
         switch (key)
         {
             case Key.Key1:
-                Selected = BuildingType.Extractor;
+                Selected = BuildingType.Mine;
                 break;
             case Key.Key2:
-                Selected = BuildingType.Smelter;
+                Selected = BuildingType.LumberCamp;
                 break;
             case Key.Key3:
+                Selected = BuildingType.Smelter;
+                break;
+            case Key.Key4:
                 Selected = BuildingType.Refinery;
+                break;
+            case Key.R:
+                Facing = (Facing)(((int)Facing + 1) % 4);
                 break;
             case Key.Key0:
             case Key.Escape:
@@ -93,17 +201,32 @@ public partial class BuildController : Node3D
 
     private void TryPlaceAtMouse()
     {
-        if (Selected is null || !TryGetMouseTile(out int gridX, out int gridZ))
+        if (Selected is null || !TryGetMouseAnchor(Selected.Value, out int anchorX, out int anchorZ))
         {
             return;
         }
-        _sim.TryPlaceBuilding(Selected.Value, gridX, gridZ);
+        _sim.TryPlaceBuilding(Selected.Value, anchorX, anchorZ, Facing);
     }
 
-    private bool TryGetMouseTile(out int gridX, out int gridZ)
+    // The anchor whose footprint center is nearest the mouse's ground point.
+    private bool TryGetMouseAnchor(BuildingType type, out int anchorX, out int anchorZ)
     {
-        gridX = 0;
-        gridZ = 0;
+        anchorX = 0;
+        anchorZ = 0;
+        if (!TryGetMouseGround(out Vector3 hit))
+        {
+            return false;
+        }
+
+        (int width, int depth) = BuildingDefs.For(type).Footprint(Facing);
+        anchorX = Mathf.RoundToInt(hit.X - width * 0.5f);
+        anchorZ = Mathf.RoundToInt(hit.Z - depth * 0.5f);
+        return true;
+    }
+
+    private bool TryGetMouseGround(out Vector3 hit)
+    {
+        hit = Vector3.Zero;
 
         Vector2 mouse = GetViewport().GetMousePosition();
         Vector3 origin = _camera.ProjectRayOrigin(mouse);
@@ -119,9 +242,7 @@ public partial class BuildController : Node3D
             return false;
         }
 
-        Vector3 hit = origin + direction * t;
-        gridX = Mathf.RoundToInt(hit.X / _sim.TileSize);
-        gridZ = Mathf.RoundToInt(hit.Z / _sim.TileSize);
+        hit = origin + direction * t;
         return true;
     }
 }

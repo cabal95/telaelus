@@ -16,10 +16,11 @@ next step once the files are in.
 
 ## Conventions
 
-- One tile per grid cell, 1 world unit square, centered on the cell (integer coordinates).
+- One tile per **map cell**: 4 x 4 world units (4 x 4 fine cells), centered on the map cell.
 - "Land" for shoreline purposes means any non-water cell (grass or mountain).
 - The fixed test layout (a pond and a mountain cluster) lives in `Simulation.GenerateTerrain`.
 
 ## Scale reference
 
-1 tile = 1 world unit (~2 m). Tiles should be authored or scaled to 1 unit square.
+1 tile = 1 map cell = 4 x 4 world units. Author tiles at 4 x 4 Blender units, or at 1 x 1 and
+scale by 4 in code.

@@ -29,13 +29,22 @@ and mirrors it onto nodes.
 - The simulation never reads devices; it only reads intent and receives commands. This seam is what
   makes the planned co-op multiplayer feasible.
 
-### The grid
+### The grid (two levels)
 
-- A `GridWidth` x `GridHeight` grid of `32` x `32` tiles, `TileSize` 1 world unit, centered on the
-  origin. Tiles are addressed by integer coordinates; `TileCenter(x, z)` is `(x, 0, z)` and
-  `InBounds` covers `[-16, 16]` on each axis.
-- Terrain, resources, and buildings all live on this grid. Terrain-derived passability
-  (`IsPassable`, `IsWalkable`) is defined in terrain.md.
+- A **fine cell** is 1 x 1 world unit. Buildings, collision, movement, and placement live on fine
+  cells.
+- A **map cell** is `FineCellsPerMapCell` x `FineCellsPerMapCell` (4 x 4) fine cells. Terrain and
+  resource fields live on map cells.
+- Coordinates are signed integers. Fine cell `(x, z)` spans `[x, x+1) x [z, z+1)`;
+  `CellCenter(x, z)` is `(x + 0.5, 0, z + 0.5)` and `CellAt` maps a world point to its fine cell
+  by floor. `MapCellOf` converts a fine coordinate to its map coordinate by floor division, so
+  negative coordinates map correctly; `MapCellCenter` gives a map cell's world center.
+- The world is a **fixed test map** of `MapWidth` x `MapHeight` = 16 x 16 map cells (64 x 64 fine
+  cells, `GridWidth` x `GridHeight`), occupying fine cells `[0, 63]` on each axis with the world
+  origin at its corner. `InBounds` and `MapInBounds` test against it. Nothing else assumes a fixed
+  size; procedural generation will replace this bound.
+- The player spawns at the test map's center, `(32, 0, 32)`.
+- Terrain-derived passability (`IsPassable`, `IsWalkable`) is defined in terrain.md.
 
 ### Architecture posture (single-player now, multiplayer-ready)
 

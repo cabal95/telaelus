@@ -26,6 +26,9 @@ Newest last. One line each; open the file for the full spec.
   colored tiles with shoreline previews.
 - **2611100909-impassability** - Blocks movement and placement on water, mountain, resource nodes,
   and buildings.
+- **2611110949-world-map-cells** - Splits the world into map cells (terrain, resource fields) and
+  fine cells (buildings, movement); adds staged resource fields, building footprints and facing,
+  and extractor work areas.
 
 ## Adding a changeset
 

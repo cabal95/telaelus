@@ -3,7 +3,7 @@ namespace Game.Sim;
 /// <summary>Static rate and recipe definitions for each building type.</summary>
 public static class Recipes
 {
-    /// <summary>Units per second an Extractor pulls from its node.</summary>
+    /// <summary>Units per second an extractor (Mine, Lumber Camp) pulls from its current field.</summary>
     public const float ExtractorRate = 5f;
 
     private static readonly Recipe SmelterRecipe = new(

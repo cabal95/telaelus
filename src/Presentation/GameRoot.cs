@@ -15,7 +15,7 @@ public partial class GameRoot : Node3D
 
     private PlayerView _playerView = null!;
     private CameraRig _camera = null!;
-    private ResourceNodeViews _nodeViews = null!;
+    private ResourceFieldViews _fieldViews = null!;
     private BuildingViews _buildingViews = null!;
     private BuildController _buildController = null!;
     private Hud _hud = null!;
@@ -42,9 +42,16 @@ public partial class GameRoot : Node3D
 
         _playerView.UpdateFrom(_sim.Player.Position, moveDir, delta);
         _camera.SetTarget(_sim.Player.Position);
-        _nodeViews.Sync(_sim.Nodes);
+        _fieldViews.Sync(_sim.Fields);
         _buildingViews.Sync(_sim.Buildings);
-        _hud.Refresh(_sim.Stockpile, _sim.HarvestTarget, _buildController.Selected, _sim.CanLaunchShip(), _sim.ShipsLaunched);
+        _hud.Refresh(
+            _sim.Stockpile,
+            _sim.HarvestTarget,
+            _buildController.Selected,
+            _buildController.Facing,
+            _buildController.FieldsInRange,
+            _sim.CanLaunchShip(),
+            _sim.ShipsLaunched);
     }
 
     public override void _UnhandledInput(InputEvent @event)
@@ -118,11 +125,11 @@ public partial class GameRoot : Node3D
         light.RotationDegrees = new Vector3(-50, -40, 0);
         AddChild(light);
 
-        _nodeViews = new ResourceNodeViews
+        _fieldViews = new ResourceFieldViews
         {
-            Name = "ResourceNodes"
+            Name = "ResourceFields"
         };
-        AddChild(_nodeViews);
+        AddChild(_fieldViews);
 
         _buildingViews = new BuildingViews
         {

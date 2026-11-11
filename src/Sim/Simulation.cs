@@ -7,21 +7,34 @@ namespace Game.Sim;
 /// The authoritative game state and logic. Fixed-step, and free of Godot nodes
 /// and input devices. In single-player this runs in-process; conceptually it is
 /// the future authoritative "server".
+///
+/// The world has two grid levels. A fine cell is 1 x 1 world unit; buildings,
+/// collision, and movement live on fine cells. A map cell is a square of
+/// FineCellsPerMapCell x FineCellsPerMapCell fine cells; terrain and resource
+/// fields live on map cells. Coordinates are signed integers, and fine-to-map
+/// conversion uses floor division so negative coordinates map correctly.
 /// </summary>
 public sealed class Simulation
 {
-    // Grid definition. Buildings snap to this grid; it is centered on the origin.
-    public int GridWidth { get; } = 32;
-    public int GridHeight { get; } = 32;
-    public float TileSize { get; } = 1f;
+    public const int FineCellsPerMapCell = 4;
+
+    // The fixed test map's size in map cells. Procedural generation will replace
+    // this bound with on-demand cells; nothing else assumes a fixed size.
+    public int MapWidth { get; } = 16;
+    public int MapHeight { get; } = 16;
+
+    /// <summary>The test map's size in fine cells; it occupies [0, GridWidth) on X.</summary>
+    public int GridWidth => MapWidth * FineCellsPerMapCell;
+    public int GridHeight => MapHeight * FineCellsPerMapCell;
 
     public Player Player { get; } = new();
 
     /// <summary>Input for the current tick, set by the presentation before Step.</summary>
     public PlayerIntent Intent;
 
-    private readonly List<ResourceNode> _nodes = new();
-    public IReadOnlyList<ResourceNode> Nodes => _nodes;
+    private readonly List<ResourceField> _fields = new();
+    private readonly Dictionary<(int MapX, int MapZ), ResourceField> _fieldsByMapCell = new();
+    public IReadOnlyList<ResourceField> Fields => _fields;
 
     private readonly List<Building> _buildings = new();
     public IReadOnlyList<Building> Buildings => _buildings;
@@ -33,28 +46,28 @@ public sealed class Simulation
 
     private readonly TerrainType[,] _terrain;
 
-    /// <summary>The node currently in range to hand-harvest, or null.</summary>
-    public ResourceNode? HarvestTarget { get; private set; }
+    /// <summary>The field currently in range to hand-harvest, or null.</summary>
+    public ResourceField? HarvestTarget { get; private set; }
 
     /// <summary>How many ships have been launched (the initial win condition).</summary>
     public int ShipsLaunched { get; private set; }
 
     private int _nextBuildingId;
+    private int _nextFieldId;
 
     private const float HarvestRange = 1.5f;
     private const float HarvestRate = 10f;
+    private const float FieldAmount = 250f;
 
     public const float LaunchFuelCost = 500f;
     public const float LaunchMetalCost = 100f;
 
-    public float WorldSizeX => GridWidth * TileSize;
-    public float WorldSizeZ => GridHeight * TileSize;
-
     public Simulation()
     {
-        _terrain = new TerrainType[GridWidth + 1, GridHeight + 1];
+        _terrain = new TerrainType[MapWidth, MapHeight];
         GenerateTerrain();
-        SpawnInitialNodes();
+        SpawnInitialFields();
+        Player.Position = new Vector3(GridWidth * 0.5f, 0f, GridHeight * 0.5f);
     }
 
     public void Step(double dt)
@@ -68,60 +81,85 @@ public sealed class Simulation
         StepBuildings(dt);
     }
 
+    // ---- Grid -----------------------------------------------------------
+
+    /// <summary>Whether a fine cell lies within the test map.</summary>
+    public bool InBounds(int x, int z)
+    {
+        return x >= 0 && x < GridWidth && z >= 0 && z < GridHeight;
+    }
+
+    /// <summary>Whether a map cell lies within the test map.</summary>
+    public bool MapInBounds(int mapX, int mapZ)
+    {
+        return mapX >= 0 && mapX < MapWidth && mapZ >= 0 && mapZ < MapHeight;
+    }
+
+    /// <summary>World-space center of a fine cell.</summary>
+    public static Vector3 CellCenter(int x, int z)
+    {
+        return new Vector3(x + 0.5f, 0f, z + 0.5f);
+    }
+
+    /// <summary>The fine cell containing a world-space point.</summary>
+    public static (int X, int Z) CellAt(float worldX, float worldZ)
+    {
+        return (Mathf.FloorToInt(worldX), Mathf.FloorToInt(worldZ));
+    }
+
+    /// <summary>The map-cell coordinate containing a fine-cell coordinate (floor division).</summary>
+    public static int MapCellOf(int fine)
+    {
+        int quotient = fine / FineCellsPerMapCell;
+        return fine % FineCellsPerMapCell < 0 ? quotient - 1 : quotient;
+    }
+
+    /// <summary>World-space center of a map cell.</summary>
+    public static Vector3 MapCellCenter(int mapX, int mapZ)
+    {
+        float half = FineCellsPerMapCell * 0.5f;
+        return new Vector3(mapX * FineCellsPerMapCell + half, 0f, mapZ * FineCellsPerMapCell + half);
+    }
+
     // ---- Placement -------------------------------------------------------
 
-    public bool InBounds(int gridX, int gridZ)
+    /// <summary>
+    /// The standard placement rule: every footprint cell is in bounds, grass,
+    /// unoccupied, and not covered by a resource field. Extractors follow the
+    /// same rule and may be placed with no field in range (they idle).
+    /// </summary>
+    public bool CanPlace(BuildingType type, int anchorX, int anchorZ, Facing facing)
     {
-        int halfX = GridWidth / 2;
-        int halfZ = GridHeight / 2;
-        return gridX >= -halfX && gridX <= halfX && gridZ >= -halfZ && gridZ <= halfZ;
+        (int width, int depth) = BuildingDefs.For(type).Footprint(facing);
+        for (int x = anchorX; x < anchorX + width; x++)
+        {
+            for (int z = anchorZ; z < anchorZ + depth; z++)
+            {
+                if (!InBounds(x, z) || _occupied.Contains((x, z)) || !IsPassable(x, z) || FieldAt(x, z) is not null)
+                {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
-    public Vector3 TileCenter(int gridX, int gridZ)
+    public bool TryPlaceBuilding(BuildingType type, int anchorX, int anchorZ, Facing facing)
     {
-        return new Vector3(gridX * TileSize, 0f, gridZ * TileSize);
-    }
-
-    public bool CanPlace(BuildingType type, int gridX, int gridZ)
-    {
-        if (!InBounds(gridX, gridZ))
-        {
-            return false;
-        }
-        if (_occupied.Contains((gridX, gridZ)))
-        {
-            return false;
-        }
-        if (!IsPassable(gridX, gridZ))
+        if (!CanPlace(type, anchorX, anchorZ, facing))
         {
             return false;
         }
 
-        // Extractors need a node to draw from; processors need a clear tile.
-        bool hasNode = NodeAt(gridX, gridZ) is not null;
-        return type == BuildingType.Extractor ? hasNode : !hasNode;
-    }
-
-    public bool TryPlaceBuilding(BuildingType type, int gridX, int gridZ)
-    {
-        if (!CanPlace(type, gridX, gridZ))
-        {
-            return false;
-        }
-
-        var building = new Building(
-            _nextBuildingId++,
-            type,
-            gridX,
-            gridZ,
-            TileCenter(gridX, gridZ),
-            Recipes.For(type))
-        {
-            Source = type == BuildingType.Extractor ? NodeAt(gridX, gridZ) : null
-        };
-
+        var building = new Building(_nextBuildingId++, type, anchorX, anchorZ, facing, Recipes.For(type));
         _buildings.Add(building);
-        _occupied.Add((gridX, gridZ));
+        for (int x = anchorX; x < anchorX + building.Width; x++)
+        {
+            for (int z = anchorZ; z < anchorZ + building.Depth; z++)
+            {
+                _occupied.Add((x, z));
+            }
+        }
         return true;
     }
 
@@ -148,18 +186,53 @@ public sealed class Simulation
         return true;
     }
 
-    private ResourceNode? NodeAt(int gridX, int gridZ)
+    // ---- Resource fields -------------------------------------------------
+
+    /// <summary>The field covering a fine cell, or null.</summary>
+    public ResourceField? FieldAt(int x, int z)
     {
-        foreach (ResourceNode node in _nodes)
+        _fieldsByMapCell.TryGetValue((MapCellOf(x), MapCellOf(z)), out ResourceField? field);
+        return field;
+    }
+
+    /// <summary>Distance from a point to the nearest point of a field's map-cell square (0 inside).</summary>
+    public static float DistanceToField(Vector3 point, ResourceField field)
+    {
+        float size = FineCellsPerMapCell;
+        float dx = Mathf.Max(Mathf.Max(field.MinX - point.X, 0f), point.X - (field.MinX + size));
+        float dz = Mathf.Max(Mathf.Max(field.MinZ - point.Z, 0f), point.Z - (field.MinZ + size));
+        return Mathf.Sqrt(dx * dx + dz * dz);
+    }
+
+    /// <summary>Non-depleted fields of a type within a radius of a point.</summary>
+    public List<ResourceField> FieldsInRange(Vector3 point, float radius, ResourceType type)
+    {
+        var result = new List<ResourceField>();
+        foreach (ResourceField field in _fields)
         {
-            int nx = Mathf.RoundToInt(node.Position.X / TileSize);
-            int nz = Mathf.RoundToInt(node.Position.Z / TileSize);
-            if (nx == gridX && nz == gridZ)
+            if (field.Type == type && !field.Depleted && DistanceToField(point, field) <= radius)
             {
-                return node;
+                result.Add(field);
             }
         }
-        return null;
+        return result;
+    }
+
+    private void AddField(ResourceType type, int mapX, int mapZ)
+    {
+        var field = new ResourceField(_nextFieldId++, type, mapX, mapZ, FieldAmount);
+        _fields.Add(field);
+        _fieldsByMapCell[(mapX, mapZ)] = field;
+    }
+
+    private void RemoveField(ResourceField field)
+    {
+        _fields.Remove(field);
+        _fieldsByMapCell.Remove((field.MapX, field.MapZ));
+        if (ReferenceEquals(HarvestTarget, field))
+        {
+            HarvestTarget = null;
+        }
     }
 
     // ---- Player hand-harvest --------------------------------------------
@@ -188,24 +261,22 @@ public sealed class Simulation
             p.Z = nextZ;
         }
 
-        float halfX = WorldSizeX * 0.5f;
-        float halfZ = WorldSizeZ * 0.5f;
-        p.X = Mathf.Clamp(p.X, -halfX, halfX);
-        p.Z = Mathf.Clamp(p.Z, -halfZ, halfZ);
+        p.X = Mathf.Clamp(p.X, 0f, GridWidth);
+        p.Z = Mathf.Clamp(p.Z, 0f, GridHeight);
         Player.Position = p;
     }
 
     private void UpdateHarvestTarget()
     {
-        ResourceNode? best = null;
-        float bestDistance = HarvestRange * HarvestRange;
-        foreach (ResourceNode node in _nodes)
+        ResourceField? best = null;
+        float bestDistance = HarvestRange;
+        foreach (ResourceField field in _fields)
         {
-            float distance = Player.Position.DistanceSquaredTo(node.Position);
+            float distance = DistanceToField(Player.Position, field);
             if (distance <= bestDistance)
             {
                 bestDistance = distance;
-                best = node;
+                best = field;
             }
         }
         HarvestTarget = best;
@@ -213,19 +284,19 @@ public sealed class Simulation
 
     private void Harvest(double dt)
     {
-        ResourceNode? node = HarvestTarget;
-        if (node is null)
+        ResourceField? field = HarvestTarget;
+        if (field is null)
         {
             return;
         }
 
-        float take = Mathf.Min(node.Amount, HarvestRate * (float)dt);
-        node.Amount -= take;
-        AddToStockpile(node.Type, take);
+        float take = Mathf.Min(field.Amount, HarvestRate * (float)dt);
+        field.Amount -= take;
+        AddToStockpile(field.Type, take);
 
-        if (node.Depleted)
+        if (field.Depleted)
         {
-            RemoveNode(node);
+            RemoveField(field);
         }
     }
 
@@ -235,7 +306,7 @@ public sealed class Simulation
     {
         foreach (Building building in _buildings)
         {
-            if (building.Type == BuildingType.Extractor)
+            if (building.Def.IsExtractor)
             {
                 StepExtractor(building, dt);
                 continue;
@@ -251,21 +322,44 @@ public sealed class Simulation
 
     private void StepExtractor(Building building, double dt)
     {
-        ResourceNode? node = building.Source;
-        if (node is null || node.Depleted)
+        ResourceField? field = building.CurrentField;
+        if (field is null || field.Depleted)
+        {
+            field = NearestFieldInWorkArea(building);
+            building.CurrentField = field;
+        }
+        if (field is null)
         {
             return;
         }
 
-        float take = Mathf.Min(node.Amount, Recipes.ExtractorRate * (float)dt);
-        node.Amount -= take;
-        AddToStockpile(node.Type, take);
+        float take = Mathf.Min(field.Amount, Recipes.ExtractorRate * (float)dt);
+        field.Amount -= take;
+        AddToStockpile(field.Type, take);
 
-        if (node.Depleted)
+        if (field.Depleted)
         {
-            RemoveNode(node);
-            building.Source = null;
+            RemoveField(field);
+            building.CurrentField = null;
         }
+    }
+
+    private ResourceField? NearestFieldInWorkArea(Building building)
+    {
+        ResourceType type = building.Def.Extracts!.Value;
+        Vector3 center = building.Position;
+        ResourceField? best = null;
+        float bestDistance = float.MaxValue;
+        foreach (ResourceField field in FieldsInRange(center, building.Def.WorkRadius, type))
+        {
+            float distance = DistanceToField(center, field);
+            if (distance < bestDistance)
+            {
+                bestDistance = distance;
+                best = field;
+            }
+        }
+        return best;
     }
 
     private void StepProcessor(Building building, Recipe recipe, double dt)
@@ -325,27 +419,22 @@ public sealed class Simulation
         _stockpile[type] = current + amount;
     }
 
-    private void RemoveNode(ResourceNode node)
-    {
-        _nodes.Remove(node);
-        if (ReferenceEquals(HarvestTarget, node))
-        {
-            HarvestTarget = null;
-        }
-    }
-
     // ---- Terrain ---------------------------------------------------------
 
-    private int HalfX => GridWidth / 2;
-    private int HalfZ => GridHeight / 2;
-
-    public TerrainType TerrainAt(int x, int z)
+    /// <summary>Terrain of a map cell; out-of-bounds reads return Grass.</summary>
+    public TerrainType MapTerrainAt(int mapX, int mapZ)
     {
-        if (!InBounds(x, z))
+        if (!MapInBounds(mapX, mapZ))
         {
             return TerrainType.Grass;
         }
-        return _terrain[x + HalfX, z + HalfZ];
+        return _terrain[mapX, mapZ];
+    }
+
+    /// <summary>Terrain of a fine cell: its map cell's terrain.</summary>
+    public TerrainType TerrainAt(int x, int z)
+    {
+        return MapTerrainAt(MapCellOf(x), MapCellOf(z));
     }
 
     /// <summary>Only grass is buildable terrain; water and mountain block.</summary>
@@ -355,71 +444,70 @@ public sealed class Simulation
     }
 
     /// <summary>
-    /// Walkable = passable terrain, no resource node, and no building on the tile.
-    /// A node blocks movement until it depletes and is removed, which reopens the
-    /// tile; a building blocks for as long as it stands.
+    /// Walkable = passable terrain, no resource field, and no building on the
+    /// fine cell. A field blocks all its cells until it depletes and is removed;
+    /// a building blocks for as long as it stands.
     /// </summary>
     public bool IsWalkable(int x, int z)
     {
-        return IsPassable(x, z) && NodeAt(x, z) is null && !_occupied.Contains((x, z));
+        return IsPassable(x, z) && FieldAt(x, z) is null && !_occupied.Contains((x, z));
     }
 
     private bool IsWalkableAt(float worldX, float worldZ)
     {
-        int tileX = Mathf.RoundToInt(worldX / TileSize);
-        int tileZ = Mathf.RoundToInt(worldZ / TileSize);
-        return IsWalkable(tileX, tileZ);
+        (int x, int z) = CellAt(worldX, worldZ);
+        return IsWalkable(x, z);
     }
 
-    private void SetTerrain(int x, int z, TerrainType type)
+    private void SetMapTerrain(int mapX, int mapZ, TerrainType type)
     {
-        if (InBounds(x, z))
+        if (MapInBounds(mapX, mapZ))
         {
-            _terrain[x + HalfX, z + HalfZ] = type;
+            _terrain[mapX, mapZ] = type;
         }
     }
 
     private void GenerateTerrain()
     {
-        // Fixed test layout: a water pond and a small mountain cluster on grass.
-        for (int x = 2; x <= 6; x++)
+        // Fixed test layout in map cells: a water pond and a small mountain
+        // cluster on grass. The center map cells stay clear for the spawn.
+        for (int mapX = 9; mapX <= 11; mapX++)
         {
-            for (int z = -4; z <= 0; z++)
+            for (int mapZ = 5; mapZ <= 6; mapZ++)
             {
-                SetTerrain(x, z, TerrainType.Water);
+                SetMapTerrain(mapX, mapZ, TerrainType.Water);
             }
         }
 
         (int X, int Z)[] mountains =
         {
-            (-6, 2),
-            (-6, 3),
-            (-5, 2)
+            (4, 9),
+            (4, 10),
+            (5, 9)
         };
-        foreach ((int mountainX, int mountainZ) in mountains)
+        foreach ((int mapX, int mapZ) in mountains)
         {
-            SetTerrain(mountainX, mountainZ, TerrainType.Mountain);
+            SetMapTerrain(mapX, mapZ, TerrainType.Mountain);
         }
     }
 
-    private void SpawnInitialNodes()
+    private void SpawnInitialFields()
     {
-        (ResourceType Type, int X, int Z)[] placements =
+        (ResourceType Type, int MapX, int MapZ)[] placements =
         {
-            (ResourceType.Ore, 6, 4),
-            (ResourceType.Ore, 7, 5),
-            (ResourceType.Ore, 5, 6),
-            (ResourceType.Wood, -8, -6),
-            (ResourceType.Wood, -7, -7),
-            (ResourceType.Wood, -9, -5),
-            (ResourceType.Ore, -6, 8),
-            (ResourceType.Wood, 9, -8)
+            (ResourceType.Ore, 10, 9),
+            (ResourceType.Ore, 11, 10),
+            (ResourceType.Ore, 9, 11),
+            (ResourceType.Ore, 4, 12),
+            (ResourceType.Wood, 3, 4),
+            (ResourceType.Wood, 4, 3),
+            (ResourceType.Wood, 2, 5),
+            (ResourceType.Wood, 12, 3)
         };
 
-        int id = 0;
-        foreach ((ResourceType type, int x, int z) in placements)
+        foreach ((ResourceType type, int mapX, int mapZ) in placements)
         {
-            _nodes.Add(new ResourceNode(id++, type, TileCenter(x, z), 100f));
+            AddField(type, mapX, mapZ);
         }
     }
 }
