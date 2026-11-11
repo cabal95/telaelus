@@ -154,6 +154,10 @@ pausing it and stepping frame by frame.
 - **Godot path:** the `GODOT_EDITOR` environment variable, else `godot.editor` in `tools.json` at
   the repo root (found by walking up to `game.slnx`); with neither, the test fails with setup
   instructions.
+- **Schema checks:** `ScenarioSchemaTests`, in the same project but without launching Godot,
+  checks that `scenario.schema.json` has no duplicate keys (JSON lets a later key silently replace
+  an earlier one) and validates every scenario file against it with JsonSchema.Net, one test per
+  file. This keeps the `$schema` that editors use accurate.
 - **Run:** `dotnet test src/Game.Integration.Tests`, or `dotnet test game.slnx` for everything.
 - **What belongs here:** what only the running game can show (input reaching the right place,
   presentation state, views mirroring the sim). Sim rules belong in the unit tests. Screenshot

@@ -39,6 +39,8 @@ Newest last. One line each; open the file for the full spec.
   scenario commands, plus `pause`, `resume`, and frame-exact `step`.
 - **2611111234-block-placement-on-player** - Blocks placing a building with the player inside its
   footprint, and records when a change needs a changeset.
+- **2611111238-scenario-schema-checks** - Fixes the scenario schema's duplicate `step` definition and
+  adds tests that check the schema and validate every scenario against it.
 
 ## Adding a changeset
 

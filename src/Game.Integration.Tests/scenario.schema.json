@@ -12,7 +12,7 @@
     "description": { "type": "string" },
     "steps": {
       "type": "array",
-      "items": { "$ref": "#/definitions/step" }
+      "items": { "$ref": "#/definitions/scenarioStep" }
     }
   },
   "definitions": {
@@ -38,7 +38,8 @@
     "building": { "enum": ["Mine", "LumberCamp", "Smelter", "Refinery"] },
     "facing": { "enum": ["North", "East", "South", "West"] },
     "comment": { "type": "string", "description": "Ignored; documents the step." },
-    "step": {
+    "scenarioStep": {
+      "description": "One step: exactly one command, plus an optional comment.",
       "oneOf": [
         { "$ref": "#/definitions/initMap" },
         { "$ref": "#/definitions/changeTiles" },
