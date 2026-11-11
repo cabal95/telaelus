@@ -1,0 +1,18 @@
+newmtl cliff
+Kd 0.340 0.320 0.310
+
+newmtl scree
+Kd 0.440 0.410 0.360
+
+newmtl rock_dk
+Kd 0.380 0.360 0.350
+
+newmtl rock
+Kd 0.500 0.470 0.440
+
+newmtl rock_lt
+Kd 0.630 0.600 0.570
+
+newmtl snow
+Kd 0.930 0.950 0.980
+

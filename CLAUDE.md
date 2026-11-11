@@ -31,7 +31,8 @@ repo root. This file is git-ignored and differs per machine.
 
 Use the Godot editor path from `tools.json` wherever `<godot.editor>` appears below.
 
-`src/` holds one folder per C# project. The Godot project root is `src/Game` (that is where
+`src/` holds one folder per C# project, plus `src/asset-factory` (asset source and generators, not
+a C# project; see [docs/asset-pipeline.md](docs/asset-pipeline.md)). The Godot project root is `src/Game` (that is where
 `project.godot` and `Game.csproj` live), so Godot commands take `--path src/Game`. The
 simulation is a separate class library in `src/Game.Sim`, referenced by `Game.csproj`.
 `game.slnx` at the repo root lists every project; building it needs .NET SDK 9.0.200 or later
@@ -51,6 +52,11 @@ simulation is a separate class library in `src/Game.Sim`, referenced by `Game.cs
   the repo root; output defaults to `test-output/runs/<timestamp>-<name>/`; read the PNGs and
   `report.json` there). Add `--headless` for a state-only run. See
   [docs/blueprints/testing.md](docs/blueprints/testing.md) for the command list.
+  Windowed runs (and the live control channel) always open a Godot window for a second or two and
+  take focus. We found no way to hide it: `--headless` cannot render screenshots, `--no-window`,
+  `--minimized` and off-screen `--position` are ignored or clamped, a hidden process launch still
+  takes keyboard focus briefly, and the `no_focus` window setting leaves the window visible. Use
+  `--headless` (state only) when you do not need pixels.
 - Drive a running game live: start it in the background with `<godot.editor> --path src/Game
   --fixed-fps 30 --resolution 1280x720 -- --control-port=7777 [--start-paused]`, poll
   `curl -s localhost:7777/status` until it answers, send scenario commands with

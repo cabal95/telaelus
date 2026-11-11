@@ -1,0 +1,7 @@
+config_version=5
+
+[application]
+config/name="asset-lab"
+
+[rendering]
+renderer/rendering_method="forward_plus"
