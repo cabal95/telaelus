@@ -38,6 +38,9 @@ simulation is a separate class library in `src/Game.Sim`, referenced by `Game.cs
 (older SDKs cannot read `.slnx`), while each project still targets net8.0.
 
 - Build without the editor: `dotnet build game.slnx -c Debug`
+- After adding a C# script or asset under `src/Game`, run `<godot.editor> --headless --path
+  src/Game --import` (a headless project scan and import that quits in seconds) and commit the
+  `.uid` files it creates with the script, so they do not appear later when the editor opens.
 - Run the sim unit tests: `dotnet test src/Game.Sim.Tests` (engine-free; must pass before a
   changeset is stamped Implemented)
 - Run the integration tests: `dotnet test src/Game.Integration.Tests` (each JSON scenario in
