@@ -1,7 +1,7 @@
 {
   "$schema": "../scenario.schema.json",
   "name": "terrain-types",
-  "description": "Every terrain type, a mountain on snow, and a river crossing from grass into sand render; a river channel blocks placement while its bank allows it; the snapshot reports the terrain, biome, and feature under the player.",
+  "description": "Every terrain type, a mountain on each ground that takes one (both model families), and a river crossing from grass into sand render; a river channel blocks placement while its bank allows it; the snapshot reports the terrain, biome, and feature under the player.",
   "steps": [
     { "initMap": {} },
     { "comment": "A strip of every terrain along map row z 6, x 2 to 9.", "changeTiles": { "type": "Grass", "cells": [[2, 6]] } },
@@ -12,7 +12,11 @@
     { "changeTiles": { "type": "ShallowWater", "cells": [[7, 6]] } },
     { "changeTiles": { "type": "DeepWater", "biome": "Ocean", "cells": [[8, 6]] } },
     { "changeTiles": { "type": "Lava", "biome": "Volcanic", "cells": [[9, 6]] } },
-    { "comment": "A mountain on snow.", "changeTiles": { "type": "Snow", "biome": "Tundra", "feature": "Mountain", "cells": [[11, 6]] } },
+    { "comment": "A mountain on every ground that takes one, as a 3 x 2 cluster: snow, sand, mud on row 6, then rock and grass on row 7.", "changeTiles": { "type": "Snow", "biome": "Tundra", "feature": "Mountain", "cells": [[11, 6]] } },
+    { "changeTiles": { "type": "Sand", "biome": "Desert", "feature": "Mountain", "cells": [[12, 6]] } },
+    { "changeTiles": { "type": "Mud", "biome": "Swamp", "feature": "Mountain", "cells": [[13, 6]] } },
+    { "changeTiles": { "type": "Rock", "biome": "Highlands", "feature": "Mountain", "cells": [[11, 7]] } },
+    { "changeTiles": { "feature": "Mountain", "cells": [[12, 7]] } },
     { "comment": "A river flowing east along map row z 10, from grass into desert sand.", "changeTiles": { "type": "Sand", "biome": "Desert", "from": [4, 10], "to": [5, 10] } },
     { "changeTiles": { "feature": "River", "flow": "East", "from": [2, 10], "to": [5, 10] } },
     { "teleportPlayer": { "x": 26, "z": 34 } },

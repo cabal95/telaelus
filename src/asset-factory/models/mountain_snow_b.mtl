@@ -1,0 +1,12 @@
+newmtl snow
+Kd 0.930 0.950 0.980
+
+newmtl snow_sh
+Kd 0.800 0.840 0.900
+
+newmtl rock_dk
+Kd 0.380 0.360 0.350
+
+newmtl rock
+Kd 0.500 0.470 0.440
+

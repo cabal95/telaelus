@@ -132,11 +132,14 @@ The center map cells around the spawn are clear Grassland grass.
   so transitions stay continuous where three terrains meet. Where a river flows in across the
   edge, the strip's middle is left open so the channel meets the water. One edge set per terrain keeps
   future transition art at N assets rather than one per pair.
-- A **mountain** is a peak tinted by the terrain beneath (stone-grey on Rock, green-grey on Grass,
-  pale stone with a white cap on Snow).
+- A **mountain** is a generated model from `MountainModels`: the Snow family on Snow ground and
+  the Stone family on every other ground, one of three shapes at a deterministic 90-degree
+  rotation per map cell. The model stays inside its map cell with every edge flat on the
+  ground, so each mountain is a standalone peak and neighbors form a cluster. The six files are required (see
+  `src/Game/assets/models/terrain/README.md`).
 - A **river** is water laid over its channel fine cells, above the edge strips, so its banks show
   the cell's own terrain.
-- Real CC0 terrain tile models are pending; the expected set and conventions are in
+- Ground tiles are still colored placeholders; mountains are not. The model conventions are in
   `src/Game/assets/models/terrain/README.md`.
 
 ## Related

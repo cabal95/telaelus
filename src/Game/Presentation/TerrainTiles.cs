@@ -10,8 +10,8 @@ namespace Game.Presentation;
 /// models), one color per terrain. Transitions follow draw priority: on each edge
 /// whose neighbor has a higher priority, the cell draws a strip in the neighbor's
 /// color, so each terrain needs one edge set rather than one per pair. Features
-/// draw on top: a mountain is a peak tinted by the terrain beneath it, and a river
-/// is water laid over its channel fine cells.
+/// draw on top: a mountain is a generated model (see <see cref="MountainModels"/>),
+/// and a river is water laid over its channel fine cells.
 /// </summary>
 public static class TerrainTiles
 {
@@ -31,7 +31,6 @@ public static class TerrainTiles
     };
 
     private static readonly Color RiverColor = new(0.24f, 0.45f, 0.68f);
-    private static readonly Color SnowCapColor = new(0.97f, 0.98f, 1.0f);
 
     public static Node3D CreateTile(Simulation sim, int mapX, int mapZ)
     {
@@ -46,7 +45,7 @@ public static class TerrainTiles
         switch (sim.MapFeatureAt(mapX, mapZ))
         {
             case MapFeature.Mountain:
-                AddMountain(root, terrain);
+                root.AddChild(MountainModels.Create(terrain, mapX, mapZ));
                 break;
             case MapFeature.River:
                 AddRiver(root, sim, mapX, mapZ);
@@ -186,47 +185,6 @@ public static class TerrainTiles
     private static Vector3 StripSize(bool alongX, float length)
     {
         return alongX ? new Vector3(length, StripThickness, EdgeWidth) : new Vector3(EdgeWidth, StripThickness, length);
-    }
-
-    private static void AddMountain(Node3D root, TerrainType terrain)
-    {
-        // The peak takes the ground's color, darkened to read as stone; on snow it
-        // is pale stone with a white cap.
-        Color ground = ColorOf(terrain);
-        Color stone = terrain == TerrainType.Snow
-            ? new Color(0.62f, 0.64f, 0.68f)
-            : ground.Lerp(ColorOf(TerrainType.Rock), 0.55f).Darkened(0.1f);
-
-        const float height = 2.4f;
-        root.AddChild(new MeshInstance3D
-        {
-            Name = "Peak",
-            Mesh = new CylinderMesh
-            {
-                TopRadius = 0f,
-                BottomRadius = Size * 0.45f,
-                Height = height
-            },
-            MaterialOverride = Material(stone),
-            Position = new Vector3(0f, height * 0.5f, 0f)
-        });
-
-        if (terrain == TerrainType.Snow)
-        {
-            const float capHeight = height * 0.4f;
-            root.AddChild(new MeshInstance3D
-            {
-                Name = "SnowCap",
-                Mesh = new CylinderMesh
-                {
-                    TopRadius = 0f,
-                    BottomRadius = Size * 0.45f * 0.4f + 0.03f,
-                    Height = capHeight
-                },
-                MaterialOverride = Material(SnowCapColor),
-                Position = new Vector3(0f, height - capHeight * 0.5f + 0.01f, 0f)
-            });
-        }
     }
 
     private static void AddRiver(Node3D root, Simulation sim, int mapX, int mapZ)

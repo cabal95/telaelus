@@ -63,7 +63,9 @@ Generators write Wavefront `.obj` plus a sibling `.mtl`. Rules every generator f
 - **Deterministic.** Every generator seeds its own `random.Random`, so regenerating gives
   identical geometry. Change the seed to get a new variant.
 - **Tileable assets** (terrain overlays) must keep their shared edge profile identical across
-  all variants so any tile can sit next to any other. See `border_h` in the mountain generator.
+  all variants so any tile can sit next to any other.
+- **Cell-filling assets that do not tile** (mountains) stay inside their 4 x 4 cell and meet the
+  ground at every edge, so they look finished alone and beside anything.
 
 ## Generating
 
@@ -142,6 +144,9 @@ Things to know:
   alias instead: `<user>/AppData/Local/Microsoft/WindowsApps/blender-launcher.exe`. It runs
   headless but detaches and prints nothing, so wait for the output file to appear instead of
   reading stdout. A standard (non-Store) install runs normally and blocks until done.
+  Launched from Git Bash, the Store launcher sometimes drops a run silently (no Blender process,
+  no output). Launching it from PowerShell with `Start-Process -FilePath <launcher> -ArgumentList
+  ... -Wait -NoNewWindow`, one run at a time with absolute paths, has been reliable.
 - **Checking the result.** Both preview renderers also load `.glb`; pass the `.glb` path as the model
   to confirm geometry, orientation, scale, and color survived the export.
 

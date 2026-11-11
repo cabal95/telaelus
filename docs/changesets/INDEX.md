@@ -44,6 +44,9 @@ Newest last. One line each; open the file for the full spec.
 - **2611111426-biome-terrain-model** - Adds eight terrain types with rules in a `TerrainDef` table, eight
   biomes per map cell, mountain and river features (rivers with stored flow and derived shape and
   channel), and a test map repainted to show every biome.
+- **2611111615-mountain-models** - Replaces the mountain cone with six required generated models
+  (stone and snow families of three shapes, chosen by the ground beneath), each a standalone peak
+  inside its map cell with flat edges.
 
 ## Adding a changeset
 

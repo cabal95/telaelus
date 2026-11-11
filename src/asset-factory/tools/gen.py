@@ -68,25 +68,21 @@ class Mesh:
 
 
 # ---------------------------------------------------------------- mountains
-MTN_MATS = {
-    "cliff": ((0.34, 0.32, 0.31), None),
+# Two families share three shapes: stone (bare rock, any non-snow ground) and snow (on Snow ground).
+STONE_MATS = {
     "scree": ((0.44, 0.41, 0.36), None),
     "rock_dk": ((0.38, 0.36, 0.35), None),
     "rock": ((0.50, 0.47, 0.44), None),
     "rock_lt": ((0.63, 0.60, 0.57), None),
-    "snow": ((0.93, 0.95, 0.98), None),
 }
-HALF = 2.0   # tile is 4 x 4
-N = 8        # grid cells per side
-
-
-def border_h(s):
-    """Height profile shared by all four tile edges so neighbouring tiles join seamlessly."""
-    return 1.15 + 0.85 * (1 + math.cos(math.pi * s / HALF)) / 2
-
-
-def base_h(x, z):
-    return 1.15 + 0.85 * max((1 + math.cos(math.pi * x / HALF)) / 2, (1 + math.cos(math.pi * z / HALF)) / 2)
+SNOW_MATS = {
+    "snow": ((0.93, 0.95, 0.98), None),
+    "snow_sh": ((0.80, 0.84, 0.90), None),
+    "rock_dk": ((0.38, 0.36, 0.35), None),
+    "rock": ((0.50, 0.47, 0.44), None),
+}
+HALF = 2.0   # tile is 4 x 4; nothing leaves it
+N = 10       # grid cells per side
 
 
 def cone(x, z, cx, cz, h, r, p=1.25):
@@ -104,68 +100,75 @@ def ridge(x, z, a, b, h, r, p=1.25):
     return h * (0.55 + 0.45 * math.sin(math.pi * t)) * max(0.0, 1 - d / r) ** p
 
 
-def mountain_tile(seed, peaks):
+def mountain_shape(seed, peaks):
+    """Returns the surface triangles. Every vertex lies within the 4 x 4 cell, and every edge sits on the ground."""
     rnd = random.Random(seed)
     step = 2 * HALF / N
-    inner = [-HALF + i * step for i in range(N + 1)]
-    out_d = [0.45, 0.9, 1.3]              # ring distances beyond the tile edge
-    xs = [-HALF - d for d in reversed(out_d)] + inner + [HALF + d for d in out_d]
-    R = len(out_d)
-    ring_of = [R - k for k in range(R)] + [0] * (N + 1) + [k + 1 for k in range(R)]  # 3,2,1,0..0,1,2,3
-    factor = [1.0, 0.72, 0.38, 0.0]
-    jit = [0.14, 0.16, 0.22, 0.30]
-    M = len(xs)
+    xs = [-HALF + i * step for i in range(N + 1)]
     grid = {}
-    for i in range(M):
-        for j in range(M):
-            ring = max(ring_of[i], ring_of[j])
+    for i in range(N + 1):
+        for j in range(N + 1):
             x, z = xs[i], xs[j]
-            on_border = ring == 0 and (i - R in (0, N) or j - R in (0, N))
-            if ring > 0 or not on_border:
-                x += rnd.uniform(-jit[ring], jit[ring])
-                z += rnd.uniform(-jit[ring], jit[ring])
-            if ring == 0:
+            on_border = i in (0, N) or j in (0, N)
+            if on_border:
+                y = 0.0
+            else:
+                x += rnd.uniform(-0.14, 0.14)
+                z += rnd.uniform(-0.14, 0.14)
                 d = min(HALF - abs(x), HALF - abs(z))
                 w = max(0.0, min(1.0, d / 1.1))
                 w = w * w * (3 - 2 * w)
-                y = base_h(x, z) + w * (sum(fn(x, z) for fn in peaks) + rnd.uniform(-0.18, 0.18))
-                if on_border:
-                    y = border_h(x if j - R in (0, N) else z)
-                y = max(0.05, y)
-            else:
-                # scree/foothills: continue the shared edge height outward, stepping down to the ground
-                hb = base_h(max(-HALF, min(HALF, x)), max(-HALF, min(HALF, z)))
-                y = hb * factor[ring] * rnd.uniform(0.8, 1.15) if ring < R + 1 and factor[ring] > 0 else 0.0
+                y = w * (sum(fn(x, z) for fn in peaks) + rnd.uniform(-0.15, 0.15))
+                y = max(0.02, y)
             grid[(i, j)] = (x, y, z)
-    m = Mesh()
-    for i in range(M - 1):
-        for j in range(M - 1):
+    surface = []
+    for i in range(N):
+        for j in range(N):
             a, b, c, d = grid[(i, j)], grid[(i, j + 1)], grid[(i + 1, j + 1)], grid[(i + 1, j)]
-            quad = [(a, b, c), (a, c, d)] if (i + j) % 2 == 0 else [(a, b, d), (b, c, d)]
-            ring = max(min(ring_of[i], ring_of[i + 1]), min(ring_of[j], ring_of[j + 1])) if True else 0
-            for t in quad:
-                if max(p[1] for p in t) <= 0.001:
-                    continue
-                ay = sum(p[1] for p in t) / 3 + rnd.uniform(-0.25, 0.25)
-                if ring >= 1:
-                    mat = "scree" if rnd.random() < 0.5 else "rock_dk"
-                else:
-                    mat = "rock_dk" if ay < 1.5 else "rock" if ay < 2.4 else "rock_lt" if ay < 3.1 else "snow"
-                m.tri(mat, *t, outward=(0, 1, 0))
+            surface += [(a, b, c), (a, c, d)] if (i + j) % 2 == 0 else [(a, b, d), (b, c, d)]
+    return surface
+
+
+def stone_mat(rnd, ay, ny):
+    if ay < 0.5:
+        return "scree" if rnd.random() < 0.6 else "rock_dk"
+    return "rock_dk" if ay < 1.4 else "rock" if ay < 2.4 else "rock_lt"
+
+
+def snow_mat(rnd, ay, ny):
+    if ay < 1.0:
+        return "snow_sh" if ny > 0.55 or rnd.random() < 0.3 else "rock_dk"
+    if ay > 2.4:
+        return "snow" if ny > 0.2 or rnd.random() < 0.5 else "rock"
+    return "snow" if ny > 0.38 else "rock"
+
+
+def paint(surface, seed, pick):
+    rnd = random.Random(seed * 7 + 1)
+    m = Mesh()
+    for t in surface:
+        n = norm(cross(sub(t[1], t[0]), sub(t[2], t[0])))
+        ny = abs(n[1])
+        ay = sum(p[1] for p in t) / 3 + rnd.uniform(-0.2, 0.2)
+        m.tri(pick(rnd, ay, ny), *t, outward=(0, 1, 0))
     return m
 
 
+MOUNTAIN_SHAPES = {
+    "a": (11, [lambda x, z: cone(x, z, 0.1, -0.1, 4.0, 1.9),
+               lambda x, z: cone(x, z, -0.9, 0.9, 1.4, 1.2)]),
+    "b": (23, [lambda x, z: cone(x, z, -0.6, -0.5, 3.5, 1.7),
+               lambda x, z: cone(x, z, 0.7, 0.6, 3.1, 1.6)]),
+    "c": (37, [lambda x, z: ridge(x, z, (-1.1, 0.9), (1.1, -0.9), 3.7, 1.5),
+               lambda x, z: cone(x, z, 0.9, 0.9, 1.2, 1.0)]),
+}
+
+
 def build_mountains():
-    tiles = {
-        "mountain_a": mountain_tile(11, [lambda x, z: cone(x, z, 0.1, -0.1, 2.4, 2.1),
-                                         lambda x, z: cone(x, z, -0.9, 0.9, 1.1, 1.3)]),
-        "mountain_b": mountain_tile(23, [lambda x, z: cone(x, z, -0.7, -0.6, 2.0, 1.8),
-                                         lambda x, z: cone(x, z, 0.8, 0.7, 1.8, 1.7)]),
-        "mountain_c": mountain_tile(37, [lambda x, z: ridge(x, z, (-1.3, 1.1), (1.3, -1.1), 2.2, 1.6),
-                                         lambda x, z: cone(x, z, 0.9, 0.9, 0.9, 1.1)]),
-    }
-    for name, m in tiles.items():
-        m.write(name, MTN_MATS)
+    for suffix, (seed, peaks) in MOUNTAIN_SHAPES.items():
+        shape = mountain_shape(seed, peaks)
+        paint(shape, seed, stone_mat).write("mountain_" + suffix, STONE_MATS)
+        paint(shape, seed, snow_mat).write("mountain_snow_" + suffix, SNOW_MATS)
 
 
 # ---------------------------------------------------------------- ores
