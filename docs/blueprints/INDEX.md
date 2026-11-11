@@ -21,6 +21,8 @@ Read this index to find the right area, then open that blueprint for the detail.
   and the on-screen character and follow camera.
 - **[presentation.md](presentation.md)** - The presentation layer: the frame loop and view-sync
   pattern, the views, the asset and model pipeline, and the renderer.
+- **[testing.md](testing.md)** - The engine-free sim unit tests: project layout, the seam rule and
+  its check, test hooks, and the test classes.
 
 ## Adding a blueprint
 

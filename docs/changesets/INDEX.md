@@ -31,6 +31,8 @@ Newest last. One line each; open the file for the full spec.
   and extractor work areas.
 - **2611111121-sim-project-split** - Moves the Godot project to `src/Game` and the simulation into its
   own `Game.Sim` class library, which the game references.
+- **2611111128-sim-unit-tests** - Adds the engine-free xUnit sim test project, a seam check that the
+  sim references only Godot math types, and the test gate before Implemented.
 
 ## Adding a changeset
 

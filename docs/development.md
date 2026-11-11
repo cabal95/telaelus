@@ -23,7 +23,7 @@ A blueprint is a living document for one area of the project. It always reflects
   edit. The blueprint's history lives in git and in the changeset that made each change.
 
 Location: `docs/blueprints/<area>.md`, one per area. Current areas: `simulation`, `terrain`,
-`resources`, `buildings`, `player`, `presentation`. See `docs/blueprints/INDEX.md` for the area index and the template.
+`resources`, `buildings`, `player`, `presentation`, `testing`. See `docs/blueprints/INDEX.md` for the area index and the template.
 
 ## Changesets (one change, permanent once implemented)
 
@@ -44,13 +44,21 @@ See `docs/changesets/INDEX.md` for the completed-changeset index and the templat
 1. **Proposed** - drafted as `docs/changesets/<slug>.md` (no prefix), so active work is easy to
    find and not buried among completed specs.
 2. **Accepted** - the spec is approved before any code is written. Still `docs/changesets/<slug>.md`.
-3. **Implemented** - the code is written; we review the running result; any small tweak is folded
-   back into the code, the changeset, and the blueprint so the changeset stays truthful; then the
-   changeset is stamped with its prefix, moved to `docs/changesets/completed/<YYMMDDHHMM>-<slug>.md`,
+3. **Implemented** - the code is written; the sim unit tests pass (`dotnet test
+   src/Game.Sim.Tests`); we review the running result; any small tweak is folded back into the
+   code, the changeset, and the blueprint so the changeset stays truthful; then the changeset is
+   stamped with its prefix, moved to `docs/changesets/completed/<YYMMDDHHMM>-<slug>.md`,
    its `Depends-on` is re-checked against current main, and it is committed. A large deviation from
    an Accepted spec means the spec was wrong, so we rework the changeset rather than patch it.
 
 Once committed, an Implemented changeset is immutable; a later change is a new changeset.
+
+### Tests
+
+- New or changed sim behavior gets unit tests in the same changeset.
+- A changeset's **Verification** section names the unit tests it adds or changes.
+- Passing `dotnet test src/Game.Sim.Tests` is required before a changeset is stamped Implemented.
+  See `docs/blueprints/testing.md` for how the tests are organized.
 
 ### Filename, ordering, and Depends-on
 

@@ -16,6 +16,10 @@ and mirrors it onto nodes.
   `Mathf`); that package version matches the Godot.NET.Sdk version of the game project.
 - The game project (`src/Game/Game.csproj`) references `Game.Sim`; `Game.Sim` never references
   the game, so the compiler keeps the sim free of presentation code.
+- The sim may use Godot math types only (`Vector2`, `Vector3`, `Mathf`), never engine objects.
+  The unit test project checks this (see testing.md).
+- `Game.Sim.csproj` declares `InternalsVisibleTo` for `Game.Sim.Tests`; `internal` members such as
+  `TestSeedStockpile` are test hooks the game cannot call.
 
 ### Ownership and the loop
 

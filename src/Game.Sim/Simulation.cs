@@ -413,6 +413,12 @@ public sealed class Simulation
         }
     }
 
+    /// <summary>Test hook: adds an amount to the stockpile without playing for it.</summary>
+    internal void TestSeedStockpile(ResourceType type, float amount)
+    {
+        AddToStockpile(type, amount);
+    }
+
     private void AddToStockpile(ResourceType type, float amount)
     {
         _stockpile.TryGetValue(type, out float current);

@@ -34,9 +34,12 @@ Use the Godot editor path from `tools.json` wherever `<godot.editor>` appears be
 `src/` holds one folder per C# project. The Godot project root is `src/Game` (that is where
 `project.godot` and `Game.csproj` live), so Godot commands take `--path src/Game`. The
 simulation is a separate class library in `src/Game.Sim`, referenced by `Game.csproj`.
-`game.slnx` at the repo root lists every project.
+`game.slnx` at the repo root lists every project; building it needs .NET SDK 9.0.200 or later
+(older SDKs cannot read `.slnx`), while each project still targets net8.0.
 
 - Build without the editor: `dotnet build game.slnx -c Debug`
+- Run the sim unit tests: `dotnet test src/Game.Sim.Tests` (engine-free; must pass before a
+  changeset is stamped Implemented)
 - Open the editor: `<godot.editor> --editor --path src/Game`
 - Run the game: `<godot.editor> --path src/Game`
 - Headless runtime check: `<godot.editor> --headless --path src/Game --quit-after 20` (stderr
