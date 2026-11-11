@@ -100,3 +100,10 @@ and are not retrofitted into changesets.
   They are not blueprints or changesets.
 - `game-plan.md` holds the long-term vision and roadmap (the "why" and "where we are going").
   Current-state detail lives in the blueprints, which are authoritative for "what is."
+
+## Deployment references (future)
+
+We have not addressed deployment yet. Material to revisit when we do:
+
+- [Building Xbox games with Godot](https://developer.microsoft.com/en-us/games/articles/2026/06/building-xbox-games-with-godot/)
+  (Microsoft): deploying Godot games to Xbox.
