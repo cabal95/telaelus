@@ -3,5 +3,6 @@
     <Project Path="src/Game/Game.csproj" />
     <Project Path="src/Game.Sim/Game.Sim.csproj" />
     <Project Path="src/Game.Sim.Tests/Game.Sim.Tests.csproj" />
+    <Project Path="src/Game.Integration.Tests/Game.Integration.Tests.csproj" />
   </Folder>
 </Solution>

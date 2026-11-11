@@ -11,8 +11,4 @@
          Godot.NET.Sdk version in ../Game/Game.csproj. -->
     <PackageReference Include="GodotSharp" Version="4.7.2" />
   </ItemGroup>
-  <ItemGroup>
-    <!-- Lets the unit tests reach internal test hooks; the game cannot. -->
-    <InternalsVisibleTo Include="Game.Sim.Tests" />
-  </ItemGroup>
 </Project>

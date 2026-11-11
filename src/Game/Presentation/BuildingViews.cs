@@ -4,7 +4,10 @@ using Godot;
 
 namespace Game.Presentation;
 
-/// <summary>Mirrors the simulation's buildings onto boxes sized to their footprint, colored by type.</summary>
+/// <summary>
+/// Mirrors the simulation's buildings onto boxes sized to their footprint, colored by type,
+/// creating and freeing them as buildings appear or are removed.
+/// </summary>
 public partial class BuildingViews : Node3D
 {
     public const float BoxHeight = 1f;
@@ -16,8 +19,10 @@ public partial class BuildingViews : Node3D
 
     public void Sync(IReadOnlyList<Building> buildings)
     {
+        var present = new HashSet<int>();
         foreach (Building building in buildings)
         {
+            present.Add(building.Id);
             if (_views.ContainsKey(building.Id))
             {
                 continue;
@@ -38,6 +43,26 @@ public partial class BuildingViews : Node3D
             };
             _views[building.Id] = view;
             AddChild(view);
+        }
+
+        RemoveMissing(present);
+    }
+
+    private void RemoveMissing(HashSet<int> present)
+    {
+        var gone = new List<int>();
+        foreach (int id in _views.Keys)
+        {
+            if (!present.Contains(id))
+            {
+                gone.Add(id);
+            }
+        }
+
+        foreach (int id in gone)
+        {
+            _views[id].QueueFree();
+            _views.Remove(id);
         }
     }
 

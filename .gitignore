@@ -23,3 +23,6 @@ android/
 
 # Machine-specific tool paths (copy tools.template.json -> tools.json)
 tools.json
+
+# Scenario and integration test runs (screenshots, reports)
+test-output/

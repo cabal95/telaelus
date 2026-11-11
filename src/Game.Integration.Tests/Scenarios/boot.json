@@ -1,0 +1,15 @@
+{
+  "$schema": "../scenario.schema.json",
+  "name": "boot",
+  "description": "Smoke test: the main scene loads, the world builds, and the game runs a few frames.",
+  "steps": [
+    { "initMap": {} },
+    { "wait": 5 },
+    { "screenshot": "spawn" },
+    { "expect": "player.position[0]", "approx": 32 },
+    { "expect": "player.position[1]", "approx": 32 },
+    { "expect": "build", "equals": null },
+    { "expect": "fields", "equals": [] },
+    { "expect": "buildings", "equals": [] }
+  ]
+}

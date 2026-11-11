@@ -1,0 +1,371 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "scenario.schema.json",
+  "title": "Game scenario",
+  "description": "A scripted run of the real game: setup, injected input, waits, captures, and expectations against the state snapshot. See docs/blueprints/testing.md.",
+  "type": "object",
+  "required": ["name", "steps"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "name": { "type": "string", "minLength": 1 },
+    "description": { "type": "string" },
+    "steps": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/step" }
+    }
+  },
+  "definitions": {
+    "pair": {
+      "type": "array",
+      "items": { "type": "integer" },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "point": {
+      "type": "array",
+      "items": { "type": "number" },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "key": {
+      "type": "string",
+      "description": "A Godot Key enum name, such as R, E, Key1, Escape."
+    },
+    "label": { "type": "string", "minLength": 1 },
+    "terrain": { "enum": ["Grass", "Water", "Mountain"] },
+    "resource": { "enum": ["Ore", "Wood", "Metal", "Fuel"] },
+    "building": { "enum": ["Mine", "LumberCamp", "Smelter", "Refinery"] },
+    "facing": { "enum": ["North", "East", "South", "West"] },
+    "comment": { "type": "string", "description": "Ignored; documents the step." },
+    "step": {
+      "oneOf": [
+        { "$ref": "#/definitions/initMap" },
+        { "$ref": "#/definitions/changeTiles" },
+        { "$ref": "#/definitions/placeResource" },
+        { "$ref": "#/definitions/setResourceAmount" },
+        { "$ref": "#/definitions/removeResource" },
+        { "$ref": "#/definitions/removeBuilding" },
+        { "$ref": "#/definitions/placeBuilding" },
+        { "$ref": "#/definitions/teleportPlayer" },
+        { "$ref": "#/definitions/seedStockpile" },
+        { "$ref": "#/definitions/cameraZoom" },
+        { "$ref": "#/definitions/press" },
+        { "$ref": "#/definitions/keyDown" },
+        { "$ref": "#/definitions/keyUp" },
+        { "$ref": "#/definitions/hold" },
+        { "$ref": "#/definitions/aimAt" },
+        { "$ref": "#/definitions/click" },
+        { "$ref": "#/definitions/wait" },
+        { "$ref": "#/definitions/screenshot" },
+        { "$ref": "#/definitions/snapshot" },
+        { "$ref": "#/definitions/expect" }
+      ]
+    },
+    "initMap": {
+      "description": "Reset to an empty all-grass map: no fields or buildings, empty stockpile, player at the map center.",
+      "type": "object",
+      "required": ["initMap"],
+      "additionalProperties": false,
+      "properties": {
+        "initMap": { "type": "object", "maxProperties": 0 },
+        "comment": { "$ref": "#/definitions/comment" }
+      }
+    },
+    "changeTiles": {
+      "description": "Set the terrain of map cells, given as a list or an inclusive from/to rectangle.",
+      "type": "object",
+      "required": ["changeTiles"],
+      "additionalProperties": false,
+      "properties": {
+        "changeTiles": {
+          "type": "object",
+          "required": ["type"],
+          "additionalProperties": false,
+          "properties": {
+            "type": { "$ref": "#/definitions/terrain" },
+            "cells": { "type": "array", "items": { "$ref": "#/definitions/pair" } },
+            "from": { "$ref": "#/definitions/pair" },
+            "to": { "$ref": "#/definitions/pair" }
+          },
+          "oneOf": [
+            { "required": ["cells"] },
+            { "required": ["from", "to"] }
+          ]
+        },
+        "comment": { "$ref": "#/definitions/comment" }
+      }
+    },
+    "placeResource": {
+      "description": "Add a resource field on an empty map cell (default amount 250).",
+      "type": "object",
+      "required": ["placeResource"],
+      "additionalProperties": false,
+      "properties": {
+        "placeResource": {
+          "type": "object",
+          "required": ["type", "mapCell"],
+          "additionalProperties": false,
+          "properties": {
+            "type": { "$ref": "#/definitions/resource" },
+            "mapCell": { "$ref": "#/definitions/pair" },
+            "amount": { "type": "number", "exclusiveMinimum": 0 }
+          }
+        },
+        "comment": { "$ref": "#/definitions/comment" }
+      }
+    },
+    "setResourceAmount": {
+      "description": "Set a field's remaining amount; 0 removes it.",
+      "type": "object",
+      "required": ["setResourceAmount"],
+      "additionalProperties": false,
+      "properties": {
+        "setResourceAmount": {
+          "type": "object",
+          "required": ["mapCell", "amount"],
+          "additionalProperties": false,
+          "properties": {
+            "mapCell": { "$ref": "#/definitions/pair" },
+            "amount": { "type": "number", "minimum": 0 }
+          }
+        },
+        "comment": { "$ref": "#/definitions/comment" }
+      }
+    },
+    "removeResource": {
+      "type": "object",
+      "required": ["removeResource"],
+      "additionalProperties": false,
+      "properties": {
+        "removeResource": {
+          "type": "object",
+          "required": ["mapCell"],
+          "additionalProperties": false,
+          "properties": {
+            "mapCell": { "$ref": "#/definitions/pair" }
+          }
+        },
+        "comment": { "$ref": "#/definitions/comment" }
+      }
+    },
+    "removeBuilding": {
+      "type": "object",
+      "required": ["removeBuilding"],
+      "additionalProperties": false,
+      "properties": {
+        "removeBuilding": {
+          "type": "object",
+          "required": ["anchor"],
+          "additionalProperties": false,
+          "properties": {
+            "anchor": { "$ref": "#/definitions/pair" }
+          }
+        },
+        "comment": { "$ref": "#/definitions/comment" }
+      }
+    },
+    "placeBuilding": {
+      "description": "Place a building through the normal placement rules (fails the step if invalid).",
+      "type": "object",
+      "required": ["placeBuilding"],
+      "additionalProperties": false,
+      "properties": {
+        "placeBuilding": {
+          "type": "object",
+          "required": ["type", "anchor"],
+          "additionalProperties": false,
+          "properties": {
+            "type": { "$ref": "#/definitions/building" },
+            "anchor": { "$ref": "#/definitions/pair" },
+            "facing": { "$ref": "#/definitions/facing" }
+          }
+        },
+        "comment": { "$ref": "#/definitions/comment" }
+      }
+    },
+    "teleportPlayer": {
+      "type": "object",
+      "required": ["teleportPlayer"],
+      "additionalProperties": false,
+      "properties": {
+        "teleportPlayer": {
+          "type": "object",
+          "required": ["x", "z"],
+          "additionalProperties": false,
+          "properties": {
+            "x": { "type": "number" },
+            "z": { "type": "number" }
+          }
+        },
+        "comment": { "$ref": "#/definitions/comment" }
+      }
+    },
+    "seedStockpile": {
+      "type": "object",
+      "required": ["seedStockpile"],
+      "additionalProperties": false,
+      "properties": {
+        "seedStockpile": {
+          "type": "object",
+          "required": ["type", "amount"],
+          "additionalProperties": false,
+          "properties": {
+            "type": { "$ref": "#/definitions/resource" },
+            "amount": { "type": "number" }
+          }
+        },
+        "comment": { "$ref": "#/definitions/comment" }
+      }
+    },
+    "cameraZoom": {
+      "description": "Set the orthographic camera size (clamped to the zoom limits).",
+      "type": "object",
+      "required": ["cameraZoom"],
+      "additionalProperties": false,
+      "properties": {
+        "cameraZoom": {
+          "type": "object",
+          "required": ["size"],
+          "additionalProperties": false,
+          "properties": {
+            "size": { "type": "number" }
+          }
+        },
+        "comment": { "$ref": "#/definitions/comment" }
+      }
+    },
+    "press": {
+      "description": "Key down now, released at the start of the next frame.",
+      "type": "object",
+      "required": ["press"],
+      "additionalProperties": false,
+      "properties": {
+        "press": { "$ref": "#/definitions/key" },
+        "comment": { "$ref": "#/definitions/comment" }
+      }
+    },
+    "keyDown": {
+      "type": "object",
+      "required": ["keyDown"],
+      "additionalProperties": false,
+      "properties": {
+        "keyDown": { "$ref": "#/definitions/key" },
+        "comment": { "$ref": "#/definitions/comment" }
+      }
+    },
+    "keyUp": {
+      "type": "object",
+      "required": ["keyUp"],
+      "additionalProperties": false,
+      "properties": {
+        "keyUp": { "$ref": "#/definitions/key" },
+        "comment": { "$ref": "#/definitions/comment" }
+      }
+    },
+    "hold": {
+      "description": "Key down, wait the given frames, key up.",
+      "type": "object",
+      "required": ["hold"],
+      "additionalProperties": false,
+      "properties": {
+        "hold": {
+          "type": "object",
+          "required": ["key", "frames"],
+          "additionalProperties": false,
+          "properties": {
+            "key": { "$ref": "#/definitions/key" },
+            "frames": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "comment": { "$ref": "#/definitions/comment" }
+      }
+    },
+    "aimAt": {
+      "description": "Point the build pointer at a fine cell's center or a world ground point.",
+      "type": "object",
+      "required": ["aimAt"],
+      "additionalProperties": false,
+      "properties": {
+        "aimAt": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "cell": { "$ref": "#/definitions/pair" },
+            "world": { "$ref": "#/definitions/point" }
+          },
+          "oneOf": [
+            { "required": ["cell"] },
+            { "required": ["world"] }
+          ]
+        },
+        "comment": { "$ref": "#/definitions/comment" }
+      }
+    },
+    "click": {
+      "description": "Left button down at the current aim, released at the start of the next frame.",
+      "type": "object",
+      "required": ["click"],
+      "additionalProperties": false,
+      "properties": {
+        "click": { "type": "object", "maxProperties": 0 },
+        "comment": { "$ref": "#/definitions/comment" }
+      }
+    },
+    "wait": {
+      "description": "Advance this many frames before the next step.",
+      "type": "object",
+      "required": ["wait"],
+      "additionalProperties": false,
+      "properties": {
+        "wait": { "type": "integer", "minimum": 0 },
+        "comment": { "$ref": "#/definitions/comment" }
+      }
+    },
+    "screenshot": {
+      "description": "Record a snapshot and save the next drawn frame as NN-label.png (snapshot only when headless or --no-screenshots).",
+      "type": "object",
+      "required": ["screenshot"],
+      "additionalProperties": false,
+      "properties": {
+        "screenshot": { "$ref": "#/definitions/label" },
+        "comment": { "$ref": "#/definitions/comment" }
+      }
+    },
+    "snapshot": {
+      "description": "Record a state snapshot in the report.",
+      "type": "object",
+      "required": ["snapshot"],
+      "additionalProperties": false,
+      "properties": {
+        "snapshot": { "$ref": "#/definitions/label" },
+        "comment": { "$ref": "#/definitions/comment" }
+      }
+    },
+    "expect": {
+      "description": "Check a snapshot path (e.g. build.ghost.width, fields[0].stage) with exactly one operator.",
+      "type": "object",
+      "required": ["expect"],
+      "additionalProperties": false,
+      "properties": {
+        "expect": { "type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]*(\\[\\d+\\])*(\\.[A-Za-z_][A-Za-z0-9_]*(\\[\\d+\\])*)*$" },
+        "equals": {},
+        "notEquals": {},
+        "gte": { "type": "number" },
+        "lte": { "type": "number" },
+        "approx": { "type": "number" },
+        "tolerance": { "type": "number", "minimum": 0 },
+        "exists": { "type": "boolean" },
+        "comment": { "$ref": "#/definitions/comment" }
+      },
+      "oneOf": [
+        { "required": ["equals"] },
+        { "required": ["notEquals"] },
+        { "required": ["gte"] },
+        { "required": ["lte"] },
+        { "required": ["approx"] },
+        { "required": ["exists"] }
+      ]
+    }
+  }
+}

@@ -18,8 +18,20 @@ and mirrors it onto nodes.
   the game, so the compiler keeps the sim free of presentation code.
 - The sim may use Godot math types only (`Vector2`, `Vector3`, `Mathf`), never engine objects.
   The unit test project checks this (see testing.md).
-- `Game.Sim.csproj` declares `InternalsVisibleTo` for `Game.Sim.Tests`; `internal` members such as
-  `TestSeedStockpile` are test hooks the game cannot call.
+
+### Debug surface and map changes
+
+- `Simulation.Debug` (a `DebugTools` instance) holds setup operations the normal game never
+  performs: `ResetToEmptyMap` (all grass, no fields, buildings, stockpile, or launches, player at
+  the map center), `SetTerrain`, `PlaceField`, `SetFieldAmount` (0 or less removes the field),
+  `RemoveField`, `PlaceBuilding` (through the normal placement rules), `RemoveBuilding` (freeing
+  its cells), `TeleportPlayer`, and `SeedStockpile`. Invalid requests throw
+  `InvalidOperationException`. It is used by the unit tests, scenarios, and (later) the live
+  control channel.
+- The `MapChanged` event is raised by the debug operations that change terrain or fields, so views
+  built once at startup (the terrain) can rebuild.
+- Field and building ids keep counting up across `ResetToEmptyMap`, so a view never mistakes a new
+  field for an old one.
 
 ### Ownership and the loop
 

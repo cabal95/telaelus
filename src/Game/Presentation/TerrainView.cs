@@ -3,11 +3,20 @@ using Godot;
 
 namespace Game.Presentation;
 
-/// <summary>Builds the terrain as one tile per map cell from the simulation's terrain map.</summary>
+/// <summary>
+/// Builds the terrain as one tile per map cell from the simulation's terrain map.
+/// Rebuilds from scratch when the map changes outside normal play.
+/// </summary>
 public partial class TerrainView : Node3D
 {
     public void Build(Simulation sim)
     {
+        foreach (Node child in GetChildren())
+        {
+            RemoveChild(child);
+            child.QueueFree();
+        }
+
         for (int mapX = 0; mapX < sim.MapWidth; mapX++)
         {
             for (int mapZ = 0; mapZ < sim.MapHeight; mapZ++)

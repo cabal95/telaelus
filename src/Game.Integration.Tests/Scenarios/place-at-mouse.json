@@ -1,0 +1,23 @@
+{
+  "$schema": "../scenario.schema.json",
+  "name": "place-at-mouse",
+  "description": "Aiming and clicking places a Mine centered on the pointer, and the ghost counts Ore fields in its work area. Mouse-to-anchor mapping and the range count are presentation.",
+  "steps": [
+    { "initMap": {} },
+    { "press": "Key1" },
+    { "comment": "A 2x2 Mine centered on the grid corner (21, 21) is anchored at (20, 20).", "aimAt": { "world": [21, 21] } },
+    { "wait": 2 },
+    { "expect": "build.ghost.anchor", "equals": [20, 20] },
+    { "expect": "build.ghost.placeable", "equals": true },
+    { "expect": "build.fieldsInRange", "equals": 0 },
+    { "click": {} },
+    { "wait": 2 },
+    { "screenshot": "placed" },
+    { "expect": "buildings[0].type", "equals": "Mine" },
+    { "expect": "buildings[0].anchor", "equals": [20, 20] },
+    { "expect": "build.ghost.placeable", "equals": false },
+    { "comment": "Map cell (6, 5) spans x 24..28, 3 units from the Mine's center.", "placeResource": { "type": "Ore", "mapCell": [6, 5] } },
+    { "wait": 1 },
+    { "expect": "build.fieldsInRange", "equals": 1 }
+  ]
+}

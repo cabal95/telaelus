@@ -14,7 +14,7 @@ namespace Game.Sim;
 /// fields live on map cells. Coordinates are signed integers, and fine-to-map
 /// conversion uses floor division so negative coordinates map correctly.
 /// </summary>
-public sealed class Simulation
+public sealed partial class Simulation
 {
     public const int FineCellsPerMapCell = 4;
 
@@ -64,6 +64,7 @@ public sealed class Simulation
 
     public Simulation()
     {
+        Debug = new DebugTools(this);
         _terrain = new TerrainType[MapWidth, MapHeight];
         GenerateTerrain();
         SpawnInitialFields();
@@ -218,11 +219,12 @@ public sealed class Simulation
         return result;
     }
 
-    private void AddField(ResourceType type, int mapX, int mapZ)
+    private ResourceField AddField(ResourceType type, int mapX, int mapZ, float amount = FieldAmount)
     {
-        var field = new ResourceField(_nextFieldId++, type, mapX, mapZ, FieldAmount);
+        var field = new ResourceField(_nextFieldId++, type, mapX, mapZ, amount);
         _fields.Add(field);
         _fieldsByMapCell[(mapX, mapZ)] = field;
+        return field;
     }
 
     private void RemoveField(ResourceField field)
@@ -411,12 +413,6 @@ public sealed class Simulation
         {
             AddToStockpile(output.Type, output.Amount);
         }
-    }
-
-    /// <summary>Test hook: adds an amount to the stockpile without playing for it.</summary>
-    internal void TestSeedStockpile(ResourceType type, float amount)
-    {
-        AddToStockpile(type, amount);
     }
 
     private void AddToStockpile(ResourceType type, float amount)

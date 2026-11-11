@@ -6,8 +6,8 @@ public class LaunchTests
     public void Launch_RequiresTheFullCost()
     {
         var sim = new Simulation();
-        sim.TestSeedStockpile(ResourceType.Fuel, Simulation.LaunchFuelCost);
-        sim.TestSeedStockpile(ResourceType.Metal, Simulation.LaunchMetalCost - 1f);
+        sim.Debug.SeedStockpile(ResourceType.Fuel, Simulation.LaunchFuelCost);
+        sim.Debug.SeedStockpile(ResourceType.Metal, Simulation.LaunchMetalCost - 1f);
 
         Assert.False(sim.CanLaunchShip());
         Assert.False(sim.TryLaunchShip());
@@ -18,8 +18,8 @@ public class LaunchTests
     public void Launch_ConsumesTheCostAndCountsTheShip()
     {
         var sim = new Simulation();
-        sim.TestSeedStockpile(ResourceType.Fuel, 600f);
-        sim.TestSeedStockpile(ResourceType.Metal, 150f);
+        sim.Debug.SeedStockpile(ResourceType.Fuel, 600f);
+        sim.Debug.SeedStockpile(ResourceType.Metal, 150f);
 
         Assert.True(sim.CanLaunchShip());
         Assert.True(sim.TryLaunchShip());

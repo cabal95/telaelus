@@ -10,6 +10,9 @@ namespace Game.Presentation;
 /// placement command to the simulation on a left click. For an extractor, it also
 /// shows the work area as a translucent disc and highlights the matching fields
 /// in range. Placement itself is decided by the sim (CanPlace / TryPlace).
+/// The pointer is the viewport mouse position, unless a scenario sets
+/// <see cref="PointerOverride"/> to a world point; that point is projected to the
+/// screen each frame and then goes through the same screen-to-ground ray.
 /// </summary>
 public partial class BuildController : Node3D
 {
@@ -29,6 +32,22 @@ public partial class BuildController : Node3D
 
     /// <summary>Matching fields in the ghost's work area (extractors only; 0 otherwise).</summary>
     public int FieldsInRange { get; private set; }
+
+    /// <summary>
+    /// A world point on the ground to aim at instead of the mouse (set by scenarios
+    /// and the live channel). Null means use the real mouse.
+    /// </summary>
+    public Vector3? PointerOverride { get; set; }
+
+    /// <summary>The placement ghost as it stands for the current pointer.</summary>
+    public readonly record struct GhostInfo(
+        int AnchorX,
+        int AnchorZ,
+        int Width,
+        int Depth,
+        Vector3 Center,
+        bool Placeable,
+        int FieldsInRange);
 
     private static readonly Color ValidColor = new(0.3f, 0.9f, 0.4f, 0.5f);
     private static readonly Color InvalidColor = new(0.9f, 0.3f, 0.3f, 0.5f);
@@ -87,31 +106,58 @@ public partial class BuildController : Node3D
 
     public override void _Process(double delta)
     {
-        FieldsInRange = 0;
-        if (Selected is null || !TryGetMouseAnchor(Selected.Value, out int anchorX, out int anchorZ))
+        GhostInfo? ghost = CurrentGhost();
+        FieldsInRange = ghost?.FieldsInRange ?? 0;
+        if (Selected is null || ghost is null)
         {
             HideGhost();
             return;
         }
 
+        GhostInfo g = ghost.Value;
         BuildingDef def = BuildingDefs.For(Selected.Value);
-        (int width, int depth) = def.Footprint(Facing);
-        Vector3 center = def.Center(anchorX, anchorZ, Facing);
 
         _ghost.Visible = true;
-        _ghostMesh.Size = BuildingViews.BoxSize(width, depth);
-        _ghost.Position = center + new Vector3(0f, BuildingViews.BoxHeight * 0.5f, 0f);
-        _ghostMaterial.AlbedoColor = _sim.CanPlace(Selected.Value, anchorX, anchorZ, Facing) ? ValidColor : InvalidColor;
+        _ghostMesh.Size = BuildingViews.BoxSize(g.Width, g.Depth);
+        _ghost.Position = g.Center + new Vector3(0f, BuildingViews.BoxHeight * 0.5f, 0f);
+        _ghostMaterial.AlbedoColor = g.Placeable ? ValidColor : InvalidColor;
 
         if (def.Extracts is ResourceType extracts)
         {
-            ShowWorkArea(center, def.WorkRadius, extracts);
+            ShowWorkArea(g.Center, def.WorkRadius, extracts);
         }
         else
         {
             _workArea.Visible = false;
             ShowHighlights(new List<ResourceField>());
         }
+    }
+
+    /// <summary>
+    /// Computes the ghost for the current selection, facing, and pointer, or null
+    /// when nothing is selected or the pointer misses the ground.
+    /// </summary>
+    public GhostInfo? CurrentGhost()
+    {
+        if (Selected is null || !TryGetMouseAnchor(Selected.Value, out int anchorX, out int anchorZ))
+        {
+            return null;
+        }
+
+        BuildingDef def = BuildingDefs.For(Selected.Value);
+        (int width, int depth) = def.Footprint(Facing);
+        Vector3 center = def.Center(anchorX, anchorZ, Facing);
+        int fieldsInRange = def.Extracts is ResourceType extracts
+            ? _sim.FieldsInRange(center, def.WorkRadius, extracts).Count
+            : 0;
+        return new GhostInfo(
+            anchorX,
+            anchorZ,
+            width,
+            depth,
+            center,
+            _sim.CanPlace(Selected.Value, anchorX, anchorZ, Facing),
+            fieldsInRange);
     }
 
     public override void _UnhandledInput(InputEvent @event)
@@ -133,9 +179,7 @@ public partial class BuildController : Node3D
         _workAreaMesh.BottomRadius = radius;
         _workArea.Position = center + new Vector3(0f, 0.03f, 0f);
 
-        List<ResourceField> fields = _sim.FieldsInRange(center, radius, type);
-        FieldsInRange = fields.Count;
-        ShowHighlights(fields);
+        ShowHighlights(_sim.FieldsInRange(center, radius, type));
     }
 
     private void ShowHighlights(List<ResourceField> fields)
@@ -228,7 +272,9 @@ public partial class BuildController : Node3D
     {
         hit = Vector3.Zero;
 
-        Vector2 mouse = GetViewport().GetMousePosition();
+        Vector2 mouse = PointerOverride is Vector3 world
+            ? _camera.UnprojectPosition(world)
+            : GetViewport().GetMousePosition();
         Vector3 origin = _camera.ProjectRayOrigin(mouse);
         Vector3 direction = _camera.ProjectRayNormal(mouse);
         if (Mathf.Abs(direction.Y) < 0.0001f)

@@ -1,0 +1,23 @@
+{
+  "$schema": "../scenario.schema.json",
+  "name": "field-stage-views",
+  "description": "A field's view shows one model per remaining stage and disappears with the field.",
+  "steps": [
+    { "initMap": {} },
+    { "placeResource": { "type": "Ore", "mapCell": [9, 9] } },
+    { "wait": 1 },
+    { "screenshot": "full" },
+    { "expect": "fields[0].stage", "equals": 5 },
+    { "expect": "fields[0].visibleModels", "equals": 5 },
+    { "setResourceAmount": { "mapCell": [9, 9], "amount": 120 } },
+    { "wait": 1 },
+    { "screenshot": "amount-120" },
+    { "expect": "fields[0].visibleModels", "equals": 3 },
+    { "setResourceAmount": { "mapCell": [9, 9], "amount": 1 } },
+    { "wait": 1 },
+    { "expect": "fields[0].visibleModels", "equals": 1 },
+    { "setResourceAmount": { "mapCell": [9, 9], "amount": 0 } },
+    { "wait": 1 },
+    { "expect": "fields", "equals": [] }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "$schema": "../scenario.schema.json",
+  "name": "harvest-input",
+  "description": "Holding E reaches the sim's harvest intent. Harvest rules themselves are unit tested.",
+  "steps": [
+    { "initMap": {} },
+    { "comment": "Map cell (8, 7) spans z 28..32; the player stands 1 unit past its edge.", "placeResource": { "type": "Wood", "mapCell": [8, 7] } },
+    { "teleportPlayer": { "x": 33.5, "z": 33 } },
+    { "wait": 2 },
+    { "expect": "player.harvestTarget", "notEquals": null },
+    { "comment": "30 frames at --fixed-fps 30 is 30 sim ticks, one second, at 10 Wood per second.", "hold": { "key": "E", "frames": 30 } },
+    { "screenshot": "after-harvest" },
+    { "expect": "stockpile.Wood", "gte": 8 },
+    { "expect": "fields[0].amount", "lte": 242 }
+  ]
+}

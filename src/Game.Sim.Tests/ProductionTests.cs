@@ -10,7 +10,7 @@ public class ProductionTests
     public void Smelter_TurnsOneOreIntoOneMetalEachSecond()
     {
         var sim = new Simulation();
-        sim.TestSeedStockpile(ResourceType.Ore, 10f);
+        sim.Debug.SeedStockpile(ResourceType.Ore, 10f);
         Assert.True(sim.TryPlaceBuilding(BuildingType.Smelter, SimTestHelpers.ClearX, SimTestHelpers.ClearZ, Facing.North));
 
         SimTestHelpers.Ticks(sim, JustOverThreeSeconds);
@@ -24,8 +24,8 @@ public class ProductionTests
     public void Refinery_TurnsMetalAndWoodIntoFuelEveryTwoSeconds()
     {
         var sim = new Simulation();
-        sim.TestSeedStockpile(ResourceType.Metal, 5f);
-        sim.TestSeedStockpile(ResourceType.Wood, 5f);
+        sim.Debug.SeedStockpile(ResourceType.Metal, 5f);
+        sim.Debug.SeedStockpile(ResourceType.Wood, 5f);
         Assert.True(sim.TryPlaceBuilding(BuildingType.Refinery, SimTestHelpers.ClearX, SimTestHelpers.ClearZ, Facing.North));
 
         SimTestHelpers.Ticks(sim, JustOverThreeSeconds);
@@ -40,7 +40,7 @@ public class ProductionTests
     public void Processor_WaitsForAllInputs()
     {
         var sim = new Simulation();
-        sim.TestSeedStockpile(ResourceType.Metal, 5f);
+        sim.Debug.SeedStockpile(ResourceType.Metal, 5f);
         Assert.True(sim.TryPlaceBuilding(BuildingType.Refinery, SimTestHelpers.ClearX, SimTestHelpers.ClearZ, Facing.North));
 
         SimTestHelpers.Ticks(sim, JustOverThreeSeconds);

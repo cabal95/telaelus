@@ -15,13 +15,19 @@ planned multiplayer feasible.
 - Each `_Process(delta)`: read input into `PlayerIntent` (camera-relative move, held `E` harvest),
   advance the clock and step the simulation, then sync the views from read-only simulation state.
   `_UnhandledInput` handles mouse-wheel zoom and the `L` launch command.
+- `GameRoot` exposes the sim, camera, build controller, and field views read-only for the testing
+  code, and after building the world attaches a `ScenarioRunner` when the command line has
+  `--scenario` (debug builds only; see testing.md).
 
 ### Views
 
 `GameRoot` creates and syncs these presentation nodes, each reading simulation state:
 
-- `TerrainView` (one terrain tile per map cell), `ResourceFieldViews` (staged resource field
-  visuals), `BuildingViews` (footprint-sized building boxes), `PlayerView` (the character), `CameraRig` (the orthographic follow camera),
+- `TerrainView` (one terrain tile per map cell, rebuilt from scratch on the sim's `MapChanged`),
+  `ResourceFieldViews` (staged resource field visuals; reports each field's visible model count),
+  `BuildingViews` (footprint-sized building boxes, created and freed as buildings appear and are
+  removed), `PlayerView` (the character), `CameraRig` (the orthographic follow camera, with
+  `ZoomTo` for a direct size),
   `Hud` (a `CanvasLayer` label with resource totals, launch status, build selection with facing
   and fields in range, and the harvest hint), and `BuildController` (build-mode selection and
   rotation, the footprint ghost, the extractor work-area disc and field highlights, and the place
@@ -42,6 +48,11 @@ planned multiplayer feasible.
 - The project uses Godot 4.7 with C# and the **Compatibility (OpenGL)** renderer. The Godot project
   root is `src/Game`; `Game.csproj` references the `Game.Sim` project (see simulation.md), whose
   `Game.Sim.dll` is built beside `Game.dll` and loaded by the engine.
+
+### Testing code
+
+- `src/Game/Testing/` holds the scenario runner, the command executor, the command parser, and the
+  state snapshot (see testing.md). It is inert unless `--scenario` is given.
 
 ## Related
 

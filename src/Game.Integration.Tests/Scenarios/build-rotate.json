@@ -1,0 +1,29 @@
+{
+  "$schema": "../scenario.schema.json",
+  "name": "build-rotate",
+  "description": "R rotates the Refinery ghost between 2x3 and 3x2, and four presses return to North. Facing lives in BuildController, not the sim.",
+  "steps": [
+    { "initMap": {} },
+    { "press": "Key4" },
+    { "aimAt": { "cell": [36, 30] } },
+    { "wait": 2 },
+    { "screenshot": "facing-north" },
+    { "expect": "build.selected", "equals": "Refinery" },
+    { "expect": "build.facing", "equals": "North" },
+    { "expect": "build.ghost.width", "equals": 2 },
+    { "expect": "build.ghost.depth", "equals": 3 },
+    { "press": "R" },
+    { "wait": 2 },
+    { "screenshot": "facing-east" },
+    { "expect": "build.facing", "equals": "East" },
+    { "expect": "build.ghost.width", "equals": 3 },
+    { "expect": "build.ghost.depth", "equals": 2 },
+    { "press": "R" },
+    { "wait": 1 },
+    { "press": "R" },
+    { "wait": 1 },
+    { "press": "R" },
+    { "wait": 1 },
+    { "expect": "build.facing", "equals": "North" }
+  ]
+}

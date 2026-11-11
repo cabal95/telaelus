@@ -77,6 +77,11 @@ loop.
   Escape cancels; R rotates the facing. The ghost is sized to the rotated footprint and placed at
   the anchor whose footprint center is nearest the mouse's ground point; it is green when placeable,
   red when not. Left-click issues the placement command.
+- The pointer is the viewport mouse position unless `PointerOverride` holds a world ground point
+  (set by scenarios); that point is projected to the screen each frame and then goes through the
+  same screen-to-ground ray, so aiming stays fixed on the ground while the camera moves.
+  `CurrentGhost()` reports the ghost (anchor, size, center, placeability, fields in range) for the
+  current pointer.
 - For an extractor, the ghost also shows its work area as a flat translucent disc of the work
   radius around the footprint center and highlights each matching field in range.
 - The HUD shows the four resource totals, the launch progress and prompt, the build selection with

@@ -45,7 +45,8 @@ See `docs/changesets/INDEX.md` for the completed-changeset index and the templat
    find and not buried among completed specs.
 2. **Accepted** - the spec is approved before any code is written. Still `docs/changesets/<slug>.md`.
 3. **Implemented** - the code is written; the sim unit tests pass (`dotnet test
-   src/Game.Sim.Tests`); we review the running result; any small tweak is folded back into the
+   src/Game.Sim.Tests`), and the integration tests pass when the change touches presentation or
+   input; we review the running result; any small tweak is folded back into the
    code, the changeset, and the blueprint so the changeset stays truthful; then the changeset is
    stamped with its prefix, moved to `docs/changesets/completed/<YYMMDDHHMM>-<slug>.md`,
    its `Depends-on` is re-checked against current main, and it is committed. A large deviation from
@@ -56,9 +57,16 @@ Once committed, an Implemented changeset is immutable; a later change is a new c
 ### Tests
 
 - New or changed sim behavior gets unit tests in the same changeset.
-- A changeset's **Verification** section names the unit tests it adds or changes.
+- New input, rendering, or UI behavior gets a permanent scenario (an integration test) when it can
+  be checked through the state snapshot.
+- A changeset's **Verification** section names the unit tests and scenarios it adds, changes, or
+  relies on.
 - Passing `dotnet test src/Game.Sim.Tests` is required before a changeset is stamped Implemented.
-  See `docs/blueprints/testing.md` for how the tests are organized.
+  When the changeset touches presentation or input, `dotnet test src/Game.Integration.Tests` must
+  pass too; running it for every changeset is recommended.
+- While implementing, use ad hoc scenarios with screenshots to see that new behavior looks right,
+  not only that its state is right.
+  See `docs/blueprints/testing.md` for how the tests and scenarios are organized.
 
 ### Filename, ordering, and Depends-on
 

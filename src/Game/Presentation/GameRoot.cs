@@ -1,4 +1,5 @@
 using Game.Sim;
+using Game.Testing;
 using Godot;
 
 namespace Game.Presentation;
@@ -19,10 +20,18 @@ public partial class GameRoot : Node3D
     private BuildingViews _buildingViews = null!;
     private BuildController _buildController = null!;
     private Hud _hud = null!;
+    private TerrainView _terrainView = null!;
+
+    // Read-only access for the testing code (scenario runner and live channel).
+    public Simulation Sim => _sim;
+    public CameraRig Camera => _camera;
+    public BuildController Builder => _buildController;
+    public ResourceFieldViews FieldViews => _fieldViews;
 
     public override void _Ready()
     {
         BuildWorld();
+        ScenarioRunner.AttachIfRequested(this);
     }
 
     public override void _Process(double delta)
@@ -111,12 +120,13 @@ public partial class GameRoot : Node3D
 
     private void BuildWorld()
     {
-        var terrain = new TerrainView
+        _terrainView = new TerrainView
         {
             Name = "Terrain"
         };
-        AddChild(terrain);
-        terrain.Build(_sim);
+        AddChild(_terrainView);
+        _terrainView.Build(_sim);
+        _sim.MapChanged += () => _terrainView.Build(_sim);
 
         var light = new DirectionalLight3D
         {

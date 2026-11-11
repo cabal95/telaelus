@@ -36,6 +36,12 @@ public partial class CameraRig : Camera3D
         Position = Position.Lerp(desired, (float)Mathf.Min(1.0, FollowSpeed * delta));
     }
 
+    /// <summary>Sets the orthographic size directly, within the zoom limits.</summary>
+    public void ZoomTo(float size)
+    {
+        Size = Mathf.Clamp(size, MinSize, MaxSize);
+    }
+
     /// <summary>Positive steps zoom out, negative zoom in.</summary>
     public void Zoom(float steps)
     {

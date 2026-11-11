@@ -40,6 +40,14 @@ simulation is a separate class library in `src/Game.Sim`, referenced by `Game.cs
 - Build without the editor: `dotnet build game.slnx -c Debug`
 - Run the sim unit tests: `dotnet test src/Game.Sim.Tests` (engine-free; must pass before a
   changeset is stamped Implemented)
+- Run the integration tests: `dotnet test src/Game.Integration.Tests` (each JSON scenario in
+  `src/Game.Integration.Tests/Scenarios/` runs headless as its own test; must pass when a change
+  touches presentation or input)
+- Run one scenario windowed with screenshots: `<godot.editor> --path src/Game --fixed-fps 30
+  --resolution 1280x720 -- --scenario=<file> [--output=<dir>]` (relative paths resolve against
+  the repo root; output defaults to `test-output/runs/<timestamp>-<name>/`; read the PNGs and
+  `report.json` there). Add `--headless` for a state-only run. See
+  [docs/blueprints/testing.md](docs/blueprints/testing.md) for the command list.
 - Open the editor: `<godot.editor> --editor --path src/Game`
 - Run the game: `<godot.editor> --path src/Game`
 - Headless runtime check: `<godot.editor> --headless --path src/Game --quit-after 20` (stderr

@@ -72,6 +72,25 @@ public partial class ResourceFieldViews : Node3D
         return slots;
     }
 
+    /// <summary>How many models a field's view shows, or null if it has no view yet.</summary>
+    public int? VisibleModels(int fieldId)
+    {
+        if (!_views.TryGetValue(fieldId, out Node3D[]? slots))
+        {
+            return null;
+        }
+
+        int visible = 0;
+        foreach (Node3D slot in slots)
+        {
+            if (slot.Visible)
+            {
+                visible++;
+            }
+        }
+        return visible;
+    }
+
     private void RemoveMissing(HashSet<int> present)
     {
         var gone = new List<int>();
