@@ -133,6 +133,14 @@ public partial class BuildController : Node3D
         }
     }
 
+    /// <summary>Returns build mode to its starting state: nothing selected, facing North, real mouse.</summary>
+    public void ResetBuildMode()
+    {
+        Selected = null;
+        Facing = Facing.North;
+        PointerOverride = null;
+    }
+
     /// <summary>
     /// Computes the ghost for the current selection, facing, and pointer, or null
     /// when nothing is selected or the pointer misses the ground.

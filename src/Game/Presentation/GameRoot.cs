@@ -32,6 +32,7 @@ public partial class GameRoot : Node3D
     {
         BuildWorld();
         ScenarioRunner.AttachIfRequested(this);
+        ControlChannel.AttachIfRequested(this);
     }
 
     public override void _Process(double delta)

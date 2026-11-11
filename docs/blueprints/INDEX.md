@@ -22,7 +22,8 @@ Read this index to find the right area, then open that blueprint for the detail.
 - **[presentation.md](presentation.md)** - The presentation layer: the frame loop and view-sync
   pattern, the views, the asset and model pipeline, and the renderer.
 - **[testing.md](testing.md)** - The engine-free sim unit tests and the seam check, JSON
-  scenarios (commands, snapshot, running, output), and the headless integration tests.
+  scenarios (commands, snapshot, running, output), the headless integration tests, and the live
+  control channel with pause and frame stepping.
 
 ## Adding a blueprint
 

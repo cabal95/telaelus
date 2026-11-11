@@ -48,6 +48,12 @@ simulation is a separate class library in `src/Game.Sim`, referenced by `Game.cs
   the repo root; output defaults to `test-output/runs/<timestamp>-<name>/`; read the PNGs and
   `report.json` there). Add `--headless` for a state-only run. See
   [docs/blueprints/testing.md](docs/blueprints/testing.md) for the command list.
+- Drive a running game live: start it in the background with `<godot.editor> --path src/Game
+  --fixed-fps 30 --resolution 1280x720 -- --control-port=7777 [--start-paused]`, poll
+  `curl -s localhost:7777/status` until it answers, send scenario commands with
+  `curl -s localhost:7777/commands -d '[{"press":"Key4"},{"wait":2},{"screenshot":"ghost"}]'`
+  (open the returned screenshot paths to see the frame; use `pause` and `step` to go frame by
+  frame), and finish with `curl -s -X POST localhost:7777/quit`.
 - Open the editor: `<godot.editor> --editor --path src/Game`
 - Run the game: `<godot.editor> --path src/Game`
 - Headless runtime check: `<godot.editor> --headless --path src/Game --quit-after 20` (stderr

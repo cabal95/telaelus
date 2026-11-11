@@ -185,6 +185,25 @@ public sealed class ScenarioCommand
                     RequireObject(arg, name);
                     return e => e.Click();
                 }
+            case "pause":
+                {
+                    RequireObject(arg, name);
+                    return e => e.Pause();
+                }
+            case "resume":
+                {
+                    RequireObject(arg, name);
+                    return e => e.Resume();
+                }
+            case "step":
+                {
+                    int frames = Int(Required(arg, "frames"), "frames");
+                    if (frames < 1)
+                    {
+                        throw new FormatException("step needs at least one frame");
+                    }
+                    return e => e.Step(frames);
+                }
             case "wait":
                 {
                     int frames = Int(arg, "wait");

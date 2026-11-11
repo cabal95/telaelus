@@ -1,0 +1,31 @@
+{
+  "$schema": "../scenario.schema.json",
+  "name": "pause-step",
+  "description": "While paused, input waits for step, and step runs exact frames (one sim tick each at --fixed-fps 30) then stays paused.",
+  "steps": [
+    { "initMap": {} },
+    { "wait": 1 },
+    { "pause": {} },
+    { "keyDown": "D" },
+    { "comment": "Queued, not delivered: nothing moves while paused.", "expect": "player.position[0]", "approx": 32 },
+    { "expect": "input.heldKeys", "equals": [] },
+    { "step": { "frames": 1 } },
+    { "expect": "paused", "equals": true },
+    { "expect": "input.heldKeys", "equals": ["D"] },
+    { "comment": "One tick at 6 units per second along the screen-right diagonal: 0.2 / sqrt(2) on X.", "expect": "player.position[0]", "approx": 32.1414, "tolerance": 0.002 },
+    { "step": { "frames": 4 } },
+    { "expect": "player.position[0]", "approx": 32.7071, "tolerance": 0.002 },
+    { "keyUp": "D" },
+    { "press": "Key4" },
+    { "step": { "frames": 1 } },
+    { "press": "R" },
+    { "expect": "build.facing", "equals": "North" },
+    { "step": { "frames": 1 } },
+    { "expect": "build.facing", "equals": "East" },
+    { "expect": "paused", "equals": true },
+    { "resume": {} },
+    { "wait": 2 },
+    { "expect": "paused", "equals": false },
+    { "expect": "input.heldKeys", "equals": [] }
+  ]
+}

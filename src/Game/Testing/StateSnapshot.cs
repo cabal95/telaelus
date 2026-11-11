@@ -12,12 +12,23 @@ namespace Game.Testing;
 /// </summary>
 public static class StateSnapshot
 {
-    public static JsonObject Build(GameRoot root, int frame)
+    public static JsonObject Build(GameRoot root, CommandExecutor executor)
     {
         Simulation sim = root.Sim;
+        var heldKeys = new JsonArray();
+        foreach (Key key in executor.HeldKeys)
+        {
+            heldKeys.Add(key.ToString());
+        }
+
         return new JsonObject
         {
-            ["frame"] = frame,
+            ["frame"] = executor.Frame,
+            ["paused"] = executor.Paused,
+            ["input"] = new JsonObject
+            {
+                ["heldKeys"] = heldKeys
+            },
             ["player"] = new JsonObject
             {
                 ["position"] = Pair(sim.Player.Position.X, sim.Player.Position.Z),

@@ -17,7 +17,9 @@ planned multiplayer feasible.
   `_UnhandledInput` handles mouse-wheel zoom and the `L` launch command.
 - `GameRoot` exposes the sim, camera, build controller, and field views read-only for the testing
   code, and after building the world attaches a `ScenarioRunner` when the command line has
-  `--scenario` (debug builds only; see testing.md).
+  `--scenario`, or a `ControlChannel` when it has `--control-port` (debug builds only; see
+  testing.md). Both run with `ProcessMode.Always` so they keep working while the scene tree is
+  paused; every other game node pauses.
 
 ### Views
 
@@ -51,8 +53,9 @@ planned multiplayer feasible.
 
 ### Testing code
 
-- `src/Game/Testing/` holds the scenario runner, the command executor, the command parser, and the
-  state snapshot (see testing.md). It is inert unless `--scenario` is given.
+- `src/Game/Testing/` holds the scenario runner, the live control channel, the command executor,
+  the command parser, the state snapshot, and shared path helpers (see testing.md). It is inert
+  unless `--scenario` or `--control-port` is given.
 
 ## Related
 

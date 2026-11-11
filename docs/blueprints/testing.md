@@ -6,7 +6,9 @@ Automated tests guard behavior that already works, at two levels. **Sim unit tes
 simulation in a plain xUnit project that runs without the engine. **Scenarios** are JSON files
 that drive the real game (setup, injected input, waits, screenshots, expectations); kept
 scenarios run headless as **integration tests**, one test per file. Both gate a changeset before
-it is stamped Implemented (see `docs/development.md`).
+it is stamped Implemented (see `docs/development.md`). The **live control channel** accepts the
+same commands over local HTTP, so an agent can drive a running game interactively, including
+pausing it and stepping frame by frame.
 
 ## Current state
 
@@ -61,7 +63,8 @@ it is stamped Implemented (see `docs/development.md`).
   trailing commas in the file are tolerated. `src/Game.Integration.Tests/scenario.schema.json`
   defines the format; scenarios reference it with `$schema`.
 - **Commands:**
-  - Map setup: `initMap` `{}` (empty all-grass map, player at the center), `changeTiles`
+  - Map setup: `initMap` `{}` (empty all-grass map, player at the center, and build mode reset:
+    nothing selected, facing North, no aim override), `changeTiles`
     `{ type, cells: [[x, z], ...] }` or `{ type, from, to }` (map cells, inclusive),
     `placeResource` `{ type, mapCell, amount? }` (default 250), `setResourceAmount`
     `{ mapCell, amount }` (0 removes), `removeResource` `{ mapCell }`, `removeBuilding`
@@ -74,6 +77,7 @@ it is stamped Implemented (see `docs/development.md`).
     Godot `Key` names (`R`, `E`, `Key1`, `Escape`).
   - Time and capture: `wait` (frames), `screenshot` (label; records a snapshot and saves the next
     drawn frame as `NN-<label>.png`, taking one frame), `snapshot` (label; records state only).
+  - Pause: `pause` `{}`, `resume` `{}`, and `step` `{ frames }` (see "Pause and frame stepping").
   - Check: `expect` with a snapshot path and exactly one of `equals`, `notEquals`, `gte`, `lte`,
     `approx` (optional `tolerance`, default 0.001), or `exists`. Paths use dots and indexes
     (`build.ghost.width`, `fields[0].visibleModels`, `player.position[0]`). Numbers compare by
@@ -81,8 +85,10 @@ it is stamped Implemented (see `docs/development.md`).
 - Commands that take no frames run back to back in the same frame, so several inputs with no
   `wait` between them arrive together. `wait` and `screenshot` hold the next step until their
   frames pass.
-- **The state snapshot** (`StateSnapshot`) is the contract for `expect` and the report: `frame`;
-  `player` (`position` [x, z], `harvestTarget` field id or null); `build` (null when not in build
+- **The state snapshot** (`StateSnapshot`) is the contract for `expect`, the report, and the live
+  channel: `frame` (game frames processed since the executor started; paused frames do not
+  count); `paused`; `input` (`heldKeys`: keys the executor pressed that are still down); `player`
+  (`position` [x, z], `harvestTarget` field id or null); `build` (null when not in build
   mode, else `selected`, `facing`, `fieldsInRange`, and `ghost`: `anchor`, `width`, `depth`,
   `placeable`, or null); `buildings` (`id`, `type`, `anchor`, `facing`, `width`, `depth`,
   `currentField`); `fields` (`id`, `type`, `mapCell`, `amount`, `stage`, `visibleModels`);
@@ -92,6 +98,23 @@ it is stamped Implemented (see `docs/development.md`).
   buffers them until its next flush). Aiming uses `BuildController.PointerOverride`, a world
   point projected to the screen each frame; injected mouse motion is not used because a windowed
   game reports the real OS cursor instead.
+
+### Pause and frame stepping
+
+- `pause` uses Godot's scene-tree pause: game nodes stop processing (sim clock, camera, views,
+  animation). The scenario runner and the control channel run with `ProcessMode.Always`, so they
+  keep taking commands; rendering continues, so screenshots show the frozen frame.
+- `step` `{ frames: n }` pauses first if running, then runs exactly n game frames and stays
+  paused. At `--fixed-fps 30` each frame is one sim tick, so `step 1` is one tick.
+- **While paused, input waits for `step`:** `press`, `keyDown`, `keyUp`, and `click` are queued,
+  and the next `step` unpauses, injects the queue, flushes it, and runs its frames, so everything
+  queued since the last step arrives together in that step's first frame (two keys, or a key and
+  a click, in the same frame). Godot drops input flushed while the tree is paused, which is why
+  the executor unpauses before injecting.
+- A paused `press` or `click` delivers its down event in the next step and its up event in the
+  step after, so it reads as held for exactly one frame; until that later step, the snapshot still
+  lists the key as held. `wait` and `hold` run as steps while paused (a `hold`'s key-up waits for
+  the next step). `resume` delivers any queued input and resumes normal running.
 
 ### Running a scenario
 
@@ -107,7 +130,8 @@ it is stamped Implemented (see `docs/development.md`).
   that input held for a single frame (a `press`) overlaps a sim tick; at 60 fps the sim ticks only
   every other frame, so a one-frame press of a polled key (movement, E) could be missed. If the
   sim tick rate changes, this value changes with it.
-- `GameRoot` attaches the `ScenarioRunner` only with `--scenario` and only in debug builds.
+- `GameRoot` attaches the `ScenarioRunner` only with `--scenario` and only in debug builds. The
+  runner processes with `ProcessMode.Always`, so scenarios can use `pause` and `step`.
 - **Output:** by default `test-output/runs/<yyMMdd-HHmmss>-<name>/` at the repo root
   (git-ignored), or `--output`. It holds the PNGs and `report.json`: scenario name and file,
   result, exit code, message, frame count, and one record per executed command (step index,
@@ -138,13 +162,45 @@ it is stamped Implemented (see `docs/development.md`).
   `build-rotate` (R rotates the Refinery ghost 2 x 3 to 3 x 2 and back), `place-at-mouse` (aim and
   click places a Mine at the expected anchor; the ghost counts an Ore field in range),
   `harvest-input` (holding E harvests), `field-stage-views` (visible models track the stage and
-  vanish with the field).
+  vanish with the field), `pause-step` (paused input waits for `step`, and steps advance exact
+  ticks).
+
+### Live control channel
+
+- **Starting:** `<godot.editor> --path src/Game --fixed-fps 30 --resolution 1280x720 --
+  --control-port=<n> [--start-paused] [--output=<dir>] [--no-screenshots]`. Debug builds only;
+  ignored if `--scenario` is also given. `--start-paused` pauses once the world is built.
+  Screenshots and the session log go to `test-output/runs/<yyMMdd-HHmmss>-live/` or `--output`.
+- **Transport:** a `TcpListener` bound to `IPAddress.Loopback` (127.0.0.1 only; nothing else can
+  connect) with a minimal HTTP/1.1 parser on a background thread. It needs no URL reservation or
+  admin rights, unlike `HttpListener` on Windows. Each request is queued and run on the main
+  thread by `ControlChannel` (a `ProcessMode.Always` node) with the shared `CommandExecutor`; one
+  request runs at a time, in arrival order. Responses close the connection.
+- **Endpoints:**
+  - `GET /status`: `ready`, `paused`, `frame`, and the run folder `output`.
+  - `GET /snapshot`: the current state snapshot.
+  - `POST /commands`: one step object or an array of them, in the scenario format. The response
+    comes when the last command finishes (so `wait`, `step`, and `hold` hold it) and has
+    `passed` (every `expect` passed), `error` (null, or a runtime failure such as an invalid
+    placement, which stops the rest of the request), `results` (per command: `index`,
+    `command`, `input`, `outcome` ok/failed/error, `message`, `detail`; a screenshot's detail
+    includes its absolute `path`), and the final `snapshot`. A failed `expect` is HTTP 200 with
+    `passed: false`; the game keeps running.
+  - `POST /quit`: responds, then exits the game.
+  - An invalid request (bad JSON, unknown command, bad arguments) is HTTP 400 with `error`, and
+    nothing in it runs. An unknown path or method is HTTP 404.
+- **Session log:** every request and response is written to `session.json` in the run folder, so
+  a session can be reviewed or trimmed into a scenario file.
 
 ### Agent workflow
 
 - During implementation, write an ad hoc scenario (for example under `test-output/`), run it
   windowed, and read the PNGs and `report.json`. To keep it, add `expect` steps for its state and
   move it into `Scenarios/`.
+- To explore interactively, start the game in the background with `--control-port`, poll
+  `/status` until it answers, send commands with `curl -s localhost:<n>/commands -d '<json>'`,
+  open the returned screenshot paths, and finish with `curl -s -X POST localhost:<n>/quit`. Use
+  `--start-paused` and `step` to inspect changes frame by frame.
 
 ## Related
 

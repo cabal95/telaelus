@@ -53,6 +53,7 @@ public partial class ScenarioRunner : Node
         var runner = new ScenarioRunner
         {
             Name = "ScenarioRunner",
+            ProcessMode = ProcessModeEnum.Always,
             _root = root,
             _args = args
         };
@@ -61,7 +62,7 @@ public partial class ScenarioRunner : Node
 
     public override void _Ready()
     {
-        _scenarioFile = FromRepoRoot(_args.ScenarioPath!);
+        _scenarioFile = TestPaths.FromRepoRoot(_args.ScenarioPath!);
         _name = Path.GetFileNameWithoutExtension(_scenarioFile);
         try
         {
@@ -166,24 +167,7 @@ public partial class ScenarioRunner : Node
 
     private string ResolveOutputDir()
     {
-        if (_args.OutputDir is string output)
-        {
-            return FromRepoRoot(output);
-        }
-
-        string runId = $"{DateTime.Now:yyMMdd-HHmmss}-{_name}";
-        return Path.Combine(RepoRoot, "test-output", "runs", runId);
-    }
-
-    // The repo root is two levels above the Godot project (src/Game).
-    private static string RepoRoot =>
-        Path.GetFullPath(Path.Combine(ProjectSettings.GlobalizePath("res://"), "..", ".."));
-
-    // Godot switches its working directory to the project folder when given --path,
-    // so relative paths are resolved against the repo root instead.
-    private static string FromRepoRoot(string path)
-    {
-        return Path.IsPathRooted(path) ? Path.GetFullPath(path) : Path.GetFullPath(Path.Combine(RepoRoot, path));
+        return TestPaths.RunFolder(_args.OutputDir, _name);
     }
 
     private void Record(int step, ScenarioCommand command, string outcome, string? message, JsonNode? detail)

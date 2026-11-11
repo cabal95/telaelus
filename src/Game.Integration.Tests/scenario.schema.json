@@ -57,6 +57,9 @@
         { "$ref": "#/definitions/aimAt" },
         { "$ref": "#/definitions/click" },
         { "$ref": "#/definitions/wait" },
+        { "$ref": "#/definitions/pause" },
+        { "$ref": "#/definitions/resume" },
+        { "$ref": "#/definitions/step" },
         { "$ref": "#/definitions/screenshot" },
         { "$ref": "#/definitions/snapshot" },
         { "$ref": "#/definitions/expect" }
@@ -319,6 +322,43 @@
       "additionalProperties": false,
       "properties": {
         "wait": { "type": "integer", "minimum": 0 },
+        "comment": { "$ref": "#/definitions/comment" }
+      }
+    },
+    "pause": {
+      "description": "Pause the game (scene-tree pause). While paused, input is queued until the next step, and wait or hold run as steps.",
+      "type": "object",
+      "required": ["pause"],
+      "additionalProperties": false,
+      "properties": {
+        "pause": { "type": "object", "maxProperties": 0 },
+        "comment": { "$ref": "#/definitions/comment" }
+      }
+    },
+    "resume": {
+      "description": "Resume normal running, delivering any queued input.",
+      "type": "object",
+      "required": ["resume"],
+      "additionalProperties": false,
+      "properties": {
+        "resume": { "type": "object", "maxProperties": 0 },
+        "comment": { "$ref": "#/definitions/comment" }
+      }
+    },
+    "step": {
+      "description": "Run exactly this many frames (pausing first if running), delivering queued input in the first, then stay paused.",
+      "type": "object",
+      "required": ["step"],
+      "additionalProperties": false,
+      "properties": {
+        "step": {
+          "type": "object",
+          "required": ["frames"],
+          "additionalProperties": false,
+          "properties": {
+            "frames": { "type": "integer", "minimum": 1 }
+          }
+        },
         "comment": { "$ref": "#/definitions/comment" }
       }
     },

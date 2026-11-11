@@ -9,18 +9,35 @@ namespace Game.Testing;
 
 /// <summary>
 /// Runs scenario commands against the live game. Most commands finish instantly
-/// (in the current frame); <c>wait</c> and <c>screenshot</c> make the executor
-/// <see cref="Busy"/> until enough frames pass. The owning node calls
-/// <see cref="BeginFrame"/> once per frame before running more commands. Shared by
-/// the scenario runner and (later) the live control channel.
+/// (in the current frame); <c>wait</c>, <c>step</c>, and <c>screenshot</c> make the
+/// executor <see cref="Busy"/> until enough frames pass. The owning node (which runs
+/// with ProcessMode.Always, after GameRoot in the tree) calls <see cref="BeginFrame"/>
+/// once per frame before running more commands. Shared by the scenario runner and
+/// the live control channel.
+///
+/// While the scene tree is paused, input is queued rather than injected, and the
+/// next <c>step</c> unpauses, injects the queue, flushes it, and runs its frames.
+/// Godot drops input that is flushed while the tree is paused, so queued input is
+/// only ever delivered in a frame the game will process.
 /// </summary>
 public sealed class CommandExecutor
 {
     private readonly GameRoot _root;
     private readonly string _outputDir;
     private readonly bool _screenshots;
+
+    // Running: release halves of press/click, delivered at the start of the next frame.
     private readonly List<InputEvent> _pendingReleases = new();
+
+    // Paused: input for the next step, and release halves for the step after it.
+    private List<InputEvent> _queuedInput = new();
+    private List<InputEvent> _deferredInput = new();
+
+    // Keys this executor has pressed, for the snapshot's held-key list.
+    private readonly HashSet<Key> _touchedKeys = new();
+
     private int _waitFrames;
+    private int _stepFrames;
     private bool _awaitingScreenshot;
     private string? _screenshotPath;
     private int _screenshotCount;
@@ -32,16 +49,61 @@ public sealed class CommandExecutor
         _screenshots = screenshots;
     }
 
-    /// <summary>Frames since the executor started (frame 0 is the first frame it ran in).</summary>
+    /// <summary>
+    /// Game frames processed since the executor started (frame 0 is the first). Frames
+    /// spent paused do not count.
+    /// </summary>
     public int Frame { get; private set; } = -1;
 
-    /// <summary>True while waiting for frames to pass or a screenshot to be captured.</summary>
-    public bool Busy => _waitFrames > 0 || _awaitingScreenshot;
+    /// <summary>The folder screenshots are written to.</summary>
+    public string OutputDir => _outputDir;
 
-    /// <summary>Advances the frame: delivers queued releases and counts down any wait.</summary>
+    /// <summary>True while waiting for frames to pass, a step to finish, or a screenshot.</summary>
+    public bool Busy => _waitFrames > 0 || _stepFrames > 0 || _awaitingScreenshot;
+
+    public bool Paused => _root.GetTree().Paused;
+
+    /// <summary>Keys the executor pressed that Godot currently reports as held.</summary>
+    public IEnumerable<Key> HeldKeys
+    {
+        get
+        {
+            foreach (Key key in _touchedKeys)
+            {
+                if (Input.IsPhysicalKeyPressed(key))
+                {
+                    yield return key;
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Advances the frame: counts the frame if the game processed it, finishes a step
+    /// (re-pausing), or delivers running-mode releases and counts down a wait.
+    /// </summary>
     public void BeginFrame()
     {
-        Frame++;
+        if (!Paused)
+        {
+            Frame++;
+        }
+
+        if (_stepFrames > 0)
+        {
+            _stepFrames--;
+            if (_stepFrames == 0)
+            {
+                _root.GetTree().Paused = true;
+            }
+            return;
+        }
+
+        if (Paused)
+        {
+            return;
+        }
+
         if (_pendingReleases.Count > 0)
         {
             foreach (InputEvent release in _pendingReleases)
@@ -57,11 +119,61 @@ public sealed class CommandExecutor
         }
     }
 
+    // ---- Pause and stepping ---------------------------------------------
+
+    /// <summary>Pauses the game; pending releases wait for the next step.</summary>
+    public StepOutcome Pause()
+    {
+        if (!Paused)
+        {
+            _root.GetTree().Paused = true;
+            _queuedInput.AddRange(_pendingReleases);
+            _pendingReleases.Clear();
+        }
+        return StepOutcome.Ok;
+    }
+
+    /// <summary>Resumes normal running, delivering queued input now and deferred releases next frame.</summary>
+    public StepOutcome Resume()
+    {
+        if (Paused)
+        {
+            _root.GetTree().Paused = false;
+            DeliverNow(_queuedInput);
+            _pendingReleases.AddRange(_deferredInput);
+            _queuedInput = new List<InputEvent>();
+            _deferredInput = new List<InputEvent>();
+        }
+        return StepOutcome.Ok;
+    }
+
+    /// <summary>
+    /// Runs exactly <paramref name="frames"/> game frames, then stays paused. Pauses
+    /// first if running. Queued input is delivered in the first stepped frame.
+    /// </summary>
+    public StepOutcome Step(int frames)
+    {
+        Pause();
+        if (frames <= 0)
+        {
+            return StepOutcome.Ok;
+        }
+
+        // Unpause first: input flushed while paused is dropped.
+        _root.GetTree().Paused = false;
+        DeliverNow(_queuedInput);
+        _queuedInput = _deferredInput;
+        _deferredInput = new List<InputEvent>();
+        _stepFrames = frames;
+        return StepOutcome.Ok;
+    }
+
     // ---- Map and other setup --------------------------------------------
 
     public StepOutcome InitMap()
     {
         _root.Sim.Debug.ResetToEmptyMap();
+        _root.Builder.ResetBuildMode();
         return StepOutcome.Ok;
     }
 
@@ -131,16 +243,21 @@ public sealed class CommandExecutor
 
     // ---- Input ----------------------------------------------------------
 
-    /// <summary>Key down now; key up at the start of the next frame.</summary>
+    /// <summary>
+    /// Key down now and up at the start of the next frame (running), or down in the
+    /// next step and up in the step after it (paused): held for exactly one frame.
+    /// </summary>
     public StepOutcome Press(Key key)
     {
+        _touchedKeys.Add(key);
         Inject(KeyEvent(key, true));
-        _pendingReleases.Add(KeyEvent(key, false));
+        Release(KeyEvent(key, false));
         return StepOutcome.Ok;
     }
 
     public StepOutcome KeyDown(Key key)
     {
+        _touchedKeys.Add(key);
         Inject(KeyEvent(key, true));
         return StepOutcome.Ok;
     }
@@ -165,14 +282,19 @@ public sealed class CommandExecutor
             ? _root.Camera.UnprojectPosition(world)
             : _root.GetViewport().GetMousePosition();
         Inject(MouseEvent(screen, true));
-        _pendingReleases.Add(MouseEvent(screen, false));
+        Release(MouseEvent(screen, false));
         return StepOutcome.Ok;
     }
 
     // ---- Time and capture ----------------------------------------------
 
+    /// <summary>Lets frames pass; while paused, that means stepping them.</summary>
     public StepOutcome Wait(int frames)
     {
+        if (Paused)
+        {
+            return Step(frames);
+        }
         _waitFrames = frames;
         return StepOutcome.Ok;
     }
@@ -182,7 +304,7 @@ public sealed class CommandExecutor
         return new StepOutcome(true, null, new JsonObject
         {
             ["label"] = label,
-            ["snapshot"] = StateSnapshot.Build(_root, Frame)
+            ["snapshot"] = StateSnapshot.Build(_root, this)
         });
     }
 
@@ -208,13 +330,13 @@ public sealed class CommandExecutor
         {
             ["label"] = label,
             ["file"] = file,
-            ["snapshot"] = StateSnapshot.Build(_root, Frame)
+            ["snapshot"] = StateSnapshot.Build(_root, this)
         });
     }
 
     public StepOutcome Expect(string path, string op, JsonNode? expected, double tolerance)
     {
-        JsonObject snapshot = StateSnapshot.Build(_root, Frame);
+        JsonObject snapshot = StateSnapshot.Build(_root, this);
         bool exists = SnapshotPath.TryResolve(snapshot, path, out JsonNode? actual);
         bool passed = op switch
         {
@@ -262,11 +384,46 @@ public sealed class CommandExecutor
             && test(a, e);
     }
 
-    private static void Inject(InputEvent inputEvent)
+    // Running: deliver now. Paused: queue for the next step.
+    private void Inject(InputEvent inputEvent)
     {
+        if (Paused)
+        {
+            _queuedInput.Add(inputEvent);
+            return;
+        }
+        DeliverNow(new List<InputEvent>
+        {
+            inputEvent
+        });
+    }
+
+    // Running: release at the start of the next frame. Paused: release in the step after next.
+    private void Release(InputEvent inputEvent)
+    {
+        if (Paused)
+        {
+            _deferredInput.Add(inputEvent);
+        }
+        else
+        {
+            _pendingReleases.Add(inputEvent);
+        }
+    }
+
+    private static void DeliverNow(List<InputEvent> events)
+    {
+        if (events.Count == 0)
+        {
+            return;
+        }
+
         // Godot buffers injected events until its next input flush; flushing now
         // delivers them in this frame.
-        Input.ParseInputEvent(inputEvent);
+        foreach (InputEvent inputEvent in events)
+        {
+            Input.ParseInputEvent(inputEvent);
+        }
         Input.FlushBufferedEvents();
     }
 

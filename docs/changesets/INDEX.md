@@ -35,6 +35,8 @@ Newest last. One line each; open the file for the full spec.
   sim references only Godot math types, and the test gate before Implemented.
 - **2611111204-scenario-runner** - Adds JSON scenarios that drive the real game (setup, input,
   screenshots, expectations), `Simulation.Debug`, and headless integration tests, one per scenario.
+- **2611111216-live-control** - Adds a loopback HTTP control channel that drives a running game with the
+  scenario commands, plus `pause`, `resume`, and frame-exact `step`.
 
 ## Adding a changeset
 
