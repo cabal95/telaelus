@@ -18,10 +18,11 @@ src/asset-factory/
   models/            generated .obj and .mtl (the source of truth, committed)
   previews/          kept sample sheets (final ones only)
   tools/
-    gen.py           runs every generator; mountains and ore
+    gen.py           runs every generator; mountains
     mesh.py          shared building blocks: Mesh writer, PALETTE, solids
     terrain_gen.py   ground tiles, transition pieces, river pieces
     building_gen.py  building models
+    resource_gen.py  resource field models (the deposits)
     arrange.py       composes test maps from terrain models (for previews)
     export_glb.py    OBJ to .glb exporter
     preview.py       preview renderer (no window)
@@ -190,7 +191,7 @@ and takes milliseconds.
 ## Shipping an asset to the game
 
 - Follow the folder and naming rules in the relevant `README.md` under
-  `src/Game/assets/models/` (for example `rock_a.glb`, `tree_a.glb`).
+  `src/Game/assets/models/` (for example `iron_ore_a.glb`, `tree_a.glb`).
 - Godot caches imported assets. Replacing a `.glb` is not enough for a plain game run, which keeps
   drawing the old cached model. Re-import first with
   `<godot.editor> --headless --path src/Game --import` (it exits on its own), or just open the

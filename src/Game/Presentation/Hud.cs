@@ -6,8 +6,8 @@ using Godot;
 namespace Game.Presentation;
 
 /// <summary>
-/// Minimal heads-up display: resource totals, the current build selection, and a
-/// harvest hint. Pure presentation; it only reads simulation state.
+/// Minimal heads-up display: resource totals (deposits on one line, refined goods on
+/// the next), launch progress, the current build selection, and a harvest hint. Pure presentation; it only reads simulation state.
 /// </summary>
 public partial class Hud : CanvasLayer
 {
@@ -33,13 +33,12 @@ public partial class Hud : CanvasLayer
         int shipsLaunched)
     {
         var text = new StringBuilder();
-        text.Append("Ore: ").Append(Amount(stockpile, ResourceType.Ore));
-        text.Append("   Wood: ").Append(Amount(stockpile, ResourceType.Wood));
-        text.Append("   Metal: ").Append(Amount(stockpile, ResourceType.Metal));
-        text.Append("   Fuel: ").Append(Amount(stockpile, ResourceType.Fuel));
+        AppendLine(text, stockpile, ResourceKind.Deposit);
+        text.Append('\n');
+        AppendLine(text, stockpile, ResourceKind.Refined);
 
-        text.Append("\nLaunch: Fuel ").Append(Amount(stockpile, ResourceType.Fuel)).Append('/').Append((int)Simulation.LaunchFuelCost);
-        text.Append("   Metal ").Append(Amount(stockpile, ResourceType.Metal)).Append('/').Append((int)Simulation.LaunchMetalCost);
+        text.Append("\nLaunch: Rocket Fuel ").Append(Amount(stockpile, ResourceType.RocketFuel)).Append('/').Append((int)Simulation.LaunchRocketFuelCost);
+        text.Append("   Iron ").Append(Amount(stockpile, ResourceType.Iron)).Append('/').Append((int)Simulation.LaunchIronCost);
         if (canLaunch)
         {
             text.Append("   [L] LAUNCH SHIP");
@@ -61,15 +60,34 @@ public partial class Hud : CanvasLayer
         }
         else
         {
-            text.Append("\nBuild:  [1] Mine   [2] Lumber Camp   [3] Smelter   [4] Refinery");
+            text.Append("\nBuild:  [1] Mine   [2] Lumber Camp   [3] Smelter   [4] Refinery   [5] Oil Well");
         }
 
         if (harvestTarget is not null)
         {
-            text.Append("\n[E] harvest ").Append(harvestTarget.Type);
+            text.Append("\n[E] harvest ").Append(ResourceDefs.For(harvestTarget.Type).Name);
         }
 
         _label.Text = text.ToString();
+    }
+
+    /// <summary>
+    /// One line of totals for every resource of a kind, in table order. Terrain-sourced
+    /// resources are left out until a building can collect them.
+    /// </summary>
+    private static void AppendLine(StringBuilder text, IReadOnlyDictionary<ResourceType, float> stockpile, ResourceKind kind)
+    {
+        bool first = true;
+        foreach (ResourceType type in System.Enum.GetValues<ResourceType>())
+        {
+            ResourceDef def = ResourceDefs.For(type);
+            if (def.Kind != kind)
+            {
+                continue;
+            }
+            text.Append(first ? "" : "   ").Append(def.Name).Append(": ").Append(Amount(stockpile, type));
+            first = false;
+        }
     }
 
     private static int Amount(IReadOnlyDictionary<ResourceType, float> stockpile, ResourceType type)

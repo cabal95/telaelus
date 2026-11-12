@@ -16,14 +16,46 @@ public static class NodeModels
 
     private static readonly Dictionary<ResourceType, ModelSpec> Specs = new()
     {
-        [ResourceType.Ore] = new ModelSpec(
+        [ResourceType.IronOre] = new ModelSpec(
             new[]
             {
-                "nature/rock_a",
-                "nature/rock_b",
-                "nature/rock_c"
+                "nature/iron_ore_a",
+                "nature/iron_ore_b",
+                "nature/iron_ore_c"
             },
             0.8f),
+        [ResourceType.CopperOre] = new ModelSpec(
+            new[]
+            {
+                "nature/copper_ore_a",
+                "nature/copper_ore_b",
+                "nature/copper_ore_c"
+            },
+            0.8f),
+        [ResourceType.Coal] = new ModelSpec(
+            new[]
+            {
+                "nature/coal_a",
+                "nature/coal_b",
+                "nature/coal_c"
+            },
+            0.6f),
+        [ResourceType.Stone] = new ModelSpec(
+            new[]
+            {
+                "nature/stone_a",
+                "nature/stone_b",
+                "nature/stone_c"
+            },
+            0.9f),
+        [ResourceType.CrudeOil] = new ModelSpec(
+            new[]
+            {
+                "nature/crude_oil_a",
+                "nature/crude_oil_b",
+                "nature/crude_oil_c"
+            },
+            0.05f),
         [ResourceType.Wood] = new ModelSpec(
             new[]
             {

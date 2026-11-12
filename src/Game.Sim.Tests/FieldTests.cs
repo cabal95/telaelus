@@ -22,7 +22,7 @@ public class FieldTests
     [Fact]
     public void Depleted_WhenEmpty()
     {
-        var field = new ResourceField(0, ResourceType.Ore, 0, 0, 250f)
+        var field = new ResourceField(0, ResourceType.IronOre, 0, 0, 250f)
         {
             Amount = 0f
         };
@@ -33,7 +33,7 @@ public class FieldTests
     [Fact]
     public void Bounds_SpanItsMapCell()
     {
-        var field = new ResourceField(0, ResourceType.Ore, 10, 9, 250f);
+        var field = new ResourceField(0, ResourceType.IronOre, 10, 9, 250f);
         Assert.Equal(40f, field.MinX);
         Assert.Equal(36f, field.MinZ);
         Assert.Equal(new Vector3(42f, 0f, 38f), field.Center);
@@ -43,7 +43,7 @@ public class FieldTests
     public void DistanceToField_IsZeroInsideAndMeasuresToTheNearestEdgeOrCorner()
     {
         // Field square spans world [0, 4] x [0, 4].
-        var field = new ResourceField(0, ResourceType.Ore, 0, 0, 250f);
+        var field = new ResourceField(0, ResourceType.IronOre, 0, 0, 250f);
 
         Assert.Equal(0f, Simulation.DistanceToField(new Vector3(2f, 0f, 2f), field));
         Assert.Equal(1f, Simulation.DistanceToField(new Vector3(5f, 0f, 2f), field), 4);
@@ -56,7 +56,7 @@ public class FieldTests
     {
         var sim = new Simulation();
         ResourceField field = SimTestHelpers.FieldAtMapCell(sim, 10, 9);
-        Assert.Equal(ResourceType.Ore, field.Type);
+        Assert.Equal(ResourceType.IronOre, field.Type);
 
         for (int x = 40; x < 44; x++)
         {
@@ -75,27 +75,24 @@ public class FieldTests
     public void StartingFields_HoldEnoughForALaunch()
     {
         var sim = new Simulation();
-        float ore = 0f;
-        float wood = 0f;
+        var totals = new System.Collections.Generic.Dictionary<ResourceType, float>();
         foreach (ResourceField field in sim.Fields)
         {
-            if (field.Type == ResourceType.Ore)
-            {
-                ore += field.Amount;
-            }
-            else if (field.Type == ResourceType.Wood)
-            {
-                wood += field.Amount;
-            }
+            totals.TryGetValue(field.Type, out float sum);
+            totals[field.Type] = sum + field.Amount;
         }
 
-        Assert.Equal(8, sim.Fields.Count);
-        Assert.Equal(1150f, ore);
-        Assert.Equal(1750f, wood);
+        Assert.Equal(14, sim.Fields.Count);
+        Assert.Equal(1150f, totals[ResourceType.IronOre]);
+        Assert.Equal(300f, totals[ResourceType.CopperOre]);
+        Assert.Equal(400f, totals[ResourceType.Coal]);
+        Assert.Equal(650f, totals[ResourceType.Stone]);
+        Assert.Equal(1750f, totals[ResourceType.Wood]);
+        Assert.Equal(1000f, totals[ResourceType.CrudeOil]);
 
-        // A launch needs 600 Metal (500 into Fuel, 100 for the launch) and 500 Wood.
-        Assert.True(ore >= Simulation.LaunchFuelCost + Simulation.LaunchMetalCost);
-        Assert.True(wood >= Simulation.LaunchFuelCost);
+        // A launch needs 100 Iron (from Iron Ore) and 500 Rocket Fuel (from Crude Oil).
+        Assert.True(totals[ResourceType.IronOre] >= Simulation.LaunchIronCost);
+        Assert.True(totals[ResourceType.CrudeOil] >= Simulation.LaunchRocketFuelCost);
     }
 
     [Fact]
@@ -105,8 +102,8 @@ public class FieldTests
         var point = new Vector3(45f, 0f, 35f);
 
         // Ore (10, 9) is ~1.4 away and Ore (11, 10) is 5 away; nothing else is within 6.
-        Assert.Equal(2, sim.FieldsInRange(point, 6f, ResourceType.Ore).Count);
-        Assert.Single(sim.FieldsInRange(point, 3f, ResourceType.Ore));
+        Assert.Equal(2, sim.FieldsInRange(point, 6f, ResourceType.IronOre).Count);
+        Assert.Single(sim.FieldsInRange(point, 3f, ResourceType.IronOre));
         Assert.Empty(sim.FieldsInRange(point, 6f, ResourceType.Wood));
     }
 }

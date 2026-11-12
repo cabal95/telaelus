@@ -10,13 +10,31 @@ buildings.md). A single global stockpile holds all amounts.
 
 ### Resource types
 
-- `ResourceType` has four values: **Ore**, **Wood** (raw, from fields), **Metal**, **Fuel**
-  (refined, from buildings).
+- `ResourceType` has ten values. `ResourceDefs.For(type)` gives each a display name, a `Kind`, and
+  whether the player can harvest it by hand; rules read this table, not the enum:
+
+  | Type | Kind | Hand-harvest | Source |
+  |---|---|---|---|
+  | Wood | Deposit | yes | Wood fields (trees) |
+  | Stone | Deposit | yes | Stone fields (boulders) |
+  | IronOre | Deposit | yes | Iron Ore fields |
+  | CopperOre | Deposit | yes | Copper Ore fields |
+  | Coal | Deposit | yes | Coal fields |
+  | CrudeOil | Deposit | no | Crude Oil fields (oil seeps), by an Oil Well only |
+  | Sand | TerrainSourced | no | a collector on Sand (not yet built) |
+  | Water | TerrainSourced | no | a pump on ShallowWater (not yet built) |
+  | Iron | Refined | | Smelter |
+  | RocketFuel | Refined | | Refinery |
+
+- Deposits are finite resource fields. Terrain-sourced resources never run out but need a building
+  on or beside the right terrain; Sand and Water are defined so the production plan (see
+  docs/game-plan.md) and the HUD are settled, and nothing produces them yet. Refined resources come
+  from processing buildings (see buildings.md).
 
 ### Resource fields
 
 - A `ResourceField` occupies exactly one map cell (all 16 of its fine cells). It has an `Id`, a
-  `Type` (Ore or Wood), its map cell (`MapX`, `MapZ`), an `InitialAmount`, and a remaining
+  `Type` (a deposit type), its map cell (`MapX`, `MapZ`), an `InitialAmount`, and a remaining
   `Amount`. It is `Depleted` when empty, `RemainingFraction` reports how full it is, and `MinX`,
   `MinZ`, and `Center` give its world-space square.
 - `StageCount` is 5. `Stage` is `ceil(RemainingFraction * StageCount)`: 5 when full, 1 just before
@@ -26,25 +44,35 @@ buildings.md). A single global stockpile holds all amounts.
   fine cell with one lookup. Adding or removing a field updates both.
 - A field placed without an explicit amount takes its biome's amount for its type, or the global
   default of 250 (`BiomeDef.DefaultFieldAmount`) when the biome does not list the type (see
-  terrain.md). A field may not sit on a map cell with a feature.
-- The simulation spawns a fixed set of eight fields, each at its biome's amount: Ore at map cells
-  `(10, 9)`, `(11, 10)`, `(9, 11)` (Grassland, 250 each) and `(4, 12)` (Highlands, 400); Wood at
-  `(3, 4)`, `(4, 3)`, `(2, 5)` (Forest, 500 each) and `(12, 3)` (Grassland, 250). That is 1150 Ore
-  and 1750 Wood, enough for a ship launch.
+  terrain.md). A field may not sit on a map cell with a feature, and only a deposit type can be a
+  field (placing any other kind throws).
+- The simulation spawns a fixed set of fourteen fields, each at its biome's amount:
+
+  | Type | Map cells | Biome | Total |
+  |---|---|---|---|
+  | Iron Ore | (10, 9), (11, 10), (9, 11); (4, 12) | Grassland (250 each); Highlands (400) | 1150 |
+  | Copper Ore | (2, 11) | Highlands | 300 |
+  | Coal | (1, 9) | Highlands | 400 |
+  | Stone | (3, 9); (7, 10) | Highlands (400); Grassland (250) | 650 |
+  | Wood | (3, 4), (4, 3), (2, 5); (12, 3) | Forest (500 each); Grassland (250) | 1750 |
+  | Crude Oil | (14, 6), (15, 7) | Desert | 1000 |
+
+  That is enough for a ship launch: 100 Iron from Iron Ore and 500 Rocket Fuel from Crude Oil.
 - A field blocks movement and placement on all its fine cells until it depletes and is removed,
   which reopens them.
 
 ### Range to a field
 
 - `DistanceToField(point, field)` is the distance from a point to the nearest point of the field's
-  map-cell square (0 inside). `FieldsInRange(point, radius, type)` returns the non-depleted fields
-  of a type within a radius by that measure.
+  map-cell square (0 inside). `FieldsInRange(point, radius, types)` returns the non-depleted fields
+  of any of the given types (or of one type) within a radius by that measure.
 
 ### Stockpile and hand-harvesting
 
 - The stockpile is a map from `ResourceType` to amount, exposed read-only.
-- Each tick the simulation finds the nearest field within `HarvestRange` (1.5 units) of the player,
-  by distance to the field's square, as the `HarvestTarget`. While the player holds the harvest
+- Each tick the simulation finds the nearest hand-harvestable field within `HarvestRange` (1.5
+  units) of the player, by distance to the field's square, as the `HarvestTarget`; a Crude Oil
+  field is never a target. While the player holds the harvest
   intent, it pulls `HarvestRate` (10 per second) from that field into the stockpile; a depleted
   field is removed.
 
@@ -54,14 +82,16 @@ buildings.md). A single global stockpile holds all amounts.
   positions inside its map cell (a quincunx around the center, kept clear of the cell edge) and
   shows the first `Stage` slots, so a field loses one model per stage. Visuals are freed when the
   field is removed.
-- `NodeModels` builds each slot's model from its glTF models (Ore rocks, generated by the asset
-  factory; Wood trees, CC0),
-  scaling to a target height (Ore ~0.8 units; Wood 2.5 units for a field of 250 or less, rising
-  to 3.5 at 500 or more, so larger fields look larger) but capping the footprint to the slot size
+- `NodeModels` builds each slot's model from its deposit's glTF models (three variants each,
+  generated by the asset factory, except the CC0 trees), scaling to a target height (Iron Ore and
+  Copper Ore ~0.8 units, Coal ~0.6, Stone ~0.9; Crude Oil is a flat pool, so its slot width sets
+  its size; Wood 2.5 units for a field of 250
+  or less, rising to 3.5 at 500 or more, so larger fields look larger) but capping the footprint to the slot size
   (1.2 units); it seats the model on the ground with a deterministic yaw and variant per slot. The
   models are required: a missing file throws (see presentation.md). Assets and conventions live in
   `src/Game/assets/models/nature/README.md`.
-- The HUD shows resource totals and an `[E] harvest` hint when a field is in range.
+- The HUD shows resource totals and an `[E] harvest` hint, with the resource's name, when a
+  hand-harvestable field is in range.
 
 ## Related
 

@@ -151,12 +151,12 @@ public class RiverTests
         Assert.Throws<InvalidOperationException>(() => sim.Debug.SetFeature(3, 3, MapFeature.River, Facing.East));
         Assert.Throws<InvalidOperationException>(() => sim.Debug.SetFeature(4, 4, MapFeature.Mountain));
 
-        sim.Debug.PlaceField(ResourceType.Ore, 5, 5);
+        sim.Debug.PlaceField(ResourceType.IronOre, 5, 5);
         Assert.Throws<InvalidOperationException>(() => sim.Debug.SetFeature(5, 5, MapFeature.Mountain));
 
         sim.Debug.SetFeature(6, 6, MapFeature.Mountain);
         Assert.Throws<InvalidOperationException>(() => sim.Debug.SetTerrain(6, 6, TerrainType.ShallowWater));
-        Assert.Throws<InvalidOperationException>(() => sim.Debug.PlaceField(ResourceType.Ore, 6, 6));
+        Assert.Throws<InvalidOperationException>(() => sim.Debug.PlaceField(ResourceType.IronOre, 6, 6));
         sim.Debug.SetTerrain(6, 6, TerrainType.Snow);
     }
 

@@ -94,8 +94,8 @@ public class TerrainModelTests
         sim.Debug.SetBiome(4, 4, BiomeType.Highlands);
 
         Assert.Equal(500f, sim.Debug.PlaceField(ResourceType.Wood, 2, 2).InitialAmount);
-        Assert.Equal(BiomeDef.DefaultFieldAmount, sim.Debug.PlaceField(ResourceType.Ore, 3, 3).InitialAmount);
-        Assert.Equal(400f, sim.Debug.PlaceField(ResourceType.Ore, 4, 4).InitialAmount);
+        Assert.Equal(BiomeDef.DefaultFieldAmount, sim.Debug.PlaceField(ResourceType.IronOre, 3, 3).InitialAmount);
+        Assert.Equal(400f, sim.Debug.PlaceField(ResourceType.IronOre, 4, 4).InitialAmount);
         Assert.Equal(250f, sim.Debug.PlaceField(ResourceType.Wood, 5, 5).InitialAmount);
     }
 

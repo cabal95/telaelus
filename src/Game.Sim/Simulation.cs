@@ -56,8 +56,8 @@ public sealed partial class Simulation
     private const float HarvestRange = 1.5f;
     private const float HarvestRate = 10f;
 
-    public const float LaunchFuelCost = 500f;
-    public const float LaunchMetalCost = 100f;
+    public const float LaunchRocketFuelCost = 500f;
+    public const float LaunchIronCost = 100f;
 
     public Simulation()
     {
@@ -176,9 +176,9 @@ public sealed partial class Simulation
 
     public bool CanLaunchShip()
     {
-        _stockpile.TryGetValue(ResourceType.Fuel, out float fuel);
-        _stockpile.TryGetValue(ResourceType.Metal, out float metal);
-        return fuel >= LaunchFuelCost && metal >= LaunchMetalCost;
+        _stockpile.TryGetValue(ResourceType.RocketFuel, out float fuel);
+        _stockpile.TryGetValue(ResourceType.Iron, out float iron);
+        return fuel >= LaunchRocketFuelCost && iron >= LaunchIronCost;
     }
 
     /// <summary>Consume the launch cost and record a launched ship. The initial win.</summary>
@@ -189,8 +189,8 @@ public sealed partial class Simulation
             return false;
         }
 
-        AddToStockpile(ResourceType.Fuel, -LaunchFuelCost);
-        AddToStockpile(ResourceType.Metal, -LaunchMetalCost);
+        AddToStockpile(ResourceType.RocketFuel, -LaunchRocketFuelCost);
+        AddToStockpile(ResourceType.Iron, -LaunchIronCost);
         ShipsLaunched++;
         return true;
     }
@@ -216,10 +216,16 @@ public sealed partial class Simulation
     /// <summary>Non-depleted fields of a type within a radius of a point.</summary>
     public List<ResourceField> FieldsInRange(Vector3 point, float radius, ResourceType type)
     {
+        return FieldsInRange(point, radius, new[] { type });
+    }
+
+    /// <summary>Non-depleted fields of any of the given types within a radius of a point.</summary>
+    public List<ResourceField> FieldsInRange(Vector3 point, float radius, IReadOnlyList<ResourceType> types)
+    {
         var result = new List<ResourceField>();
         foreach (ResourceField field in _fields)
         {
-            if (field.Type == type && !field.Depleted && DistanceToField(point, field) <= radius)
+            if (Contains(types, field.Type) && !field.Depleted && DistanceToField(point, field) <= radius)
             {
                 result.Add(field);
             }
@@ -278,12 +284,29 @@ public sealed partial class Simulation
         Player.Position = p;
     }
 
+    private static bool Contains(IReadOnlyList<ResourceType> types, ResourceType type)
+    {
+        foreach (ResourceType candidate in types)
+        {
+            if (candidate == type)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /// <summary>The nearest hand-harvestable field within reach (a Crude Oil field needs an Oil Well).</summary>
     private void UpdateHarvestTarget()
     {
         ResourceField? best = null;
         float bestDistance = HarvestRange;
         foreach (ResourceField field in _fields)
         {
+            if (!ResourceDefs.For(field.Type).HandHarvestable)
+            {
+                continue;
+            }
             float distance = DistanceToField(Player.Position, field);
             if (distance <= bestDistance)
             {
@@ -358,11 +381,10 @@ public sealed partial class Simulation
 
     private ResourceField? NearestFieldInWorkArea(Building building)
     {
-        ResourceType type = building.Def.Extracts!.Value;
         Vector3 center = building.Position;
         ResourceField? best = null;
         float bestDistance = float.MaxValue;
-        foreach (ResourceField field in FieldsInRange(center, building.Def.WorkRadius, type))
+        foreach (ResourceField field in FieldsInRange(center, building.Def.WorkRadius, building.Def.Works))
         {
             float distance = DistanceToField(center, field);
             if (distance < bestDistance)

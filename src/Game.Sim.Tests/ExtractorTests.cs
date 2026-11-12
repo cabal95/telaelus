@@ -17,7 +17,7 @@ public class ExtractorTests
         SimTestHelpers.Ticks(sim, 30);
 
         Assert.Same(SimTestHelpers.FieldAtMapCell(sim, 10, 9), mine.CurrentField);
-        Assert.Equal(5f, SimTestHelpers.Stock(sim, ResourceType.Ore), 2);
+        Assert.Equal(5f, SimTestHelpers.Stock(sim, ResourceType.IronOre), 2);
     }
 
     [Fact]
@@ -48,7 +48,7 @@ public class ExtractorTests
         SimTestHelpers.Seconds(sim, 2.0);
 
         Assert.Null(mine.CurrentField);
-        Assert.Equal(0f, SimTestHelpers.Stock(sim, ResourceType.Ore));
+        Assert.Equal(0f, SimTestHelpers.Stock(sim, ResourceType.IronOre));
     }
 
     [Fact]
@@ -61,7 +61,7 @@ public class ExtractorTests
         SimTestHelpers.Seconds(sim, 2.0);
 
         Assert.Null(camp.CurrentField);
-        Assert.Equal(0f, SimTestHelpers.Stock(sim, ResourceType.Ore));
+        Assert.Equal(0f, SimTestHelpers.Stock(sim, ResourceType.IronOre));
         Assert.Equal(0f, SimTestHelpers.Stock(sim, ResourceType.Wood));
     }
 
@@ -77,6 +77,6 @@ public class ExtractorTests
 
         // Two mines at 5 per second each.
         Assert.Equal(240f, field.Amount, 2);
-        Assert.Equal(10f, SimTestHelpers.Stock(sim, ResourceType.Ore), 2);
+        Assert.Equal(10f, SimTestHelpers.Stock(sim, ResourceType.IronOre), 2);
     }
 }

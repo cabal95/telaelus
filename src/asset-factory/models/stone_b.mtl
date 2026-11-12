@@ -1,0 +1,12 @@
+newmtl boulder
+Kd 0.700 0.680 0.640
+
+newmtl boulder_95
+Kd 0.665 0.646 0.608
+
+newmtl boulder_104
+Kd 0.728 0.707 0.666
+
+newmtl boulder_dark
+Kd 0.560 0.540 0.510
+

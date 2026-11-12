@@ -285,19 +285,28 @@ public sealed partial class Simulation
         Paint(13, 14, 14, 14, BiomeType.Volcanic, TerrainType.Lava);
     }
 
-    /// <summary>The test map's fields; each takes its biome's amount (1150 Ore, 1750 Wood in all).</summary>
+    /// <summary>
+    /// The test map's fields; each takes its biome's amount. In all: 1150 Iron Ore, 300 Copper Ore,
+    /// 400 Coal, 650 Stone, 1750 Wood, and 1000 Crude Oil.
+    /// </summary>
     private void SpawnInitialFields()
     {
         (ResourceType Type, int MapX, int MapZ)[] placements =
         {
-            (ResourceType.Ore, 10, 9),
-            (ResourceType.Ore, 11, 10),
-            (ResourceType.Ore, 9, 11),
-            (ResourceType.Ore, 4, 12),
+            (ResourceType.IronOre, 10, 9),
+            (ResourceType.IronOre, 11, 10),
+            (ResourceType.IronOre, 9, 11),
+            (ResourceType.IronOre, 4, 12),
+            (ResourceType.CopperOre, 2, 11),
+            (ResourceType.Coal, 1, 9),
+            (ResourceType.Stone, 3, 9),
             (ResourceType.Wood, 3, 4),
             (ResourceType.Wood, 4, 3),
             (ResourceType.Wood, 2, 5),
-            (ResourceType.Wood, 12, 3)
+            (ResourceType.Wood, 12, 3),
+            (ResourceType.Stone, 7, 10),
+            (ResourceType.CrudeOil, 14, 6),
+            (ResourceType.CrudeOil, 15, 7)
         };
 
         foreach ((ResourceType type, int mapX, int mapZ) in placements)

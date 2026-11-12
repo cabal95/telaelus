@@ -1,0 +1,9 @@
+newmtl coal_85
+Kd 0.111 0.111 0.119
+
+newmtl coal
+Kd 0.130 0.130 0.140
+
+newmtl coal_sheen
+Kd 0.240 0.240 0.270
+

@@ -3,8 +3,8 @@ using System.Collections.Generic;
 namespace Game.Sim;
 
 /// <summary>
-/// What a biome puts in its map cells: its base terrain and the resource fields
-/// it offers, each with its field amount. A biome carries no gameplay rule of its
+/// What a biome puts in its map cells: its base terrain and the deposits it offers
+/// as resource fields, each with its field amount. A biome carries no gameplay rule of its
 /// own; walk and build rules come from terrain and features.
 /// </summary>
 public sealed record BiomeDef(TerrainType BaseTerrain, IReadOnlyDictionary<ResourceType, float> Fields)
@@ -24,8 +24,9 @@ public static class BiomeDefs
 {
     private static readonly BiomeDef Grassland = new(TerrainType.Grass, new Dictionary<ResourceType, float>
     {
-        [ResourceType.Ore] = 250f,
-        [ResourceType.Wood] = 250f
+        [ResourceType.Wood] = 250f,
+        [ResourceType.Stone] = 250f,
+        [ResourceType.IronOre] = 250f
     });
     private static readonly BiomeDef Forest = new(TerrainType.Grass, new Dictionary<ResourceType, float>
     {
@@ -33,11 +34,15 @@ public static class BiomeDefs
     });
     private static readonly BiomeDef Highlands = new(TerrainType.Rock, new Dictionary<ResourceType, float>
     {
-        [ResourceType.Ore] = 400f
+        [ResourceType.IronOre] = 400f,
+        [ResourceType.CopperOre] = 300f,
+        [ResourceType.Coal] = 400f,
+        [ResourceType.Stone] = 400f
     });
     private static readonly BiomeDef Desert = new(TerrainType.Sand, new Dictionary<ResourceType, float>
     {
-        [ResourceType.Ore] = 250f
+        [ResourceType.CopperOre] = 250f,
+        [ResourceType.CrudeOil] = 500f
     });
     private static readonly BiomeDef Swamp = new(TerrainType.Mud, new Dictionary<ResourceType, float>
     {
@@ -45,11 +50,12 @@ public static class BiomeDefs
     });
     private static readonly BiomeDef Tundra = new(TerrainType.Snow, new Dictionary<ResourceType, float>
     {
-        [ResourceType.Ore] = 250f
+        [ResourceType.IronOre] = 250f
     });
     private static readonly BiomeDef Volcanic = new(TerrainType.Rock, new Dictionary<ResourceType, float>
     {
-        [ResourceType.Ore] = 400f
+        [ResourceType.IronOre] = 400f,
+        [ResourceType.Stone] = 400f
     });
     private static readonly BiomeDef Ocean = new(TerrainType.DeepWater, new Dictionary<ResourceType, float>());
 

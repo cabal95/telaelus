@@ -92,11 +92,30 @@ PALETTE = {
     "metal_dark": (0.30, 0.31, 0.34),
     "shadow": (0.08, 0.07, 0.07),
     "furnace_glow": (1.00, 0.55, 0.18),
+    # deposits
+    "ore_rock": (0.52, 0.51, 0.50),
+    "ore_rock_dark": (0.40, 0.40, 0.41),
+    "iron_rust": (0.66, 0.31, 0.17),
+    "iron_dark": (0.45, 0.20, 0.12),
+    "iron_steel": (0.30, 0.33, 0.42),
+    "copper_rock": (0.50, 0.44, 0.38),
+    "copper_green": (0.22, 0.58, 0.45),
+    "copper_orange": (0.82, 0.46, 0.22),
+    "coal": (0.13, 0.13, 0.14),
+    "coal_sheen": (0.24, 0.24, 0.27),
+    "boulder": (0.70, 0.68, 0.64),
+    "boulder_dark": (0.56, 0.54, 0.51),
+    "oil": (0.05, 0.05, 0.06),
+    "oil_sheen": (0.20, 0.19, 0.26),
+    "oil_violet": (0.28, 0.18, 0.36),
+    "oil_teal": (0.12, 0.30, 0.30),
+    "oil_earth": (0.30, 0.25, 0.19),
     # building accents (each building's identity color)
     "mine_accent": (0.85, 0.55, 0.20),
     "lumber_accent": (0.62, 0.40, 0.20),
     "smelter_accent": (0.78, 0.26, 0.20),
     "refinery_accent": (0.22, 0.42, 0.78),
+    "oil_well_accent": (0.92, 0.74, 0.16),
 }
 GLOW = {"lava", "furnace_glow"}  # palette entries that are emissive
 GLOW_STRENGTH = 0.5  # emission as a fraction of the base color

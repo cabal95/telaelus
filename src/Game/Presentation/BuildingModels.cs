@@ -23,6 +23,7 @@ public static class BuildingModels
         return type switch
         {
             BuildingType.LumberCamp => "lumber_camp",
+            BuildingType.OilWell => "oil_well",
             _ => type.ToString().ToLowerInvariant()
         };
     }

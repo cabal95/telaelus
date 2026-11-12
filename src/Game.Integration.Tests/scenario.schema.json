@@ -36,8 +36,8 @@
     "terrain": { "enum": ["Grass", "Sand", "Snow", "Rock", "Mud", "ShallowWater", "DeepWater", "Lava"] },
     "biome": { "enum": ["Grassland", "Forest", "Highlands", "Desert", "Swamp", "Tundra", "Volcanic", "Ocean"] },
     "feature": { "enum": ["None", "Mountain", "River"] },
-    "resource": { "enum": ["Ore", "Wood", "Metal", "Fuel"] },
-    "building": { "enum": ["Mine", "LumberCamp", "Smelter", "Refinery"] },
+    "resource": { "enum": ["Wood", "Stone", "IronOre", "CopperOre", "Coal", "CrudeOil", "Sand", "Water", "Iron", "RocketFuel"] },
+    "building": { "enum": ["Mine", "LumberCamp", "Smelter", "Refinery", "OilWell"] },
     "facing": { "enum": ["North", "East", "South", "West"] },
     "comment": { "type": "string", "description": "Ignored; documents the step." },
     "scenarioStep": {

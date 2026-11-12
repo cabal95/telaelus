@@ -41,7 +41,7 @@ public class HarvestTests
 
         // 10 per second for one second.
         Assert.Equal(240f, field.Amount, 2);
-        Assert.Equal(10f, SimTestHelpers.Stock(sim, ResourceType.Ore), 2);
+        Assert.Equal(10f, SimTestHelpers.Stock(sim, ResourceType.IronOre), 2);
     }
 
     [Fact]
@@ -51,7 +51,7 @@ public class HarvestTests
         SimTestHelpers.Teleport(sim, 41.5f, 35f);
         SimTestHelpers.Seconds(sim, 1.0);
 
-        Assert.Equal(0f, SimTestHelpers.Stock(sim, ResourceType.Ore));
+        Assert.Equal(0f, SimTestHelpers.Stock(sim, ResourceType.IronOre));
     }
 
     [Fact]
@@ -71,6 +71,6 @@ public class HarvestTests
         Assert.DoesNotContain(field, sim.Fields);
         Assert.Null(sim.FieldAt(41, 37));
         Assert.True(sim.IsWalkable(41, 37));
-        Assert.Equal(250f, SimTestHelpers.Stock(sim, ResourceType.Ore), 2);
+        Assert.Equal(250f, SimTestHelpers.Stock(sim, ResourceType.IronOre), 2);
     }
 }

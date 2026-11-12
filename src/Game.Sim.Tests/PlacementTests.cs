@@ -87,7 +87,7 @@ public class PlacementTests
     public void ExtractorWithNoFieldInRange_IsPlaceable()
     {
         var sim = new Simulation();
-        Assert.Empty(sim.FieldsInRange(BuildingDefs.For(BuildingType.Mine).Center(X, Z, Facing.North), 6f, ResourceType.Ore));
+        Assert.Empty(sim.FieldsInRange(BuildingDefs.For(BuildingType.Mine).Center(X, Z, Facing.North), 6f, ResourceType.IronOre));
         Assert.True(sim.TryPlaceBuilding(BuildingType.Mine, X, Z, Facing.North));
     }
 

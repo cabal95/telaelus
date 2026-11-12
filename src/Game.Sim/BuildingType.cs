@@ -6,5 +6,6 @@ public enum BuildingType
     Mine,
     LumberCamp,
     Smelter,
-    Refinery
+    Refinery,
+    OilWell
 }

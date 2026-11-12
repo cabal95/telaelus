@@ -16,7 +16,7 @@
     { "expect": "buildings[0].type", "equals": "Mine" },
     { "expect": "buildings[0].anchor", "equals": [20, 20] },
     { "expect": "build.ghost.placeable", "equals": false },
-    { "comment": "Map cell (6, 5) spans x 24..28, 3 units from the Mine's center.", "placeResource": { "type": "Ore", "mapCell": [6, 5] } },
+    { "comment": "Map cell (6, 5) spans x 24..28, 3 units from the Mine's center.", "placeResource": { "type": "IronOre", "mapCell": [6, 5] } },
     { "wait": 1 },
     { "expect": "build.fieldsInRange", "equals": 1 }
   ]

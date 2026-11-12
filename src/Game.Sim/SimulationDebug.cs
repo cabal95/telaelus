@@ -112,12 +112,16 @@ public sealed partial class Simulation
         }
 
         /// <summary>
-        /// Adds a field on an empty, featureless map cell. Without an amount it takes
+        /// Adds a deposit field on an empty, featureless map cell. Without an amount it takes
         /// its biome's amount for the type (or the global default).
         /// </summary>
         public ResourceField PlaceField(ResourceType type, int mapX, int mapZ, float? amount = null)
         {
             RequireMapCell(mapX, mapZ);
+            if (!ResourceDefs.For(type).HasFields)
+            {
+                throw new InvalidOperationException($"{type} is not a deposit and cannot be a resource field");
+            }
             if (_sim._fieldsByMapCell.ContainsKey((mapX, mapZ)))
             {
                 throw new InvalidOperationException($"map cell ({mapX}, {mapZ}) already has a field");

@@ -50,6 +50,9 @@ Newest last. One line each; open the file for the full spec.
 - **2611111733-initial-world-assets** - Replaces every remaining placeholder with generated models (ground tiles,
   transition pieces, river pieces, buildings, and model-based build ghosts), makes all models
   required, and starts the art-style blueprint.
+- **2611111844-raw-resources** - Adds the eight raw resources the first ship needs (six deposits, two
+  terrain-sourced) with a definitions table, biome deposits, a multi-deposit Mine, the Oil Well,
+  placeholder Smelter and Refinery recipes, and generated deposit models.
 
 ## Adding a changeset
 

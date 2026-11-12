@@ -174,13 +174,17 @@ pausing it and stepping frame by frame.
   steps in a kept scenario are for manual runs; the test suite skips them.
 - **Current scenarios:** `boot` (the game starts; player at the center, nothing on the map),
   `build-rotate` (R rotates the Refinery ghost 2 x 3 to 3 x 2 and back), `place-at-mouse` (aim and
-  click places a Mine at the expected anchor; the ghost counts an Ore field in range),
+  click places a Mine at the expected anchor; the ghost counts an Iron Ore field in range),
   `harvest-input` (holding E harvests), `field-stage-views` (visible models track the stage and
   vanish with the field), `pause-step` (paused input waits for `step`, and steps advance exact
   ticks), `place-on-player` (a building cannot be placed on the player; right beside them it can,
-  and the player can still walk), `terrain-types` (every terrain, a mountain on snow, and a river
-  from grass into sand render; the ghost is blocked on a river channel and allowed on its bank;
-  the snapshot reports the terrain, biome, and feature under the player).
+  and the player can still walk), `terrain-types` (every terrain, a mountain on each ground that
+  takes one, and rivers in every shape on several bank terrains render; the ghost is blocked on a
+  river channel and allowed on its bank; the snapshot reports the terrain, biome, and feature under
+  the player), `building-models` (every building model in every facing, the tinted ghost for each
+  type, red over a blocked spot, and placement still works), `resource-fields` (every deposit's
+  field model renders; Crude Oil cannot be hand-harvested; a Mine fills from the nearest mineral
+  deposit and an Oil Well from its seep).
 
 ### Live control channel
 

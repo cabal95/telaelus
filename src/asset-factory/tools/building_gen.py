@@ -104,7 +104,34 @@ def refinery():
     return m, mat.mats
 
 
-BUILDINGS = {"mine": mine, "lumber_camp": lumber_camp, "smelter": smelter, "refinery": refinery}
+def oil_well():
+    """A pumpjack over a wellhead at the front, its crank and counterweight at the back, and a tank."""
+    m, mat = Mesh(), Materials()
+    hx, hz = half(2), half(2)
+    box(m, mat("stone_dark"), -hx, 0, -hz, hx, 0.06, hz, mat_top=mat("stone", 0.8))
+    # wellhead at the front
+    cylinder(m, mat("metal_dark"), (0.0, 0.06, -0.62), (0.0, 0.3, -0.62), 0.09, segs=8)
+    cylinder(m, mat("oil_well_accent"), (0.0, 0.3, -0.62), (0.0, 0.36, -0.62), 0.12, segs=8)
+    # samson post: an A-frame holding the walking beam at its middle
+    for x in (-0.16, 0.16):
+        cylinder(m, mat("metal_dark"), (x, 0.06, -0.25), (x * 0.4, 0.95, -0.05), 0.035, segs=6)
+        cylinder(m, mat("metal_dark"), (x, 0.06, 0.15), (x * 0.4, 0.95, -0.05), 0.035, segs=6)
+    # walking beam, horsehead over the wellhead, crank and counterweight at the back
+    box(m, mat("oil_well_accent"), -0.06, 0.92, -0.62, 0.06, 1.02, 0.5)
+    box(m, mat("oil"), -0.08, 0.7, -0.78, 0.08, 1.06, -0.6, mat_top=mat("oil_well_accent"))
+    cylinder(m, mat("metal_dark"), (0.0, 0.66, -0.7), (0.0, 0.36, -0.62), 0.015, segs=4)
+    box(m, mat("metal_dark"), -0.22, 0.06, 0.35, 0.22, 0.42, 0.55)
+    box(m, mat("oil"), -0.24, 0.2, 0.42, 0.24, 0.62, 0.72)
+    cylinder(m, mat("metal_dark"), (0.0, 0.62, 0.55), (0.0, 0.95, 0.5), 0.03, segs=5)
+    # storage tank on the side
+    cylinder(m, mat("metal"), (0.58, 0.06, -0.05), (0.58, 0.62, -0.05), 0.25, segs=10)
+    cylinder(m, mat("oil_well_accent"), (0.58, 0.4, -0.05), (0.58, 0.48, -0.05), 0.26, segs=10)
+    cylinder(m, mat("metal_dark"), (0.1, 0.18, -0.62), (0.45, 0.18, -0.15), 0.03, segs=5)
+    return m, mat.mats
+
+
+BUILDINGS = {"mine": mine, "lumber_camp": lumber_camp, "smelter": smelter, "refinery": refinery,
+             "oil_well": oil_well}
 
 
 def build_all():

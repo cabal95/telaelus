@@ -10,23 +10,29 @@ loop.
 
 ### Building types and definitions
 
-- `BuildingType` has four values: **Mine**, **Lumber Camp**, **Smelter**, **Refinery**.
+- `BuildingType` has five values: **Mine**, **Lumber Camp**, **Smelter**, **Refinery**, **Oil Well**.
 - Each type has a `BuildingDef` (in `BuildingDefs`): a display name, a footprint in fine cells
-  (width along X, depth along Z when facing North), and for an extractor, the resource it extracts
-  and its work radius.
+  (width along X, depth along Z when facing North), and for an extractor, the deposit types it
+  works (`Works`; a building is an extractor when the list is not empty) and its work radius.
 
-  | Type        | Footprint | Extracts | Work radius |
-  |-------------|-----------|----------|-------------|
-  | Mine        | 2 x 2     | Ore      | 6 units     |
-  | Lumber Camp | 2 x 2     | Wood     | 6 units     |
-  | Smelter     | 3 x 3     |          |             |
-  | Refinery    | 2 x 3     |          |             |
+  | Type        | Footprint | Works                                | Work radius |
+  |-------------|-----------|--------------------------------------|-------------|
+  | Mine        | 2 x 2     | Iron Ore, Copper Ore, Coal, Stone    | 6 units     |
+  | Lumber Camp | 2 x 2     | Wood                                 | 6 units     |
+  | Oil Well    | 2 x 2     | Crude Oil                            | 3 units     |
+  | Smelter     | 3 x 3     |                                      |             |
+  | Refinery    | 2 x 3     |                                      |             |
+
+  The Oil Well's short radius means it sits beside its seep.
 
 - A `Recipe` has inputs, outputs (each a `ResourceAmount`), and a cycle time. Recipes are defined
   centrally:
-  - Mine and Lumber Camp: no recipe; each pulls from a field at `ExtractorRate` (5 per second).
-  - Smelter: 1 Ore to 1 Metal, cycle 1 s.
-  - Refinery: 1 Metal plus 1 Wood to 1 Fuel, cycle 2 s.
+  - Extractors (Mine, Lumber Camp, Oil Well): no recipe; each pulls from a field at
+    `ExtractorRate` (5 per second).
+  - Smelter: 1 Iron Ore to 1 Iron, cycle 1 s.
+  - Refinery: 1 Crude Oil to 1 Rocket Fuel, cycle 2 s.
+  These are placeholders until the production chain toward a ship (Steel Mill, Water into the
+  Refinery, ship parts; see docs/game-plan.md) is built.
 
 ### Placement state: anchor and facing
 
@@ -59,8 +65,9 @@ loop.
 
 - Each tick, every building steps.
 - An extractor works one field at a time: its current field, or if that is gone, the nearest
-  non-depleted matching field within its work area (distance from its footprint center to the
-  field's square, at most the work radius). It pulls `ExtractorRate` into the stockpile and clears
+  non-depleted field of any type it works within its work area (distance from its footprint center
+  to the field's square, at most the work radius). It pulls `ExtractorRate` of that field's type
+  into the stockpile and clears
   its current field when that field depletes. Several extractors may work the same field. With no
   field in range, it idles, and it picks up a field as soon as one is in range.
 - A processor, when idle, consumes its recipe inputs from the stockpile if available and starts a
@@ -70,7 +77,8 @@ loop.
 
 ### Ship launch (win condition)
 
-- When the stockpile holds at least `LaunchFuelCost` (500 Fuel) and `LaunchMetalCost` (100 Metal),
+- When the stockpile holds at least `LaunchRocketFuelCost` (500 Rocket Fuel) and `LaunchIronCost`
+  (100 Iron),
   `CanLaunchShip` is true. `TryLaunchShip` consumes that cost and increments `ShipsLaunched`. This
   is the current win that closes the initial loop.
 
@@ -82,9 +90,11 @@ loop.
   inset per side, and carries its type's accent color: Mine (a headframe over a shaft, ore cart at
   the front, orange), Lumber Camp (a plank shed, log pile and saw bench at the front, brown),
   Smelter (a stone furnace with a chimney and a glowing mouth at the front, red), Refinery (two
-  tanks joined by pipes, a control hut at the front, blue). The front marks the facing, so a
+  tanks joined by pipes, a control hut at the front, blue), Oil Well (a pumpjack whose horsehead
+  hangs over a wellhead at the front, with a crank, a counterweight, and a small tank, yellow and
+  black). The front marks the facing, so a
   rotated building reads as rotated.
-- `BuildController` drives build mode: keys 1 Mine, 2 Lumber Camp, 3 Smelter, 4 Refinery; 0 or
+- `BuildController` drives build mode: keys 1 Mine, 2 Lumber Camp, 3 Smelter, 4 Refinery, 5 Oil Well; 0 or
   Escape cancels; R rotates the facing. The ghost is a translucent copy of the selected building's
   model, turned to the chosen facing, over a thin plate covering the exact footprint; it is placed
   at the anchor whose footprint center is nearest the mouse's ground point, and every surface of
@@ -96,8 +106,8 @@ loop.
   current pointer, and `ResetBuildMode()` returns to no selection, facing North, and the real mouse
   (used by the `initMap` testing command).
 - For an extractor, the ghost also shows its work area as a flat translucent disc of the work
-  radius around the footprint center and highlights each matching field in range.
-- The HUD shows the four resource totals, the launch progress and prompt, the build selection with
+  radius around the footprint center and highlights each field in range of a type it works.
+- The HUD shows the resource totals, the launch progress and prompt, the build selection with
   its facing, and for an extractor, the count of fields in range.
 
 ## Related

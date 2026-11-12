@@ -80,18 +80,19 @@ it (None out of bounds). A feature adds its own blocking on top of the terrain's
 
 `BiomeType`: Grassland (the default), Forest, Highlands, Desert, Swamp, Tundra, Volcanic, Ocean.
 `MapBiomeAt` and `BiomeAt` read it (Grassland out of bounds). `BiomeDefs.For(type)` returns a
-`BiomeDef` with its `BaseTerrain` and `Fields`, the resource types it offers with each one's field
-amount; a biome lists only what it offers:
+`BiomeDef` with its `BaseTerrain` and `Fields`, the deposits it offers with each one's field
+amount (deposits are resource types of kind Deposit, see resources.md); a biome lists only what it
+offers, following the signature resources in docs/game-plan.md:
 
 | Biome | Base terrain | Fields |
 |---|---|---|
-| Grassland | Grass | Ore 250, Wood 250 |
+| Grassland | Grass | Wood 250, Stone 250, Iron Ore 250 |
 | Forest | Grass | Wood 500 |
-| Highlands | Rock | Ore 400 |
-| Desert | Sand | Ore 250 |
+| Highlands | Rock | Iron Ore 400, Copper Ore 300, Coal 400, Stone 400 |
+| Desert | Sand | Copper Ore 250, Crude Oil 500 |
 | Swamp | Mud | Wood 250 |
-| Tundra | Snow | Ore 250 |
-| Volcanic | Rock | Ore 400 |
+| Tundra | Snow | Iron Ore 250 |
+| Volcanic | Rock | Iron Ore 400, Stone 400 |
 | Ocean | DeepWater | none |
 
 - A field placed without an amount takes its biome's amount for its type (see resources.md).

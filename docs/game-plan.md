@@ -83,7 +83,9 @@ The current model (terrain types, biomes, mountain and river features) is in
 - **Planets weight biomes.** Part A starts on one planet. Each planet has its own biome
   probabilities, so a frozen planet is mostly tundra and becomes the long-term uranium source.
   Procedural generation picks biomes from the planet's weights.
-- **Signature resources** give each biome a reason to explore and expand:
+- **Signature resources** give each biome a reason to explore and expand. Wood, stone, iron,
+  copper, coal, and oil exist now as deposits (see [blueprints/terrain.md](blueprints/terrain.md));
+  the rest arrive with later ships and planets:
 
   | Biome | Signature resources |
   |---|---|
@@ -107,6 +109,41 @@ The current model (terrain types, biomes, mountain and river features) is in
 - **Fixed decisions:** the world is flat (a mountain range is the only hard land barrier); terrain
   is permanent once generated (no landfill); clearing a forest means depleting its Wood fields;
   decorative trees, when they come, never block and are never harvested.
+
+#### Production tree: toward the first ship
+
+The raw resources are chosen by working backward from the first ship launch. The eight raw
+resources exist now (see [blueprints/resources.md](blueprints/resources.md)); the intermediate
+buildings, ship parts, and power are the plan for later changesets. Counts are placeholders for
+tuning.
+
+```
+Ship launch = Hull Section x10 + Engine x1 + Control Module x1 + Rocket Fuel x200
+
+Hull Section ── Hull Plate x4 ── Steel ──┬── Iron ── Iron Ore
+             └─ Steel Beam x2 ── Steel   └── Coal
+Engine ──────── Steel, Copper Wire ── Copper ── Copper Ore
+             └─ Circuit ──┬── Copper Wire
+                          └── Plastic ── Crude Oil (refinery by-product)
+Control Module ─ Circuit, Hull Plate
+             └─ Glass ── Sand
+Rocket Fuel ──── Crude Oil + Water (refinery)
+```
+
+- **Raw resources (8):** Wood, Stone, Iron Ore, Copper Ore, Coal, and Crude Oil as deposits; Sand
+  and Water as terrain-sourced. Wood and Stone do not feed the ship: they are construction
+  materials, for when buildings have a cost.
+- **Buildings in the chain:** Smelter (Iron Ore to Iron, Copper Ore to Copper, Sand to Glass),
+  Steel Mill (Iron and Coal to Steel), Press (Steel to Hull Plate or Steel Beam), Wire Mill
+  (Copper to Copper Wire), Refinery (Crude Oil and Water to Rocket Fuel, with Plastic as a
+  by-product), and Assembler (Circuits and the ship parts). Until they exist, a placeholder
+  Smelter (Iron Ore to Iron) and Refinery (Crude Oil to Rocket Fuel) keep the loop playable.
+- **Power:** processors draw power; extractors stay unpowered at first. Sources, roughly in order:
+  a Burner Generator (burns Coal or Wood), a Water Wheel (on a Straight river cell, small and
+  free), an Oil Generator (burns a refinery product), and later a geothermal tap at Lava, solar,
+  and nuclear.
+- **Left for later ships and planets:** sulfur, biomass, crystals, rare metals, and uranium (the
+  Swamp, Volcanic, and Tundra signatures).
 
 ### Part B: In-Space (build this second)
 

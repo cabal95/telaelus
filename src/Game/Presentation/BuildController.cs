@@ -6,7 +6,7 @@ namespace Game.Presentation;
 
 /// <summary>
 /// Handles build mode: selecting a building type with the number keys, rotating
-/// with R, showing a ghost of the selected building centered on the mouse (a
+/// with R (keys 1 Mine, 2 Lumber Camp, 3 Smelter, 4 Refinery, 5 Oil Well), showing a ghost of the selected building centered on the mouse (a
 /// translucent copy of its model, tinted green or red, over a plate covering the
 /// exact footprint), and issuing a
 /// placement command to the simulation on a left click. For an extractor, it also
@@ -136,9 +136,9 @@ public partial class BuildController : Node3D
         _ghostPlate.Position = new Vector3(0f, PlateHeight * 0.5f, 0f);
         _ghostMaterial.AlbedoColor = g.Placeable ? ValidColor : InvalidColor;
 
-        if (def.Extracts is ResourceType extracts)
+        if (def.IsExtractor)
         {
-            ShowWorkArea(g.Center, def.WorkRadius, extracts);
+            ShowWorkArea(g.Center, def.WorkRadius, def.Works);
         }
         else
         {
@@ -169,8 +169,8 @@ public partial class BuildController : Node3D
         BuildingDef def = BuildingDefs.For(Selected.Value);
         (int width, int depth) = def.Footprint(Facing);
         Vector3 center = def.Center(anchorX, anchorZ, Facing);
-        int fieldsInRange = def.Extracts is ResourceType extracts
-            ? _sim.FieldsInRange(center, def.WorkRadius, extracts).Count
+        int fieldsInRange = def.IsExtractor
+            ? _sim.FieldsInRange(center, def.WorkRadius, def.Works).Count
             : 0;
         return new GhostInfo(
             anchorX,
@@ -194,14 +194,14 @@ public partial class BuildController : Node3D
         }
     }
 
-    private void ShowWorkArea(Vector3 center, float radius, ResourceType type)
+    private void ShowWorkArea(Vector3 center, float radius, IReadOnlyList<ResourceType> types)
     {
         _workArea.Visible = true;
         _workAreaMesh.TopRadius = radius;
         _workAreaMesh.BottomRadius = radius;
         _workArea.Position = center + new Vector3(0f, 0.03f, 0f);
 
-        ShowHighlights(_sim.FieldsInRange(center, radius, type));
+        ShowHighlights(_sim.FieldsInRange(center, radius, types));
     }
 
     private void ShowHighlights(List<ResourceField> fields)
@@ -284,6 +284,9 @@ public partial class BuildController : Node3D
                 break;
             case Key.Key4:
                 Selected = BuildingType.Refinery;
+                break;
+            case Key.Key5:
+                Selected = BuildingType.OilWell;
                 break;
             case Key.R:
                 Facing = (Facing)(((int)Facing + 1) % 4);

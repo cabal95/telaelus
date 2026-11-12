@@ -30,7 +30,8 @@ planned multiplayer feasible.
   `BuildingViews` (footprint-sized building boxes, created and freed as buildings appear and are
   removed), `PlayerView` (the character), `CameraRig` (the orthographic follow camera, with
   `ZoomTo` for a direct size),
-  `Hud` (a `CanvasLayer` label with resource totals, launch status, build selection with facing
+  `Hud` (a `CanvasLayer` label with resource totals, deposits on one line and refined goods on the
+  next, in table order and without terrain-sourced types until they can be collected; launch status, build selection with facing
   and fields in range, and the harvest hint), and `BuildController` (build-mode selection and
   rotation, the footprint ghost, the extractor work-area disc and field highlights, and the place
   command).

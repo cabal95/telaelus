@@ -3,29 +3,28 @@ namespace Game.Sim;
 /// <summary>Static rate and recipe definitions for each building type.</summary>
 public static class Recipes
 {
-    /// <summary>Units per second an extractor (Mine, Lumber Camp) pulls from its current field.</summary>
+    /// <summary>Units per second an extractor (Mine, Lumber Camp, Oil Well) pulls from its current field.</summary>
     public const float ExtractorRate = 5f;
 
     private static readonly Recipe SmelterRecipe = new(
         new ResourceAmount[]
         {
-            new(ResourceType.Ore, 1f)
+            new(ResourceType.IronOre, 1f)
         },
         new ResourceAmount[]
         {
-            new(ResourceType.Metal, 1f)
+            new(ResourceType.Iron, 1f)
         },
         1f);
 
     private static readonly Recipe RefineryRecipe = new(
         new ResourceAmount[]
         {
-            new(ResourceType.Metal, 1f),
-            new(ResourceType.Wood, 1f)
+            new(ResourceType.CrudeOil, 1f)
         },
         new ResourceAmount[]
         {
-            new(ResourceType.Fuel, 1f)
+            new(ResourceType.RocketFuel, 1f)
         },
         2f);
 

@@ -10,43 +10,42 @@ public class ProductionTests
     public void Smelter_TurnsOneOreIntoOneMetalEachSecond()
     {
         var sim = new Simulation();
-        sim.Debug.SeedStockpile(ResourceType.Ore, 10f);
+        sim.Debug.SeedStockpile(ResourceType.IronOre, 10f);
         Assert.True(sim.TryPlaceBuilding(BuildingType.Smelter, SimTestHelpers.ClearX, SimTestHelpers.ClearZ, Facing.North));
 
         SimTestHelpers.Ticks(sim, JustOverThreeSeconds);
 
         // Three cycles finished and a fourth started (its Ore already consumed).
-        Assert.Equal(3f, SimTestHelpers.Stock(sim, ResourceType.Metal));
-        Assert.Equal(6f, SimTestHelpers.Stock(sim, ResourceType.Ore));
+        Assert.Equal(3f, SimTestHelpers.Stock(sim, ResourceType.Iron));
+        Assert.Equal(6f, SimTestHelpers.Stock(sim, ResourceType.IronOre));
     }
 
     [Fact]
-    public void Refinery_TurnsMetalAndWoodIntoFuelEveryTwoSeconds()
+    public void Refinery_TurnsCrudeOilIntoRocketFuelEveryTwoSeconds()
     {
         var sim = new Simulation();
-        sim.Debug.SeedStockpile(ResourceType.Metal, 5f);
-        sim.Debug.SeedStockpile(ResourceType.Wood, 5f);
+        sim.Debug.SeedStockpile(ResourceType.CrudeOil, 5f);
         Assert.True(sim.TryPlaceBuilding(BuildingType.Refinery, SimTestHelpers.ClearX, SimTestHelpers.ClearZ, Facing.North));
 
         SimTestHelpers.Ticks(sim, JustOverThreeSeconds);
 
         // One cycle finished and a second started.
-        Assert.Equal(1f, SimTestHelpers.Stock(sim, ResourceType.Fuel));
-        Assert.Equal(3f, SimTestHelpers.Stock(sim, ResourceType.Metal));
-        Assert.Equal(3f, SimTestHelpers.Stock(sim, ResourceType.Wood));
+        Assert.Equal(1f, SimTestHelpers.Stock(sim, ResourceType.RocketFuel));
+        Assert.Equal(3f, SimTestHelpers.Stock(sim, ResourceType.CrudeOil));
     }
 
     [Fact]
-    public void Processor_WaitsForAllInputs()
+    public void Processor_WaitsForItsInputs()
     {
+        // Iron is not a Refinery input, so the Refinery has nothing to work with.
         var sim = new Simulation();
-        sim.Debug.SeedStockpile(ResourceType.Metal, 5f);
+        sim.Debug.SeedStockpile(ResourceType.Iron, 5f);
         Assert.True(sim.TryPlaceBuilding(BuildingType.Refinery, SimTestHelpers.ClearX, SimTestHelpers.ClearZ, Facing.North));
 
         SimTestHelpers.Ticks(sim, JustOverThreeSeconds);
 
-        Assert.Equal(0f, SimTestHelpers.Stock(sim, ResourceType.Fuel));
-        Assert.Equal(5f, SimTestHelpers.Stock(sim, ResourceType.Metal));
+        Assert.Equal(0f, SimTestHelpers.Stock(sim, ResourceType.RocketFuel));
+        Assert.Equal(5f, SimTestHelpers.Stock(sim, ResourceType.Iron));
     }
 
     [Fact]

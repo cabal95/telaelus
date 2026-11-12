@@ -9,7 +9,7 @@ public class DebugTests
     public void ResetToEmptyMap_ClearsEverything()
     {
         var sim = new Simulation();
-        sim.Debug.SeedStockpile(ResourceType.Ore, 5f);
+        sim.Debug.SeedStockpile(ResourceType.IronOre, 5f);
         sim.Debug.PlaceBuilding(BuildingType.Smelter, SimTestHelpers.ClearX, SimTestHelpers.ClearZ, Facing.North);
         sim.Debug.TeleportPlayer(5f, 5f);
 
@@ -53,7 +53,7 @@ public class DebugTests
         Assert.Same(field, sim.FieldAt(21, 22));
         Assert.Equal(100f, field.Amount);
         Assert.False(sim.IsWalkable(21, 22));
-        Assert.Throws<InvalidOperationException>(() => sim.Debug.PlaceField(ResourceType.Ore, 5, 5));
+        Assert.Throws<InvalidOperationException>(() => sim.Debug.PlaceField(ResourceType.IronOre, 5, 5));
     }
 
     [Fact]
@@ -61,7 +61,7 @@ public class DebugTests
     {
         var sim = new Simulation();
         sim.Debug.ResetToEmptyMap();
-        ResourceField field = sim.Debug.PlaceField(ResourceType.Ore, 10, 10);
+        ResourceField field = sim.Debug.PlaceField(ResourceType.IronOre, 10, 10);
 
         sim.Debug.SetFieldAmount(10, 10, 120f);
         Assert.Equal(3, field.Stage);
@@ -78,7 +78,7 @@ public class DebugTests
         sim.Debug.RemoveField(10, 9);
 
         Assert.Null(sim.FieldAt(40, 36));
-        Assert.Equal(7, sim.Fields.Count);
+        Assert.Equal(13, sim.Fields.Count);
         Assert.Throws<InvalidOperationException>(() => sim.Debug.RemoveField(10, 9));
     }
 
@@ -111,7 +111,7 @@ public class DebugTests
 
         sim.Debug.ResetToEmptyMap();
         sim.Debug.SetTerrain(1, 1, TerrainType.Sand);
-        sim.Debug.PlaceField(ResourceType.Ore, 3, 3);
+        sim.Debug.PlaceField(ResourceType.IronOre, 3, 3);
         sim.Debug.SetFieldAmount(3, 3, 50f);
         sim.Debug.RemoveField(3, 3);
 
@@ -123,6 +123,6 @@ public class DebugTests
     {
         var sim = new Simulation();
         Assert.Throws<InvalidOperationException>(() => sim.Debug.SetTerrain(-1, 0, TerrainType.ShallowWater));
-        Assert.Throws<InvalidOperationException>(() => sim.Debug.PlaceField(ResourceType.Ore, 16, 0));
+        Assert.Throws<InvalidOperationException>(() => sim.Debug.PlaceField(ResourceType.IronOre, 16, 0));
     }
 }

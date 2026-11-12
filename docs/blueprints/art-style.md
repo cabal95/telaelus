@@ -53,10 +53,28 @@ or 1.05 for facet variation). A new material extends the table.
 | metal_dark | 0.30, 0.31, 0.34 | Pipes, rails, wheels |
 | shadow | 0.08, 0.07, 0.07 | Openings (doors, shafts, chimney mouth) |
 | furnace_glow | 1.00, 0.55, 0.18 | Furnace mouth (emissive) |
+| ore_rock | 0.52, 0.51, 0.50 | Ore host rock |
+| ore_rock_dark | 0.40, 0.40, 0.41 | Ore host rock, shaded faces |
+| iron_rust | 0.66, 0.31, 0.17 | Iron Ore veins |
+| iron_dark | 0.45, 0.20, 0.12 | Iron Ore veins, dark |
+| iron_steel | 0.30, 0.33, 0.42 | Iron Ore chunks |
+| copper_rock | 0.50, 0.44, 0.38 | Copper Ore host rock |
+| copper_green | 0.22, 0.58, 0.45 | Copper Ore veins (malachite) |
+| copper_orange | 0.82, 0.46, 0.22 | Copper Ore veins and chunks |
+| coal | 0.13, 0.13, 0.14 | Coal lumps |
+| coal_sheen | 0.24, 0.24, 0.27 | Coal lump tops |
+| boulder | 0.70, 0.68, 0.64 | Stone boulders |
+| boulder_dark | 0.56, 0.54, 0.51 | Stone boulder bases |
+| oil | 0.05, 0.05, 0.06 | Crude Oil pool, Oil Well parts |
+| oil_sheen | 0.20, 0.19, 0.26 | Crude Oil pool rim sheen |
+| oil_violet | 0.28, 0.18, 0.36 | Crude Oil pool rim sheen |
+| oil_teal | 0.12, 0.30, 0.30 | Crude Oil pool rim sheen |
+| oil_earth | 0.30, 0.25, 0.19 | Oil-stained ground around a pool |
 | mine_accent | 0.85, 0.55, 0.20 | Mine identity color (orange) |
 | lumber_accent | 0.62, 0.40, 0.20 | Lumber Camp identity color (brown) |
 | smelter_accent | 0.78, 0.26, 0.20 | Smelter identity color (red) |
 | refinery_accent | 0.22, 0.42, 0.78 | Refinery identity color (blue) |
+| oil_well_accent | 0.92, 0.74, 0.16 | Oil Well identity color (yellow, with oil black) |
 
 Emissive materials glow at half their base color. Mountains keep their own stone and snow bands
 (see terrain.md), drawn from the same tones.
@@ -64,7 +82,8 @@ Emissive materials glow at half their base color. Mountains keep their own stone
 ### Scale
 
 - 1 fine cell = 1 unit; 1 map cell = 4 x 4 units.
-- Size targets: the player about 1.4 tall, ore about 0.8, trees 2.5 to 3.5 (by field size),
+- Size targets: the player about 1.4 tall, deposits (Iron Ore and Copper Ore about 0.8, Coal 0.6,
+  Stone 0.9; Crude Oil is a flat pool about 0.05 high), trees 2.5 to 3.5 (by field size),
   mountains 3.2 to 3.5, buildings 1.2 to 2.2 (see buildings.md).
 
 ### Ground levels
