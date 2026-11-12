@@ -20,6 +20,9 @@ public partial class Hud : CanvasLayer
             Position = new Vector2(16f, 12f)
         };
         _label.AddThemeColorOverride("font_color", new Color(0.92f, 0.94f, 0.92f));
+        // A dark outline keeps the text readable over bright ground such as snow and sand.
+        _label.AddThemeColorOverride("font_outline_color", new Color(0.05f, 0.06f, 0.05f));
+        _label.AddThemeConstantOverride("outline_size", 5);
         AddChild(_label);
     }
 
@@ -30,12 +33,14 @@ public partial class Hud : CanvasLayer
         Facing facing,
         int fieldsInRange,
         bool canLaunch,
-        int shipsLaunched)
+        int shipsLaunched,
+        string diagnostics)
     {
         var text = new StringBuilder();
         AppendLine(text, stockpile, ResourceKind.Deposit);
         text.Append('\n');
         AppendLine(text, stockpile, ResourceKind.Refined);
+        text.Append('\n').Append(diagnostics);
 
         text.Append("\nLaunch: Rocket Fuel ").Append(Amount(stockpile, ResourceType.RocketFuel)).Append('/').Append((int)Simulation.LaunchRocketFuelCost);
         text.Append("   Iron ").Append(Amount(stockpile, ResourceType.Iron)).Append('/').Append((int)Simulation.LaunchIronCost);
@@ -88,6 +93,26 @@ public partial class Hud : CanvasLayer
             text.Append(first ? "" : "   ").Append(def.Name).Append(": ").Append(Amount(stockpile, type));
             first = false;
         }
+    }
+
+    /// <summary>
+    /// The diagnostics line for checking the world while exploring: the world (its seed,
+    /// or the bounded map's name), the biome and terrain under the player, and their
+    /// chunk and map cell.
+    /// </summary>
+    public static string Diagnostics(Simulation sim)
+    {
+        (int x, int z) = Simulation.CellAt(sim.Player.Position.X, sim.Player.Position.Z);
+        int mapX = Simulation.MapCellOf(x);
+        int mapZ = Simulation.MapCellOf(z);
+        (int chunkX, int chunkZ) = Simulation.ChunkAt(sim.Player.Position);
+        string world = sim.World.Kind switch
+        {
+            WorldKind.Generated => "seed " + sim.World.Seed,
+            WorldKind.TestMap => "test map",
+            _ => "empty map"
+        };
+        return $"{world}   {sim.MapBiomeAt(mapX, mapZ)} / {sim.MapTerrainAt(mapX, mapZ)}   chunk ({chunkX}, {chunkZ})   cell ({mapX}, {mapZ})";
     }
 
     private static int Amount(IReadOnlyDictionary<ResourceType, float> stockpile, ResourceType type)

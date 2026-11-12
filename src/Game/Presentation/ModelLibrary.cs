@@ -45,22 +45,46 @@ public static class ModelLibrary
         return model;
     }
 
+    private static readonly Dictionary<string, (Mesh Mesh, Transform3D Transform)> Meshes = new();
+
     /// <summary>
-    /// Turns off shadow casting for every mesh under <paramref name="node"/>. Flat ground
-    /// pieces use it: their small surface details would otherwise speckle the ground with
-    /// tiny shadows.
+    /// The mesh of a single-mesh model (and its transform within the model), for
+    /// drawing many copies at once with a multimesh. Throws like <see cref="Instance(string)"/>.
     /// </summary>
-    public static Node3D WithoutShadows(Node3D node)
+    public static (Mesh Mesh, Transform3D Transform) Mesh(string path)
     {
-        foreach (Node child in node.FindChildren("*", "GeometryInstance3D", true, false))
+        if (Meshes.TryGetValue(path, out (Mesh, Transform3D) cached))
         {
-            ((GeometryInstance3D)child).CastShadow = GeometryInstance3D.ShadowCastingSetting.Off;
+            return cached;
         }
-        if (node is GeometryInstance3D self)
+        Node3D model = Instance(path);
+        MeshInstance3D? found = null;
+        foreach (Node node in model.FindChildren("*", "MeshInstance3D", true, false))
         {
-            self.CastShadow = GeometryInstance3D.ShadowCastingSetting.Off;
+            found = (MeshInstance3D)node;
+            break;
         }
-        return node;
+        if (model is MeshInstance3D self)
+        {
+            found = self;
+        }
+        if (found?.Mesh is not Mesh mesh)
+        {
+            model.Free();
+            throw new InvalidOperationException($"Model {Root + path}.glb has no mesh.");
+        }
+
+        Transform3D transform = Transform3D.Identity;
+        for (Node? node = found; node is not null && node != model; node = node.GetParent())
+        {
+            if (node is Node3D n)
+            {
+                transform = n.Transform * transform;
+            }
+        }
+        model.Free();
+        Meshes[path] = (mesh, transform);
+        return (mesh, transform);
     }
 
     /// <summary>A deterministic hash of a map cell, for picking variants and rotations.</summary>

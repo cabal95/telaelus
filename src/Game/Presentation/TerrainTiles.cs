@@ -1,53 +1,58 @@
+using System.Collections.Generic;
 using Game.Sim;
 using Godot;
 
 namespace Game.Presentation;
 
+/// <summary>One terrain model to draw: its path under the models folder, where, how turned, and whether it casts shadows.</summary>
+public readonly record struct Placement(string Path, Vector3 Position, float Yaw, bool CastsShadow);
+
 /// <summary>
-/// Builds the visual for one map cell from the generated terrain models (see
-/// src/Game/assets/models/terrain/README.md). The cell's own model is a ground
-/// tile, or the river piece or mountain that covers the cell instead. Transitions
-/// follow draw priority: on each edge whose neighbor outranks the cell, the cell
-/// draws that neighbor's edge piece, and each corner draws the corner piece of the
+/// Lists the terrain models for one map cell, from the generated terrain models (see
+/// src/Game/assets/models/terrain/README.md). The cell's own model is a ground tile,
+/// or the river piece or mountain that covers the cell instead. Transitions follow
+/// draw priority: on each edge whose neighbor outranks the cell, the cell draws that
+/// neighbor's edge piece, and each corner draws the corner piece of the
 /// highest-ranked terrain among the three cells around it. Edge and corner pieces
 /// are authored for the North edge and the North-West corner and turned into place.
 /// Ground pieces cast no shadows (they are flat; only mountains stand up).
 /// </summary>
 public static class TerrainTiles
 {
-    public static Node3D CreateTile(Simulation sim, int mapX, int mapZ)
+    /// <summary>Adds the cell's placements, positioned relative to <paramref name="origin"/>.</summary>
+    public static void AddPlacements(Simulation sim, int mapX, int mapZ, Vector3 origin, List<Placement> into)
     {
+        Vector3 at = Simulation.MapCellCenter(mapX, mapZ) - origin;
         TerrainType terrain = sim.MapTerrainAt(mapX, mapZ);
-        var root = new Node3D
-        {
-            Name = terrain.ToString()
-        };
 
         switch (sim.MapFeatureAt(mapX, mapZ))
         {
             case MapFeature.Mountain:
-                root.AddChild(MountainModels.Create(terrain, mapX, mapZ));
+                (string mountain, float mountainYaw) = MountainModels.Model(terrain, mapX, mapZ);
+                into.Add(new Placement(mountain, at, mountainYaw, true));
                 break;
             case MapFeature.River:
-                root.AddChild(ModelLibrary.WithoutShadows(RiverPieces.Create(sim, mapX, mapZ, terrain)));
+                (string river, float riverYaw) = RiverPieces.Model(sim, mapX, mapZ, terrain);
+                into.Add(new Placement(river, at, riverYaw, false));
                 break;
             default:
-                root.AddChild(ModelLibrary.WithoutShadows(ModelLibrary.Instance(
+                into.Add(new Placement(
                     $"terrain/ground_{FileName(terrain)}_{ModelLibrary.Variant(mapX, mapZ)}",
-                    ModelLibrary.CellYaw(mapX, mapZ))));
+                    at,
+                    ModelLibrary.CellYaw(mapX, mapZ),
+                    false));
                 break;
         }
 
         int own = TerrainDefs.For(terrain).DrawPriority;
         foreach (Facing edge in new[] { Facing.North, Facing.East, Facing.South, Facing.West })
         {
-            AddEdge(root, sim, own, mapX, mapZ, edge);
+            AddEdge(sim, own, mapX, mapZ, edge, at, into);
         }
-        AddCorner(root, sim, own, mapX, mapZ, -1, -1, 0f);
-        AddCorner(root, sim, own, mapX, mapZ, -1, 1, 90f);
-        AddCorner(root, sim, own, mapX, mapZ, 1, 1, 180f);
-        AddCorner(root, sim, own, mapX, mapZ, 1, -1, 270f);
-        return root;
+        AddCorner(sim, own, mapX, mapZ, -1, -1, 0f, at, into);
+        AddCorner(sim, own, mapX, mapZ, -1, 1, 90f, at, into);
+        AddCorner(sim, own, mapX, mapZ, 1, 1, 180f, at, into);
+        AddCorner(sim, own, mapX, mapZ, 1, -1, 270f, at, into);
     }
 
     /// <summary>The terrain's name in model file names (snake_case, for example shallow_water).</summary>
@@ -76,7 +81,7 @@ public static class TerrainTiles
     /// Adds the neighbor's edge piece when it outranks this cell. Where a river flows
     /// in across the edge, the mouth piece leaves a gap so the channel meets the cell.
     /// </summary>
-    private static void AddEdge(Node3D root, Simulation sim, int own, int mapX, int mapZ, Facing edge)
+    private static void AddEdge(Simulation sim, int own, int mapX, int mapZ, Facing edge, Vector3 at, List<Placement> into)
     {
         (int dx, int dz) = Simulation.EdgeOffset(edge);
         int neighborX = mapX + dx;
@@ -88,7 +93,7 @@ public static class TerrainTiles
 
         bool riverMouth = sim.RiverConnects(neighborX, neighborZ, (Facing)(((int)edge + 2) % 4));
         string piece = riverMouth ? "edge_mouth_" : "edge_";
-        root.AddChild(ModelLibrary.WithoutShadows(ModelLibrary.Instance("terrain/" + piece + FileName(neighbor), ModelLibrary.EdgeYaw(edge))));
+        into.Add(new Placement("terrain/" + piece + FileName(neighbor), at, ModelLibrary.EdgeYaw(edge), false));
     }
 
     /// <summary>
@@ -96,7 +101,7 @@ public static class TerrainTiles
     /// around the corner (sx, sz), when it outranks this cell. The piece is authored
     /// for the North-West corner and turned by <paramref name="yaw"/>.
     /// </summary>
-    private static void AddCorner(Node3D root, Simulation sim, int own, int mapX, int mapZ, int sx, int sz, float yaw)
+    private static void AddCorner(Simulation sim, int own, int mapX, int mapZ, int sx, int sz, float yaw, Vector3 at, List<Placement> into)
     {
         TerrainType? best = null;
         int bestPriority = own;
@@ -110,7 +115,7 @@ public static class TerrainTiles
         }
         if (best is TerrainType corner)
         {
-            root.AddChild(ModelLibrary.WithoutShadows(ModelLibrary.Instance("terrain/corner_" + FileName(corner), yaw)));
+            into.Add(new Placement("terrain/corner_" + FileName(corner), at, yaw, false));
         }
     }
 }

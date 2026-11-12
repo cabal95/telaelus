@@ -29,6 +29,7 @@ public static class StateSnapshot
             {
                 ["heldKeys"] = heldKeys
             },
+            ["world"] = World(sim, root.Terrain),
             ["player"] = Player(sim),
             ["build"] = Build(root.Builder),
             ["buildings"] = Buildings(sim),
@@ -47,7 +48,19 @@ public static class StateSnapshot
             ["harvestTarget"] = sim.HarvestTarget?.Id,
             ["terrain"] = sim.TerrainAt(x, z).ToString(),
             ["biome"] = sim.BiomeAt(x, z).ToString(),
-            ["feature"] = sim.FeatureAt(x, z).ToString()
+            ["feature"] = sim.FeatureAt(x, z).ToString(),
+            ["chunk"] = Pair(Simulation.ChunkAt(sim.Player.Position).ChunkX, Simulation.ChunkAt(sim.Player.Position).ChunkZ)
+        };
+    }
+
+    private static JsonObject World(Simulation sim, Presentation.TerrainView terrain)
+    {
+        return new JsonObject
+        {
+            ["kind"] = sim.World.Kind.ToString(),
+            ["seed"] = sim.World.Kind == WorldKind.Generated ? sim.World.Seed : null,
+            ["chunks"] = sim.ChunkCount,
+            ["tiles"] = terrain.TileCount
         };
     }
 

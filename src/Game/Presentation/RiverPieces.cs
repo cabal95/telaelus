@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using Game.Sim;
-using Godot;
 
 namespace Game.Presentation;
 
@@ -26,7 +25,8 @@ public static class RiverPieces
         [RiverShape.Cross] = new[] { Facing.North, Facing.East, Facing.South, Facing.West }
     };
 
-    public static Node3D Create(Simulation sim, int mapX, int mapZ, TerrainType bank)
+    /// <summary>The model path and yaw for the river piece at a map cell with the given bank terrain.</summary>
+    public static (string Path, float Yaw) Model(Simulation sim, int mapX, int mapZ, TerrainType bank)
     {
         RiverShape shape = sim.RiverShapeAt(mapX, mapZ);
         int connections = 0;
@@ -39,9 +39,7 @@ public static class RiverPieces
         }
 
         string path = $"terrain/river_{shape.ToString().ToLowerInvariant()}_{TerrainTiles.FileName(bank)}";
-        Node3D piece = ModelLibrary.Instance(path, 90f * Turns(shape, connections));
-        piece.Name = "River";
-        return piece;
+        return (path, 90f * Turns(shape, connections));
     }
 
     /// <summary>How many +90-degree turns map the shape's canonical connections onto <paramref name="connections"/>.</summary>

@@ -68,11 +68,14 @@ and mirrors it onto nodes.
   `CellCenter(x, z)` is `(x + 0.5, 0, z + 0.5)` and `CellAt` maps a world point to its fine cell
   by floor. `MapCellOf` converts a fine coordinate to its map coordinate by floor division, so
   negative coordinates map correctly; `MapCellCenter` gives a map cell's world center.
-- The world is a **fixed test map** of `MapWidth` x `MapHeight` = 16 x 16 map cells (64 x 64 fine
-  cells, `GridWidth` x `GridHeight`), occupying fine cells `[0, 63]` on each axis with the world
-  origin at its corner. `InBounds` and `MapInBounds` test against it. Nothing else assumes a fixed
-  size; procedural generation will replace this bound.
-- The player spawns at the test map's center, `(32, 0, 32)`.
+- Map cells are stored in **chunks** of 64 x 64 map cells, and a world is either **bounded** (the
+  16 x 16 test map or empty map, occupying fine cells `[0, 63]` on each axis with the world origin
+  at its corner; `MapWidth`, `MapHeight`, `GridWidth`, `GridHeight`, `InBounds`, and `MapInBounds`
+  describe it) or **generated** (no edge; every cell in bounds). See world-generation.md.
+- The player spawns at the bounded map's center, `(32, 0, 32)`, or at a generated world's spawn
+  point.
+- Each step first generates any missing chunk within one chunk of the player (a generated world
+  only), then moves the player, harvests, and steps the buildings.
 - The walk and build rules (`IsWalkable`, `IsBuildable`) are defined in terrain.md.
 
 ### Architecture posture (single-player now, multiplayer-ready)

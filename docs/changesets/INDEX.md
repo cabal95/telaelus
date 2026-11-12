@@ -53,6 +53,10 @@ Newest last. One line each; open the file for the full spec.
 - **2611111844-raw-resources** - Adds the eight raw resources the first ship needs (six deposits, two
   terrain-sourced) with a definitions table, biome deposits, a multi-deposit Mine, the Oil Well,
   placeholder Smelter and Refinery recipes, and generated deposit models.
+- **2611112100-procedural-world** - Runs the game on a generated world: 64 x 64 map-cell chunks made on demand from
+  a seed and the starter planet (climate-driven biome regions, terrain patches, mountain ranges,
+  rivers, deposits, and a spawn with an exit), drawn in 16 x 16 render tiles, with HUD
+  diagnostics; the test map stays as a bounded world for tests.
 
 ## Adding a changeset
 

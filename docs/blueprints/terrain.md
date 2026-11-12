@@ -102,8 +102,10 @@ offers, following the signature resources in docs/game-plan.md:
 
 ### Test map
 
-The world is a fixed test layout built in `Simulation.GenerateTerrain` (map cells, x east, z
-south). Procedural generation is not yet in.
+The bounded test map (see world-generation.md) is a fixed layout built in
+`Simulation.GenerateTerrain` (map cells, x east, z south). Unit tests and most scenarios use it; the
+game runs a generated world, whose terrain, biomes, mountains, rivers, and deposits come from the
+generator described in world-generation.md.
 
 | Region | Cells | Biome / terrain / feature |
 |---|---|---|
@@ -124,8 +126,9 @@ The center map cells around the spawn are clear Grassland grass.
 
 ### Rendering
 
-- `TerrainView` builds one visual per map cell; `TerrainTiles` assembles it from the generated
-  terrain models (files and conventions in `src/Game/assets/models/terrain/README.md`; the look and
+- `TerrainView` draws the terrain in render tiles of 16 x 16 map cells, batched into one
+  multimesh per model (see presentation.md); `TerrainTiles` lists each map cell's models from the
+  generated terrain models (files and conventions in `src/Game/assets/models/terrain/README.md`; the look and
   the ground levels in art-style.md).
 - A plain cell draws its **ground tile**, `ground_<terrain>_<a|b|c>`: one of three variants at a
   90-degree yaw, both from the map cell's coordinates. Land tiles are faceted surfaces at y = 0

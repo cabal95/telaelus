@@ -11,6 +11,9 @@ Read this index to find the right area, then open that blueprint for the detail.
 - **[simulation.md](simulation.md)** - The authoritative simulation framework: the fixed-timestep
   loop and clock, the intent-and-command input seam, the two-level grid (fine cells and map
   cells), and the multiplayer-ready architecture posture.
+- **[world-generation.md](world-generation.md)** - Chunks, bounded and generated worlds, and the
+  generator: planet weights, climate-driven biome regions, terrain patches, mountain ranges,
+  rivers, deposits, the spawn, and determinism.
 - **[terrain.md](terrain.md)** - The per-map-cell layers (terrain types and their rules, biomes,
   and mountain and river features with river flow and channels), the walk and build rules, the
   fixed test layout, and tile rendering with priority transitions.

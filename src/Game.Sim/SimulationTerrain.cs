@@ -9,17 +9,17 @@ namespace Game.Sim;
 /// </summary>
 public sealed partial class Simulation
 {
-    private readonly TerrainType[,] _terrain;
-    private readonly BiomeType[,] _biomes;
-    private readonly MapFeature[,] _features;
-    private readonly Facing?[,] _riverFlow;
-
     // ---- Layer reads -----------------------------------------------------
 
     /// <summary>Terrain of a map cell; out-of-bounds reads return Grass.</summary>
     public TerrainType MapTerrainAt(int mapX, int mapZ)
     {
-        return MapInBounds(mapX, mapZ) ? _terrain[mapX, mapZ] : TerrainType.Grass;
+        if (!MapInBounds(mapX, mapZ))
+        {
+            return TerrainType.Grass;
+        }
+        (Chunk chunk, int x, int z) = Cell(mapX, mapZ);
+        return chunk.Terrain[x, z];
     }
 
     /// <summary>Terrain of a fine cell: its map cell's terrain (features change no terrain).</summary>
@@ -31,7 +31,12 @@ public sealed partial class Simulation
     /// <summary>Biome of a map cell; out-of-bounds reads return Grassland.</summary>
     public BiomeType MapBiomeAt(int mapX, int mapZ)
     {
-        return MapInBounds(mapX, mapZ) ? _biomes[mapX, mapZ] : BiomeType.Grassland;
+        if (!MapInBounds(mapX, mapZ))
+        {
+            return BiomeType.Grassland;
+        }
+        (Chunk chunk, int x, int z) = Cell(mapX, mapZ);
+        return chunk.Biomes[x, z];
     }
 
     /// <summary>Biome of a fine cell: its map cell's biome.</summary>
@@ -43,7 +48,12 @@ public sealed partial class Simulation
     /// <summary>Feature of a map cell; out-of-bounds reads return None.</summary>
     public MapFeature MapFeatureAt(int mapX, int mapZ)
     {
-        return MapInBounds(mapX, mapZ) ? _features[mapX, mapZ] : MapFeature.None;
+        if (!MapInBounds(mapX, mapZ))
+        {
+            return MapFeature.None;
+        }
+        (Chunk chunk, int x, int z) = Cell(mapX, mapZ);
+        return chunk.Features[x, z];
     }
 
     /// <summary>Feature of a fine cell: its map cell's feature.</summary>
@@ -57,7 +67,12 @@ public sealed partial class Simulation
     /// <summary>The edge a river cell's water leaves by, or null when the map cell is not a river.</summary>
     public Facing? RiverFlowAt(int mapX, int mapZ)
     {
-        return MapInBounds(mapX, mapZ) ? _riverFlow[mapX, mapZ] : null;
+        if (!MapInBounds(mapX, mapZ))
+        {
+            return null;
+        }
+        (Chunk chunk, int x, int z) = Cell(mapX, mapZ);
+        return chunk.RiverFlow[x, z];
     }
 
     /// <summary>
@@ -213,21 +228,24 @@ public sealed partial class Simulation
         {
             for (int mapZ = fromZ; mapZ <= toZ; mapZ++)
             {
-                _biomes[mapX, mapZ] = biome;
-                _terrain[mapX, mapZ] = terrain;
+                (Chunk chunk, int x, int z) = Cell(mapX, mapZ);
+                chunk.Biomes[x, z] = biome;
+                chunk.Terrain[x, z] = terrain;
             }
         }
     }
 
     private void SetMountain(int mapX, int mapZ)
     {
-        _features[mapX, mapZ] = MapFeature.Mountain;
+        (Chunk chunk, int x, int z) = Cell(mapX, mapZ);
+        chunk.Features[x, z] = MapFeature.Mountain;
     }
 
     private void SetRiver(int mapX, int mapZ, Facing flow)
     {
-        _features[mapX, mapZ] = MapFeature.River;
-        _riverFlow[mapX, mapZ] = flow;
+        (Chunk chunk, int x, int z) = Cell(mapX, mapZ);
+        chunk.Features[x, z] = MapFeature.River;
+        chunk.RiverFlow[x, z] = flow;
     }
 
     /// <summary>

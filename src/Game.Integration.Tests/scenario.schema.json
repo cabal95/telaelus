@@ -69,12 +69,18 @@
       ]
     },
     "initMap": {
-      "description": "Reset to an empty all-grass map: no fields or buildings, empty stockpile, player at the map center.",
+      "description": "Reset to an empty all-grass map (no fields or buildings, empty stockpile, player at the map center), or with generate, to a generated world from that seed with the player at its spawn.",
       "type": "object",
       "required": ["initMap"],
       "additionalProperties": false,
       "properties": {
-        "initMap": { "type": "object", "maxProperties": 0 },
+        "initMap": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "generate": { "type": "integer", "description": "World seed; omit for the bounded empty map." }
+          }
+        },
         "comment": { "$ref": "#/definitions/comment" }
       }
     },

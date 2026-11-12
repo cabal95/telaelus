@@ -29,30 +29,23 @@ public sealed partial class Simulation
         }
 
         /// <summary>
-        /// Resets to an empty, all-grass Grassland map with no features: no fields or
-        /// buildings, an empty stockpile, no launches, and the player at the map center.
+        /// Resets to the bounded empty map: all-grass Grassland with no features, no
+        /// fields or buildings, an empty stockpile, no launches, and the player at the
+        /// map center.
         /// </summary>
         public void ResetToEmptyMap()
         {
-            for (int mapX = 0; mapX < _sim.MapWidth; mapX++)
-            {
-                for (int mapZ = 0; mapZ < _sim.MapHeight; mapZ++)
-                {
-                    _sim._terrain[mapX, mapZ] = TerrainType.Grass;
-                    _sim._biomes[mapX, mapZ] = BiomeType.Grassland;
-                    _sim._features[mapX, mapZ] = MapFeature.None;
-                    _sim._riverFlow[mapX, mapZ] = null;
-                }
-            }
+            _sim.ResetWorld(WorldSettings.Empty);
+            _sim.MapChanged?.Invoke();
+        }
 
-            _sim._fields.Clear();
-            _sim._fieldsByMapCell.Clear();
-            _sim._buildings.Clear();
-            _sim._occupied.Clear();
-            _sim._stockpile.Clear();
-            _sim.HarvestTarget = null;
-            _sim.ShipsLaunched = 0;
-            _sim.Player.Position = new Vector3(_sim.GridWidth * 0.5f, 0f, _sim.GridHeight * 0.5f);
+        /// <summary>
+        /// Resets to a generated world from a seed on the starter planet, with nothing
+        /// built, an empty stockpile, and the player at its spawn point.
+        /// </summary>
+        public void ResetToGeneratedWorld(int seed)
+        {
+            _sim.ResetWorld(WorldSettings.Generated(seed));
             _sim.MapChanged?.Invoke();
         }
 
@@ -60,12 +53,13 @@ public sealed partial class Simulation
         public void SetTerrain(int mapX, int mapZ, TerrainType type)
         {
             RequireMapCell(mapX, mapZ);
-            MapFeature feature = _sim._features[mapX, mapZ];
+            (Chunk chunk, int x, int z) = _sim.Cell(mapX, mapZ);
+            MapFeature feature = chunk.Features[x, z];
             if (feature != MapFeature.None && !TerrainDefs.For(type).TakesFeatures)
             {
                 throw new InvalidOperationException($"map cell ({mapX}, {mapZ}) has a {feature}, which cannot sit on {type}");
             }
-            _sim._terrain[mapX, mapZ] = type;
+            chunk.Terrain[x, z] = type;
             _sim.MapChanged?.Invoke();
         }
 
@@ -73,7 +67,8 @@ public sealed partial class Simulation
         public void SetBiome(int mapX, int mapZ, BiomeType biome)
         {
             RequireMapCell(mapX, mapZ);
-            _sim._biomes[mapX, mapZ] = biome;
+            (Chunk chunk, int x, int z) = _sim.Cell(mapX, mapZ);
+            chunk.Biomes[x, z] = biome;
             _sim.MapChanged?.Invoke();
         }
 
@@ -93,9 +88,10 @@ public sealed partial class Simulation
             {
                 throw new InvalidOperationException($"only a River takes a flow, not {feature}");
             }
+            (Chunk chunk, int x, int z) = _sim.Cell(mapX, mapZ);
             if (feature != MapFeature.None)
             {
-                TerrainType terrain = _sim._terrain[mapX, mapZ];
+                TerrainType terrain = chunk.Terrain[x, z];
                 if (!TerrainDefs.For(terrain).TakesFeatures)
                 {
                     throw new InvalidOperationException($"a {feature} cannot sit on {terrain} at map cell ({mapX}, {mapZ})");
@@ -106,8 +102,8 @@ public sealed partial class Simulation
                 }
             }
 
-            _sim._features[mapX, mapZ] = feature;
-            _sim._riverFlow[mapX, mapZ] = flow;
+            chunk.Features[x, z] = feature;
+            chunk.RiverFlow[x, z] = flow;
             _sim.MapChanged?.Invoke();
         }
 
@@ -126,9 +122,10 @@ public sealed partial class Simulation
             {
                 throw new InvalidOperationException($"map cell ({mapX}, {mapZ}) already has a field");
             }
-            if (_sim._features[mapX, mapZ] != MapFeature.None)
+            MapFeature existing = _sim.MapFeatureAt(mapX, mapZ);
+            if (existing != MapFeature.None)
             {
-                throw new InvalidOperationException($"map cell ({mapX}, {mapZ}) has a {_sim._features[mapX, mapZ]}");
+                throw new InvalidOperationException($"map cell ({mapX}, {mapZ}) has a {existing}");
             }
             if (amount <= 0f)
             {

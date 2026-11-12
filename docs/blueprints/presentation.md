@@ -25,13 +25,29 @@ planned multiplayer feasible.
 
 `GameRoot` creates and syncs these presentation nodes, each reading simulation state:
 
-- `TerrainView` (one terrain tile per map cell, rebuilt from scratch once on the frame after the sim's `MapChanged`, so many edits in one frame cost one rebuild; it processes while paused),
-  `ResourceFieldViews` (staged resource field visuals; reports each field's visible model count),
+- `TerrainView` (the terrain in **render tiles** of 16 x 16 map cells: each frame it builds the
+  missing tiles over the camera's view and the area within 48 units of the player, plus a one-tile
+  margin, and frees tiles two tiles outside that range; in a generated world a tile is built only
+  once every chunk it reads is generated, so drawing never generates. A tile is
+  `TerrainTileView`: every cell's terrain placements grouped into one `MultiMeshInstance3D` per
+  model, which Godot skips when the tile is off screen. The sim's `MapChanged` marks the view
+  dirty, and every tile is rebuilt on the next frame; it processes while paused. `TileCount` and
+  `ViewArea` report what is built and the ground area in range. Measured walking a generated
+  world at the widest zoom: about 25 to 30 tiles built, about 330,000 triangles and 870 draw calls
+  a frame (most draw calls are resource field models), terrain work under 0.2 ms a frame, and
+  about 60 ms on the first frame, which builds every tile at once; tiles of 8 cells drew half the
+  triangles with twice the tiles, and tiles of 32 cells drew twice the triangles and doubled the
+  first frame),
+  `ResourceFieldViews` (staged resource field visuals for the fields inside the terrain view's
+  range, freed when they leave it; reports each field's visible model count),
   `BuildingViews` (footprint-sized building boxes, created and freed as buildings appear and are
   removed), `PlayerView` (the character), `CameraRig` (the orthographic follow camera, with
   `ZoomTo` for a direct size),
-  `Hud` (a `CanvasLayer` label with resource totals, deposits on one line and refined goods on the
-  next, in table order and without terrain-sourced types until they can be collected; launch status, build selection with facing
+  `Hud` (a `CanvasLayer` label, outlined so it reads over bright ground, with resource totals, deposits on one line and refined goods on the
+  next, in table order and without terrain-sourced types until they can be collected; a
+  diagnostics line for exploring (the seed or the bounded map's name, the biome and terrain under
+  the player, their chunk, and their map cell, for example
+  `seed 1234   Highlands / Rock   chunk (1, -2)   cell (87, -101)`); launch status, build selection with facing
   and fields in range, and the harvest hint), and `BuildController` (build-mode selection and
   rotation, the footprint ghost, the extractor work-area disc and field highlights, and the place
   command).
@@ -48,8 +64,9 @@ planned multiplayer feasible.
 - `NodeModels` scales a loaded model to a target height from its bounding box, caps its footprint to
   a caller-given size (a resource field's slot), seats it on the ground, and gives it a
   deterministic variant and yaw.
-- `TerrainTiles` assembles each map cell from terrain models, with `RiverPieces` choosing and
-  turning river pieces (see terrain.md).
+- `TerrainTiles` lists each map cell's terrain placements (model path, position, yaw, and whether
+  it casts shadows), with `MountainModels` and `RiverPieces` choosing and turning those models (see
+  terrain.md). `ModelLibrary.Mesh(path)` gives a model's mesh for a multimesh.
 - `BuildingModels` maps a building type to its model and turns it to a facing; placed buildings
   and the build ghost both use it (see buildings.md).
 - `MountainModels` picks a mountain's model family from the terrain beneath it and its variant and

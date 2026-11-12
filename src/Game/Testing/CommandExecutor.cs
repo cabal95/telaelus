@@ -170,9 +170,17 @@ public sealed class CommandExecutor
 
     // ---- Map and other setup --------------------------------------------
 
-    public StepOutcome InitMap()
+    /// <summary>Resets to the bounded empty map, or to a generated world when a seed is given.</summary>
+    public StepOutcome InitMap(int? seed)
     {
-        _root.Sim.Debug.ResetToEmptyMap();
+        if (seed is int s)
+        {
+            _root.Sim.Debug.ResetToGeneratedWorld(s);
+        }
+        else
+        {
+            _root.Sim.Debug.ResetToEmptyMap();
+        }
         _root.Builder.ResetBuildMode();
         return StepOutcome.Ok;
     }

@@ -1,0 +1,28 @@
+{
+  "$schema": "../scenario.schema.json",
+  "name": "generated-world",
+  "description": "A generated world from a fixed seed: the player starts on open Grassland in chunk (0, 0) with the 3 x 3 chunks around them generated and render tiles drawn around the camera; crossing into another chunk generates the chunks around it and the tiles follow. Generation rules themselves are unit tested.",
+  "steps": [
+    { "initMap": { "generate": 1 } },
+    { "wait": 5 },
+    { "expect": "world.kind", "equals": "Generated" },
+    { "expect": "world.seed", "equals": 1 },
+    { "expect": "world.chunks", "equals": 9 },
+    { "expect": "player.chunk", "equals": [0, 0] },
+    { "expect": "player.biome", "equals": "Grassland" },
+    { "expect": "player.terrain", "equals": "Grass" },
+    { "expect": "player.feature", "equals": "None" },
+    { "expect": "world.tiles", "gte": 4 },
+    { "expect": "world.tiles", "lte": 30 },
+    { "cameraZoom": { "size": 40 } },
+    { "wait": 5 },
+    { "screenshot": "spawn" },
+    { "comment": "Chunk (0, 0) spans x 0..256; x 280 is in chunk (1, 0), whose neighbors include chunk (2, 0).", "teleportPlayer": { "x": 280, "z": 130 } },
+    { "wait": 20 },
+    { "expect": "player.chunk", "equals": [1, 0] },
+    { "expect": "world.chunks", "equals": 12 },
+    { "expect": "world.tiles", "gte": 4 },
+    { "expect": "world.tiles", "lte": 30 },
+    { "screenshot": "across-the-border" }
+  ]
+}

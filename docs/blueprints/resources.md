@@ -46,7 +46,9 @@ buildings.md). A single global stockpile holds all amounts.
   default of 250 (`BiomeDef.DefaultFieldAmount`) when the biome does not list the type (see
   terrain.md). A field may not sit on a map cell with a feature, and only a deposit type can be a
   field (placing any other kind throws).
-- The simulation spawns a fixed set of fourteen fields, each at its biome's amount:
+- In a generated world, fields come from generation: each chunk places deposits by its biomes'
+  densities and weights as it is generated (see world-generation.md).
+- The bounded test map spawns a fixed set of fourteen fields, each at its biome's amount:
 
   | Type | Map cells | Biome | Total |
   |---|---|---|---|
@@ -78,7 +80,7 @@ buildings.md). A single global stockpile holds all amounts.
 
 ### Rendering
 
-- `ResourceFieldViews` gives each field `StageCount` model slots at deterministic, jittered
+- `ResourceFieldViews` gives each field inside the terrain view's range `StageCount` model slots at deterministic, jittered
   positions inside its map cell (a quincunx around the center, kept clear of the cell edge) and
   shows the first `Stage` slots, so a field loses one model per stage. Visuals are freed when the
   field is removed.

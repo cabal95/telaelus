@@ -1,11 +1,10 @@
 using System;
 using Game.Sim;
-using Godot;
 
 namespace Game.Presentation;
 
 /// <summary>
-/// Builds the generated mountain model for one map cell. The family (stone or
+/// Picks the generated mountain model for one map cell. The family (stone or
 /// snow) follows the terrain beneath the mountain; the shape variant and a yaw in
 /// 90-degree steps follow the map cell's coordinates, so a mountain looks the same
 /// every run. Each model fills one map cell exactly with every edge flat on the
@@ -13,7 +12,8 @@ namespace Game.Presentation;
 /// </summary>
 public static class MountainModels
 {
-    public static Node3D Create(TerrainType terrain, int mapX, int mapZ)
+    /// <summary>The model path and yaw for a mountain on <paramref name="terrain"/> at a map cell.</summary>
+    public static (string Path, float Yaw) Model(TerrainType terrain, int mapX, int mapZ)
     {
         string family = terrain switch
         {
@@ -21,8 +21,6 @@ public static class MountainModels
             TerrainType.Grass or TerrainType.Sand or TerrainType.Mud or TerrainType.Rock => "mountain_",
             _ => throw new InvalidOperationException($"No mountain model family for terrain {terrain}.")
         };
-        Node3D model = ModelLibrary.Instance("terrain/" + family + ModelLibrary.Variant(mapX, mapZ), ModelLibrary.CellYaw(mapX, mapZ));
-        model.Name = "Mountain";
-        return model;
+        return ("terrain/" + family + ModelLibrary.Variant(mapX, mapZ), ModelLibrary.CellYaw(mapX, mapZ));
     }
 }

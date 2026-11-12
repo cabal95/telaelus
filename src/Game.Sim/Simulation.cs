@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Godot;
 
@@ -11,19 +12,19 @@ namespace Game.Sim;
 /// The world has two grid levels. A fine cell is 1 x 1 world unit; buildings,
 /// collision, and movement live on fine cells. A map cell is a square of
 /// FineCellsPerMapCell x FineCellsPerMapCell fine cells; terrain and resource
-/// fields live on map cells. Coordinates are signed integers, and fine-to-map
+/// fields live on map cells, which are stored in chunks (see SimulationWorld).
+/// Coordinates are signed integers, and fine-to-map
 /// conversion uses floor division so negative coordinates map correctly.
 /// </summary>
 public sealed partial class Simulation
 {
     public const int FineCellsPerMapCell = 4;
 
-    // The fixed test map's size in map cells. Procedural generation will replace
-    // this bound with on-demand cells; nothing else assumes a fixed size.
-    public int MapWidth { get; } = 16;
-    public int MapHeight { get; } = 16;
+    /// <summary>A bounded world's size in map cells; a generated world has none and throws.</summary>
+    public int MapWidth => World.IsBounded ? WorldSettings.BoundedSize : throw new InvalidOperationException("a generated world has no width");
+    public int MapHeight => World.IsBounded ? WorldSettings.BoundedSize : throw new InvalidOperationException("a generated world has no height");
 
-    /// <summary>The test map's size in fine cells; it occupies [0, GridWidth) on X.</summary>
+    /// <summary>A bounded world's size in fine cells; it occupies [0, GridWidth) on X.</summary>
     public int GridWidth => MapWidth * FineCellsPerMapCell;
     public int GridHeight => MapHeight * FineCellsPerMapCell;
 
@@ -59,20 +60,20 @@ public sealed partial class Simulation
     public const float LaunchRocketFuelCost = 500f;
     public const float LaunchIronCost = 100f;
 
-    public Simulation()
+    /// <summary>A simulation of the fixed test map.</summary>
+    public Simulation() : this(WorldSettings.TestMap)
+    {
+    }
+
+    public Simulation(WorldSettings settings)
     {
         Debug = new DebugTools(this);
-        _terrain = new TerrainType[MapWidth, MapHeight];
-        _biomes = new BiomeType[MapWidth, MapHeight];
-        _features = new MapFeature[MapWidth, MapHeight];
-        _riverFlow = new Facing?[MapWidth, MapHeight];
-        GenerateTerrain();
-        SpawnInitialFields();
-        Player.Position = new Vector3(GridWidth * 0.5f, 0f, GridHeight * 0.5f);
+        ResetWorld(settings);
     }
 
     public void Step(double dt)
     {
+        EnsureChunksAroundPlayer();
         MovePlayer(dt);
         UpdateHarvestTarget();
         if (Intent.Harvest)
@@ -84,16 +85,16 @@ public sealed partial class Simulation
 
     // ---- Grid -----------------------------------------------------------
 
-    /// <summary>Whether a fine cell lies within the test map.</summary>
+    /// <summary>Whether a fine cell lies in the world: always in a generated world, inside the rectangle in a bounded one.</summary>
     public bool InBounds(int x, int z)
     {
-        return x >= 0 && x < GridWidth && z >= 0 && z < GridHeight;
+        return !World.IsBounded || (x >= 0 && x < GridWidth && z >= 0 && z < GridHeight);
     }
 
-    /// <summary>Whether a map cell lies within the test map.</summary>
+    /// <summary>Whether a map cell lies in the world: always in a generated world, inside the rectangle in a bounded one.</summary>
     public bool MapInBounds(int mapX, int mapZ)
     {
-        return mapX >= 0 && mapX < MapWidth && mapZ >= 0 && mapZ < MapHeight;
+        return !World.IsBounded || (mapX >= 0 && mapX < MapWidth && mapZ >= 0 && mapZ < MapHeight);
     }
 
     /// <summary>World-space center of a fine cell.</summary>
@@ -279,8 +280,11 @@ public sealed partial class Simulation
             p.Z = nextZ;
         }
 
-        p.X = Mathf.Clamp(p.X, 0f, GridWidth);
-        p.Z = Mathf.Clamp(p.Z, 0f, GridHeight);
+        if (World.IsBounded)
+        {
+            p.X = Mathf.Clamp(p.X, 0f, GridWidth);
+            p.Z = Mathf.Clamp(p.Z, 0f, GridHeight);
+        }
         Player.Position = p;
     }
 

@@ -92,7 +92,8 @@ public sealed class ScenarioCommand
             case "initMap":
                 {
                     RequireObject(arg, name);
-                    return e => e.InitMap();
+                    int? seed = arg.TryGetProperty("generate", out JsonElement g) ? Int(g, "generate") : null;
+                    return e => e.InitMap(seed);
                 }
             case "changeTiles":
                 {

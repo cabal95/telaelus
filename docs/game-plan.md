@@ -82,7 +82,10 @@ The current model (terrain types, biomes, mountain and river features) is in
 
 - **Planets weight biomes.** Part A starts on one planet. Each planet has its own biome
   probabilities, so a frozen planet is mostly tundra and becomes the long-term uranium source.
-  Procedural generation picks biomes from the planet's weights.
+  Procedural generation picks biomes from the planet's weights (see
+  [blueprints/world-generation.md](blueprints/world-generation.md)): the world is generated in
+  chunks as the player explores, and the player starts on open Grassland with no resources placed
+  for them.
 - **Signature resources** give each biome a reason to explore and expand. Wood, stone, iron,
   copper, coal, and oil exist now as deposits (see [blueprints/terrain.md](blueprints/terrain.md));
   the rest arrive with later ships and planets:

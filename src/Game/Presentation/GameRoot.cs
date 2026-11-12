@@ -11,7 +11,7 @@ namespace Game.Presentation;
 /// </summary>
 public partial class GameRoot : Node3D
 {
-    private readonly Simulation _sim = new();
+    private Simulation _sim = null!;
     private readonly SimClock _clock = new(30.0); // 30 Hz simulation tick
 
     private PlayerView _playerView = null!;
@@ -27,9 +27,11 @@ public partial class GameRoot : Node3D
     public CameraRig Camera => _camera;
     public BuildController Builder => _buildController;
     public ResourceFieldViews FieldViews => _fieldViews;
+    public TerrainView Terrain => _terrainView;
 
     public override void _Ready()
     {
+        _sim = new Simulation(WorldSettings.Generated(ReadSeed()));
         BuildWorld();
         ScenarioRunner.AttachIfRequested(this);
         ControlChannel.AttachIfRequested(this);
@@ -52,7 +54,7 @@ public partial class GameRoot : Node3D
 
         _playerView.UpdateFrom(_sim.Player.Position, moveDir, delta);
         _camera.SetTarget(_sim.Player.Position);
-        _fieldViews.Sync(_sim.Fields);
+        _fieldViews.Sync(_sim.Fields, _terrainView.ViewArea);
         _buildingViews.Sync(_sim.Buildings);
         _hud.Refresh(
             _sim.Stockpile,
@@ -61,7 +63,21 @@ public partial class GameRoot : Node3D
             _buildController.Facing,
             _buildController.FieldsInRange,
             _sim.CanLaunchShip(),
-            _sim.ShipsLaunched);
+            _sim.ShipsLaunched,
+            Hud.Diagnostics(_sim));
+    }
+
+    /// <summary>The world seed from <c>--seed=&lt;n&gt;</c> after the <c>--</c> separator, or a random one.</summary>
+    private static int ReadSeed()
+    {
+        foreach (string arg in OS.GetCmdlineUserArgs())
+        {
+            if (arg.StartsWith("--seed=") && int.TryParse(arg["--seed=".Length..], out int seed))
+            {
+                return seed;
+            }
+        }
+        return (int)(GD.Randi() & 0x7FFFFFFF);
     }
 
     public override void _UnhandledInput(InputEvent @event)
@@ -127,7 +143,6 @@ public partial class GameRoot : Node3D
             ProcessMode = ProcessModeEnum.Always
         };
         AddChild(_terrainView);
-        _terrainView.Build(_sim);
         _sim.MapChanged += _terrainView.MarkDirty;
 
         var light = new DirectionalLight3D
@@ -158,6 +173,7 @@ public partial class GameRoot : Node3D
         _camera = new CameraRig();
         _camera.SetTarget(_sim.Player.Position);
         AddChild(_camera);
+        _terrainView.Initialize(_sim, _camera);
 
         _buildController = new BuildController
         {

@@ -8,7 +8,9 @@ namespace Game.Presentation;
 /// Mirrors the simulation's resource fields onto visuals. Each field has
 /// StageCount model slots at deterministic, jittered positions inside its map
 /// cell; the view shows the first Stage slots, so a field visibly loses one model
-/// per stage as it depletes. Visuals are freed when the field is removed.
+/// per stage as it depletes. Only fields inside the given area (the terrain view's
+/// range) have visuals; a field's visuals are freed when it leaves the area or is
+/// removed, and built again when it returns.
 /// </summary>
 public partial class ResourceFieldViews : Node3D
 {
@@ -28,11 +30,15 @@ public partial class ResourceFieldViews : Node3D
 
     private readonly Dictionary<int, Node3D[]> _views = new();
 
-    public void Sync(IReadOnlyList<ResourceField> fields)
+    public void Sync(IReadOnlyList<ResourceField> fields, Rect2 area)
     {
         var present = new HashSet<int>();
         foreach (ResourceField field in fields)
         {
+            if (!area.HasPoint(new Vector2(field.Center.X, field.Center.Z)))
+            {
+                continue;
+            }
             present.Add(field.Id);
             if (!_views.TryGetValue(field.Id, out Node3D[]? slots))
             {

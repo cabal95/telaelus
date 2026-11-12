@@ -23,7 +23,7 @@ A blueprint is a living document for one area of the project. It always reflects
   edit. The blueprint's history lives in git and in the changeset that made each change.
 
 Location: `docs/blueprints/<area>.md`, one per area. Current areas: `simulation`, `terrain`,
-`resources`, `buildings`, `player`, `presentation`, `art-style`, `testing`. See `docs/blueprints/INDEX.md` for the area index and the template.
+`world-generation`, `resources`, `buildings`, `player`, `presentation`, `art-style`, `testing`. See `docs/blueprints/INDEX.md` for the area index and the template.
 
 ## Changesets (one change, permanent once implemented)
 

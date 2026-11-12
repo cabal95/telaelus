@@ -55,6 +55,15 @@ pausing it and stepping frame by frame.
   occupied, out of bounds, rotated footprint), extractors placeable with no field in range,
   occupancy, and derived size and center.
 - `MovementTests`: speed, blocking by water, fields, and buildings, sliding, and map clamping.
+- `WorldGenTests`: the same seed gives identical chunks and generation order changes nothing; chunk
+  biomes match the generator; rivers flow into rivers or water across chunk borders; the spawn is
+  open Grassland at the center of chunk (0, 0) for seed 1; the spawn moves when the center has no
+  exit (seed 8); the spawn search takes the first candidate with an exit or settles for the last;
+  deposits sit on free walkable cells, apart, from their biome; the biome mix follows the
+  planet's weights on average; chunks generate around the player and on demand; a generated world
+  has no edge while bounded worlds keep theirs; resets switch the world kind.
+- `ResourceTests`: the resource definitions, biome deposits, the Mine and Oil Well, and
+  hand-harvest rules.
 - `HarvestTests`: edge-based harvest range, harvest rate, and field removal reopening cells.
 - `ExtractorTests`: nearest field, moving on after depletion, idling, resource type filtering,
   and two extractors sharing a field.
@@ -70,8 +79,9 @@ pausing it and stepping frame by frame.
   trailing commas in the file are tolerated. `src/Game.Integration.Tests/scenario.schema.json`
   defines the format; scenarios reference it with `$schema`.
 - **Commands:**
-  - Map setup: `initMap` `{}` (empty all-Grassland grass map with no features, player at the
-    center, and build mode reset: nothing selected, facing North, no aim override), `changeTiles`
+  - Map setup: `initMap` `{}` (the bounded empty map: all-Grassland grass with no features, player
+    at the center) or `{ generate: <seed> }` (a generated world from that seed, player at its
+    spawn), either way with build mode reset: nothing selected, facing North, no aim override; `changeTiles`
     `{ type?, biome?, feature?, flow?, cells: [[x, z], ...] }` or the same with `from, to` (map
     cells, inclusive; at least one of `type`, `biome`, `feature`; `flow` goes with a River and
     sets biome, then terrain, then feature),
@@ -96,13 +106,14 @@ pausing it and stepping frame by frame.
   frames pass.
 - **The state snapshot** (`StateSnapshot`) is the contract for `expect`, the report, and the live
   channel: `frame` (game frames processed since the executor started; paused frames do not
-  count); `paused`; `input` (`heldKeys`: keys the executor pressed that are still down); `player`
-  (`position` [x, z], `harvestTarget` field id or null, and the `terrain`, `biome`, and `feature`
-  under the player); `build` (null when not in build
+  count); `paused`; `input` (`heldKeys`: keys the executor pressed that are still down); `world`
+  (`kind`, `seed` or null, `chunks` generated, `tiles` of terrain built); `player` (`position`
+  [x, z], `harvestTarget` field id or null, the `terrain`, `biome`, and `feature` under the player,
+  and their `chunk` [x, z]); `build` (null when not in build
   mode, else `selected`, `facing`, `fieldsInRange`, and `ghost`: `anchor`, `width`, `depth`,
   `placeable`, or null); `buildings` (`id`, `type`, `anchor`, `facing`, `width`, `depth`,
   `currentField`); `fields` (`id`, `type`, `mapCell`, `amount`, `stage`, `visibleModels`);
-  `stockpile` (all four resources); and `shipsLaunched`. New checks are added as snapshot fields.
+  `stockpile` (every resource); and `shipsLaunched`. New checks are added as snapshot fields.
 - **Input injection:** keys and mouse buttons go through `Input.ParseInputEvent` followed by
   `Input.FlushBufferedEvents()`, so they are delivered in the current frame (Godot otherwise
   buffers them until its next flush). Aiming uses `BuildController.PointerOverride`, a world
@@ -184,7 +195,10 @@ pausing it and stepping frame by frame.
   the player), `building-models` (every building model in every facing, the tinted ghost for each
   type, red over a blocked spot, and placement still works), `resource-fields` (every deposit's
   field model renders; Crude Oil cannot be hand-harvested; a Mine fills from the nearest mineral
-  deposit and an Oil Well from its seep).
+  deposit and an Oil Well from its seep), `generated-world` (a generated world from a fixed seed
+  starts the player on open Grassland in chunk (0, 0) with the 3 x 3 chunks around them generated
+  and tiles drawn; crossing into chunk (1, 0) generates the chunks around it and the tiles
+  follow).
 
 ### Live control channel
 
