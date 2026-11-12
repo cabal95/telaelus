@@ -18,7 +18,11 @@ src/asset-factory/
   models/            generated .obj and .mtl (the source of truth, committed)
   previews/          kept sample sheets (final ones only)
   tools/
-    gen.py           generators
+    gen.py           runs every generator; mountains and ore
+    mesh.py          shared building blocks: Mesh writer, PALETTE, solids
+    terrain_gen.py   ground tiles, transition pieces, river pieces
+    building_gen.py  building models
+    arrange.py       composes test maps from terrain models (for previews)
     export_glb.py    OBJ to .glb exporter
     preview.py       preview renderer (no window)
     preview/         Godot preview renderer (render.gd + a minimal project.godot)
@@ -57,8 +61,8 @@ Run every tool with the environment's Python, written `<py>` below:
 - Windows: `src/asset-factory/.venv/Scripts/python`
 - macOS and Linux: `src/asset-factory/.venv/bin/python`
 
-`gen.py` and `export_glb.py` use only the standard library and also run with any Python 3;
-`preview.py` needs the environment.
+The generators, `arrange.py`, and `export_glb.py` use only the standard library and also run
+with any Python 3; `preview.py` needs the environment.
 
 ## Tools
 
@@ -94,9 +98,12 @@ Generators write Wavefront `.obj` plus a sibling `.mtl`. Rules every generator f
 <py> src/asset-factory/tools/gen.py
 ```
 
-This writes every model to `src/asset-factory/models/`. To add an asset, write a function
-that returns a `Mesh`, call `mesh.write(name, materials)` from the `__main__` block, and keep
-materials as a dict of `name: (Kd, Ke_or_None)`.
+This writes every model to `src/asset-factory/models/`. To add an asset, write a function that
+builds a `Mesh` (in the generator module for its family) and write it from that module's
+`build_all` (or `gen.py`'s `__main__` block). Take colors from `PALETTE` in `mesh.py` through a
+`Materials` collector (`mat("wood")`, or `mat("grass", 1.05)` for a shade), which names each
+material and marks palette entries in `GLOW` as emissive; see docs/blueprints/art-style.md for
+the palette and the look.
 
 ## Previewing
 
@@ -141,9 +148,17 @@ A Godot script run against a minimal project (`src/asset-factory/tools/preview/`
 - Save a sheet worth keeping to `src/asset-factory/previews/<model name>.png` (rendered by
   `preview.py` with its defaults).
 - Read the PNG to review the result, then adjust the generator and rerun. Expect several rounds.
-- For tileable assets, also check a multi-tile arrangement so seams and edges are seen in
-  context, not just one tile: write a throwaway script (in `test-output/`) that imports `gen`,
-  translates copies of the tiles by 4 units into one OBJ, and render that.
+- For terrain, also check a multi-cell arrangement so seams, transitions, and river joins are
+  seen in context, not just one tile. `arrange.py` composes a small test map the way the game
+  places terrain models:
+
+  ```bash
+  <py> src/asset-factory/tools/arrange.py <ground|rivers> test-output/<name>.obj
+  <py> src/asset-factory/tools/preview.py src/asset-factory/previews/arrangement_<name>.png test-output/<name>.obj
+  ```
+
+  The kept sheets are `previews/arrangement_ground.png` and `previews/arrangement_rivers.png`.
+  Add a layout to `LAYOUTS` in `arrange.py` to check something new.
 
 ## Exporting to .glb
 

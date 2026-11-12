@@ -1,0 +1,9 @@
+newmtl deep_water_95
+Kd 0.095 0.209 0.399
+
+newmtl deep_water
+Kd 0.100 0.220 0.420
+
+newmtl deep_water_104
+Kd 0.104 0.229 0.437
+

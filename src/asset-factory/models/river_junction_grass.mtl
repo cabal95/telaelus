@@ -1,0 +1,39 @@
+newmtl grass
+Kd 0.330 0.490 0.270
+
+newmtl grass_94
+Kd 0.310 0.461 0.254
+
+newmtl grass_105
+Kd 0.347 0.514 0.284
+
+newmtl wet_earth_105
+Kd 0.284 0.242 0.189
+
+newmtl wet_earth
+Kd 0.270 0.230 0.180
+
+newmtl wet_earth_94
+Kd 0.254 0.216 0.169
+
+newmtl shallow_water
+Kd 0.200 0.380 0.600
+
+newmtl shallow_water_103
+Kd 0.206 0.391 0.618
+
+newmtl shallow_water_97
+Kd 0.194 0.369 0.582
+
+newmtl grass_72
+Kd 0.238 0.353 0.194
+
+newmtl grass_120
+Kd 0.396 0.588 0.324
+
+newmtl grass_90
+Kd 0.297 0.441 0.243
+
+newmtl grass_112
+Kd 0.370 0.549 0.302
+

@@ -5,38 +5,33 @@ using Godot;
 namespace Game.Presentation;
 
 /// <summary>
-/// Builds a visual for one resource model (a slot in a resource field) from CC0 glTF models when present, and
-/// falls back to a colored box when the model files are not yet in the project.
-/// A model is scaled to a target height from its bounding box, so differently
+/// Builds a visual for one resource model (a slot in a resource field) from its glTF
+/// models (required; see <see cref="ModelLibrary"/>). A model is scaled to a target height from its bounding box, so differently
 /// sized source models all render at the right in-world size (our render-scaling
 /// control), then seated on the ground and given a deterministic yaw per node.
 /// </summary>
 public static class NodeModels
 {
-    private sealed record ModelSpec(string[] Paths, float TargetHeight, Color FallbackColor, float FallbackWidth);
+    private sealed record ModelSpec(string[] Paths, float TargetHeight);
 
     private static readonly Dictionary<ResourceType, ModelSpec> Specs = new()
     {
         [ResourceType.Ore] = new ModelSpec(
             new[]
             {
-                "res://assets/models/nature/rock_a.glb",
-                "res://assets/models/nature/rock_b.glb",
-                "res://assets/models/nature/rock_c.glb"
+                "nature/rock_a",
+                "nature/rock_b",
+                "nature/rock_c"
             },
-            0.8f,
-            new Color(0.55f, 0.57f, 0.62f),
-            0.7f),
+            0.8f),
         [ResourceType.Wood] = new ModelSpec(
             new[]
             {
-                "res://assets/models/nature/tree_a.glb",
-                "res://assets/models/nature/tree_b.glb",
-                "res://assets/models/nature/tree_c.glb"
+                "nature/tree_a",
+                "nature/tree_b",
+                "nature/tree_c"
             },
-            2.5f,
-            new Color(0.32f, 0.44f, 0.22f),
-            0.5f)
+            2.5f)
     };
 
     /// <summary>
@@ -50,7 +45,7 @@ public static class NodeModels
     {
         if (!Specs.TryGetValue(type, out ModelSpec? spec))
         {
-            spec = new ModelSpec(System.Array.Empty<string>(), 0.8f, Colors.White, 0.7f);
+            throw new System.InvalidOperationException($"No resource models for {type}.");
         }
         if (type == ResourceType.Wood)
         {
@@ -66,8 +61,9 @@ public static class NodeModels
         };
         root.RotationDegrees = new Vector3(0f, DeterministicYaw(seedId), 0f);
 
-        Node3D visual = TryInstanceModel(spec, seedId, maxFootprint) ?? CreateFallback(spec, maxFootprint);
-        root.AddChild(visual);
+        Node3D model = ModelLibrary.Instance(spec.Paths[seedId % spec.Paths.Length]);
+        SeatAndNormalize(model, spec.TargetHeight, maxFootprint);
+        root.AddChild(model);
         return root;
     }
 
@@ -84,58 +80,6 @@ public static class NodeModels
             Seed = (ulong)seedId * 2654435761UL + 1UL
         };
         return rng.RandfRange(0f, 360f);
-    }
-
-    private static Node3D? TryInstanceModel(ModelSpec spec, int nodeId, float maxFootprint)
-    {
-        var existing = new List<string>();
-        foreach (string path in spec.Paths)
-        {
-            if (ResourceLoader.Exists(path))
-            {
-                existing.Add(path);
-            }
-        }
-        if (existing.Count == 0)
-        {
-            return null;
-        }
-
-        string chosen = existing[nodeId % existing.Count];
-        var scene = GD.Load<PackedScene>(chosen);
-        if (scene is null)
-        {
-            return null;
-        }
-
-        Node instance = scene.Instantiate();
-        if (instance is not Node3D model)
-        {
-            instance.QueueFree();
-            return null;
-        }
-
-        SeatAndNormalize(model, spec.TargetHeight, maxFootprint);
-        return model;
-    }
-
-    private static Node3D CreateFallback(ModelSpec spec, float maxFootprint)
-    {
-        float height = spec.TargetHeight;
-        float width = Mathf.Min(spec.FallbackWidth, maxFootprint);
-        return new MeshInstance3D
-        {
-            Name = "Fallback",
-            Mesh = new BoxMesh
-            {
-                Size = new Vector3(width, height, width)
-            },
-            MaterialOverride = new StandardMaterial3D
-            {
-                AlbedoColor = spec.FallbackColor
-            },
-            Position = new Vector3(0f, height * 0.5f, 0f)
-        };
     }
 
     // The model is scaled to the target height unless that would make it wider

@@ -1,0 +1,18 @@
+newmtl mud
+Kd 0.380 0.320 0.220
+
+newmtl mud_105
+Kd 0.399 0.336 0.231
+
+newmtl mud_94
+Kd 0.357 0.301 0.207
+
+newmtl mud_72
+Kd 0.274 0.230 0.158
+
+newmtl puddle
+Kd 0.220 0.240 0.240
+
+newmtl mud_85
+Kd 0.323 0.272 0.187
+

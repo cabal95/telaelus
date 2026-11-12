@@ -1,70 +1,14 @@
-"""Procedural generator for the experiment assets. Writes .obj/.mtl into models/.
-Run: python gen.py
-Conventions: Y up, origin at base centre, OBJ counter-clockwise front faces.
+"""Generates every asset-factory model into models/ (.obj + .mtl).
+Run: python gen.py   (see docs/asset-pipeline.md)
+Mountains and ore live here; ground, transitions and rivers in terrain_gen.py; buildings in
+building_gen.py.
 """
 import math
-import os
 import random
 
-OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "models")
-os.makedirs(OUT, exist_ok=True)
-
-
-def sub(a, b): return (a[0] - b[0], a[1] - b[1], a[2] - b[2])
-def add(a, b): return (a[0] + b[0], a[1] + b[1], a[2] + b[2])
-def mul(a, s): return (a[0] * s, a[1] * s, a[2] * s)
-def dot(a, b): return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
-def cross(a, b): return (a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0])
-def norm(a):
-    l = math.sqrt(dot(a, a)) or 1.0
-    return (a[0] / l, a[1] / l, a[2] / l)
-def centroid(*ps): return mul(ps[0] if len(ps) == 1 else __import__("functools").reduce(add, ps), 1.0 / len(ps))
-
-
-class Mesh:
-    def __init__(self):
-        self.tris = []  # (material, a, b, c)
-
-    def tri(self, mat, a, b, c, outward=None, centre=None):
-        """Add a triangle, flipping winding so the normal faces `outward` (a vector) or away from `centre`."""
-        n = cross(sub(b, a), sub(c, a))
-        if outward is None and centre is not None:
-            outward = sub(centroid(a, b, c), centre)
-        if outward is not None and dot(n, outward) < 0:
-            b, c = c, b
-        self.tris.append((mat, a, b, c))
-
-    def translated(self, d):
-        m = Mesh()
-        m.tris = [(mt, add(a, d), add(b, d), add(c, d)) for mt, a, b, c in self.tris]
-        return m
-
-    def extend(self, other):
-        self.tris.extend(other.tris)
-
-    def write(self, name, materials):
-        with open(os.path.join(OUT, name + ".mtl"), "w") as f:
-            for mname, (kd, ke) in materials.items():
-                f.write("newmtl %s\nKd %.3f %.3f %.3f\n" % ((mname,) + kd))
-                if ke:
-                    f.write("Ke %.3f %.3f %.3f\n" % ke)
-                f.write("\n")
-        verts, by_mat = [], {}
-        for mt, a, b, c in self.tris:
-            idx = []
-            for p in (a, b, c):
-                verts.append(p)
-                idx.append(len(verts))
-            by_mat.setdefault(mt, []).append(idx)
-        with open(os.path.join(OUT, name + ".obj"), "w") as f:
-            f.write("mtllib %s.mtl\n" % name)
-            for v in verts:
-                f.write("v %.4f %.4f %.4f\n" % v)
-            for mt, faces in by_mat.items():
-                f.write("usemtl %s\n" % mt)
-                for t in faces:
-                    f.write("f %d %d %d\n" % tuple(t))
-        print("wrote", name, len(self.tris), "tris")
+from mesh import *  # noqa: F401,F403
+import building_gen
+import terrain_gen
 
 
 # ---------------------------------------------------------------- mountains
@@ -269,5 +213,7 @@ def iron_ore(seed):
 
 if __name__ == "__main__":
     build_mountains()
+    terrain_gen.build_all()
+    building_gen.build_all()
     for suffix, seed in (("a", 5), ("b", 17), ("c", 31)):
         iron_ore(seed).write("rock_" + suffix, IRON_MATS)

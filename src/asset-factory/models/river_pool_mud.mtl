@@ -1,0 +1,36 @@
+newmtl mud_94
+Kd 0.357 0.301 0.207
+
+newmtl mud
+Kd 0.380 0.320 0.220
+
+newmtl mud_105
+Kd 0.399 0.336 0.231
+
+newmtl wet_earth_105
+Kd 0.284 0.242 0.189
+
+newmtl wet_earth_94
+Kd 0.254 0.216 0.169
+
+newmtl wet_earth
+Kd 0.270 0.230 0.180
+
+newmtl shallow_water_103
+Kd 0.206 0.391 0.618
+
+newmtl shallow_water
+Kd 0.200 0.380 0.600
+
+newmtl shallow_water_97
+Kd 0.194 0.369 0.582
+
+newmtl mud_72
+Kd 0.274 0.230 0.158
+
+newmtl puddle
+Kd 0.220 0.240 0.240
+
+newmtl mud_85
+Kd 0.323 0.272 0.187
+

@@ -123,24 +123,39 @@ The center map cells around the spawn are clear Grassland grass.
 
 ### Rendering
 
-- `TerrainView` builds one tile per map cell; `TerrainTiles` renders the current placeholders, each
-  4 x 4 world units: a flat tile in its terrain's color (Lava glows).
+- `TerrainView` builds one visual per map cell; `TerrainTiles` assembles it from the generated
+  terrain models (files and conventions in `src/Game/assets/models/terrain/README.md`; the look and
+  the ground levels in art-style.md).
+- A plain cell draws its **ground tile**, `ground_<terrain>_<a|b|c>`: one of three variants at a
+  90-degree yaw, both from the map cell's coordinates. Land tiles are faceted surfaces at y = 0
+  with small flat details (grass patches, sand ripples, snow drifts, rock slabs and pebbles, mud
+  puddles) and a skirt down to -0.1 on every side; water and lava tiles are surfaces at y = -0.1
+  (lava has glowing cracks between crust plates). A mountain or river cell draws its mountain or
+  river model instead, which covers the whole cell.
 - **Transitions** follow draw priority: on each edge whose in-bounds neighbor has a higher
-  priority, the cell draws a thin strip in the neighbor's color, stopping short of the corners.
-  Each corner gets a square in the color of the highest-priority terrain among the three cells
-  around it (the two edge neighbors and the diagonal one), when that terrain outranks the cell,
-  so transitions stay continuous where three terrains meet. Where a river flows in across the
-  edge, the strip's middle is left open so the channel meets the water. One edge set per terrain keeps
-  future transition art at N assets rather than one per pair.
+  priority, the cell draws that neighbor's `edge_<terrain>` piece, a strip with a ragged inner
+  edge stopping short of the corners. Each corner draws the `corner_<terrain>` piece of the
+  highest-priority terrain among the three cells around it (the two edge neighbors and the
+  diagonal one), when that terrain outranks the cell, so transitions stay continuous where three
+  terrains meet. Where a river flows in across the edge, the cell draws `edge_mouth_<terrain>`
+  instead, whose strip leaves a gap so the channel meets it. Pieces are authored for the North edge
+  and North-West corner and turned into place; one edge set per terrain (Grass, Snow, Sand, Mud,
+  Rock, Lava; water never outranks) keeps transition art at N pieces rather than one per pair.
+  Land pieces carry a skirt to -0.1, so a land strip in a water cell is a ragged shore.
 - A **mountain** is a generated model from `MountainModels`: the Snow family on Snow ground and
   the Stone family on every other ground, one of three shapes at a deterministic 90-degree
   rotation per map cell. The model stays inside its map cell with every edge flat on the
   ground, so each mountain is a standalone peak and neighbors form a cluster. The six files are required (see
   `src/Game/assets/models/terrain/README.md`).
-- A **river** is water laid over its channel fine cells, above the edge strips, so its banks show
-  the cell's own terrain.
-- Ground tiles are still colored placeholders; mountains are not. The model conventions are in
-  `src/Game/assets/models/terrain/README.md`.
+- A **river** cell draws `river_<shape>_<bank terrain>` (`RiverPieces`): one model per shape and
+  bank terrain (Grass, Sand, Snow, Mud, Rock), banks at y = 0 in that terrain's look and the sim's
+  channel (the middle 2 x 2 fine cells plus a 2-wide arm per connection) sunk to a water surface at
+  y = -0.1 with short sloped sides. Every connected edge has the same channel cross-section, so
+  pieces join each other and meet water tiles flush. Each shape is authored with canonical
+  connections (End: North; Straight: North and South; Bend: North and East; Junction: North, East,
+  and South) and turned in 90-degree steps to the cell's connections.
+- Ground pieces (tiles, edges, corners, river pieces) cast no shadows; mountains do.
+- Every terrain model is required; a missing file throws (see presentation.md).
 
 ## Related
 

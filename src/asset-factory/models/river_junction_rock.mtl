@@ -1,0 +1,45 @@
+newmtl rock
+Kd 0.480 0.460 0.440
+
+newmtl rock_105
+Kd 0.504 0.483 0.462
+
+newmtl rock_94
+Kd 0.451 0.432 0.414
+
+newmtl wet_earth_105
+Kd 0.284 0.242 0.189
+
+newmtl wet_earth
+Kd 0.270 0.230 0.180
+
+newmtl wet_earth_94
+Kd 0.254 0.216 0.169
+
+newmtl shallow_water_103
+Kd 0.206 0.391 0.618
+
+newmtl shallow_water_97
+Kd 0.194 0.369 0.582
+
+newmtl shallow_water
+Kd 0.200 0.380 0.600
+
+newmtl rock_72
+Kd 0.346 0.331 0.317
+
+newmtl stone_dark_95
+Kd 0.342 0.323 0.314
+
+newmtl stone_dark_80
+Kd 0.288 0.272 0.264
+
+newmtl stone_dark_110
+Kd 0.396 0.374 0.363
+
+newmtl rock_115
+Kd 0.552 0.529 0.506
+
+newmtl rock_85
+Kd 0.408 0.391 0.374
+

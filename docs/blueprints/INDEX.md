@@ -22,6 +22,9 @@ Read this index to find the right area, then open that blueprint for the detail.
   and the on-screen character and follow camera.
 - **[presentation.md](presentation.md)** - The presentation layer: the frame loop and view-sync
   pattern, the views, the asset and model pipeline, and the renderer.
+- **[art-style.md](art-style.md)** - How every asset looks and is built: the low-poly flat-color
+  look, the view assets are judged from, the shared palette, scale, ground levels and cell-model
+  rules, variants, sources, and naming.
 - **[testing.md](testing.md)** - The engine-free sim unit tests and the seam check, JSON
   scenarios (commands, snapshot, running, output), the headless integration tests, and the live
   control channel with pause and frame stepping.

@@ -76,12 +76,19 @@ loop.
 
 ### Rendering and interaction
 
-- `BuildingViews` renders one colored box per building, sized to its rotated footprint (inset 0.1
-  per side, 1 unit tall): Mine orange, Lumber Camp brown, Smelter red, Refinery blue.
+- `BuildingViews` renders each building's model (`BuildingModels`, files in
+  `src/Game/assets/models/buildings/`), placed at the footprint center and turned to its facing.
+  Each model is authored facing North with its front toward -Z, fills its footprint minus a 0.1
+  inset per side, and carries its type's accent color: Mine (a headframe over a shaft, ore cart at
+  the front, orange), Lumber Camp (a plank shed, log pile and saw bench at the front, brown),
+  Smelter (a stone furnace with a chimney and a glowing mouth at the front, red), Refinery (two
+  tanks joined by pipes, a control hut at the front, blue). The front marks the facing, so a
+  rotated building reads as rotated.
 - `BuildController` drives build mode: keys 1 Mine, 2 Lumber Camp, 3 Smelter, 4 Refinery; 0 or
-  Escape cancels; R rotates the facing. The ghost is sized to the rotated footprint and placed at
-  the anchor whose footprint center is nearest the mouse's ground point; it is green when placeable,
-  red when not. Left-click issues the placement command.
+  Escape cancels; R rotates the facing. The ghost is a translucent copy of the selected building's
+  model, turned to the chosen facing, over a thin plate covering the exact footprint; it is placed
+  at the anchor whose footprint center is nearest the mouse's ground point, and every surface of
+  it is tinted green when placeable, red when not. Left-click issues the placement command.
 - The pointer is the viewport mouse position unless `PointerOverride` holds a world ground point
   (set by scenarios); that point is projected to the screen each frame and then goes through the
   same screen-to-ground ray, so aiming stays fixed on the ground while the camera moves.

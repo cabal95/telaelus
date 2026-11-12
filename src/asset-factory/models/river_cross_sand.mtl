@@ -1,0 +1,30 @@
+newmtl sand_105
+Kd 0.819 0.735 0.504
+
+newmtl sand
+Kd 0.780 0.700 0.480
+
+newmtl sand_94
+Kd 0.733 0.658 0.451
+
+newmtl wet_earth_105
+Kd 0.284 0.242 0.189
+
+newmtl wet_earth
+Kd 0.270 0.230 0.180
+
+newmtl shallow_water
+Kd 0.200 0.380 0.600
+
+newmtl shallow_water_103
+Kd 0.206 0.391 0.618
+
+newmtl shallow_water_97
+Kd 0.194 0.369 0.582
+
+newmtl wet_earth_94
+Kd 0.254 0.216 0.169
+
+newmtl sand_72
+Kd 0.562 0.504 0.346
+

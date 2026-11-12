@@ -47,6 +47,9 @@ Newest last. One line each; open the file for the full spec.
 - **2611111615-mountain-models** - Replaces the mountain cone with six required generated models
   (stone and snow families of three shapes, chosen by the ground beneath), each a standalone peak
   inside its map cell with flat edges.
+- **2611111733-initial-world-assets** - Replaces every remaining placeholder with generated models (ground tiles,
+  transition pieces, river pieces, buildings, and model-based build ghosts), makes all models
+  required, and starts the art-style blueprint.
 
 ## Adding a changeset
 

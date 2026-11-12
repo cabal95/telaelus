@@ -1,0 +1,9 @@
+newmtl shallow_water
+Kd 0.200 0.380 0.600
+
+newmtl shallow_water_95
+Kd 0.190 0.361 0.570
+
+newmtl shallow_water_104
+Kd 0.208 0.395 0.624
+

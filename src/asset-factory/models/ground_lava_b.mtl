@@ -1,0 +1,13 @@
+newmtl lava
+Kd 0.950 0.420 0.100
+Ke 0.475 0.210 0.050
+
+newmtl lava_crust_105
+Kd 0.252 0.137 0.105
+
+newmtl lava_crust_94
+Kd 0.226 0.122 0.094
+
+newmtl lava_crust
+Kd 0.240 0.130 0.100
+

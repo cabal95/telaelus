@@ -6,7 +6,9 @@ namespace Game.Presentation;
 
 /// <summary>
 /// Handles build mode: selecting a building type with the number keys, rotating
-/// with R, showing a footprint-sized ghost centered on the mouse, and issuing a
+/// with R, showing a ghost of the selected building centered on the mouse (a
+/// translucent copy of its model, tinted green or red, over a plate covering the
+/// exact footprint), and issuing a
 /// placement command to the simulation on a left click. For an extractor, it also
 /// shows the work area as a translucent disc and highlights the matching fields
 /// in range. Placement itself is decided by the sim (CanPlace / TryPlace).
@@ -18,8 +20,11 @@ public partial class BuildController : Node3D
 {
     private Simulation _sim = null!;
     private Camera3D _camera = null!;
-    private MeshInstance3D _ghost = null!;
-    private BoxMesh _ghostMesh = null!;
+    private Node3D _ghost = null!;
+    private Node3D? _ghostModel;
+    private (BuildingType Type, Facing Facing)? _ghostModelKey;
+    private MeshInstance3D _ghostPlate = null!;
+    private BoxMesh _ghostPlateMesh = null!;
     private StandardMaterial3D _ghostMaterial = null!;
     private MeshInstance3D _workArea = null!;
     private CylinderMesh _workAreaMesh = null!;
@@ -49,8 +54,9 @@ public partial class BuildController : Node3D
         bool Placeable,
         int FieldsInRange);
 
-    private static readonly Color ValidColor = new(0.3f, 0.9f, 0.4f, 0.5f);
-    private static readonly Color InvalidColor = new(0.9f, 0.3f, 0.3f, 0.5f);
+    private static readonly Color ValidColor = new(0.3f, 0.9f, 0.4f, 0.45f);
+    private static readonly Color InvalidColor = new(0.9f, 0.3f, 0.3f, 0.45f);
+    private const float PlateHeight = 0.04f;
     private static readonly Color WorkAreaColor = new(0.95f, 0.85f, 0.35f, 0.18f);
     private static readonly Color HighlightColor = new(0.95f, 0.85f, 0.35f, 0.35f);
 
@@ -67,15 +73,21 @@ public partial class BuildController : Node3D
             Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
             AlbedoColor = ValidColor
         };
-        _ghostMesh = new BoxMesh();
-        _ghost = new MeshInstance3D
+        _ghost = new Node3D
         {
             Name = "BuildGhost",
-            Mesh = _ghostMesh,
-            MaterialOverride = _ghostMaterial,
             Visible = false
         };
         AddChild(_ghost);
+        _ghostPlateMesh = new BoxMesh();
+        _ghostPlate = new MeshInstance3D
+        {
+            Name = "FootprintPlate",
+            Mesh = _ghostPlateMesh,
+            MaterialOverride = _ghostMaterial,
+            CastShadow = GeometryInstance3D.ShadowCastingSetting.Off
+        };
+        _ghost.AddChild(_ghostPlate);
 
         _workAreaMesh = new CylinderMesh
         {
@@ -118,8 +130,10 @@ public partial class BuildController : Node3D
         BuildingDef def = BuildingDefs.For(Selected.Value);
 
         _ghost.Visible = true;
-        _ghostMesh.Size = BuildingViews.BoxSize(g.Width, g.Depth);
-        _ghost.Position = g.Center + new Vector3(0f, BuildingViews.BoxHeight * 0.5f, 0f);
+        _ghost.Position = g.Center;
+        ShowGhostModel(Selected.Value, Facing);
+        _ghostPlateMesh.Size = new Vector3(g.Width, PlateHeight, g.Depth);
+        _ghostPlate.Position = new Vector3(0f, PlateHeight * 0.5f, 0f);
         _ghostMaterial.AlbedoColor = g.Placeable ? ValidColor : InvalidColor;
 
         if (def.Extracts is ResourceType extracts)
@@ -215,6 +229,36 @@ public partial class BuildController : Node3D
             {
                 _highlights[i].Position = fields[i].Center + new Vector3(0f, 0.05f, 0f);
             }
+        }
+    }
+
+    /// <summary>
+    /// Shows a copy of the building's model for the ghost, rebuilt only when the
+    /// type or facing changes, with every surface drawn in the shared tint material.
+    /// </summary>
+    private void ShowGhostModel(BuildingType type, Facing facing)
+    {
+        if (_ghostModelKey == (type, facing))
+        {
+            return;
+        }
+        _ghostModel?.QueueFree();
+        _ghostModel = BuildingModels.Create(type, facing);
+        _ghostModelKey = (type, facing);
+        TintAll(_ghostModel);
+        _ghost.AddChild(_ghostModel);
+    }
+
+    private void TintAll(Node node)
+    {
+        if (node is GeometryInstance3D geometry)
+        {
+            geometry.MaterialOverride = _ghostMaterial;
+            geometry.CastShadow = GeometryInstance3D.ShadowCastingSetting.Off;
+        }
+        foreach (Node child in node.GetChildren())
+        {
+            TintAll(child);
         }
     }
 
