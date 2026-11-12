@@ -22,6 +22,7 @@ public partial class GameRoot : Node3D
     private Hud _hud = null!;
     private TerrainView _terrainView = null!;
     private PerfMonitor _perf = null!;
+    private DirectionalLight3D _light = null!;
     private readonly System.Diagnostics.Stopwatch _simWatch = new();
 
     // Read-only access for the testing code (scenario runner and live channel).
@@ -59,6 +60,9 @@ public partial class GameRoot : Node3D
 
         _playerView.UpdateFrom(_sim.Player.Position, moveDir, delta);
         _camera.SetTarget(_sim.Player.Position);
+        // Shadows are drawn only up to this distance from the camera, which moves back as the
+        // view grows (see CameraRig.ViewDistance), so the range follows it.
+        _light.DirectionalShadowMaxDistance = _camera.ViewDistance + _camera.Size;
         _fieldViews.Sync(_sim.Fields, _terrainView);
         _buildingViews.Sync(_sim.Buildings);
         _hud.Refresh(
@@ -168,12 +172,12 @@ public partial class GameRoot : Node3D
         AddChild(_terrainView);
         _sim.MapChanged += _terrainView.MarkDirty;
 
-        var light = new DirectionalLight3D
+        _light = new DirectionalLight3D
         {
             ShadowEnabled = true
         };
-        light.RotationDegrees = new Vector3(-50, -40, 0);
-        AddChild(light);
+        _light.RotationDegrees = new Vector3(-50, -40, 0);
+        AddChild(_light);
 
         _fieldViews = new ResourceFieldViews
         {

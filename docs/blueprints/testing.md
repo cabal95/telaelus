@@ -89,7 +89,8 @@ pausing it and stepping frame by frame.
     `{ mapCell, amount }` (0 removes), `removeResource` `{ mapCell }`, `removeBuilding`
     `{ anchor }`.
   - Other setup: `placeBuilding` `{ type, anchor, facing? }` (normal placement rules),
-    `teleportPlayer` `{ x, z }`, `seedStockpile` `{ type, amount }`, `cameraZoom` `{ size }`.
+    `teleportPlayer` `{ x, z }`, `seedStockpile` `{ type, amount }`, `cameraZoom` `{ size }` (the camera's zoom: world units across 720 pixels
+    of window height, so at the 1280 x 720 scenario resolution it is the visible world height).
   - Input: `press` (key down now, up at the start of the next frame), `keyDown`, `keyUp`, `hold`
     `{ key, frames }` (down, wait, up), `aimAt` `{ cell: [x, z] }` (a fine cell's center) or
     `{ world: [x, z] }`, and `click` `{}` (left button at the aim, up the next frame). Keys are

@@ -60,6 +60,9 @@ Newest last. One line each; open the file for the full spec.
 - **2611112121-field-batching-and-perf-hud** - Batches resource field models into one multimesh per model per render tile,
   and adds frame-budget performance numbers to the HUD (F3), snapshots, and scenario reports, with
   the `perf-walk` benchmark and `--uncapped` for measurement runs.
+- **2611112139-camera-zoom-per-pixel** - Makes the camera zoom world units per 720 pixels of window height, so resizing
+  the window shows more or less map at the same scale, and backs the camera off as the view grows
+  so tall windows no longer clip the ground.
 
 ## Adding a changeset
 

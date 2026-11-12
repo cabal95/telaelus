@@ -38,9 +38,17 @@ on-screen character and camera.
   wrapper node, which preserves the character scene's baked orientation and scale. If the scene is
   absent it falls back to a capsule. All model-specific wiring lives in the scene, so swapping the
   character is an asset change, not a code change.
-- `CameraRig` is an orthographic camera holding the fixed 2.5D angle (offset `(14, 16, 14)` from its
-  target). It smoothly follows the player and zooms with the mouse wheel (size clamped between its
-  min and max). Orientation is set once and never changed, so the angle stays locked while it pans.
+- `CameraRig` is an orthographic camera holding the fixed 2.5D angle (looking at its target from
+  the direction of `(14, 16, 14)`). It sits the offset's length plus the visible world height away
+  from the target (`ViewDistance`): an orthographic view looks the same from any distance, but at a
+  fixed distance the lower edge of a tall view would dip below the ground and clip it. The
+  directional light's shadow range follows (`ViewDistance` plus the visible height), since shadows
+  are drawn only up to a set distance from the camera. It smoothly follows the player and zooms with the mouse wheel. The zoom is the world
+  units visible across 720 pixels of window height (default 28, clamped between 16 and 40); each
+  frame the camera's orthographic size is the zoom scaled by the viewport's height, so pixels per
+  world unit depend only on the zoom and resizing or maximizing the window shows more or less of
+  the map at the same scale. Orientation is set once and never changed, so the angle stays locked
+  while it pans.
 
 ## Related
 
