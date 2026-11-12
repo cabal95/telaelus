@@ -63,6 +63,8 @@ Newest last. One line each; open the file for the full spec.
 - **2611112139-camera-zoom-per-pixel** - Makes the camera zoom world units per 720 pixels of window height, so resizing
   the window shows more or less map at the same scale, and backs the camera off as the view grows
   so tall windows no longer clip the ground.
+- **2611112146-generated-trees** - Replaces the CC0 trees with generated tree families by biome (conifers in
+  Forest, broadleaf in Grassland, swamp trees in Swamp), so every world model is generated.
 
 ## Adding a changeset
 

@@ -1,0 +1,15 @@
+newmtl bark
+Kd 0.450 0.320 0.210
+
+newmtl bark_dark
+Kd 0.340 0.240 0.160
+
+newmtl leaf_light
+Kd 0.440 0.660 0.310
+
+newmtl leaf
+Kd 0.330 0.560 0.260
+
+newmtl leaf_dark
+Kd 0.250 0.450 0.210
+

@@ -57,18 +57,34 @@ public static class NodeModels
                 "nature/crude_oil_c"
             },
             0.05f),
-        [ResourceType.Wood] = new ModelSpec(
-            new[]
-            {
-                "nature/tree_a",
-                "nature/tree_b",
-                "nature/tree_c"
-            },
-            2.5f)
+        [ResourceType.Wood] = TreeFamily("broadleaf")
     };
 
     /// <summary>
-    /// The model and transform for one slot of a field: the variant and yaw are chosen
+    /// The tree family each biome's Wood fields draw: conifers in Forest, swamp trees in
+    /// Swamp, and broadleaf trees in Grassland and anywhere else.
+    /// </summary>
+    private static readonly Dictionary<BiomeType, ModelSpec> TreeFamilies = new()
+    {
+        [BiomeType.Forest] = TreeFamily("conifer"),
+        [BiomeType.Swamp] = TreeFamily("swamp")
+    };
+
+    private static ModelSpec TreeFamily(string family)
+    {
+        return new ModelSpec(
+            new[]
+            {
+                $"nature/tree_{family}_a",
+                $"nature/tree_{family}_b",
+                $"nature/tree_{family}_c"
+            },
+            2.5f);
+    }
+
+    /// <summary>
+    /// The model and transform for one slot of a field (a Wood field draws its biome's
+    /// tree family): the variant and yaw are chosen
     /// deterministically from <paramref name="seedId"/>, the model is scaled to its
     /// deposit's target height (Wood by the field's <paramref name="initialAmount"/>, see
     /// <see cref="WoodHeight"/>) unless that would make it wider than
@@ -76,12 +92,23 @@ public static class NodeModels
     /// <paramref name="slotPosition"/>. The transform includes the mesh's own transform
     /// within its model, so it can be used directly as a multimesh instance transform.
     /// </summary>
-    public static (string Path, Transform3D Transform) Slot(ResourceType type, int seedId, float maxFootprint, float initialAmount, Vector3 slotPosition)
+    public static (string Path, Transform3D Transform) Slot(
+        ResourceType type, BiomeType biome, int seedId, float maxFootprint, float initialAmount, Vector3 slotPosition)
     {
+        if (type == ResourceType.Wood && TreeFamilies.TryGetValue(biome, out ModelSpec? family))
+        {
+            return Place(family, type, seedId, maxFootprint, initialAmount, slotPosition);
+        }
         if (!Specs.TryGetValue(type, out ModelSpec? spec))
         {
             throw new System.InvalidOperationException($"No resource models for {type}.");
         }
+        return Place(spec, type, seedId, maxFootprint, initialAmount, slotPosition);
+    }
+
+    private static (string Path, Transform3D Transform) Place(
+        ModelSpec spec, ResourceType type, int seedId, float maxFootprint, float initialAmount, Vector3 slotPosition)
+    {
         float targetHeight = type == ResourceType.Wood ? WoodHeight(initialAmount) : spec.TargetHeight;
         string path = spec.Paths[seedId % spec.Paths.Length];
 

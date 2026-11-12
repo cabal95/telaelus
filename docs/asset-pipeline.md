@@ -191,7 +191,7 @@ and takes milliseconds.
 ## Shipping an asset to the game
 
 - Follow the folder and naming rules in the relevant `README.md` under
-  `src/Game/assets/models/` (for example `iron_ore_a.glb`, `tree_a.glb`).
+  `src/Game/assets/models/` (for example `iron_ore_a.glb`, `tree_conifer_a.glb`).
 - Godot caches imported assets. Replacing a `.glb` is not enough for a plain game run, which keeps
   drawing the old cached model. Re-import first with
   `<godot.editor> --headless --path src/Game --import` (it exits on its own), or just open the

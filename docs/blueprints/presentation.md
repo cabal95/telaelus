@@ -65,8 +65,9 @@ planned multiplayer feasible.
   placeholder. It caches loaded scenes, picks a map cell's variant and 90-degree yaw from a hash of
   its coordinates, turns North-authored pieces to an edge or facing, and can switch off shadow
   casting for flat ground pieces.
-- `NodeModels` holds the rules for a field slot's model: its variant and yaw (deterministic per
-  slot), its scale to the deposit's target height from the mesh's bounds, capped to the slot's
+- `NodeModels` holds the rules for a field slot's model: the model family (a Wood slot's tree
+  family follows the field's biome, read from the sim when its tile's batch is built), its
+  variant and yaw (deterministic per slot), its scale to the deposit's target height from the mesh's bounds, capped to the slot's
   footprint, and its seat on the ground, as one transform for a multimesh instance.
   `ModelLibrary.MeshBounds(path)` gives a model's mesh bounds.
 - `TerrainTiles` lists each map cell's terrain placements (model path, position, yaw, and whether

@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://qlpp545256ks"
-path="res://.godot/imported/tree_c.glb-2ae7457b3982f3373045848f4d4ebf99.scn"
+uid="uid://ca2fa753bc7pl"
+path="res://.godot/imported/tree_swamp_b.glb-ff4236d1be23f584d66dc76f90bf238e.scn"
 
 [deps]
 
-source_file="res://assets/models/nature/tree_c.glb"
-dest_files=["res://.godot/imported/tree_c.glb-2ae7457b3982f3373045848f4d4ebf99.scn"]
+source_file="res://assets/models/nature/tree_swamp_b.glb"
+dest_files=["res://.godot/imported/tree_swamp_b.glb-ff4236d1be23f584d66dc76f90bf238e.scn"]
 
 [params]
 

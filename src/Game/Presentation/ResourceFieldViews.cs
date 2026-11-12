@@ -42,8 +42,9 @@ public partial class ResourceFieldViews : Node3D
     /// <summary>How many render tiles have a built field batch.</summary>
     public int BatchCount => _batches.Count;
 
-    public void Sync(IReadOnlyList<ResourceField> fields, TerrainView terrain)
+    public void Sync(Simulation sim, TerrainView terrain)
     {
+        IReadOnlyList<ResourceField> fields = sim.Fields;
         var byTile = new Dictionary<(int, int), List<ResourceField>>();
         foreach (ResourceField field in fields)
         {
@@ -79,7 +80,7 @@ public partial class ResourceFieldViews : Node3D
                 }
                 batch.Node.QueueFree();
             }
-            Node3D node = FieldTileView.Create(inTile, key.Item1, key.Item2);
+            Node3D node = FieldTileView.Create(sim, inTile, key.Item1, key.Item2);
             AddChild(node);
             _batches[key] = new Batch
             {

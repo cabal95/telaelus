@@ -7,7 +7,7 @@ See docs/blueprints/art-style.md and src/Game/assets/models/nature/README.md.
 import math
 import random
 
-from mesh import Materials, Mesh, add, centroid, mul, norm
+from mesh import Materials, Mesh, add, centroid, cylinder, mul, norm, quad, spike
 
 
 # ---------------------------------------------------------------- lumps
@@ -190,6 +190,92 @@ def crude_oil(seed):
     return m, mat.mats
 
 
+# ---------------------------------------------------------------- trees
+def crown_shade(t, centre):
+    """Lighter on faces that look up, darker underneath, so a crown's facets read."""
+    c = centroid(*t)
+    up = c[1] - centre[1]
+    return "light" if up > 0.15 else "dark" if up < -0.1 else "mid"
+
+
+def conifer(seed):
+    """A short trunk under three or four stacked cones narrowing to a point."""
+    rnd = random.Random(seed)
+    m, mat = Mesh(), Materials()
+    cylinder(m, mat("bark"), (0, 0, 0), (0, 0.55, 0), 0.11, segs=6, mat_cap=mat("bark_dark"))
+    tiers = rnd.choice((3, 4))
+    y = 0.35
+    radius = rnd.uniform(0.55, 0.65)
+    for k in range(tiers):
+        height = rnd.uniform(1.1, 1.3) - k * 0.1
+        lean = (rnd.uniform(-0.04, 0.04), rnd.uniform(-0.04, 0.04))
+        shade = ("conifer_dark", "conifer", "conifer_light", "conifer_light")[k]
+        spike(m, mat(shade), (0, y, 0), (lean[0], y + height, lean[1]), radius, segs=rnd.choice((6, 7)))
+        y += height * rnd.uniform(0.5, 0.58)
+        radius *= rnd.uniform(0.74, 0.8)
+    return m, mat.mats
+
+
+def broadleaf(seed):
+    """A forked trunk under two or three overlapping lumpy blobs forming a round crown."""
+    rnd = random.Random(seed)
+    m, mat = Mesh(), Materials()
+    cylinder(m, mat("bark"), (0, 0, 0), (0, 0.95, 0), 0.1, segs=6, mat_cap=mat("bark_dark"))
+    for side in (-1, 1):
+        cylinder(m, mat("bark"), (0, 0.8, 0), (side * 0.28, 1.25, rnd.uniform(-0.1, 0.1)), 0.06, segs=5)
+    lumps = [(0.0, 1.55, 0.0, 0.72)]
+    for k in range(rnd.choice((2, 3))):
+        a = rnd.uniform(0, 2 * math.pi)
+        lumps.append((math.cos(a) * 0.38, rnd.uniform(1.35, 1.55), math.sin(a) * 0.38, rnd.uniform(0.45, 0.58)))
+    for x, y, z, r in lumps:
+        centre = (x, y, z)
+        tris = blob(rnd, centre, (r, r * 0.85, r), 1, 0.16, squash_base=False)
+        add_blob(m, tris, centre, lambda t, c=centre: mat({"light": "leaf_light", "mid": "leaf", "dark": "leaf_dark"}[crown_shade(t, c)]))
+    return m, mat.mats
+
+
+def swamp_tree(seed):
+    """A thick, leaning trunk flared at the base under a wide, flat crown with a hanging fringe."""
+    rnd = random.Random(seed)
+    m, mat = Mesh(), Materials()
+    lean = (rnd.uniform(-0.18, 0.18), rnd.uniform(-0.18, 0.18))
+    top = (lean[0], 1.35, lean[1])
+    # Tapered trunk: wide at the base, narrow at the top.
+    segs = 7
+    for i in range(segs):
+        a0 = 2 * math.pi * i / segs
+        a1 = 2 * math.pi * (i + 1) / segs
+        b0 = (math.cos(a0) * 0.2, 0.0, math.sin(a0) * 0.2)
+        b1 = (math.cos(a1) * 0.2, 0.0, math.sin(a1) * 0.2)
+        t0 = (top[0] + math.cos(a0) * 0.09, top[1], top[2] + math.sin(a0) * 0.09)
+        t1 = (top[0] + math.cos(a1) * 0.09, top[1], top[2] + math.sin(a1) * 0.09)
+        quad(m, mat("bark_dark" if i % 2 else "bark"), b0, b1, t1, t0, (math.cos(a0) + math.cos(a1), 0, math.sin(a0) + math.sin(a1)))
+    # Root flares at the base.
+    for k in range(3):
+        a = 2 * math.pi * k / 3 + rnd.uniform(-0.3, 0.3)
+        spike(m, mat("bark_dark"), (math.cos(a) * 0.12, 0.0, math.sin(a) * 0.12),
+              (math.cos(a) * 0.38, 0.0, math.sin(a) * 0.38), 0.08, segs=4)
+    # Wide, flattened crown.
+    centre = (top[0], 1.55, top[2])
+    tris = blob(rnd, centre, (0.95, 0.38, 0.85), 1, 0.15, squash_base=False)
+    add_blob(m, tris, centre, lambda t: mat({"light": "swamp_leaf_light", "mid": "swamp_leaf", "dark": "swamp_leaf_dark"}[crown_shade(t, centre)]))
+    # A ragged fringe hanging from the crown's edge.
+    for k in range(9):
+        a = 2 * math.pi * k / 9 + rnd.uniform(-0.15, 0.15)
+        rx, rz = math.cos(a) * 0.78, math.sin(a) * 0.7
+        base = (centre[0] + rx, centre[1] - 0.12, centre[2] + rz)
+        tip = (base[0] * 1.0, centre[1] - rnd.uniform(0.45, 0.7), base[2])
+        spike(m, mat("moss"), base, tip, rnd.uniform(0.12, 0.18), segs=4)
+    return m, mat.mats
+
+
+TREES = {
+    "tree_conifer": (conifer, (201, 213, 227)),
+    "tree_broadleaf": (broadleaf, (231, 243, 257)),
+    "tree_swamp": (swamp_tree, (261, 273, 287)),
+}
+
+
 DEPOSITS = {
     "iron_ore": (iron_ore, (5, 17, 31)),
     "copper_ore": (copper_ore, (41, 53, 67)),
@@ -200,7 +286,7 @@ DEPOSITS = {
 
 
 def build_all():
-    for name, (fn, seeds) in DEPOSITS.items():
+    for name, (fn, seeds) in list(DEPOSITS.items()) + list(TREES.items()):
         for suffix, seed in zip("abc", seeds):
             m, mats = fn(seed)
             m.write("%s_%s" % (name, suffix), mats)

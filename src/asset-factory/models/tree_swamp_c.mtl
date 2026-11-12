@@ -1,0 +1,18 @@
+newmtl bark
+Kd 0.450 0.320 0.210
+
+newmtl bark_dark
+Kd 0.340 0.240 0.160
+
+newmtl swamp_leaf_light
+Kd 0.490 0.540 0.260
+
+newmtl swamp_leaf
+Kd 0.400 0.460 0.210
+
+newmtl swamp_leaf_dark
+Kd 0.310 0.370 0.170
+
+newmtl moss
+Kd 0.340 0.400 0.190
+

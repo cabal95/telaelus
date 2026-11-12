@@ -13,7 +13,7 @@ namespace Game.Presentation;
 /// </summary>
 public static class FieldTileView
 {
-    public static Node3D Create(IReadOnlyList<ResourceField> fields, int tileX, int tileZ)
+    public static Node3D Create(Simulation sim, IReadOnlyList<ResourceField> fields, int tileX, int tileZ)
     {
         float tileWorld = TerrainView.TileSize * Simulation.FineCellsPerMapCell;
         var origin = new Vector3(tileX * tileWorld, 0f, tileZ * tileWorld);
@@ -26,7 +26,7 @@ public static class FieldTileView
             {
                 Vector3 slot = ResourceFieldViews.SlotPosition(field, i) - origin;
                 (string path, Transform3D transform) = NodeModels.Slot(
-                    field.Type, field.Id * ResourceField.StageCount + i, ResourceFieldViews.SlotFootprint, field.InitialAmount, slot);
+                    field.Type, sim.MapBiomeAt(field.MapX, field.MapZ), field.Id * ResourceField.StageCount + i, ResourceFieldViews.SlotFootprint, field.InitialAmount, slot);
                 if (!groups.TryGetValue(path, out List<Transform3D>? group))
                 {
                     group = new List<Transform3D>();
