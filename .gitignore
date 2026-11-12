@@ -26,3 +26,6 @@ tools.json
 
 # Scenario and integration test runs (screenshots, reports)
 test-output/
+
+# Asset factory Python environment (recreate with: python src/asset-factory/setup_env.py)
+.venv/

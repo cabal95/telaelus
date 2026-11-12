@@ -5,9 +5,11 @@ Godot (the Godot project is `src/Game`).
 
 - `models/`: generated `.obj` and `.mtl` files. These are the source of truth.
 - `previews/`: kept sample sheets (game camera angle, two more yaws, and a top-down view).
-- `tools/`: the generator (`gen.py`), the Blender converter (`obj_to_glb.py`), the Blender
-  preview renderer (`render_preview.py`, no window), and the Godot preview renderer (`preview/`,
-  opens a window).
+- `tools/`: the generator (`gen.py`), the `.glb` exporter (`export_glb.py`), the preview renderer
+  (`preview.py`, no window), and the Godot preview renderer (`preview/`, opens a window).
+- `requirements.txt` and `setup_env.py`: the tools' private Python environment. Run
+  `python src/asset-factory/setup_env.py` once per machine (and after `requirements.txt` changes);
+  it creates the git-ignored `.venv/`.
 
 Shipped `.glb` files live in `src/Game/assets/models/`, not here.
 

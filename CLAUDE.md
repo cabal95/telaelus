@@ -42,6 +42,10 @@ simulation is a separate class library in `src/Game.Sim`, referenced by `Game.cs
 - After adding a C# script or asset under `src/Game`, run `<godot.editor> --headless --path
   src/Game --import` (a headless project scan and import that quits in seconds) and commit the
   `.uid` files it creates with the script, so they do not appear later when the editor opens.
+- Asset factory tools (generator, `.glb` exporter, preview renderer) run in a private Python
+  environment: `python src/asset-factory/setup_env.py` once per machine, then
+  `src/asset-factory/.venv/Scripts/python src/asset-factory/tools/<tool>.py`. See
+  [docs/asset-pipeline.md](docs/asset-pipeline.md).
 - Run the sim unit tests: `dotnet test src/Game.Sim.Tests` (engine-free; must pass before a
   changeset is stamped Implemented)
 - Run the integration tests: `dotnet test src/Game.Integration.Tests` (each JSON scenario in

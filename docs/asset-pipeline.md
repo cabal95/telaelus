@@ -7,18 +7,20 @@ slot sizes).
 
 ## Status
 
-The pipeline is experimental. The generator, the Blender converter, and both preview renderers
-(Blender and Godot) exist and work. Everything lives in `src/asset-factory/`:
+The generator, the `.glb` exporter, and both preview renderers (Python and Godot) exist and work.
+Everything lives in `src/asset-factory/`:
 
 ```
 src/asset-factory/
   README.md
+  requirements.txt   pinned Python packages for the tools
+  setup_env.py       creates the private Python environment in .venv/
   models/            generated .obj and .mtl (the source of truth, committed)
   previews/          kept sample sheets (final ones only)
   tools/
     gen.py           generators
-    obj_to_glb.py    Blender conversion script
-    render_preview.py  Blender preview renderer (no window)
+    export_glb.py    OBJ to .glb exporter
+    preview.py       preview renderer (no window)
     preview/         Godot preview renderer (render.gd + a minimal project.godot)
 ```
 
@@ -29,23 +31,42 @@ Throwaway output (scratch renders, test scenarios, trial exports) goes in the gi
 ## Overview
 
 ```
-gen.py  ->  models/<name>.obj + .mtl  ->  preview render (PNG)  ->  review and adjust
-                                      \->  Blender  ->  <name>.glb  ->  src/Game/assets/models/...
+gen.py  ->  models/<name>.obj + .mtl  ->  preview.py (PNG)  ->  review and adjust
+                                      \->  export_glb.py  ->  <name>.glb  ->  src/Game/assets/models/...
 ```
 
 Assets are described as code (a Python script emits geometry), not edited by hand, so any asset
 can be tweaked by changing a parameter and regenerating.
 
+## Setup (once per machine)
+
+The tools run in a private Python environment inside the project, like `node_modules`: nothing is
+installed globally. With Python 3 on `PATH`:
+
+```bash
+python src/asset-factory/setup_env.py
+```
+
+This creates `src/asset-factory/.venv/` (git-ignored) and installs the exact versions in
+`requirements.txt` (numpy and Pillow). Run it again whenever `requirements.txt` changes. To add or
+upgrade a package, install it into the environment, then pin the new version in
+`requirements.txt`.
+
+Run every tool with the environment's Python, written `<py>` below:
+
+- Windows: `src/asset-factory/.venv/Scripts/python`
+- macOS and Linux: `src/asset-factory/.venv/bin/python`
+
+`gen.py` and `export_glb.py` use only the standard library and also run with any Python 3;
+`preview.py` needs the environment.
+
 ## Tools
 
-Paths come from `tools.json` at the repo root (see `tools.template.json`). Never guess or search
-for them.
-
-| Tool | Key | Used for |
-|------|-----|----------|
-| Python 3 | on `PATH` | running the generator (standard library only) |
-| Blender | `blender.editor` | converting OBJ to `.glb`, window-free preview renders |
-| Godot | `godot.editor` | engine-accurate preview check (opens a window) |
+| Tool | Where | Used for |
+|------|-------|----------|
+| Python 3 | on `PATH` | creating the environment |
+| Asset factory environment | `src/asset-factory/.venv` | generating, exporting, preview renders |
+| Godot | `godot.editor` in `tools.json` | engine-accurate preview check (opens a window) |
 
 ## Source format
 
@@ -54,8 +75,8 @@ Generators write Wavefront `.obj` plus a sibling `.mtl`. Rules every generator f
 - **Y is up.** The origin is the center of the model's base, resting on y=0.
 - **Units are world units.** 1 map cell is 4 x 4 units; see the in-game README for the scale of
   each asset class (ore about 0.8 tall, trees about 2.5, buildings about 1, terrain tiles 4 x 4).
-- **Counter-clockwise front faces** (the OBJ convention). Godot treats clockwise as front, so the
-  renderer reverses winding; Blender and the glTF export handle it on import.
+- **Counter-clockwise front faces** (the OBJ and glTF convention). The Godot preview renderer
+  reverses winding, since Godot treats clockwise as front; the exported `.glb` keeps it as is.
 - **Flat colors only.** Color comes from `Kd` in the `.mtl`; there are no textures. Optional `Ke`
   adds emission (for glowing materials) and `d` adds transparency.
 - **Flat shading.** Faces are written as separate triangles with no shared vertices, so every
@@ -70,7 +91,7 @@ Generators write Wavefront `.obj` plus a sibling `.mtl`. Rules every generator f
 ## Generating
 
 ```bash
-python src/asset-factory/tools/gen.py
+<py> src/asset-factory/tools/gen.py
 ```
 
 This writes every model to `src/asset-factory/models/`. To add an asset, write a function
@@ -79,20 +100,24 @@ materials as a dict of `name: (Kd, Ke_or_None)`.
 
 ## Previewing
 
-Two renderers produce the same 2 x 2 contact sheet: the game camera angle (yaw 45, pitch -48),
-two other yaws, and a top-down view. All are orthographic over a grass-colored ground, lit like
-the game (one shadowed directional light at (-50, -40, 0)).
-
-### Blender renderer (default, no window)
+### Python renderer (default, no window)
 
 ```bash
-<blender.editor> -b --python src/asset-factory/tools/render_preview.py -- <abs model.obj|model.glb> <abs out.png> [ortho_size]
+<py> src/asset-factory/tools/preview.py <out.png> <model.obj> [<model.obj> ...]
 ```
 
-Blender in background mode never opens a window, so this is the one to use while working
-unattended. It takes about 10 seconds. It accepts an `.obj` or a `.glb`. As with the converter,
-the Store launcher detaches and prints nothing, so wait for the PNG to appear. Its shadows are a
-little crisper than the game's.
+It draws a 2 x 2 contact sheet: the game camera angle (yaw 45, pitch 48), two other yaws, and a
+top-down view, orthographic, over a grass-colored ground, lit like the game (one directional light
+at the game's angle, with shadows). It takes about a second, never opens a window, and prints
+errors to the terminal.
+
+- The camera frames the model tightly, with one scale for all four views.
+- Defaults: 256 pixels per view and a 64-color palette, about 20 KB per sheet, so regenerating
+  many previews keeps commits small. `--size`, `--colors` (0 for full color), `--margin`, and
+  `--aa` (supersampling) override them.
+- Several OBJ files given together are drawn in the same space.
+- Its lighting is a little flatter than the game's. Use it for shape and color; use the Godot
+  renderer or the game for the final look.
 
 ### Godot renderer (engine check, opens a window)
 
@@ -107,56 +132,43 @@ A Godot script run against a minimal project (`src/asset-factory/tools/preview/`
   renderer with a dummy that returns no image, so it cannot produce previews. A headless display
   driver combined with a real rendering driver also returns no image, and `--no-window` does not
   stop Godot creating the window. The run is short (about a second for a preview).
+- Paths after `--` must be absolute. `ortho_size` is optional; without it the camera frames the
+  model.
 - Godot prints a block of leaked-resource warnings at exit. They are harmless.
 
-### Both renderers
+### Reviewing
 
-- Paths after `--` must be absolute.
-- `ortho_size` is optional. Without it the camera frames the model; pass a number to frame a
-  larger arrangement (the tile range test uses 22; a single tile uses 9).
-- Save a sheet worth keeping to `src/asset-factory/previews/<model name>.png`.
+- Save a sheet worth keeping to `src/asset-factory/previews/<model name>.png` (rendered by
+  `preview.py` with its defaults).
 - Read the PNG to review the result, then adjust the generator and rerun. Expect several rounds.
+- For tileable assets, also check a multi-tile arrangement so seams and edges are seen in
+  context, not just one tile: write a throwaway script (in `test-output/`) that imports `gen`,
+  translates copies of the tiles by 4 units into one OBJ, and render that.
 
-For tileable assets, also check a multi-tile arrangement so seams and edges are seen in context,
-not just one tile: write a throwaway script (in `test-output/`) that translates copies of the
-tiles by 4 units into one OBJ, and render that with an `ortho_size` of about 22.
-
-## Converting to .glb with Blender
-
-Blender runs headless: it imports the OBJ and exports glTF.
+## Exporting to .glb
 
 ```bash
-<blender.editor> -b --python src/asset-factory/tools/obj_to_glb.py -- <abs in.obj> <abs out.glb>
+<py> src/asset-factory/tools/export_glb.py <out_dir> <model.obj> [<model.obj> ...]
 ```
 
-`obj_to_glb.py` imports the OBJ with Y up, forces flat shading, converts the material colors
-from sRGB to linear, and exports a `.glb` with Y up. The `.glb` is what ships in
-`src/Game/assets/models/`, matching the existing nature models. Godot can also import `.obj`
-directly, so the conversion is for consistency rather than a hard requirement.
+Each model is written to `<out_dir>/<name>.glb`; pass the shipped folder (for example
+`src/Game/assets/models/terrain`) to export in place. It handles any number of models in one run
+and takes milliseconds.
 
-Things to know:
-
-- **Color space.** The `.mtl` colors are authored as sRGB values (that is what the Godot OBJ
-  preview assumes). Blender and glTF treat them as linear, so the script converts them. Without
-  that step the `.glb` comes out visibly paler than the preview.
-- **Microsoft Store Blender.** The Store install lives under `WindowsApps`, and Windows refuses to
-  run that executable directly (access denied). Point `blender.editor` at the Store launcher
-  alias instead: `<user>/AppData/Local/Microsoft/WindowsApps/blender-launcher.exe`. It runs
-  headless but detaches and prints nothing, so wait for the output file to appear instead of
-  reading stdout. A standard (non-Store) install runs normally and blocks until done.
-  Launched from Git Bash, the Store launcher sometimes drops a run silently (no Blender process,
-  no output). Launching it from PowerShell with `Start-Process -FilePath <launcher> -ArgumentList
-  ... -Wait -NoNewWindow`, one run at a time with absolute paths, has been reliable.
-- **Checking the result.** Both preview renderers also load `.glb`; pass the `.glb` path as the model
-  to confirm geometry, orientation, scale, and color survived the export.
+- Positions are copied as they are (OBJ and glTF are both Y up), and each triangle gets its face
+  normal, so the model stays flat-shaded.
+- **Color space.** The `.mtl` colors are authored as sRGB values; glTF stores linear color, so the
+  exporter converts them. Without that step the model comes out visibly paler in the game.
+- Materials are matte (metallic 0, roughness 1, specular 0) and double-sided; `Ke` becomes the
+  emissive color and `d` below 1 turns on alpha blending.
 
 ## Updating an existing asset
 
 1. Change the generator (parameters, seed, or logic) and rerun it.
 2. Render the preview and review it against the previous result.
 3. For anything tileable, render the arrangement test as well.
-4. Convert to `.glb`, render the `.glb` once to confirm it matches, and copy it over the shipped file under `src/Game/assets/models/`. Keep the
-   file name; the game loads by name.
+4. Export to `.glb` over the shipped file under `src/Game/assets/models/`. Keep the file name;
+   the game loads by name.
 5. Open the game (or run a scenario with screenshots, see `docs/blueprints/testing.md`) to
    confirm the asset reads correctly in place. Previews do not replace this.
 
@@ -175,7 +187,7 @@ Things to know:
 ## Limits
 
 - Procedural low-poly suits props, rocks, buildings, and terrain. Organic shapes come out chunky.
-- OBJ has no rigging or animation. Rigged or animated assets need a different source (Blender
-  authoring or a CC0 pack).
+- OBJ has no rigging or animation. Rigged or animated assets need a different source (authoring
+  in a 3D tool or a CC0 pack).
 - Previews are static stills at fixed angles. They show silhouette, color, and scale, not
   animation or in-game readability at zoom.
