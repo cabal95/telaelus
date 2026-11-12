@@ -35,6 +35,7 @@ public partial class ScenarioRunner : Node
     private CommandExecutor _executor = null!;
     private int _next;
     private bool _finished;
+    private readonly List<PerfMonitor.Sample> _perfSamples = new();
 
     /// <summary>Attaches a runner to the game root if the command line asks for a scenario.</summary>
     public static void AttachIfRequested(GameRoot root)
@@ -78,6 +79,7 @@ public partial class ScenarioRunner : Node
         _outputDir = ResolveOutputDir();
         bool screenshots = !_args.NoScreenshots && !TestArgs.IsHeadless;
         _executor = new CommandExecutor(_root, _outputDir, screenshots);
+        _root.Perf.Sampled += _perfSamples.Add;
         GD.Print($"SCENARIO {_name}: {_commands.Count} commands, output {_outputDir}");
     }
 
@@ -194,6 +196,10 @@ public partial class ScenarioRunner : Node
     private void Finish(int exitCode, string? message)
     {
         _finished = true;
+        if (_root?.Perf is PerfMonitor perf)
+        {
+            perf.Sampled -= _perfSamples.Add;
+        }
         string result = exitCode switch
         {
             0 => "passed",
@@ -210,6 +216,7 @@ public partial class ScenarioRunner : Node
             ["exitCode"] = exitCode,
             ["message"] = message,
             ["frames"] = _executor?.Frame,
+            ["perf"] = PerfSummary(),
             ["steps"] = _records
         };
 
@@ -223,5 +230,40 @@ public partial class ScenarioRunner : Node
         GD.Print($"SCENARIO {result.ToUpperInvariant()}: {_name}{(message is null ? "" : $" - {message}")}");
         GD.Print($"SCENARIO REPORT: {reportPath}");
         GetTree().Quit(exitCode);
+    }
+
+    /// <summary>
+    /// The run's performance over every sampled frame: average and worst work time (scripts
+    /// plus the renderer's CPU time), its parts, the approximate GPU time, the sim time, the
+    /// wall time between frames (the true frame cost when uncapped), average and peak draw
+    /// calls and objects, whether it ran uncapped, and whether it ran windowed or headless
+    /// (headless has no real renderer, so its numbers are not measurements).
+    /// </summary>
+    private JsonObject PerfSummary()
+    {
+        int n = _perfSamples.Count;
+        double Avg(System.Func<PerfMonitor.Sample, double> f) => n == 0 ? 0 : Math.Round(_perfSamples.Average(f), 2);
+        double Max(System.Func<PerfMonitor.Sample, double> f) => n == 0 ? 0 : Math.Round(_perfSamples.Max(f), 2);
+        var gpu = _perfSamples.Where(s => s.GpuMs is not null).Select(s => s.GpuMs!.Value).ToList();
+        return new JsonObject
+        {
+            ["mode"] = TestArgs.IsHeadless ? "headless" : "windowed",
+            ["uncapped"] = _root.Perf.Uncapped,
+            ["frames"] = n,
+            ["budgetMs"] = Math.Round(PerfMonitor.BudgetMs, 2),
+            ["workMsAvg"] = Avg(s => s.WorkMs),
+            ["workMsWorst"] = Max(s => s.WorkMs),
+            ["scriptMsAvg"] = Avg(s => s.ScriptMs),
+            ["renderCpuMsAvg"] = Avg(s => s.RenderCpuMs),
+            ["gpuMsAvg"] = gpu.Count == 0 ? null : Math.Round(gpu.Average(), 2),
+            ["simMsAvg"] = Avg(s => s.SimMs),
+            ["simMsWorst"] = Max(s => s.SimMs),
+            ["frameMsAvg"] = Avg(s => s.FrameMs),
+            ["frameMsWorst"] = Max(s => s.FrameMs),
+            ["drawsAvg"] = Avg(s => s.Draws),
+            ["drawsPeak"] = Max(s => s.Draws),
+            ["objectsAvg"] = Avg(s => s.Objects),
+            ["objectsPeak"] = Max(s => s.Objects)
+        };
     }
 }

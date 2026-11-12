@@ -107,7 +107,10 @@ pausing it and stepping frame by frame.
 - **The state snapshot** (`StateSnapshot`) is the contract for `expect`, the report, and the live
   channel: `frame` (game frames processed since the executor started; paused frames do not
   count); `paused`; `input` (`heldKeys`: keys the executor pressed that are still down); `world`
-  (`kind`, `seed` or null, `chunks` generated, `tiles` of terrain built); `player` (`position`
+  (`kind`, `seed` or null, `chunks` generated, `tiles` of terrain built, `fieldBatches` built);
+  `perf` (`workMs`, `scriptMs`, `renderCpuMs`, `gpuMs` or null, `simMs`, `frameMs` (wall time
+  since the last frame), `worstMs`, `fps`, `draws`, `objects`, as of that frame; see
+  presentation.md); `player` (`position`
   [x, z], `harvestTarget` field id or null, the `terrain`, `biome`, and `feature` under the player,
   and their `chunk` [x, z]); `build` (null when not in build
   mode, else `selected`, `facing`, `fieldsInRange`, and `ghost`: `anchor`, `width`, `depth`,
@@ -155,9 +158,19 @@ pausing it and stepping frame by frame.
   runner processes with `ProcessMode.Always`, so scenarios can use `pause` and `step`.
 - **Output:** by default `test-output/runs/<yyMMdd-HHmmss>-<name>/` at the repo root
   (git-ignored), or `--output`. It holds the PNGs and `report.json`: scenario name and file,
-  result, exit code, message, frame count, and one record per executed command (step index,
+  result, exit code, message, frame count, a run-level `perf` summary, and one record per
+  executed command (step index,
   command, frame, the step's JSON, outcome, message, and detail: expectation results with
   expected and actual values, or the snapshot for a capture). `hold` records as its three parts.
+- **Performance summary:** the report's `perf` covers every frame of the run: `mode` (`windowed`
+  or `headless`), `uncapped`, `frames`, `budgetMs`, the average and worst `workMs`, the average
+  `scriptMs`, `renderCpuMs`, and `gpuMs`, the average and worst `simMs` and `frameMs`, and the
+  average and peak `draws` and `objects`. Headless runs use a dummy renderer, so their timings and
+  render counts are not measurements; measure windowed, with `--uncapped` for true frame times.
+  Scenarios never assert on timings or draw counts, which vary by machine. To compare a change,
+  run `perf-walk` several times before and after (`<godot.editor> --path src/Game --fixed-fps 30
+  --resolution 1280x720 -- --uncapped --scenario=src/Game.Integration.Tests/Scenarios/perf-walk.json`)
+  and compare the medians: run-to-run noise is about 10%.
 - **Exit codes:** 0 passed; 1 an expectation failed; 2 the scenario was invalid (unreadable file,
   bad JSON, unknown command, bad arguments) or a step threw. A run stops at its first failure and
   still writes its report. The last lines of stdout are `SCENARIO PASSED|FAILED|ERROR: ...` and
@@ -198,7 +211,9 @@ pausing it and stepping frame by frame.
   deposit and an Oil Well from its seep), `generated-world` (a generated world from a fixed seed
   starts the player on open Grassland in chunk (0, 0) with the 3 x 3 chunks around them generated
   and tiles drawn; crossing into chunk (1, 0) generates the chunks around it and the tiles
-  follow).
+  follow), `field-batches` (every built terrain tile has a field batch, and batches follow the
+  tiles into another chunk), `perf-walk` (the standing performance benchmark: seed 2 at the widest
+  zoom, about 30 seconds of walking; in the suite it is a smoke test of a long walk across chunks).
 
 ### Live control channel
 

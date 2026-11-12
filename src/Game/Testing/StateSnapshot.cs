@@ -29,7 +29,8 @@ public static class StateSnapshot
             {
                 ["heldKeys"] = heldKeys
             },
-            ["world"] = World(sim, root.Terrain),
+            ["world"] = World(sim, root.Terrain, root.FieldViews),
+            ["perf"] = Perf(root.Perf),
             ["player"] = Player(sim),
             ["build"] = Build(root.Builder),
             ["buildings"] = Buildings(sim),
@@ -53,14 +54,33 @@ public static class StateSnapshot
         };
     }
 
-    private static JsonObject World(Simulation sim, Presentation.TerrainView terrain)
+    private static JsonObject Perf(PerfMonitor perf)
+    {
+        PerfMonitor.Sample s = perf.Latest;
+        return new JsonObject
+        {
+            ["workMs"] = Math.Round(s.WorkMs, 2),
+            ["scriptMs"] = Math.Round(s.ScriptMs, 2),
+            ["renderCpuMs"] = Math.Round(s.RenderCpuMs, 2),
+            ["gpuMs"] = s.GpuMs is double g ? Math.Round(g, 2) : null,
+            ["simMs"] = Math.Round(s.SimMs, 2),
+            ["frameMs"] = Math.Round(s.FrameMs, 2),
+            ["worstMs"] = Math.Round(perf.WorstMs, 2),
+            ["fps"] = Math.Round(s.Fps, 1),
+            ["draws"] = s.Draws,
+            ["objects"] = s.Objects
+        };
+    }
+
+    private static JsonObject World(Simulation sim, TerrainView terrain, ResourceFieldViews fieldViews)
     {
         return new JsonObject
         {
             ["kind"] = sim.World.Kind.ToString(),
             ["seed"] = sim.World.Kind == WorldKind.Generated ? sim.World.Seed : null,
             ["chunks"] = sim.ChunkCount,
-            ["tiles"] = terrain.TileCount
+            ["tiles"] = terrain.TileCount,
+            ["fieldBatches"] = fieldViews.BatchCount
         };
     }
 

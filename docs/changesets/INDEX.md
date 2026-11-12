@@ -57,6 +57,9 @@ Newest last. One line each; open the file for the full spec.
   a seed and the starter planet (climate-driven biome regions, terrain patches, mountain ranges,
   rivers, deposits, and a spawn with an exit), drawn in 16 x 16 render tiles, with HUD
   diagnostics; the test map stays as a bounded world for tests.
+- **2611112121-field-batching-and-perf-hud** - Batches resource field models into one multimesh per model per render tile,
+  and adds frame-budget performance numbers to the HUD (F3), snapshots, and scenario reports, with
+  the `perf-walk` benchmark and `--uncapped` for measurement runs.
 
 ## Adding a changeset
 

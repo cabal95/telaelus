@@ -38,8 +38,11 @@ planned multiplayer feasible.
   about 60 ms on the first frame, which builds every tile at once; tiles of 8 cells drew half the
   triangles with twice the tiles, and tiles of 32 cells drew twice the triangles and doubled the
   first frame),
-  `ResourceFieldViews` (staged resource field visuals for the fields inside the terrain view's
-  range, freed when they leave it; reports each field's visible model count),
+  `ResourceFieldViews` (resource field models batched per render tile: for every terrain tile
+  built, a `FieldTileView` draws the visible slots of the fields in that tile as one multimesh per
+  model, casting shadows; a tile's batch is rebuilt when a field in it is added, removed, or
+  changes stage, and freed with the terrain tile; it reports each field's visible model count, its
+  stage while its tile is built),
   `BuildingViews` (footprint-sized building boxes, created and freed as buildings appear and are
   removed), `PlayerView` (the character), `CameraRig` (the orthographic follow camera, with
   `ZoomTo` for a direct size),
@@ -47,7 +50,8 @@ planned multiplayer feasible.
   next, in table order and without terrain-sourced types until they can be collected; a
   diagnostics line for exploring (the seed or the bounded map's name, the biome and terrain under
   the player, their chunk, and their map cell, for example
-  `seed 1234   Highlands / Rock   chunk (1, -2)   cell (87, -101)`); launch status, build selection with facing
+  `seed 1234   Highlands / Rock   chunk (1, -2)   cell (87, -101)`); a performance line (see
+  Performance below; F3 hides it); launch status, build selection with facing
   and fields in range, and the harvest hint), and `BuildController` (build-mode selection and
   rotation, the footprint ghost, the extractor work-area disc and field highlights, and the place
   command).
@@ -61,9 +65,10 @@ planned multiplayer feasible.
   placeholder. It caches loaded scenes, picks a map cell's variant and 90-degree yaw from a hash of
   its coordinates, turns North-authored pieces to an edge or facing, and can switch off shadow
   casting for flat ground pieces.
-- `NodeModels` scales a loaded model to a target height from its bounding box, caps its footprint to
-  a caller-given size (a resource field's slot), seats it on the ground, and gives it a
-  deterministic variant and yaw.
+- `NodeModels` holds the rules for a field slot's model: its variant and yaw (deterministic per
+  slot), its scale to the deposit's target height from the mesh's bounds, capped to the slot's
+  footprint, and its seat on the ground, as one transform for a multimesh instance.
+  `ModelLibrary.MeshBounds(path)` gives a model's mesh bounds.
 - `TerrainTiles` lists each map cell's terrain placements (model path, position, yaw, and whether
   it casts shadows), with `MountainModels` and `RiverPieces` choosing and turning those models (see
   terrain.md). `ModelLibrary.Mesh(path)` gives a model's mesh for a multimesh.
@@ -73,6 +78,44 @@ planned multiplayer feasible.
   90-degree yaw from its map cell, and places the model unscaled (see terrain.md).
 - The character is a hand-assembled Godot scene (`character.tscn`) that `PlayerView` loads. It is
   the one exception to required models: absent the scene, the player falls back to a capsule.
+
+### Performance
+
+- `PerfMonitor` measures each frame against a 16.7 ms budget (60 fps). Godot's own process time
+  includes the wait for the next display refresh, so it reads about 16.7 ms under vsync at any
+  load and cannot show headroom. Instead the game times its own work: `PerfFrameStart` processes
+  first each frame and `PerfMonitor` last, and the time between them is every node's update (the
+  simulation steps included), the **scripts** time. Adding the renderer's CPU time for the viewport
+  gives the frame's **work** time, the headline number. `GameRoot` times the sim steps (**sim**). The
+  GPU time is Godot's viewport measurement; on the Compatibility renderer it is coarse (about 2 ms
+  steps) and under vsync includes the wait, so it is shown only when running uncapped. The monitor
+  also records the wall time between frames, fps, draw calls, and objects drawn, and keeps one
+  second of samples for an average and the worst frame.
+- The HUD's performance line reads, for example,
+  `frame 6.6 / 16.7 ms (40%)   scripts 0.7 (sim 0.1)  render 5.9  gpu (uncapped only)   worst 9.8   fps 60   draws 580`.
+  The frame figure is the average work time over the last second, green under 50% of the budget,
+  yellow to 80%, red above; worst is the slowest frame in that second (one-off spikes such as a
+  chunk generating). F3 hides and shows the line.
+- `--uncapped` (a game argument after `--`) turns off vsync and the frame cap, so frames run as fast
+  as they can; the wall time between frames is then the true cost of a frame, GPU included. With
+  `--fixed-fps 30`, the game still advances one 30 Hz tick per frame, so a scenario plays out the
+  same at any frame rate.
+- The budget is a fixed 60 fps target, not the display's refresh rate: on a 120 Hz display, frames
+  stay smooth at the display's rate only below 8.3 ms.
+- **Benchmark** (`perf-walk`, seed 2 at the widest zoom, about 30 seconds walking across grassland
+  and forest; windowed, `--uncapped`, five runs each), before and after batching field models:
+
+  | | Frame (ms, median of 5) | Draw calls (avg) | Objects (avg) |
+  |---|---|---|---|
+  | One node per field model | 6.9 (runs 6.4 to 7.0) | 1,012 | 1,547 |
+  | Field models batched per tile | 6.6 (runs 6.4 to 8.3) | 583 | 1,117 |
+
+  Batching cut draw calls by 42% and objects by 28%, but the frame time barely moved (within the
+  run-to-run noise): on this machine (Windows on ARM, the Compatibility renderer through a D3D12
+  translation layer) the renderer's CPU time has a base of about 3 ms even for an empty map, the
+  remaining draw calls are mostly terrain multimeshes (several per tile, and casters again in each
+  shadow cascade), and the GPU time is about the same as the frame. An idle empty map takes about
+  3.7 ms a frame, an idle generated world at the widest zoom about 7.2 ms.
 
 ### Rendering
 

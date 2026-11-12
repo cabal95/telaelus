@@ -7,23 +7,70 @@ namespace Game.Presentation;
 
 /// <summary>
 /// Minimal heads-up display: resource totals (deposits on one line, refined goods on
-/// the next), launch progress, the current build selection, and a harvest hint. Pure presentation; it only reads simulation state.
+/// the next), the diagnostics line, the performance line (colored by headroom; F3
+/// hides it), launch progress, the current build selection, and a harvest hint. Pure
+/// presentation; it only reads simulation state and the performance monitor.
 /// </summary>
 public partial class Hud : CanvasLayer
 {
+    private static readonly Color TextColor = new(0.92f, 0.94f, 0.92f);
+    private static readonly Color Good = new(0.55f, 0.92f, 0.55f);
+    private static readonly Color Tight = new(0.98f, 0.85f, 0.35f);
+    private static readonly Color Over = new(1.0f, 0.42f, 0.38f);
+
     private Label _label = null!;
+    private Label _perfLabel = null!;
+    private Label _lowerLabel = null!;
+
+    public bool ShowPerf
+    {
+        get => _perfLabel.Visible;
+        set => _perfLabel.Visible = value;
+    }
 
     public override void _Ready()
     {
-        _label = new Label
+        var lines = new VBoxContainer
         {
             Position = new Vector2(16f, 12f)
         };
-        _label.AddThemeColorOverride("font_color", new Color(0.92f, 0.94f, 0.92f));
+        lines.AddThemeConstantOverride("separation", 0);
+        AddChild(lines);
+        _label = MakeLabel();
+        _perfLabel = MakeLabel();
+        _lowerLabel = MakeLabel();
+        lines.AddChild(_label);
+        lines.AddChild(_perfLabel);
+        lines.AddChild(_lowerLabel);
+    }
+
+    private static Label MakeLabel()
+    {
+        var label = new Label();
+        label.AddThemeColorOverride("font_color", TextColor);
         // A dark outline keeps the text readable over bright ground such as snow and sand.
-        _label.AddThemeColorOverride("font_outline_color", new Color(0.05f, 0.06f, 0.05f));
-        _label.AddThemeConstantOverride("outline_size", 5);
-        AddChild(_label);
+        label.AddThemeColorOverride("font_outline_color", new Color(0.05f, 0.06f, 0.05f));
+        label.AddThemeConstantOverride("outline_size", 5);
+        return label;
+    }
+
+    /// <summary>
+    /// Shows the performance line: the frame's work time against the budget (colored
+    /// green under 50%, yellow to 80%, red above), then its parts (scripts, with the
+    /// sim's share, and the renderer's CPU time), the approximate GPU time, the worst
+    /// frame in the last second, fps, and draw calls.
+    /// </summary>
+    public void RefreshPerf(PerfMonitor perf)
+    {
+        PerfMonitor.Sample avg = perf.Average;
+        double share = avg.WorkMs / PerfMonitor.BudgetMs;
+        // Under vsync Godot's GPU time includes the wait for the refresh, so it is only
+        // shown when running uncapped.
+        string gpu = !perf.Uncapped ? "(uncapped only)" : avg.GpuMs is double g ? "~" + g.ToString("F1") : "n/a";
+        _perfLabel.Text = $"frame {avg.WorkMs:F1} / {PerfMonitor.BudgetMs:F1} ms ({share * 100:F0}%)   " +
+            $"scripts {avg.ScriptMs:F1} (sim {avg.SimMs:F1})  render {avg.RenderCpuMs:F1}  gpu {gpu}   " +
+            $"worst {perf.WorstMs:F1}   fps {avg.Fps:F0}   draws {avg.Draws}";
+        _perfLabel.AddThemeColorOverride("font_color", share < 0.5 ? Good : share < 0.8 ? Tight : Over);
     }
 
     public void Refresh(
@@ -41,8 +88,10 @@ public partial class Hud : CanvasLayer
         text.Append('\n');
         AppendLine(text, stockpile, ResourceKind.Refined);
         text.Append('\n').Append(diagnostics);
+        _label.Text = text.ToString();
+        text.Clear();
 
-        text.Append("\nLaunch: Rocket Fuel ").Append(Amount(stockpile, ResourceType.RocketFuel)).Append('/').Append((int)Simulation.LaunchRocketFuelCost);
+        text.Append("Launch: Rocket Fuel ").Append(Amount(stockpile, ResourceType.RocketFuel)).Append('/').Append((int)Simulation.LaunchRocketFuelCost);
         text.Append("   Iron ").Append(Amount(stockpile, ResourceType.Iron)).Append('/').Append((int)Simulation.LaunchIronCost);
         if (canLaunch)
         {
@@ -73,7 +122,7 @@ public partial class Hud : CanvasLayer
             text.Append("\n[E] harvest ").Append(ResourceDefs.For(harvestTarget.Type).Name);
         }
 
-        _label.Text = text.ToString();
+        _lowerLabel.Text = text.ToString();
     }
 
     /// <summary>

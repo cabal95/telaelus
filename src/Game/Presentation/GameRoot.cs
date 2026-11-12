@@ -21,6 +21,8 @@ public partial class GameRoot : Node3D
     private BuildController _buildController = null!;
     private Hud _hud = null!;
     private TerrainView _terrainView = null!;
+    private PerfMonitor _perf = null!;
+    private readonly System.Diagnostics.Stopwatch _simWatch = new();
 
     // Read-only access for the testing code (scenario runner and live channel).
     public Simulation Sim => _sim;
@@ -28,6 +30,7 @@ public partial class GameRoot : Node3D
     public BuildController Builder => _buildController;
     public ResourceFieldViews FieldViews => _fieldViews;
     public TerrainView Terrain => _terrainView;
+    public PerfMonitor Perf => _perf;
 
     public override void _Ready()
     {
@@ -47,14 +50,16 @@ public partial class GameRoot : Node3D
         };
 
         int steps = _clock.Advance(delta);
+        _simWatch.Restart();
         for (int i = 0; i < steps; i++)
         {
             _sim.Step(_clock.FixedDelta);
         }
+        _perf.SimMs = _simWatch.Elapsed.TotalMilliseconds;
 
         _playerView.UpdateFrom(_sim.Player.Position, moveDir, delta);
         _camera.SetTarget(_sim.Player.Position);
-        _fieldViews.Sync(_sim.Fields, _terrainView.ViewArea);
+        _fieldViews.Sync(_sim.Fields, _terrainView);
         _buildingViews.Sync(_sim.Buildings);
         _hud.Refresh(
             _sim.Stockpile,
@@ -65,6 +70,7 @@ public partial class GameRoot : Node3D
             _sim.CanLaunchShip(),
             _sim.ShipsLaunched,
             Hud.Diagnostics(_sim));
+        _hud.RefreshPerf(_perf);
     }
 
     /// <summary>The world seed from <c>--seed=&lt;n&gt;</c> after the <c>--</c> separator, or a random one.</summary>
@@ -96,6 +102,10 @@ public partial class GameRoot : Node3D
         else if (@event is InputEventKey key && key.Pressed && !key.Echo && key.PhysicalKeycode == Key.L)
         {
             _sim.TryLaunchShip();
+        }
+        else if (@event is InputEventKey f3 && f3.Pressed && !f3.Echo && f3.PhysicalKeycode == Key.F3)
+        {
+            _hud.ShowPerf = !_hud.ShowPerf;
         }
     }
 
@@ -137,6 +147,19 @@ public partial class GameRoot : Node3D
 
     private void BuildWorld()
     {
+        _perf = new PerfMonitor
+        {
+            Name = "PerfMonitor",
+            ProcessMode = ProcessModeEnum.Always
+        };
+        AddChild(_perf);
+        AddChild(new PerfFrameStart
+        {
+            Name = "PerfFrameStart",
+            ProcessMode = ProcessModeEnum.Always,
+            Monitor = _perf
+        });
+
         _terrainView = new TerrainView
         {
             Name = "Terrain",

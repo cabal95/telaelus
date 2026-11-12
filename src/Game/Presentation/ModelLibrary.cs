@@ -87,6 +87,25 @@ public static class ModelLibrary
         return (mesh, transform);
     }
 
+    /// <summary>The bounds of a single-mesh model's mesh within the model (the mesh's transform applied).</summary>
+    public static Aabb MeshBounds(string path)
+    {
+        (Mesh mesh, Transform3D transform) = Mesh(path);
+        Aabb box = mesh.GetAabb();
+        Vector3 p = box.Position;
+        Vector3 size = box.Size;
+        var result = new Aabb(transform * p, Vector3.Zero);
+        for (int i = 1; i < 8; i++)
+        {
+            var corner = new Vector3(
+                p.X + ((i & 1) != 0 ? size.X : 0f),
+                p.Y + ((i & 2) != 0 ? size.Y : 0f),
+                p.Z + ((i & 4) != 0 ? size.Z : 0f));
+            result = result.Expand(transform * corner);
+        }
+        return result;
+    }
+
     /// <summary>A deterministic hash of a map cell, for picking variants and rotations.</summary>
     public static uint CellHash(int mapX, int mapZ)
     {

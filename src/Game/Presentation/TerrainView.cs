@@ -29,6 +29,14 @@ public partial class TerrainView : Node3D
     /// <summary>How many render tiles are built right now.</summary>
     public int TileCount => _tiles.Count;
 
+    /// <summary>The render tiles built right now (tile coordinates are map cells divided by TileSize, rounded down).</summary>
+    public IEnumerable<(int X, int Z)> TileKeys => _tiles.Keys;
+
+    public bool HasTile((int X, int Z) key)
+    {
+        return _tiles.ContainsKey(key);
+    }
+
     /// <summary>The ground area (x and z, world units) the built tiles should cover: the view plus a margin.</summary>
     public Rect2 ViewArea { get; private set; }
 
