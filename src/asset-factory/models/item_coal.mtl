@@ -1,0 +1,9 @@
+newmtl coal_facet
+Kd 0.360 0.360 0.400
+
+newmtl coal_sheen
+Kd 0.240 0.240 0.270
+
+newmtl coal
+Kd 0.130 0.130 0.140
+

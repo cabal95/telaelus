@@ -1,0 +1,9 @@
+newmtl canister
+Kd 0.880 0.880 0.860
+
+newmtl fuel_orange
+Kd 0.950 0.500 0.150
+
+newmtl metal_dark
+Kd 0.300 0.310 0.340
+

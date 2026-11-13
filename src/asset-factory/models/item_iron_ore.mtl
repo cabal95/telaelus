@@ -1,0 +1,12 @@
+newmtl iron_rust
+Kd 0.660 0.310 0.170
+
+newmtl ore_rock
+Kd 0.520 0.510 0.500
+
+newmtl iron_dark
+Kd 0.450 0.200 0.120
+
+newmtl ore_rock_dark
+Kd 0.400 0.400 0.410
+

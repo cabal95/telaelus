@@ -74,6 +74,8 @@ Newest last. One line each; open the file for the full spec.
 - **2611122022-building-detail-overlay** - Clicking a placed building opens a detail side panel: a turning picture, status
   rows (power, state, fields in range, what it works on, recipe, progress), turn off or on, and
   destroy (asks once) for half the cost back; the sim gains switching off, status, and destroying.
+- **2611122105-resource-icons** - Adds a generated item model per resource (`item_gen.py`) and renders each once at
+  startup into a resource icon through a shared picture stage.
 
 ## Adding a changeset
 

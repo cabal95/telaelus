@@ -24,6 +24,7 @@ public partial class GameRoot : Node3D
     private OverlayHost _overlays = null!;
     private BuildMenu _buildMenu = null!;
     private BuildingDetail _buildingDetail = null!;
+    private ResourceIcons _icons = null!;
     private TerrainView _terrainView = null!;
     private PerfMonitor _perf = null!;
     private DirectionalLight3D _light = null!;
@@ -39,6 +40,7 @@ public partial class GameRoot : Node3D
     public OverlayHost Overlays => _overlays;
     public BuildMenu BuildMenu => _buildMenu;
     public BuildingDetail BuildingDetail => _buildingDetail;
+    public ResourceIcons Icons => _icons;
 
     public override void _Ready()
     {
@@ -248,6 +250,11 @@ public partial class GameRoot : Node3D
             Name = "BuildingPictures"
         };
         AddChild(pictures);
+        _icons = new ResourceIcons
+        {
+            Name = "ResourceIcons"
+        };
+        AddChild(_icons);
         _overlays = new OverlayHost
         {
             Name = "Overlays"

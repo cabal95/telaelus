@@ -76,6 +76,12 @@ or 1.05 for facet variation). A new material extends the table.
 | leaf, leaf_light, leaf_dark | 0.33, 0.56, 0.26 / 0.44, 0.66, 0.31 / 0.25, 0.45, 0.21 | Broadleaf crowns (Grassland) |
 | swamp_leaf, swamp_leaf_light, swamp_leaf_dark | 0.40, 0.46, 0.21 / 0.49, 0.54, 0.26 / 0.31, 0.37, 0.17 | Swamp tree crowns |
 | moss | 0.34, 0.40, 0.19 | Swamp tree hanging fringe |
+| log_end | 0.80, 0.66, 0.45 | Wood item: cut log ends |
+| coal_facet | 0.36, 0.36, 0.40 | Coal item: the upper facets that catch the light |
+| barrel, barrel_lid, barrel_band | 0.24, 0.24, 0.27 / 0.38, 0.38, 0.42 / 0.45, 0.30, 0.18 | Crude Oil item |
+| water, water_light | 0.26, 0.52, 0.86 / 0.45, 0.70, 0.95 | Water item |
+| ingot, ingot_light | 0.62, 0.64, 0.68 / 0.78, 0.80, 0.84 | Iron item: ingot sides and tops |
+| canister, fuel_orange | 0.88, 0.88, 0.86 / 0.95, 0.50, 0.15 | Rocket Fuel item |
 | mine_accent | 0.85, 0.55, 0.20 | Mine identity color (orange) |
 | lumber_accent | 0.62, 0.40, 0.20 | Lumber Camp identity color (brown) |
 | smelter_accent | 0.78, 0.26, 0.20 | Smelter identity color (red) |
@@ -116,13 +122,25 @@ Emissive materials glow at half their base color. Mountains keep their own stone
 - Pieces that attach to one edge or corner (transition strips and corners) are authored for the
   North edge or the North-West corner and turned into place.
 
+### Item models
+
+- Each resource has one item model (`items/item_<resource>.glb`, from `item_gen.py`): a single
+  chunky object about 1 unit across, resting on y = 0, drawn only into the UI's resource icons.
+- Items are built to read as silhouettes at about 22 pixels, on the dark UI panel: few large
+  facets, one clear shape each (a log stack, a lump, a barrel, a droplet, ingots, a canister).
+  Very dark materials (coal, crude oil) get lighter upper facets or parts so they do not vanish
+  into the panel. The two ores reuse their fields' rock and vein colors so they match the map.
+- An item whose identity is its side profile may lean away from the game camera so the icon,
+  drawn from that camera's angle, shows the profile: the water drop leans its tip back 25
+  degrees.
+
 ### Variants and rotation
 
 - Three variants (a, b, c) where repetition shows: ground tiles, mountains, ore, trees. A map
   cell's variant and a 90-degree yaw come from a hash of its coordinates, so the world looks the
   same every run.
 - One model where a thing has a single identity: each building, each river shape, each
-  transition piece.
+  transition piece, each resource item.
 
 ### Sources
 

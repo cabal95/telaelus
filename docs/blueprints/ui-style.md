@@ -94,11 +94,17 @@ There are two positions:
   optionally colored (`TipLine`). A hover tooltip shows 0.3 s after the pointer enters its
   control, beside the control (to its right, or its left when the right would leave the window),
   and is kept inside the window. Tooltips never take the mouse.
+- **The picture stage** (`PictureStage`): every UI picture of a model is drawn in its own small
+  world lit like the game's (its sun, no environment), from the game camera's angle, with an
+  orthographic camera fitted to the model: loosely (room to turn) for pictures and turntables,
+  tightly (filling the square) for icons. `RenderOnce` draws a set of stages once into cached
+  textures. Headless runs draw nothing, so there are no pictures or icons there.
 - **Building pictures** (`BuildingPictures`): each building is rendered once at startup into a
-  256 px texture, in color and as a `Silhouette`, from the game camera's angle in its own small
-  world lit like the game's (its sun, no environment), with its front toward the viewer.
-  Grayscale (at 70% brightness, for "not now") is a canvas shader on the color picture. Headless
-  runs have no pictures.
+  256 px texture, in color and as a `Silhouette`, with its front toward the viewer. Grayscale (at
+  70% brightness, for "not now") is a canvas shader on the color picture.
+- **Resource icons** (`ResourceIcons`): each resource's item model (art-style.md) is rendered
+  once at startup into a 64 px texture, shown at 20 to 24 UI units, so it stays sharp up to the
+  2x UI scale. UI that shows an icon keeps its size when there is none (headless).
 - **Costs** read one line per material, as "25 Wood", and an amount the player lacks in `Short`
   with what they hold, as "15 Stone (have 3)" (`BuildMenu.CostLines`).
 

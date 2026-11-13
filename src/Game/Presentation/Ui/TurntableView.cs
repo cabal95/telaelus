@@ -18,7 +18,7 @@ public partial class TurntableView : PanelContainer
     {
         Size = new Vector2I(256, 256),
         TransparentBg = true,
-        World3D = BuildingPictures.Stage.MakeWorld(),
+        World3D = PictureStage.MakeWorld(),
         RenderTargetUpdateMode = SubViewport.UpdateMode.WhenVisible,
         Msaa3D = Viewport.Msaa.Msaa4X
     };
@@ -52,7 +52,7 @@ public partial class TurntableView : PanelContainer
         {
             child.QueueFree();
         }
-        _pivot = BuildingPictures.Stage.Fill(_view, type, false);
+        _pivot = PictureStage.Fill(_view, type, false);
     }
 
     public override void _Process(double delta)

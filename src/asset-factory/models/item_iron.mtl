@@ -1,0 +1,6 @@
+newmtl ingot_light
+Kd 0.780 0.800 0.840
+
+newmtl ingot
+Kd 0.620 0.640 0.680
+

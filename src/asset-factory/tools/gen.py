@@ -1,13 +1,14 @@
 """Generates every asset-factory model into models/ (.obj + .mtl).
 Run: python gen.py   (see docs/asset-pipeline.md)
 Mountains live here; ground, transitions and rivers in terrain_gen.py; buildings in
-building_gen.py; resource field models in resource_gen.py.
+building_gen.py; resource field models in resource_gen.py; resource items (UI icons) in item_gen.py.
 """
 import math
 import random
 
 from mesh import *  # noqa: F401,F403
 import building_gen
+import item_gen
 import resource_gen
 import terrain_gen
 
@@ -121,3 +122,4 @@ if __name__ == "__main__":
     terrain_gen.build_all()
     building_gen.build_all()
     resource_gen.build_all()
+    item_gen.build_all()

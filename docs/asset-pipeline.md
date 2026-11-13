@@ -23,6 +23,7 @@ src/asset-factory/
     terrain_gen.py   ground tiles, transition pieces, river pieces
     building_gen.py  building models
     resource_gen.py  resource field models (the deposits)
+    item_gen.py      resource item models (the UI's resource icons)
     arrange.py       composes test maps from terrain models (for previews)
     export_glb.py    OBJ to .glb exporter
     preview.py       preview renderer (no window)

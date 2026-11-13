@@ -1,0 +1,6 @@
+newmtl bark
+Kd 0.450 0.320 0.210
+
+newmtl log_end
+Kd 0.800 0.660 0.450
+

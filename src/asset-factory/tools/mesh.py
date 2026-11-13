@@ -123,6 +123,18 @@ PALETTE = {
     "swamp_leaf_light": (0.49, 0.54, 0.26),
     "swamp_leaf_dark": (0.31, 0.37, 0.17),
     "moss": (0.34, 0.40, 0.19),
+    # resource items (UI icons)
+    "log_end": (0.80, 0.66, 0.45),
+    "coal_facet": (0.36, 0.36, 0.40),
+    "barrel": (0.24, 0.24, 0.27),
+    "barrel_lid": (0.38, 0.38, 0.42),
+    "barrel_band": (0.45, 0.30, 0.18),
+    "water": (0.26, 0.52, 0.86),
+    "water_light": (0.45, 0.70, 0.95),
+    "ingot": (0.62, 0.64, 0.68),
+    "ingot_light": (0.78, 0.80, 0.84),
+    "canister": (0.88, 0.88, 0.86),
+    "fuel_orange": (0.95, 0.50, 0.15),
     # building accents (each building's identity color)
     "mine_accent": (0.85, 0.55, 0.20),
     "lumber_accent": (0.62, 0.40, 0.20),
