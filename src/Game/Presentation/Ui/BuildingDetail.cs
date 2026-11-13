@@ -6,13 +6,13 @@ using Godot;
 namespace Game.Presentation.Ui;
 
 /// <summary>
-/// The detail side panel for a placed building: its name as the title, a turning
+/// The detail panel for a placed building: its name as the title, a turning
 /// picture of it, its status rows (power, state, fields in range, what it is working
 /// on, its recipe, and its progress), and its actions (turn off or on, destroy with a
 /// confirming second click, and close). The rows refresh every frame; the panel closes
 /// itself when its building is gone.
 /// </summary>
-public partial class BuildingDetail : Overlay
+public partial class BuildingDetail : Dialog
 {
     /// <summary>How long the Destroy button waits for its confirming click.</summary>
     public const double ConfirmSeconds = 3.0;
@@ -28,7 +28,7 @@ public partial class BuildingDetail : Overlay
     private readonly Dictionary<string, Label> _values = new();
     private readonly Dictionary<string, Label> _names = new();
 
-    public override OverlayKind Kind => OverlayKind.Side;
+    public override DialogKind Kind => DialogKind.Panel;
 
     public override string Id => "buildingDetail";
 

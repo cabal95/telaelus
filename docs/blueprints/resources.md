@@ -30,7 +30,8 @@ buildings.md). A single global stockpile holds all amounts.
 
 - Deposits are finite resource fields. Terrain-sourced resources never run out but need a building
   on or beside the right terrain; Sand and Water are defined so the production plan (see
-  docs/game-plan.md) and the HUD are settled, and nothing produces them yet. Refined resources come
+  docs/game-plan.md) and the UI are settled (the top bar shows them), and nothing produces them
+  yet. Refined resources come
   from processing buildings (see buildings.md).
 
 ### Resource fields
@@ -102,10 +103,11 @@ buildings.md). A single global stockpile holds all amounts.
   (1.2 units); it seats the model on the ground with a deterministic yaw and variant per slot. The
   models are required: a missing file throws (see presentation.md). Assets and conventions live in
   `src/Game/assets/models/nature/README.md`.
-- The HUD shows resource totals and an `[E] harvest` hint, with the resource's name and a
-  progress bar toward the next unit, when a hand-harvestable field is in range.
+- The top bar shows every raw resource's amount, and the inventory panel (I) every resource's;
+  the hint overlay shows "[E] Harvest" with the resource's icon, name, and a progress bar toward
+  the next unit when a hand-harvestable field is in range (see presentation.md).
 
 ## Related
 
 - buildings.md (refined resources, extractors), player.md (harvest input, field blocking),
-  presentation.md (rendering, HUD).
+  presentation.md (rendering, the top bar, hint overlay, and inventory).

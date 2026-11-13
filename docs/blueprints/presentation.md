@@ -46,21 +46,26 @@ planned multiplayer feasible.
   `BuildingViews` (footprint-sized building boxes, created and freed as buildings appear and are
   removed), `PlayerView` (the character), `CameraRig` (the orthographic follow camera, with
   `ZoomTo` for a direct size),
-  `Hud` (a UI layer of labels at the UI scale, outlined so they read over bright ground, with resource totals, deposits on one line and refined goods on the
-  next, in table order and without terrain-sourced types until they can be collected; a
-  diagnostics line for exploring (the seed or the bounded map's name, the biome and terrain under
-  the player, their chunk, and their map cell, for example
-  `seed 1234   Highlands / Rock   chunk (1, -2)   cell (87, -101)`); a performance line (see
-  Performance below; F3 hides it); launch status; and the harvest hint with a
-  text progress bar toward the next unit; it has no build text), `BuildController` (build-mode
-  selection and rotation, the footprint ghost, the extractor work-area disc and field highlights,
-  and the place command), and the `OverlayHost` with the build menu and tooltips (below).
+  `BuildController` (build-mode selection and rotation, the footprint ghost, the extractor
+  work-area disc and field highlights, and the place command), and the screen UI (below).
 
-### UI: the build menu and placement tooltip
+### Screen UI
 
-The UI's look and the overlay rules are in ui-style.md.
+The kinds of UI (modals, panels, overlays), their look, layers, and input rules are in
+ui-style.md. There is no text HUD; the screen holds:
 
-- **Build menu** (`BuildMenu`, a modal overlay titled "Buildings"): B opens it (leaving build
+- **Top bar** (`TopBar`, always shown): every raw resource's icon and amount, with name tooltips,
+  and the launch progress with "[L] Launch ship" once it can launch.
+- **Hint overlay** (`HintOverlay`): below the top bar, "[E] Harvest" with the resource's icon,
+  name, and a progress bar toward the next unit, while a hand-harvestable field is in range.
+- **Debug overlay** (`DebugOverlay`, F3, hidden at start): the world line for exploring (for
+  example `seed 1234   Highlands / Rock   chunk (1, -2)   cell (87, -101)`) and the performance
+  line (see Performance below), in the top-left corner below the top bar, behind everything else.
+- **Inventory** (`InventoryPanel`, a panel titled "Inventory"): I opens and closes it. Every
+  resource, including those at 0, as its icon and "Iron (23)": raw resources first (deposits, then
+  terrain-sourced) in table order, a thin rule, then the refined ones. Like every panel, opening it
+  closes a building's detail panel and the other way round.
+- **Build menu** (`BuildMenu`, a modal titled "Buildings"): B opens it (leaving build
   mode) and B, Escape, the Close button, or a click on the backdrop closes it. Its body is a grid
   of 112-unit square cells, as many columns as fit, scrolling when taller than the panel allows.
   Discovered buildings (`IsUnlocked`) come first, then undiscovered ones, each group by name.
@@ -71,7 +76,7 @@ The UI's look and the overlay rules are in ui-style.md.
   affordable or not, closes the menu and selects the building for placement, so the player can
   position it while materials build up; clicking an undiscovered cell does nothing. The cells
   refresh while the menu is open, so a cell turns from gray to color as the stock arrives.
-- **Building detail panel** (`BuildingDetail`, a side panel): opened by clicking a placed building
+- **Building detail panel** (`BuildingDetail`, a panel): opened by clicking a placed building
   outside build mode, and switched to another building by clicking it. Its title is the
   building's name. Below it, a `TurntableView` shows the building turning about its center once
   every 18 seconds in a 180-unit square: a live view of the picture stage (ui-style.md), drawn
@@ -86,7 +91,7 @@ The UI's look and the overlay rules are in ui-style.md.
   destroy" for 3 seconds, and a second click in that time destroys the building. The panel closes
   itself when its building is gone. While it is open, its building keeps the hover outline in
   the world.
-- **Placement tooltip:** while a building is selected (and no modal overlay is open), a tooltip
+- **Placement tooltip:** while a building is selected (and no modal is open), a tooltip
   follows the pointer 28 units below and to the right of it, clear of the ghost: the building's
   name in the accent color, its cost (short amounts marked), fields in range for an extractor,
   and the dim hint "R rotate   Esc cancel". The ghost itself shows the facing (the model is
@@ -128,11 +133,11 @@ The UI's look and the overlay rules are in ui-style.md.
   steps) and under vsync includes the wait, so it is shown only when running uncapped. The monitor
   also records the wall time between frames, fps, draw calls, and objects drawn, and keeps one
   second of samples for an average and the worst frame.
-- The HUD's performance line reads, for example,
+- The debug overlay's performance line reads, for example,
   `frame 6.6 / 16.7 ms (40%)   scripts 0.7 (sim 0.1)  render 5.9  gpu (uncapped only)   worst 9.8   fps 60   draws 580`.
   The frame figure is the average work time over the last second, green under 50% of the budget,
   yellow to 80%, red above; worst is the slowest frame in that second (one-off spikes such as a
-  chunk generating). F3 hides and shows the line.
+  chunk generating). F3 shows and hides the debug overlay, which starts hidden.
 - `--uncapped` (a game argument after `--`) turns off vsync and the frame cap, so frames run as fast
   as they can; the wall time between frames is then the true cost of a frame, GPU included. With
   `--fixed-fps 30`, the game still advances one 30 Hz tick per frame, so a scenario plays out the

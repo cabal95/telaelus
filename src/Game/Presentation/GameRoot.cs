@@ -20,8 +20,11 @@ public partial class GameRoot : Node3D
     private ResourceFieldViews _fieldViews = null!;
     private BuildingViews _buildingViews = null!;
     private BuildController _buildController = null!;
-    private Hud _hud = null!;
-    private OverlayHost _overlays = null!;
+    private DebugOverlay _debug = null!;
+    private TopBar _topBar = null!;
+    private HintOverlay _hint = null!;
+    private InventoryPanel _inventory = null!;
+    private DialogHost _dialogs = null!;
     private BuildMenu _buildMenu = null!;
     private BuildingDetail _buildingDetail = null!;
     private ResourceIcons _icons = null!;
@@ -37,10 +40,14 @@ public partial class GameRoot : Node3D
     public ResourceFieldViews FieldViews => _fieldViews;
     public TerrainView Terrain => _terrainView;
     public PerfMonitor Perf => _perf;
-    public OverlayHost Overlays => _overlays;
+    public DialogHost Dialogs => _dialogs;
     public BuildMenu BuildMenu => _buildMenu;
     public BuildingDetail BuildingDetail => _buildingDetail;
     public ResourceIcons Icons => _icons;
+    public DebugOverlay Debug => _debug;
+    public TopBar TopBar => _topBar;
+    public HintOverlay Hint => _hint;
+    public InventoryPanel Inventory => _inventory;
 
     public override void _Ready()
     {
@@ -52,8 +59,8 @@ public partial class GameRoot : Node3D
 
     public override void _Process(double delta)
     {
-        // A modal overlay takes all input, so the world reads none.
-        bool worldInput = !_overlays.CapturesWorldInput;
+        // A modal takes all input, so the world reads none.
+        bool worldInput = !_dialogs.CapturesWorldInput;
         Vector2 moveDir = worldInput ? ReadWorldMoveInput() : Vector2.Zero;
         _sim.Intent = new PlayerIntent
         {
@@ -76,11 +83,12 @@ public partial class GameRoot : Node3D
         _light.DirectionalShadowMaxDistance = _camera.ViewDistance + _camera.Size;
         _fieldViews.Sync(_sim, _terrainView);
         _buildingViews.Sync(_sim.Buildings);
-        _hud.Refresh(_sim);
-        _overlays.SideTop = _hud.Bottom;
-        _buildController.Focused = _overlays.Current == _buildingDetail ? _buildingDetail.Building : null;
+        _topBar.Refresh(_sim, _dialogs.UiSize);
+        _hint.Refresh(_sim, _dialogs.UiSize);
+        _debug.Refresh(_sim, _perf);
+        _dialogs.PanelTop = TopBar.Height;
+        _buildController.Focused = _dialogs.Current == _buildingDetail ? _buildingDetail.Building : null;
         UpdatePlacementTip();
-        _hud.RefreshPerf(_perf);
     }
 
     /// <summary>The world seed from <c>--seed=&lt;n&gt;</c> after the <c>--</c> separator, or a random one.</summary>
@@ -115,11 +123,15 @@ public partial class GameRoot : Node3D
         }
         else if (@event is InputEventKey f3 && f3.Pressed && !f3.Echo && f3.PhysicalKeycode == Key.F3)
         {
-            _hud.ShowPerf = !_hud.ShowPerf;
+            _debug.Shown = !_debug.Shown;
         }
         else if (@event is InputEventKey b && b.Pressed && !b.Echo && b.PhysicalKeycode == Key.B)
         {
             OpenBuildMenu();
+        }
+        else if (@event is InputEventKey i && i.Pressed && !i.Echo && i.PhysicalKeycode == Key.I)
+        {
+            ToggleInventory();
         }
     }
 
@@ -127,20 +139,33 @@ public partial class GameRoot : Node3D
     public void OpenBuildMenu()
     {
         _buildController.Cancel();
-        _overlays.Open(_buildMenu);
+        _dialogs.Open(_buildMenu);
+    }
+
+    /// <summary>Opens the inventory panel, or closes it when it is open.</summary>
+    public void ToggleInventory()
+    {
+        if (_dialogs.Current == _inventory)
+        {
+            _dialogs.Close(_inventory);
+        }
+        else
+        {
+            _dialogs.Open(_inventory);
+        }
     }
 
     /// <summary>Shows the placement tooltip beside the pointer while a building is selected.</summary>
     private void UpdatePlacementTip()
     {
-        if (_buildController.Selected is null || _overlays.CapturesWorldInput)
+        if (_buildController.Selected is null || _dialogs.CapturesWorldInput)
         {
-            _overlays.PlacementTip.HideTip();
+            _dialogs.PlacementTip.HideTip();
             return;
         }
         // Below and to the right of the pointer, clear of the ghost under it.
-        Vector2 point = _overlays.ToUi(_buildController.PointerScreen()) + new Vector2(28f, 28f);
-        _overlays.PlacementTip.ShowAt(point, _buildController.PlacementLines(), _overlays.UiSize);
+        Vector2 point = _dialogs.ToUi(_buildController.PointerScreen()) + new Vector2(28f, 28f);
+        _dialogs.PlacementTip.ShowAt(point, _buildController.PlacementLines(), _dialogs.UiSize);
     }
 
     /// <summary>
@@ -239,11 +264,11 @@ public partial class GameRoot : Node3D
         _buildController.Initialize(_sim, _camera);
         AddChild(_buildController);
 
-        _hud = new Hud
+        _debug = new DebugOverlay
         {
-            Name = "Hud"
+            Name = "DebugOverlay"
         };
-        AddChild(_hud);
+        AddChild(_debug);
 
         var pictures = new BuildingPictures
         {
@@ -255,31 +280,52 @@ public partial class GameRoot : Node3D
             Name = "ResourceIcons"
         };
         AddChild(_icons);
-        _overlays = new OverlayHost
+        _dialogs = new DialogHost
         {
-            Name = "Overlays"
+            Name = "Dialogs"
         };
-        AddChild(_overlays);
+        AddChild(_dialogs);
+
+        _topBar = new TopBar
+        {
+            Name = "TopBar"
+        };
+        _topBar.Initialize(_dialogs, _icons);
+        _dialogs.AddOverlay(_topBar);
+        _hint = new HintOverlay
+        {
+            Name = "HintOverlay"
+        };
+        _hint.Initialize(_icons);
+        _dialogs.AddOverlay(_hint);
+
         _buildMenu = new BuildMenu
         {
             Name = "BuildMenu"
         };
         _buildMenu.Initialize(_sim, _buildController, pictures);
-        _overlays.Add(_buildMenu, "Buildings");
+        _dialogs.Add(_buildMenu, "Buildings");
 
         _buildingDetail = new BuildingDetail
         {
             Name = "BuildingDetail"
         };
         _buildingDetail.Initialize(_sim);
-        _overlays.Add(_buildingDetail, "");
+        _dialogs.Add(_buildingDetail, "");
         _buildController.BuildingClicked += _buildingDetail.ShowBuilding;
-        // A click on the world that selects nothing closes a side panel.
+
+        _inventory = new InventoryPanel
+        {
+            Name = "Inventory"
+        };
+        _inventory.Initialize(_sim, _icons);
+        _dialogs.Add(_inventory, "Inventory");
+        // A click on the world that selects nothing closes a panel.
         _buildController.EmptyClicked += () =>
         {
-            if (_overlays.Current is { Kind: OverlayKind.Side } side)
+            if (_dialogs.Current is { Kind: DialogKind.Panel } panel)
             {
-                _overlays.Close(side);
+                _dialogs.Close(panel);
             }
         };
     }

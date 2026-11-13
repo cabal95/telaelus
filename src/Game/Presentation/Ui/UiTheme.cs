@@ -4,7 +4,7 @@ namespace Game.Presentation.Ui;
 
 /// <summary>
 /// The shared UI style (see docs/blueprints/ui-style.md): color tokens, sizes, and the
-/// Godot <see cref="Theme"/> every overlay uses, plus the UI scale. Sizes are authored
+/// Godot <see cref="Theme"/> all the UI uses, plus the UI scale. Sizes are authored
 /// for a 720 px tall window; each UI layer is scaled by <see cref="Scale"/>.
 /// </summary>
 public static class UiTheme

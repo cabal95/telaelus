@@ -21,12 +21,12 @@ public enum BuildCellState
 }
 
 /// <summary>
-/// The build menu (B): a modal overlay with a grid of every building. Discovered
+/// The build menu (B): a modal with a grid of every building. Discovered
 /// buildings come first, then undiscovered ones, each group by name. Hovering a
 /// discovered cell shows its cost; clicking it closes the menu and selects the
 /// building for placement, affordable or not.
 /// </summary>
-public partial class BuildMenu : Overlay
+public partial class BuildMenu : Dialog
 {
     public const float CellSize = 112f;
     private const float PictureHeight = 80f;
@@ -38,7 +38,7 @@ public partial class BuildMenu : Overlay
     private readonly Dictionary<BuildingType, Cell> _cells = new();
     private string _signature = "";
 
-    public override OverlayKind Kind => OverlayKind.Modal;
+    public override DialogKind Kind => DialogKind.Modal;
 
     public override string Id => "buildMenu";
 

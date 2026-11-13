@@ -103,10 +103,11 @@ pausing it and stepping frame by frame.
     `{ id }` (moves the pointer over a registered UI control and clicks it, released the next
     frame), `hoverUi` `{ id }` (moves the pointer over one, so its hover state and tooltip
     show), and `scrollUi` `{ id, ticks }` (turns the wheel over one: positive ticks down,
-    negative up). Keys are Godot `Key` names (`R`, `E`, `B`, `Escape`). UI ids are an overlay's id and a
+    negative up). Keys are Godot `Key` names (`R`, `E`, `B`, `Escape`). UI ids are a dialog's id and a
     control's name: `buildMenu/<BuildingType>` for a cell, `buildingDetail/toggle` and
-    `buildingDetail/destroy` for the detail panel's actions, and `<overlay>/close` for the Close
-    button. Buttons act on release, the frame after a `clickUi`, so check their effect after
+    `buildingDetail/destroy` for the detail panel's actions, `inventory/<ResourceType>` for an
+    inventory row, `topBar/<ResourceType>` for a top bar entry (top bar ids work while no dialog is
+    open), and `<dialog>/close` for the Close button. Buttons act on release, the frame after a `clickUi`, so check their effect after
     `wait` 2. UI pointer events go straight to the viewport (`PushInput`), so they reach the GUI in
     headless runs too.
   - Time and capture: `wait` (frames), `screenshot` (label; records a snapshot and saves the next
@@ -130,12 +131,15 @@ pausing it and stepping frame by frame.
   and their `chunk` [x, z]); `build` (null when not in build
   mode, else `selected`, `facing`, `fieldsInRange`, and `ghost`: `anchor`, `width`, `depth`,
   `placeable` (the spot), `affordable` (the cost), or null, and `tooltip`: the placement
-  tooltip's lines, or null); `ui` (`open`: the open overlay's id or null, `tooltip`: the hover
+  tooltip's lines, or null); `ui` (`open`: the open dialog's id or null, `debug`: whether the debug overlay shows,
+  `topBar`: its `items` (each raw resource's `type` and `amount`) and its `launch` text, `hint`:
+  the hint's `text` and `progress` or null, `tooltip`: the hover
   tooltip's lines or null, and while the build menu is open, its `cells` in display order, each
   `type`, `state` (`affordable`, `unaffordable`, or `undiscovered`), and `label`; while the
   detail panel is open, `building` (its id), `rows` (each shown status row, keyed in camel case:
   `power`, `state`, `inRange`, `workingOn`, `recipe`), `destroy` (the Destroy button's text), and
-  `turnDegrees`); `buildings` (`id`, `type`, `anchor`, `facing`, `width`, `depth`,
+  `turnDegrees`; while the inventory is open, `inventory`: its rows in order, each `type`,
+  `amount`, and `section` (`raw` or `other`)); `buildings` (`id`, `type`, `anchor`, `facing`, `width`, `depth`,
   `currentField`, `enabled`, `status` (`working`, `idle`, or `off`), and `idleReason` or null);
   `hoveredBuilding` (the id of the building under the pointer outside build mode, or null);
   `focusedBuilding` (the id of the building the detail panel shows and outlines, or null);
@@ -173,7 +177,7 @@ pausing it and stepping frame by frame.
 - Headless, state only: `<godot.editor> --headless --path src/Game --fixed-fps 30 --
   --scenario=<file> [--output=<dir>]`. Headless implies `--no-screenshots`, which turns each
   `screenshot` into a `snapshot`. A headless window is 64 x 64 and ignores `--resolution`, so
-  the scenario runner sizes it to 1280 x 720, and overlays lay out and UI clicks land as they do
+  the scenario runner sizes it to 1280 x 720, and the UI lays out and UI clicks land as they do
   windowed.
 - Relative `--scenario` and `--output` paths resolve against the repo root, because Godot changes
   its working directory to the project folder when given `--path`.
@@ -225,7 +229,11 @@ pausing it and stepping frame by frame.
   presentation state, views mirroring the sim). Sim rules belong in the unit tests. Screenshot
   steps in a kept scenario are for manual runs; the test suite skips them.
 - **Current scenarios:** `boot` (the game starts; player at the center, nothing on the map),
-  `building-detail` (clicking a building opens its side panel with the right status rows; the
+  `hud` (the debug overlay starts hidden and F3 toggles it; the top bar shows all eight raw
+  resources with name tooltips and the launch progress; the hint overlay shows the harvest hint
+  and its bar; I opens and closes the inventory with raw resources first; the inventory and a
+  building's detail replace each other; a panel covers the debug overlay),
+  `building-detail` (clicking a building opens its panel with the right status rows; the
   player walks with it open; it turns the building off and on; clicking another building
   switches it; empty ground, B, and Escape close it; Destroy asks once, then refunds half the
   cost),

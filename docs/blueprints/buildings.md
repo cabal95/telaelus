@@ -159,4 +159,4 @@ loop.
 ## Related
 
 - resources.md (stockpile, fields, range), simulation.md (commands, grid), presentation.md (views,
-  HUD, build UI).
+  screen UI, build UI).

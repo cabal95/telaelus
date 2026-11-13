@@ -324,11 +324,11 @@ public sealed class CommandExecutor
     /// </summary>
     public StepOutcome ClickUi(string id)
     {
-        if (_root.Overlays.Find(id) is not Control control)
+        if (_root.Dialogs.Find(id) is not Control control)
         {
             return new StepOutcome(false, $"no visible UI control '{id}'");
         }
-        Vector2 screen = _root.Overlays.ScreenCenter(control);
+        Vector2 screen = _root.Dialogs.ScreenCenter(control);
         PushUi(MotionEvent(screen));
         PushUi(MouseEvent(screen, true));
         _pendingUiReleases.Add(MouseEvent(screen, false));
@@ -338,11 +338,11 @@ public sealed class CommandExecutor
     /// <summary>Moves the pointer over a registered UI control (its hover state and tooltip follow).</summary>
     public StepOutcome HoverUi(string id)
     {
-        if (_root.Overlays.Find(id) is not Control control)
+        if (_root.Dialogs.Find(id) is not Control control)
         {
             return new StepOutcome(false, $"no visible UI control '{id}'");
         }
-        PushUi(MotionEvent(_root.Overlays.ScreenCenter(control)));
+        PushUi(MotionEvent(_root.Dialogs.ScreenCenter(control)));
         return StepOutcome.Ok;
     }
 
@@ -352,11 +352,11 @@ public sealed class CommandExecutor
     /// </summary>
     public StepOutcome ScrollUi(string id, int ticks)
     {
-        if (_root.Overlays.Find(id) is not Control control)
+        if (_root.Dialogs.Find(id) is not Control control)
         {
             return new StepOutcome(false, $"no visible UI control '{id}'");
         }
-        Vector2 screen = _root.Overlays.ScreenCenter(control);
+        Vector2 screen = _root.Dialogs.ScreenCenter(control);
         PushUi(MotionEvent(screen));
         MouseButton button = ticks >= 0 ? MouseButton.WheelDown : MouseButton.WheelUp;
         for (int i = 0; i < System.Math.Abs(ticks); i++)

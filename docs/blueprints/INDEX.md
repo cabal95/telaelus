@@ -29,7 +29,8 @@ Read this index to find the right area, then open that blueprint for the detail.
   look, the view assets are judged from, the shared palette, scale, ground levels and cell-model
   rules, variants, sources, and naming.
 - **[ui-style.md](ui-style.md)** - How on-screen UI looks and behaves: the color and size
-  tokens and shared theme, the UI scale, the modal and side-panel overlay positions and their
+  tokens and shared theme, the UI scale, the three kinds of UI (modals, panels, and overlays) and
+  their layers and
   input rules, and the shared buttons, cells, tooltips, and building pictures.
 - **[testing.md](testing.md)** - The engine-free sim unit tests and the seam check, JSON
   scenarios (commands, snapshot, running, output), the headless integration tests, and the live

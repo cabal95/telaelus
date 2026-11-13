@@ -66,22 +66,61 @@ public static class PictureStage
             });
         }
 
-        Aabb bounds = ModelLibrary.MeshBounds(modelPath);
-        float radius = Mathf.Max(bounds.Size.X, bounds.Size.Z) * 0.5f;
-        float height = bounds.Size.Y;
-        var target = new Vector3(0f, height * (framing == Framing.Tight ? 0.5f : 0.4f), 0f);
         var camera = new Camera3D
         {
             Projection = Camera3D.ProjectionType.Orthogonal,
-            Size = framing == Framing.Tight
-                ? Mathf.Max(radius * 2f, height) * 1.2f
-                : Mathf.Max(radius * 2.2f, height * 1.5f) + 0.4f,
             Current = true
         };
         parent.AddChild(camera);
-        Vector3 position = target + CameraRig.Offset.Normalized() * 30f;
-        camera.Transform = new Transform3D(Basis.LookingAt(target - position, Vector3.Up), position);
+        Vector3 back = CameraRig.Offset.Normalized();
+        Basis basis = Basis.LookingAt(-back, Vector3.Up);
+        Vector3 target;
+        if (framing == Framing.Tight)
+        {
+            // Fit the model's outline as this camera sees it: project every vertex onto the
+            // view's right and up axes, then center on that outline. A bounding box would
+            // leave a leaning model (the water drop) off-center.
+            (Vector2 min, Vector2 max) = ScreenExtent(modelPath, yawDegrees, basis);
+            Vector2 middle = (min + max) * 0.5f;
+            target = basis.X * middle.X + basis.Y * middle.Y;
+            Vector2 extent = max - min;
+            camera.Size = Mathf.Max(extent.X, extent.Y) * 1.15f;
+        }
+        else
+        {
+            Aabb bounds = ModelLibrary.MeshBounds(modelPath);
+            float radius = Mathf.Max(bounds.Size.X, bounds.Size.Z) * 0.5f;
+            float height = bounds.Size.Y;
+            target = new Vector3(0f, height * 0.4f, 0f);
+            // Wide enough for the model turned any way, plus a margin.
+            camera.Size = Mathf.Max(radius * 2.2f, height * 1.5f) + 0.4f;
+        }
+        camera.Transform = new Transform3D(basis, target + back * 30f);
         return pivot;
+    }
+
+    /// <summary>
+    /// The model's extent on the view plane of a camera with the given basis: every
+    /// vertex, turned by the model's yaw, projected onto the camera's right and up axes.
+    /// </summary>
+    private static (Vector2 Min, Vector2 Max) ScreenExtent(string modelPath, float yawDegrees, Basis basis)
+    {
+        (Mesh mesh, Transform3D transform) = ModelLibrary.Mesh(modelPath);
+        Transform3D placed = new Transform3D(new Basis(Vector3.Up, Mathf.DegToRad(yawDegrees)), Vector3.Zero) * transform;
+        var min = new Vector2(float.MaxValue, float.MaxValue);
+        var max = new Vector2(float.MinValue, float.MinValue);
+        for (int surface = 0; surface < mesh.GetSurfaceCount(); surface++)
+        {
+            var vertices = mesh.SurfaceGetArrays(surface)[(int)Mesh.ArrayType.Vertex].AsVector3Array();
+            foreach (Vector3 vertex in vertices)
+            {
+                Vector3 p = placed * vertex;
+                var onScreen = new Vector2(p.Dot(basis.X), p.Dot(basis.Y));
+                min = min.Min(onScreen);
+                max = max.Max(onScreen);
+            }
+        }
+        return (min, max);
     }
 
     /// <summary>

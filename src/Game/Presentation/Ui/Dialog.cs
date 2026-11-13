@@ -3,39 +3,40 @@ using Godot;
 
 namespace Game.Presentation.Ui;
 
-/// <summary>The two overlay positions (see docs/blueprints/ui-style.md).</summary>
-public enum OverlayKind
+/// <summary>The two kinds of dialog (see docs/blueprints/ui-style.md).</summary>
+public enum DialogKind
 {
     /// <summary>Centered over a dimmed backdrop; takes all input until dismissed.</summary>
     Modal,
 
-    /// <summary>Against the left edge, a third of the window wide; captures only Escape.</summary>
-    Side
+    /// <summary>Docked at the left edge below the top bar, a third of the window wide; captures only Escape.</summary>
+    Panel
 }
 
 /// <summary>
-/// The shared overlay frame: a panel with a title, a vertically scrolling body, and a
-/// close button at the bottom center. Subclasses fill <see cref="Body"/>. The host
-/// (<see cref="OverlayHost"/>) opens and closes overlays, one at a time, and places
-/// them each frame by their kind.
+/// UI the player opens and closes (a modal or a panel; overlays, which are part of the
+/// screen, are <see cref="HudOverlay"/>s): a frame with a title, a vertically scrolling
+/// body, and a close button at the bottom center. Subclasses fill <see cref="Body"/>.
+/// The host (<see cref="DialogHost"/>) opens and closes dialogs, one at a time, and
+/// places them each frame by their kind.
 /// </summary>
-public abstract partial class Overlay : PanelContainer
+public abstract partial class Dialog : PanelContainer
 {
-    public abstract OverlayKind Kind { get; }
+    public abstract DialogKind Kind { get; }
 
-    /// <summary>The overlay's id for the snapshot and the <c>clickUi</c> command, as "buildMenu".</summary>
+    /// <summary>The dialog's id for the snapshot and the <c>clickUi</c> command, as "buildMenu".</summary>
     public abstract string Id { get; }
 
-    protected OverlayHost Host { get; private set; } = null!;
+    protected DialogHost Host { get; private set; } = null!;
     protected Label TitleLabel { get; private set; } = null!;
     protected VBoxContainer Body { get; private set; } = null!;
     protected ScrollContainer Scroll { get; private set; } = null!;
     public Button CloseButton { get; private set; } = null!;
 
-    /// <summary>Raised after the overlay closes, by any means.</summary>
+    /// <summary>Raised after the dialog closes, by any means.</summary>
     public event Action? Closed;
 
-    public void Attach(OverlayHost host, string title)
+    public void Attach(DialogHost host, string title)
     {
         Host = host;
         Visible = false;
@@ -89,30 +90,30 @@ public abstract partial class Overlay : PanelContainer
     /// <summary>Fills <see cref="Body"/> once, when attached.</summary>
     protected abstract void Build();
 
-    /// <summary>Called every frame while open, before the overlay is placed.</summary>
+    /// <summary>Called every frame while open, before the dialog is placed.</summary>
     public virtual void Refresh()
     {
     }
 
-    /// <summary>A key pressed while this modal overlay is open (every key is swallowed either way).</summary>
+    /// <summary>A key pressed while this modal is open (every key is swallowed either way).</summary>
     public virtual void OnKey(Key key)
     {
     }
 
-    /// <summary>Called by the host when the overlay opens.</summary>
+    /// <summary>Called by the host when the dialog opens.</summary>
     public virtual void OnOpened()
     {
         Scroll.ScrollVertical = 0;
     }
 
-    /// <summary>Called by the host when the overlay closes.</summary>
+    /// <summary>Called by the host when the dialog closes.</summary>
     public virtual void OnClosed()
     {
         Closed?.Invoke();
     }
 
     /// <summary>
-    /// The width a modal overlay takes: 60% of the window, at least 420 and at most 900
+    /// The width a modal takes: 60% of the window, at least 420 and at most 900
     /// UI units (never wider than the window less the margins).
     /// </summary>
     public static float ModalWidth(Vector2 uiSize)
@@ -122,14 +123,14 @@ public abstract partial class Overlay : PanelContainer
     }
 
     /// <summary>
-    /// Sizes and positions the panel for its kind in a window of the given UI size. A
-    /// side panel starts below <paramref name="sideTop"/> (the HUD's text) and runs to the
-    /// bottom margin.
+    /// Sizes and positions the dialog for its kind in a window of the given UI size. A
+    /// panel starts below <paramref name="panelTop"/> (the top bar) and runs to the bottom
+    /// margin.
     /// </summary>
-    public void Place(Vector2 uiSize, float sideTop)
+    public void Place(Vector2 uiSize, float panelTop)
     {
         float margin = UiTheme.Padding;
-        if (Kind == OverlayKind.Modal)
+        if (Kind == DialogKind.Modal)
         {
             float width = ModalWidth(uiSize);
             // As tall as the content, up to 80% of the window; past that the body scrolls.
@@ -143,7 +144,7 @@ public abstract partial class Overlay : PanelContainer
         else
         {
             float width = Mathf.Max(uiSize.X / 3f, 280f);
-            float top = Mathf.Max(margin, sideTop + UiTheme.Gap);
+            float top = Mathf.Max(margin, panelTop + UiTheme.Gap);
             Size = new Vector2(width, Mathf.Max(160f, uiSize.Y - top - margin));
             Position = new Vector2(margin, top);
         }

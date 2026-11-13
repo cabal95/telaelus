@@ -33,7 +33,7 @@ public static class StateSnapshot
             ["world"] = World(sim, root.Terrain, root.FieldViews),
             ["perf"] = Perf(root.Perf),
             ["player"] = Player(sim),
-            ["build"] = Build(root.Builder, root.Overlays),
+            ["build"] = Build(root.Builder, root.Dialogs),
             ["hoveredBuilding"] = root.Builder.Hovered?.Id,
             ["focusedBuilding"] = root.Builder.Focused?.Id,
             ["camera"] = new JsonObject
@@ -98,10 +98,33 @@ public static class StateSnapshot
     {
         var ui = new JsonObject
         {
-            ["open"] = root.Overlays.Current?.Id,
-            ["tooltip"] = Lines(root.Overlays.HoverTip)
+            ["open"] = root.Dialogs.Current?.Id,
+            ["tooltip"] = Lines(root.Dialogs.HoverTip),
+            ["debug"] = root.Debug.Shown,
+            ["topBar"] = TopBar(root.TopBar),
+            ["hint"] = root.Hint.Text is string hint
+                ? new JsonObject
+                {
+                    ["text"] = hint,
+                    ["progress"] = Math.Round(root.Hint.Progress, 3)
+                }
+                : null
         };
-        if (root.Overlays.Current == root.BuildMenu)
+        if (root.Dialogs.Current == root.Inventory)
+        {
+            var rows = new JsonArray();
+            foreach ((ResourceType type, int amount, string section) in root.Inventory.Rows)
+            {
+                rows.Add(new JsonObject
+                {
+                    ["type"] = type.ToString(),
+                    ["amount"] = amount,
+                    ["section"] = section
+                });
+            }
+            ui["inventory"] = rows;
+        }
+        if (root.Dialogs.Current == root.BuildMenu)
         {
             var cells = new JsonArray();
             foreach ((BuildingType type, BuildCellState state, string label) in root.BuildMenu.Cells)
@@ -115,7 +138,7 @@ public static class StateSnapshot
             }
             ui["cells"] = cells;
         }
-        if (root.Overlays.Current == root.BuildingDetail && root.BuildingDetail.Building is Building building)
+        if (root.Dialogs.Current == root.BuildingDetail && root.BuildingDetail.Building is Building building)
         {
             var rows = new JsonObject();
             foreach ((string name, string value) in root.BuildingDetail.Rows)
@@ -128,6 +151,24 @@ public static class StateSnapshot
             ui["turnDegrees"] = Math.Round(root.BuildingDetail.TurnDegrees, 1);
         }
         return ui;
+    }
+
+    private static JsonObject TopBar(TopBar bar)
+    {
+        var items = new JsonArray();
+        foreach ((ResourceType type, string amount) in bar.Entries)
+        {
+            items.Add(new JsonObject
+            {
+                ["type"] = type.ToString(),
+                ["amount"] = int.Parse(amount)
+            });
+        }
+        return new JsonObject
+        {
+            ["items"] = items,
+            ["launch"] = bar.LaunchText
+        };
     }
 
     /// <summary>A tooltip's lines while it shows, else null.</summary>
@@ -162,7 +203,7 @@ public static class StateSnapshot
         return char.ToLowerInvariant(name[0]) + name[1..];
     }
 
-    private static JsonNode? Build(BuildController builder, OverlayHost overlays)
+    private static JsonNode? Build(BuildController builder, DialogHost dialogs)
     {
         if (builder.Selected is not BuildingType selected)
         {
@@ -175,7 +216,7 @@ public static class StateSnapshot
             ["selected"] = selected.ToString(),
             ["facing"] = builder.Facing.ToString(),
             ["fieldsInRange"] = ghost?.FieldsInRange ?? 0,
-            ["tooltip"] = Lines(overlays.PlacementTip),
+            ["tooltip"] = Lines(dialogs.PlacementTip),
             ["ghost"] = ghost is BuildController.GhostInfo g
                 ? new JsonObject
                 {

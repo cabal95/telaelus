@@ -4,34 +4,35 @@ using Godot;
 namespace Game.Presentation.Ui;
 
 /// <summary>
-/// Owns the overlays and the tooltips on one UI layer above the HUD. One overlay is
-/// open at a time: opening one closes the other. Escape closes the open overlay. A
-/// modal overlay sits over a dimmed backdrop and takes all input (keys are swallowed
-/// here; the world reads <see cref="CapturesWorldInput"/> before polling keys); a
-/// side panel captures only Escape. Controls register ids so scenarios can click and
-/// hover them by name.
+/// The game's UI layer: the screen overlays (the top bar and the hint overlay, behind
+/// everything else here), the dialogs, and the tooltips (on top). One dialog is open at
+/// a time: opening one closes the other. Escape closes the open dialog. A modal sits
+/// over a dimmed backdrop and takes all input (keys are swallowed here; the world reads
+/// <see cref="CapturesWorldInput"/> before polling keys); a panel captures only Escape.
+/// Controls register ids so scenarios can click and hover them by name.
 /// </summary>
-public partial class OverlayHost : UiLayer
+public partial class DialogHost : UiLayer
 {
     private ColorRect _backdrop = null!;
-    private readonly List<Overlay> _overlays = new();
+    private readonly List<Dialog> _dialogs = new();
     private readonly Dictionary<string, Control> _controls = new();
 
     private Control? _hoverAnchor;
     private IReadOnlyList<TipLine>? _hoverLines;
     private double _hoverTime;
+    private bool _hoverBelow;
 
     public Tooltip HoverTip { get; private set; } = null!;
     public Tooltip PlacementTip { get; private set; } = null!;
 
-    /// <summary>Where a side panel's top may start, in UI units (below the HUD's text).</summary>
-    public float SideTop { get; set; }
+    /// <summary>Where a panel's top may start, in UI units (the bottom of the top bar).</summary>
+    public float PanelTop { get; set; }
 
-    /// <summary>The open overlay, or null.</summary>
-    public Overlay? Current { get; private set; }
+    /// <summary>The open dialog, or null.</summary>
+    public Dialog? Current { get; private set; }
 
-    /// <summary>True while a modal overlay is open: the world gets no input.</summary>
-    public bool CapturesWorldInput => Current is { Kind: OverlayKind.Modal };
+    /// <summary>True while a modal is open: the world gets no input.</summary>
+    public bool CapturesWorldInput => Current is { Kind: DialogKind.Modal };
 
     public override void _Ready()
     {
@@ -61,13 +62,23 @@ public partial class OverlayHost : UiLayer
         };
     }
 
-    /// <summary>Adds an overlay to the host, closed. Call after the host is in the tree.</summary>
-    public void Add(Overlay overlay, string title)
+    /// <summary>
+    /// Adds a screen overlay, drawn behind the backdrop and every dialog. Call after the
+    /// host is in the tree.
+    /// </summary>
+    public void AddOverlay(Control overlay)
     {
-        _overlays.Add(overlay);
         Root.AddChild(overlay);
-        overlay.Attach(this, title);
-        // Tooltips stay on top of every overlay.
+        Root.MoveChild(overlay, _backdrop.GetIndex());
+    }
+
+    /// <summary>Adds a dialog to the host, closed. Call after the host is in the tree.</summary>
+    public void Add(Dialog dialog, string title)
+    {
+        _dialogs.Add(dialog);
+        Root.AddChild(dialog);
+        dialog.Attach(this, title);
+        // Tooltips stay on top of every dialog.
         if (HoverTip.GetParent() is null)
         {
             Root.AddChild(PlacementTip);
@@ -77,9 +88,9 @@ public partial class OverlayHost : UiLayer
         Root.MoveChild(HoverTip, -1);
     }
 
-    public void Open(Overlay overlay)
+    public void Open(Dialog dialog)
     {
-        if (Current == overlay)
+        if (Current == dialog)
         {
             return;
         }
@@ -87,25 +98,25 @@ public partial class OverlayHost : UiLayer
         {
             Close(Current);
         }
-        Current = overlay;
-        overlay.Visible = true;
-        _backdrop.Visible = overlay.Kind == OverlayKind.Modal;
-        overlay.OnOpened();
-        overlay.Refresh();
-        overlay.Place(UiSize, SideTop);
+        Current = dialog;
+        dialog.Visible = true;
+        _backdrop.Visible = dialog.Kind == DialogKind.Modal;
+        dialog.OnOpened();
+        dialog.Refresh();
+        dialog.Place(UiSize, PanelTop);
     }
 
-    public void Close(Overlay overlay)
+    public void Close(Dialog dialog)
     {
-        if (Current != overlay)
+        if (Current != dialog)
         {
             return;
         }
         Current = null;
-        overlay.Visible = false;
+        dialog.Visible = false;
         _backdrop.Visible = false;
         HideHover(null);
-        overlay.OnClosed();
+        dialog.OnClosed();
     }
 
     public void CloseCurrent()
@@ -139,9 +150,13 @@ public partial class OverlayHost : UiLayer
         return ToScreen(control.GetGlobalRect().GetCenter());
     }
 
-    /// <summary>Starts the hover tooltip for an anchor control; it shows after the tooltip delay.</summary>
-    public void ShowHover(Control anchor, IReadOnlyList<TipLine> lines)
+    /// <summary>
+    /// Starts the hover tooltip for an anchor control; it shows after the tooltip delay,
+    /// beside the anchor, or below it (for controls in a row, such as the top bar).
+    /// </summary>
+    public void ShowHover(Control anchor, IReadOnlyList<TipLine> lines, bool below = false)
     {
+        _hoverBelow = below;
         if (_hoverAnchor != anchor)
         {
             _hoverTime = 0;
@@ -169,7 +184,7 @@ public partial class OverlayHost : UiLayer
             Current.Refresh();
             if (Current is not null)
             {
-                Current.Place(UiSize, SideTop);
+                Current.Place(UiSize, PanelTop);
             }
         }
 
@@ -183,8 +198,13 @@ public partial class OverlayHost : UiLayer
             _hoverTime += delta;
             if (_hoverTime >= UiTheme.TooltipDelay)
             {
-                // Beside the anchor: to its right, or to its left when that would leave the window.
                 Rect2 rect = _hoverAnchor.GetGlobalRect();
+                if (_hoverBelow)
+                {
+                    HoverTip.ShowAt(new Vector2(rect.Position.X, rect.End.Y + UiTheme.Gap), _hoverLines, UiSize);
+                    return;
+                }
+                // Beside the anchor: to its right, or to its left when that would leave the window.
                 var point = new Vector2(rect.End.X + UiTheme.Gap, rect.Position.Y);
                 HoverTip.ShowAt(point, _hoverLines, UiSize);
                 if (HoverTip.Position.X < rect.End.X)
@@ -210,13 +230,13 @@ public partial class OverlayHost : UiLayer
             return;
         }
 
-        if (Current.Kind == OverlayKind.Modal)
+        if (Current.Kind == DialogKind.Modal)
         {
             if (key.Pressed && !key.Echo)
             {
                 Current.OnKey(key.PhysicalKeycode);
             }
-            // A modal overlay takes every key.
+            // A modal takes every key.
             GetViewport().SetInputAsHandled();
         }
     }
@@ -225,7 +245,7 @@ public partial class OverlayHost : UiLayer
     {
         if (@event is InputEventMouseButton { Pressed: true } button
             && button.ButtonIndex is MouseButton.Left or MouseButton.Right
-            && Current is { Kind: OverlayKind.Modal })
+            && Current is { Kind: DialogKind.Modal })
         {
             Close(Current);
             _backdrop.AcceptEvent();
