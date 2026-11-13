@@ -72,6 +72,15 @@ buildings.md). A single global stockpile holds all amounts.
   map-cell square (0 inside). `FieldsInRange(point, radius, types)` returns the non-depleted fields
   of any of the given types (or of one type) within a radius by that measure.
 
+### Selecting a field
+
+- Outside build mode, the field under the pointer (when no building is) gets the thin accent
+  outline, a thin frame around its map cell (the same frame buildings get), and a left click opens its field detail panel (see
+  presentation.md); the field keeps the outline while the panel is open. Clicking never starts
+  or stops hand-harvesting.
+- `ExtractorsWorking(field)` lists the switched-on extractors whose current field it is (display
+  only; it changes no rule).
+
 ### Stockpile and hand-harvesting
 
 - The stockpile is a map from `ResourceType` to amount, exposed read-only. It starts empty: the

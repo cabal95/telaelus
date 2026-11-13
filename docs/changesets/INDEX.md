@@ -79,6 +79,9 @@ Newest last. One line each; open the file for the full spec.
 - **2611122116-hud-overlays-and-inventory** - Replaces the text HUD with a top bar (raw resources as icons, launch
   progress), a hint overlay, an F3 debug overlay (off by default), and an I inventory panel, and
   names the kinds of UI modal, panel, and overlay.
+- **2611122136-field-detail-panel** - Clicking a resource field opens a field detail panel: the resource's name, a
+  picture of a full field drawn once at startup (per tree family for Wood), Remaining, and Worked
+  by.
 
 ## Adding a changeset
 

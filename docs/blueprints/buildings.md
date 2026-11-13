@@ -144,10 +144,10 @@ loop.
   `CurrentGhost()` reports the ghost (anchor, size, center, placeability, fields in range) for the
   current pointer, and `ResetBuildMode()` returns to no selection, facing North, and the real mouse
   (used by the `initMap` testing command).
-- Outside build mode, the placed building under the pointer gets a thin accent outline (a plate
-  over its footprint, unless the pointer is over UI), and a left click on it opens its detail
-  panel (see presentation.md); a left click on the world that hits no building closes a side
-  panel. The building the detail panel shows (`Focused`) keeps its outline until the panel
+- Outside build mode, the placed building under the pointer gets a thin accent outline (a
+  frame of four bars 0.14 units wide just outside its footprint, unless the pointer is over UI), and a left click on it opens its detail
+  panel (see presentation.md); a left click on the world that hits neither a building nor a
+  resource field (which opens its own panel, see resources.md) closes a panel. The building the detail panel shows (`Focused`) keeps its outline until the panel
   closes, so the player can tell which one they are looking at.
 - For an extractor, the ghost also shows its work area as a flat translucent disc of the work
   radius around the footprint center and highlights each field in range of a type it works.

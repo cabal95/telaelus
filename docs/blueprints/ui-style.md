@@ -14,7 +14,7 @@ rules and never sets its own colors or sizes. The code lives in `src/Game/Presen
 - **Modal**: centered over a dimmed backdrop; takes all input until it is used or dismissed. The
   build menu.
 - **Panel**: docked against the left edge below the top bar; captures only Escape, so the world
-  keeps its input. The building detail and the inventory.
+  keeps its input. The building detail, the field detail, and the inventory.
 - **Overlay**: part of the screen rather than something opened: always shown (the top bar),
   shown while it applies (the hint overlay, later notifications), or toggled by the player (the
   debug overlay). An overlay never takes keys and never closes anything.

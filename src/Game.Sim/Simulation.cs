@@ -214,6 +214,12 @@ public sealed partial class Simulation
         return _buildings.Find(b => x >= b.AnchorX && x < b.AnchorX + b.Width && z >= b.AnchorZ && z < b.AnchorZ + b.Depth);
     }
 
+    /// <summary>The switched-on extractors working a field right now (whose current field it is).</summary>
+    public List<Building> ExtractorsWorking(ResourceField field)
+    {
+        return _buildings.FindAll(b => b.Enabled && b.Def.IsExtractor && ReferenceEquals(b.CurrentField, field));
+    }
+
     /// <summary>
     /// Switches a building on or off. Switching off drops the work in hand: progress
     /// goes back to 0, and a processor's running cycle ends with its inputs returned to

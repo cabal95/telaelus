@@ -109,6 +109,23 @@ public class BuildingControlTests
     }
 
     [Fact]
+    public void ExtractorsWorking_ListsTheSwitchedOnExtractorsOnAField()
+    {
+        var sim = new Simulation();
+        ResourceField ore = SimTestHelpers.FieldAtMapCell(sim, 10, 9);
+        Building first = sim.Debug.PlaceBuilding(BuildingType.Mine, NearOreX, NearOreZ, Facing.North);
+        Building second = sim.Debug.PlaceBuilding(BuildingType.Mine, 40, 34, Facing.North);
+        sim.Debug.PlaceBuilding(BuildingType.Smelter, SimTestHelpers.ClearX, SimTestHelpers.ClearZ, Facing.North);
+        Assert.Empty(sim.ExtractorsWorking(ore));
+
+        SimTestHelpers.Ticks(sim, 1);
+        Assert.Equal(new[] { first, second }, sim.ExtractorsWorking(ore));
+
+        sim.SetBuildingEnabled(second.Id, false);
+        Assert.Equal(new[] { first }, sim.ExtractorsWorking(ore));
+    }
+
+    [Fact]
     public void BuildingAt_FindsTheBuildingCoveringACell()
     {
         var sim = new Simulation();

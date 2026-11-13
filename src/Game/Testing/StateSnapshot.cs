@@ -36,6 +36,8 @@ public static class StateSnapshot
             ["build"] = Build(root.Builder, root.Dialogs),
             ["hoveredBuilding"] = root.Builder.Hovered?.Id,
             ["focusedBuilding"] = root.Builder.Focused?.Id,
+            ["hoveredField"] = root.Builder.HoveredField?.Id,
+            ["focusedField"] = root.Builder.FocusedField?.Id,
             ["camera"] = new JsonObject
             {
                 ["zoom"] = Math.Round(root.Camera.ZoomLevel, 2)
@@ -110,6 +112,17 @@ public static class StateSnapshot
                 }
                 : null
         };
+        if (root.Dialogs.Current == root.FieldDetail && root.FieldDetail.Field is ResourceField field)
+        {
+            var fieldRows = new JsonObject();
+            foreach ((string name, string value) in root.FieldDetail.Rows)
+            {
+                fieldRows[RowKey(name)] = value;
+            }
+            ui["field"] = field.Id;
+            ui["title"] = ResourceDefs.For(field.Type).Name;
+            ui["rows"] = fieldRows;
+        }
         if (root.Dialogs.Current == root.Inventory)
         {
             var rows = new JsonArray();

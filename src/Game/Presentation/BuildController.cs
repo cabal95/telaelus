@@ -15,9 +15,10 @@ namespace Game.Presentation;
 /// placement command to the simulation on a left click. For an extractor, it also
 /// shows the work area as a translucent disc and highlights the matching fields
 /// in range. Placement itself is decided by the sim (CanPlace / TryPlace).
-/// Outside build mode, a placed building under the pointer gets a thin accent
-/// outline, and a left click on the world reports the building clicked
-/// (<see cref="BuildingClicked"/>) or that nothing was (<see cref="EmptyClicked"/>).
+/// Outside build mode, a placed building or resource field under the pointer gets a
+/// thin accent outline, and a left click on the world reports the building
+/// (<see cref="BuildingClicked"/>) or field (<see cref="FieldClicked"/>) clicked, or
+/// that nothing was (<see cref="EmptyClicked"/>).
 /// The pointer is the viewport mouse position, unless a scenario sets
 /// <see cref="PointerOverride"/> to a world point; that point is projected to the
 /// screen each frame and then goes through the same screen-to-ground ray.
@@ -42,14 +43,23 @@ public partial class BuildController : Node3D
     /// <summary>Raised on a left click on a placed building outside build mode.</summary>
     public event Action<Building>? BuildingClicked;
 
-    /// <summary>Raised on a left click on the world that hits no building, outside build mode.</summary>
+    /// <summary>Raised on a left click on a resource field outside build mode.</summary>
+    public event Action<ResourceField>? FieldClicked;
+
+    /// <summary>Raised on a left click on the world that hits no building or field, outside build mode.</summary>
     public event Action? EmptyClicked;
 
     /// <summary>The placed building under the pointer outside build mode, or null.</summary>
     public Building? Hovered { get; private set; }
 
-    private MeshInstance3D _hoverOutline = null!;
-    private MeshInstance3D _focusOutline = null!;
+    /// <summary>The resource field under the pointer outside build mode (when no building is), or null.</summary>
+    public ResourceField? HoveredField { get; private set; }
+
+    /// <summary>The field a detail panel shows; it keeps its outline while set.</summary>
+    public ResourceField? FocusedField { get; set; }
+
+    private Node3D _hoverOutline = null!;
+    private Node3D _focusOutline = null!;
 
     /// <summary>The building a detail panel shows; it keeps its outline while set.</summary>
     public Building? Focused { get; set; }
@@ -333,16 +343,34 @@ public partial class BuildController : Node3D
         return _sim.BuildingAt(x, z);
     }
 
-    private MeshInstance3D MakeOutline(string name, Material material)
+    /// <summary>The resource field covering the pointer's ground point, or null.</summary>
+    private ResourceField? FieldUnderPointer()
     {
-        var outline = new MeshInstance3D
+        if (!TryGetMouseGround(out Vector3 hit))
+        {
+            return null;
+        }
+        (int x, int z) = Simulation.CellAt(hit.X, hit.Z);
+        return _sim.FieldAt(x, z);
+    }
+
+    /// <summary>An outline: four thin accent bars, laid around a footprint by <see cref="ShowOutline"/>.</summary>
+    private Node3D MakeOutline(string name, Material material)
+    {
+        var outline = new Node3D
         {
             Name = name,
-            Mesh = new BoxMesh(),
-            MaterialOverride = material,
-            CastShadow = GeometryInstance3D.ShadowCastingSetting.Off,
             Visible = false
         };
+        for (int i = 0; i < 4; i++)
+        {
+            outline.AddChild(new MeshInstance3D
+            {
+                Mesh = new BoxMesh(),
+                MaterialOverride = material,
+                CastShadow = GeometryInstance3D.ShadowCastingSetting.Off
+            });
+        }
         AddChild(outline);
         return outline;
     }
@@ -355,28 +383,69 @@ public partial class BuildController : Node3D
     private void UpdateHover()
     {
         bool overUi = PointerOverride is null && GetViewport().GuiGetHoveredControl() is not null;
-        Hovered = Selected is null && !overUi ? BuildingUnderPointer() : null;
-        ShowOutline(_hoverOutline, Hovered != Focused ? Hovered : null);
-        ShowOutline(_focusOutline, Focused);
+        bool pointing = Selected is null && !overUi;
+        Hovered = pointing ? BuildingUnderPointer() : null;
+        HoveredField = pointing && Hovered is null ? FieldUnderPointer() : null;
+
+        ShowOutline(_focusOutline, Focused is not null ? Footprint(Focused) : FocusedField is not null ? Footprint(FocusedField) : null);
+        bool hoverIsFocused = (Hovered is not null && Hovered == Focused) || (HoveredField is not null && HoveredField == FocusedField);
+        ShowOutline(_hoverOutline, hoverIsFocused ? null
+            : Hovered is not null ? Footprint(Hovered)
+            : HoveredField is not null ? Footprint(HoveredField)
+            : null);
     }
 
-    private static void ShowOutline(MeshInstance3D outline, Building? building)
+    private static (Vector3 Center, float Width, float Depth) Footprint(Building building)
     {
-        outline.Visible = building is not null;
-        if (building is null)
+        return (building.Position, building.Width, building.Depth);
+    }
+
+    private static (Vector3 Center, float Width, float Depth) Footprint(ResourceField field)
+    {
+        return (field.Center, Simulation.FineCellsPerMapCell, Simulation.FineCellsPerMapCell);
+    }
+
+    /// <summary>
+    /// A thin frame just outside a footprint (its bars <see cref="OutlineWidth"/> wide,
+    /// starting <see cref="OutlineGap"/> outside the edge), or hidden for none.
+    /// </summary>
+    private static void ShowOutline(Node3D outline, (Vector3 Center, float Width, float Depth)? footprint)
+    {
+        outline.Visible = footprint is not null;
+        if (footprint is not (Vector3 center, float width, float depth))
         {
             return;
         }
-        const float Border = 0.12f;
-        ((BoxMesh)outline.Mesh).Size = new Vector3(building.Width + Border * 2, PlateHeight, building.Depth + Border * 2);
-        outline.Position = building.Position + new Vector3(0f, PlateHeight * 0.5f, 0f);
+        outline.Position = center + new Vector3(0f, PlateHeight * 0.5f, 0f);
+        float halfX = width * 0.5f + OutlineGap + OutlineWidth * 0.5f;
+        float halfZ = depth * 0.5f + OutlineGap + OutlineWidth * 0.5f;
+        float spanX = halfX * 2f + OutlineWidth;
+        float spanZ = halfZ * 2f;
+        // North and South bars run the full width (covering the corners); East and West fill between.
+        Place(outline.GetChild<MeshInstance3D>(0), new Vector3(0f, 0f, -halfZ), new Vector3(spanX, PlateHeight, OutlineWidth));
+        Place(outline.GetChild<MeshInstance3D>(1), new Vector3(0f, 0f, halfZ), new Vector3(spanX, PlateHeight, OutlineWidth));
+        Place(outline.GetChild<MeshInstance3D>(2), new Vector3(-halfX, 0f, 0f), new Vector3(OutlineWidth, PlateHeight, spanZ));
+        Place(outline.GetChild<MeshInstance3D>(3), new Vector3(halfX, 0f, 0f), new Vector3(OutlineWidth, PlateHeight, spanZ));
+
+        static void Place(MeshInstance3D bar, Vector3 position, Vector3 size)
+        {
+            bar.Position = position;
+            ((BoxMesh)bar.Mesh).Size = size;
+        }
     }
+
+    private const float OutlineWidth = 0.14f;
+    private const float OutlineGap = 0.04f;
 
     private void ClickWorld()
     {
         if (BuildingUnderPointer() is Building building)
         {
             BuildingClicked?.Invoke(building);
+        }
+        else if (FieldUnderPointer() is ResourceField field)
+        {
+            FieldClicked?.Invoke(field);
         }
         else
         {

@@ -24,6 +24,8 @@ public partial class GameRoot : Node3D
     private TopBar _topBar = null!;
     private HintOverlay _hint = null!;
     private InventoryPanel _inventory = null!;
+    private FieldDetail _fieldDetail = null!;
+    private FieldPictures _fieldPictures = null!;
     private DialogHost _dialogs = null!;
     private BuildMenu _buildMenu = null!;
     private BuildingDetail _buildingDetail = null!;
@@ -48,6 +50,7 @@ public partial class GameRoot : Node3D
     public TopBar TopBar => _topBar;
     public HintOverlay Hint => _hint;
     public InventoryPanel Inventory => _inventory;
+    public FieldDetail FieldDetail => _fieldDetail;
 
     public override void _Ready()
     {
@@ -88,6 +91,7 @@ public partial class GameRoot : Node3D
         _debug.Refresh(_sim, _perf);
         _dialogs.PanelTop = TopBar.Height;
         _buildController.Focused = _dialogs.Current == _buildingDetail ? _buildingDetail.Building : null;
+        _buildController.FocusedField = _dialogs.Current == _fieldDetail ? _fieldDetail.Field : null;
         UpdatePlacementTip();
     }
 
@@ -280,6 +284,11 @@ public partial class GameRoot : Node3D
             Name = "ResourceIcons"
         };
         AddChild(_icons);
+        _fieldPictures = new FieldPictures
+        {
+            Name = "FieldPictures"
+        };
+        AddChild(_fieldPictures);
         _dialogs = new DialogHost
         {
             Name = "Dialogs"
@@ -320,6 +329,14 @@ public partial class GameRoot : Node3D
         };
         _inventory.Initialize(_sim, _icons);
         _dialogs.Add(_inventory, "Inventory");
+
+        _fieldDetail = new FieldDetail
+        {
+            Name = "FieldDetail"
+        };
+        _fieldDetail.Initialize(_sim, _fieldPictures);
+        _dialogs.Add(_fieldDetail, "");
+        _buildController.FieldClicked += _fieldDetail.ShowField;
         // A click on the world that selects nothing closes a panel.
         _buildController.EmptyClicked += () =>
         {

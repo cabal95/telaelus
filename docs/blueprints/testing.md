@@ -69,6 +69,10 @@ pausing it and stepping frame by frame.
 - `ExtractorTests`: base speed, one unit per gather time over speed, nearest field, moving on
   after depletion, idling, resource type filtering, and two extractors sharing a field.
 - `ProductionTests`: Smelter and Refinery cycles, waiting for inputs, and recipe definitions.
+- `BuildingControlTests`: switching off (an extractor drops its unit in hand; a processor returns
+  its cycle's inputs), status and idle reasons, destroying (half the cost back, rounded up, plus a
+  running cycle's inputs; cells freed), `BuildingAt`, and `ExtractorsWorking` (the switched-on
+  extractors on a field).
 - `CostTests`: unlocking once the whole cost is held, by seeding and by hand gathering (kept
   when the stock runs out), placement
   deducting the cost, refusal with nothing deducted when locked, unaffordable, or blocked, free
@@ -138,11 +142,13 @@ pausing it and stepping frame by frame.
   `type`, `state` (`affordable`, `unaffordable`, or `undiscovered`), and `label`; while the
   detail panel is open, `building` (its id), `rows` (each shown status row, keyed in camel case:
   `power`, `state`, `inRange`, `workingOn`, `recipe`), `destroy` (the Destroy button's text), and
-  `turnDegrees`; while the inventory is open, `inventory`: its rows in order, each `type`,
+  `turnDegrees`; while the field detail panel is open, `field` (its id), `title`, and `rows`
+  (`remaining`, `workedBy`); while the inventory is open, `inventory`: its rows in order, each `type`,
   `amount`, and `section` (`raw` or `other`)); `buildings` (`id`, `type`, `anchor`, `facing`, `width`, `depth`,
   `currentField`, `enabled`, `status` (`working`, `idle`, or `off`), and `idleReason` or null);
   `hoveredBuilding` (the id of the building under the pointer outside build mode, or null);
   `focusedBuilding` (the id of the building the detail panel shows and outlines, or null);
+  `hoveredField` and `focusedField` (the same for resource fields);
   `camera` (`zoom`: world units across 720 pixels);
   `fields` (`id`, `type`, `mapCell`, `amount`, `stage`, `visibleModels`);
   `stockpile` (every resource); `unlockedBuildings` (type names, in enum order); and
@@ -229,6 +235,10 @@ pausing it and stepping frame by frame.
   presentation state, views mirroring the sim). Sim rules belong in the unit tests. Screenshot
   steps in a kept scenario are for manual runs; the test suite skips them.
 - **Current scenarios:** `boot` (the game starts; player at the center, nothing on the map),
+  `field-detail` (clicking a field opens its panel with its name, Remaining, and Worked by; the
+  field keeps its outline; two Mines show as "2 Mines" and Remaining falls as they dig; a
+  building and a Forest Wood field switch the panel; empty ground closes it; it closes when its
+  field depletes),
   `hud` (the debug overlay starts hidden and F3 toggles it; the top bar shows all eight raw
   resources with name tooltips and the launch progress; the hint overlay shows the harvest hint
   and its bar; I opens and closes the inventory with raw resources first; the inventory and a

@@ -59,17 +59,7 @@ public partial class HintOverlay : HudOverlay
         _name = UiTheme.MakeLabel("", UiTheme.BodySize);
         line.AddChild(_name);
 
-        _progress = new ProgressBar
-        {
-            MinValue = 0,
-            MaxValue = 1,
-            Step = 0,
-            ShowPercentage = false,
-            CustomMinimumSize = new Vector2(180f, 8f),
-            MouseFilter = MouseFilterEnum.Ignore
-        };
-        _progress.AddThemeStyleboxOverride("background", UiTheme.Box(UiTheme.Cell, 3));
-        _progress.AddThemeStyleboxOverride("fill", UiTheme.Box(UiTheme.Accent, 3));
+        _progress = StatusRows.MakeProgressBar(180f);
         column.AddChild(_progress);
     }
 

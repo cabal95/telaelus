@@ -60,15 +60,27 @@ public static class NodeModels
         [ResourceType.Wood] = TreeFamily("broadleaf")
     };
 
+    /// <summary>The tree families, by name (see <see cref="TreeFamilyOf"/>).</summary>
+    private static readonly Dictionary<string, ModelSpec> TreeFamilies = new()
+    {
+        ["conifer"] = TreeFamily("conifer"),
+        ["swamp"] = TreeFamily("swamp"),
+        ["broadleaf"] = TreeFamily("broadleaf")
+    };
+
     /// <summary>
-    /// The tree family each biome's Wood fields draw: conifers in Forest, swamp trees in
+    /// The tree family a biome's Wood fields draw: conifers in Forest, swamp trees in
     /// Swamp, and broadleaf trees in Grassland and anywhere else.
     /// </summary>
-    private static readonly Dictionary<BiomeType, ModelSpec> TreeFamilies = new()
+    public static string TreeFamilyOf(BiomeType biome)
     {
-        [BiomeType.Forest] = TreeFamily("conifer"),
-        [BiomeType.Swamp] = TreeFamily("swamp")
-    };
+        return biome switch
+        {
+            BiomeType.Forest => "conifer",
+            BiomeType.Swamp => "swamp",
+            _ => "broadleaf"
+        };
+    }
 
     private static ModelSpec TreeFamily(string family)
     {
@@ -95,9 +107,9 @@ public static class NodeModels
     public static (string Path, Transform3D Transform) Slot(
         ResourceType type, BiomeType biome, int seedId, float maxFootprint, float initialAmount, Vector3 slotPosition)
     {
-        if (type == ResourceType.Wood && TreeFamilies.TryGetValue(biome, out ModelSpec? family))
+        if (type == ResourceType.Wood)
         {
-            return Place(family, type, seedId, maxFootprint, initialAmount, slotPosition);
+            return Place(TreeFamilies[TreeFamilyOf(biome)], type, seedId, maxFootprint, initialAmount, slotPosition);
         }
         if (!Specs.TryGetValue(type, out ModelSpec? spec))
         {

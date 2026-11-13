@@ -19,14 +19,12 @@ public partial class BuildingDetail : Dialog
 
     private Simulation _sim = null!;
     private TurntableView _turntable = null!;
-    private GridContainer _rows = null!;
+    private StatusRows _rows = null!;
     private ProgressBar _progress = null!;
     private Label _progressLabel = null!;
     private Button _toggle = null!;
     private Button _destroy = null!;
     private double _confirmLeft;
-    private readonly Dictionary<string, Label> _values = new();
-    private readonly Dictionary<string, Label> _names = new();
 
     public override DialogKind Kind => DialogKind.Panel;
 
@@ -36,9 +34,7 @@ public partial class BuildingDetail : Dialog
     public Building? Building { get; private set; }
 
     /// <summary>The status rows as shown (label to value), for the snapshot.</summary>
-    public IReadOnlyDictionary<string, string> Rows => _values
-        .Where(entry => entry.Value.Visible)
-        .ToDictionary(entry => entry.Key, entry => entry.Value.Text);
+    public IReadOnlyDictionary<string, string> Rows => _rows.Shown;
 
     /// <summary>The Destroy button's text (it reads "Confirm destroy" while waiting).</summary>
     public string DestroyText => _destroy.Text;
@@ -60,39 +56,12 @@ public partial class BuildingDetail : Dialog
         _turntable = new TurntableView();
         center.AddChild(_turntable);
 
-        _rows = new GridContainer
-        {
-            Columns = 2,
-            SizeFlagsHorizontal = SizeFlags.ExpandFill
-        };
-        _rows.AddThemeConstantOverride("h_separation", UiTheme.Padding);
-        _rows.AddThemeConstantOverride("v_separation", 2);
+        _rows = new StatusRows("Power", "State", "In range", "Working on", "Recipe");
         Body.AddChild(_rows);
-        foreach (string row in new[] { "Power", "State", "In range", "Working on", "Recipe" })
-        {
-            Label name = UiTheme.MakeLabel(row, UiTheme.SmallSize, UiTheme.TextDim);
-            Label value = UiTheme.MakeLabel("", UiTheme.SmallSize);
-            value.AutowrapMode = TextServer.AutowrapMode.WordSmart;
-            value.SizeFlagsHorizontal = SizeFlags.ExpandFill;
-            _rows.AddChild(name);
-            _rows.AddChild(value);
-            _names[row] = name;
-            _values[row] = value;
-        }
 
         _progressLabel = UiTheme.MakeLabel("Progress", UiTheme.SmallSize, UiTheme.TextDim);
         Body.AddChild(_progressLabel);
-        _progress = new ProgressBar
-        {
-            MinValue = 0,
-            MaxValue = 1,
-            Step = 0,
-            ShowPercentage = false,
-            CustomMinimumSize = new Vector2(0f, 8f),
-            MouseFilter = MouseFilterEnum.Ignore
-        };
-        _progress.AddThemeStyleboxOverride("background", UiTheme.Box(UiTheme.Cell, 3));
-        _progress.AddThemeStyleboxOverride("fill", UiTheme.Box(UiTheme.Accent, 3));
+        _progress = StatusRows.MakeProgressBar();
         Body.AddChild(_progress);
 
         Body.AddChild(new Control
@@ -153,8 +122,8 @@ public partial class BuildingDetail : Dialog
 
         BuildingDef def = building.Def;
         BuildingStatus status = _sim.BuildingStatusOf(building);
-        Set("Power", building.Enabled ? "On" : "Off");
-        Set("State", status.State == BuildingState.Working ? "Working" : "Idle: " + status.IdleReason);
+        _rows.Set("Power", building.Enabled ? "On" : "Off");
+        _rows.Set("State", status.State == BuildingState.Working ? "Working" : "Idle: " + status.IdleReason);
 
         float progress = 0f;
         if (def.IsExtractor)
@@ -168,25 +137,25 @@ public partial class BuildingDetail : Dialog
                     // The field count, then what those fields hold in all.
                     .Select(entry => $"{ResourceDefs.For(entry.type).Name} {entry.inType.Count}"
                         + $" ({Mathf.CeilToInt(entry.inType.Sum(f => f.Amount))})"));
-            Set("In range", inRange);
+            _rows.Set("In range", inRange);
 
             ResourceField? field = building.CurrentField is { Depleted: false } current ? current : null;
             // Only a building that works more than one type says which it is on.
-            Set("Working on", def.Works.Count > 1
+            _rows.Set("Working on", def.Works.Count > 1
                 ? field is null ? "nothing" : $"{ResourceDefs.For(field.Type).Name} ({Mathf.CeilToInt(field.Amount)} left)"
                 : null);
             if (field is not null && ResourceDefs.For(field.Type).GatherSeconds is float seconds)
             {
                 progress = building.Progress / (seconds / def.Speed);
             }
-            Set("Recipe", null);
+            _rows.Set("Recipe", null);
         }
         else
         {
-            Set("In range", null);
-            Set("Working on", null);
+            _rows.Set("In range", null);
+            _rows.Set("Working on", null);
             Recipe? recipe = building.Recipe;
-            Set("Recipe", recipe is null ? null : RecipeText(recipe));
+            _rows.Set("Recipe", recipe is null ? null : RecipeText(recipe));
             if (recipe is not null && building.Crafting)
             {
                 progress = building.Progress / recipe.CycleTime;
@@ -204,14 +173,6 @@ public partial class BuildingDetail : Dialog
         {
             _confirmLeft -= delta;
         }
-    }
-
-    private void Set(string row, string? value)
-    {
-        bool shown = value is not null;
-        _names[row].Visible = shown;
-        _values[row].Visible = shown;
-        _values[row].Text = value ?? "";
     }
 
     private static string RecipeText(Recipe recipe)

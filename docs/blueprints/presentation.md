@@ -61,6 +61,16 @@ ui-style.md. There is no text HUD; the screen holds:
 - **Debug overlay** (`DebugOverlay`, F3, hidden at start): the world line for exploring (for
   example `seed 1234   Highlands / Rock   chunk (1, -2)   cell (87, -101)`) and the performance
   line (see Performance below), in the top-left corner below the top bar, behind everything else.
+- **Field detail panel** (`FieldDetail`, a panel): opened by clicking a resource field outside
+  build mode (see resources.md). Its title is the resource's name ("Iron Ore"). Below it, a still
+  180-unit picture of a full field of that deposit from `FieldPictures`, which draws one at
+  startup per deposit (all five slots of a stand-in field with a fixed id and its biome's starting
+  amount, placed by the map's own slot rules) and per tree family for Wood, so the picture shows
+  the trees the field's biome grows; the biome only picks the picture. Then the status rows,
+  refreshed every frame: Remaining ("212 / 250", the amount left and the starting amount, with a
+  bar of the fraction left) and Worked by (the switched-on extractors working it now, as
+  "2 Mines", or "nothing"). The UI shows no biome and no gather speeds. The panel closes itself
+  when its field depletes. Its field keeps the hover outline while it is open.
 - **Inventory** (`InventoryPanel`, a panel titled "Inventory"): I opens and closes it. Every
   resource, including those at 0, as its icon and "Iron (23)": raw resources first (deposits, then
   terrain-sourced) in table order, a thin rule, then the refined ones. Like every panel, opening it

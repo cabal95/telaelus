@@ -80,7 +80,9 @@ public static class PictureStage
             // Fit the model's outline as this camera sees it: project every vertex onto the
             // view's right and up axes, then center on that outline. A bounding box would
             // leave a leaning model (the water drop) off-center.
-            (Vector2 min, Vector2 max) = ScreenExtent(modelPath, yawDegrees, basis);
+            (Mesh mesh, Transform3D transform) = ModelLibrary.Mesh(modelPath);
+            Transform3D placed = new Transform3D(new Basis(Vector3.Up, Mathf.DegToRad(yawDegrees)), Vector3.Zero) * transform;
+            (Vector2 min, Vector2 max) = ScreenExtent(new[] { (mesh, placed) }, basis);
             Vector2 middle = (min + max) * 0.5f;
             target = basis.X * middle.X + basis.Y * middle.Y;
             Vector2 extent = max - min;
@@ -100,24 +102,63 @@ public static class PictureStage
     }
 
     /// <summary>
-    /// The model's extent on the view plane of a camera with the given basis: every
-    /// vertex, turned by the model's yaw, projected onto the camera's right and up axes.
+    /// Stages several meshes together, each at its own transform (a field's slots), with a
+    /// camera at the game camera's angle fitted to their outline as it sees them, plus a
+    /// margin.
     /// </summary>
-    private static (Vector2 Min, Vector2 Max) ScreenExtent(string modelPath, float yawDegrees, Basis basis)
+    public static void FillMeshes(Node parent, IReadOnlyList<(Mesh Mesh, Transform3D Transform)> parts)
     {
-        (Mesh mesh, Transform3D transform) = ModelLibrary.Mesh(modelPath);
-        Transform3D placed = new Transform3D(new Basis(Vector3.Up, Mathf.DegToRad(yawDegrees)), Vector3.Zero) * transform;
+        var sun = new DirectionalLight3D
+        {
+            LightEnergy = 1.0f
+        };
+        sun.RotationDegrees = new Vector3(-50, -40, 0);
+        parent.AddChild(sun);
+        foreach ((Mesh mesh, Transform3D transform) in parts)
+        {
+            parent.AddChild(new MeshInstance3D
+            {
+                Mesh = mesh,
+                Transform = transform
+            });
+        }
+
+        Vector3 back = CameraRig.Offset.Normalized();
+        Basis basis = Basis.LookingAt(-back, Vector3.Up);
+        (Vector2 min, Vector2 max) = ScreenExtent(parts, basis);
+        Vector2 middle = (min + max) * 0.5f;
+        Vector3 target = basis.X * middle.X + basis.Y * middle.Y;
+        Vector2 extent = max - min;
+        var camera = new Camera3D
+        {
+            Projection = Camera3D.ProjectionType.Orthogonal,
+            Size = Mathf.Max(extent.X, extent.Y) * 1.12f,
+            Current = true
+        };
+        parent.AddChild(camera);
+        camera.Transform = new Transform3D(basis, target + back * 30f);
+    }
+
+    /// <summary>
+    /// The extent of placed meshes on the view plane of a camera with the given basis:
+    /// every vertex projected onto the camera's right and up axes.
+    /// </summary>
+    private static (Vector2 Min, Vector2 Max) ScreenExtent(IEnumerable<(Mesh Mesh, Transform3D Transform)> parts, Basis basis)
+    {
         var min = new Vector2(float.MaxValue, float.MaxValue);
         var max = new Vector2(float.MinValue, float.MinValue);
-        for (int surface = 0; surface < mesh.GetSurfaceCount(); surface++)
+        foreach ((Mesh mesh, Transform3D placed) in parts)
         {
-            var vertices = mesh.SurfaceGetArrays(surface)[(int)Mesh.ArrayType.Vertex].AsVector3Array();
-            foreach (Vector3 vertex in vertices)
+            for (int surface = 0; surface < mesh.GetSurfaceCount(); surface++)
             {
-                Vector3 p = placed * vertex;
-                var onScreen = new Vector2(p.Dot(basis.X), p.Dot(basis.Y));
-                min = min.Min(onScreen);
-                max = max.Max(onScreen);
+                var vertices = mesh.SurfaceGetArrays(surface)[(int)Mesh.ArrayType.Vertex].AsVector3Array();
+                foreach (Vector3 vertex in vertices)
+                {
+                    Vector3 p = placed * vertex;
+                    var onScreen = new Vector2(p.Dot(basis.X), p.Dot(basis.Y));
+                    min = min.Min(onScreen);
+                    max = max.Max(onScreen);
+                }
             }
         }
         return (min, max);
