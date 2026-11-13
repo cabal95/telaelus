@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Text;
+using Game.Presentation.Ui;
 using Game.Sim;
 using Godot;
 
@@ -8,10 +9,11 @@ namespace Game.Presentation;
 /// <summary>
 /// Minimal heads-up display: resource totals (deposits on one line, refined goods on
 /// the next), the diagnostics line, the performance line (colored by headroom; F3
-/// hides it), launch progress, the current build selection, and a harvest hint. Pure
-/// presentation; it only reads simulation state and the performance monitor.
+/// hides it), launch progress, and a harvest hint with its progress bar. Drawn at the
+/// UI scale. Pure presentation; it only reads simulation state and the performance
+/// monitor. Building lives in the build menu, not here.
 /// </summary>
-public partial class Hud : CanvasLayer
+public partial class Hud : UiLayer
 {
     private static readonly Color TextColor = new(0.92f, 0.94f, 0.92f);
     private static readonly Color Good = new(0.55f, 0.92f, 0.55f);
@@ -30,12 +32,14 @@ public partial class Hud : CanvasLayer
 
     public override void _Ready()
     {
+        base._Ready();
         var lines = new VBoxContainer
         {
-            Position = new Vector2(16f, 12f)
+            Position = new Vector2(16f, 12f),
+            MouseFilter = Control.MouseFilterEnum.Ignore
         };
         lines.AddThemeConstantOverride("separation", 0);
-        AddChild(lines);
+        Root.AddChild(lines);
         _label = MakeLabel();
         _perfLabel = MakeLabel();
         _lowerLabel = MakeLabel();
@@ -73,19 +77,9 @@ public partial class Hud : CanvasLayer
         _perfLabel.AddThemeColorOverride("font_color", share < 0.5 ? Good : share < 0.8 ? Tight : Over);
     }
 
-    /// <summary>The build keys, in key order.</summary>
-    private static readonly (string Key, BuildingType Type)[] BuildKeys =
-    {
-        ("1", BuildingType.Mine),
-        ("2", BuildingType.LumberCamp),
-        ("3", BuildingType.Smelter),
-        ("4", BuildingType.Refinery),
-        ("5", BuildingType.OilWell)
-    };
-
     private const int ProgressBarWidth = 10;
 
-    public void Refresh(Simulation sim, BuildingType? selectedBuild, Facing facing, int fieldsInRange)
+    public void Refresh(Simulation sim)
     {
         IReadOnlyDictionary<ResourceType, float> stockpile = sim.Stockpile;
         ResourceField? harvestTarget = sim.HarvestTarget;
@@ -112,40 +106,6 @@ public partial class Hud : CanvasLayer
             text.Append("   (launched: ").Append(shipsLaunched).Append(')');
         }
 
-        if (selectedBuild is not null)
-        {
-            BuildingDef def = BuildingDefs.For(selectedBuild.Value);
-            text.Append("\nBuild: ").Append(def.Name).Append(" (");
-            AppendCost(text, stockpile, def);
-            text.Append(")   facing ").Append(facing);
-            if (def.IsExtractor)
-            {
-                text.Append("   fields in range: ").Append(fieldsInRange);
-            }
-            text.Append("   (left-click to place, R to rotate, Esc to cancel)");
-        }
-        else
-        {
-            text.Append("\nBuild:");
-            bool any = false;
-            foreach ((string key, BuildingType type) in BuildKeys)
-            {
-                if (!sim.IsUnlocked(type))
-                {
-                    continue;
-                }
-                BuildingDef def = BuildingDefs.For(type);
-                text.Append("  [").Append(key).Append("] ").Append(def.Name).Append(" (");
-                AppendCost(text, stockpile, def);
-                text.Append(')');
-                any = true;
-            }
-            if (!any)
-            {
-                text.Append("  nothing yet: gather resources to unlock buildings");
-            }
-        }
-
         if (harvestTarget is not null)
         {
             text.Append("\n[E] harvest ").Append(ResourceDefs.For(harvestTarget.Type).Name).Append("  ");
@@ -153,24 +113,6 @@ public partial class Hud : CanvasLayer
         }
 
         _lowerLabel.Text = text.ToString();
-    }
-
-    /// <summary>
-    /// A building's cost as "25 Wood, 15 Stone", each amount the stockpile is short of
-    /// marked with what it holds, as "15 Stone (have 3)".
-    /// </summary>
-    private static void AppendCost(StringBuilder text, IReadOnlyDictionary<ResourceType, float> stockpile, BuildingDef def)
-    {
-        for (int i = 0; i < def.Cost.Count; i++)
-        {
-            ResourceAmount cost = def.Cost[i];
-            int have = Amount(stockpile, cost.Type);
-            text.Append(i == 0 ? "" : ", ").Append((int)cost.Amount).Append(' ').Append(ResourceDefs.For(cost.Type).Name);
-            if (have < cost.Amount)
-            {
-                text.Append(" (have ").Append(have).Append(')');
-            }
-        }
     }
 
     /// <summary>A text progress bar, as "[####------]".</summary>

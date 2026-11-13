@@ -59,6 +59,8 @@
         { "$ref": "#/definitions/hold" },
         { "$ref": "#/definitions/aimAt" },
         { "$ref": "#/definitions/click" },
+        { "$ref": "#/definitions/clickUi" },
+        { "$ref": "#/definitions/hoverUi" },
         { "$ref": "#/definitions/wait" },
         { "$ref": "#/definitions/pause" },
         { "$ref": "#/definitions/resume" },
@@ -329,6 +331,40 @@
       "additionalProperties": false,
       "properties": {
         "click": { "type": "object", "maxProperties": 0 },
+        "comment": { "$ref": "#/definitions/comment" }
+      }
+    },
+    "clickUi": {
+      "description": "Move the pointer over a named UI control (as \"buildMenu/Mine\" or \"buildMenu/close\") and click it; released at the start of the next frame.",
+      "type": "object",
+      "required": ["clickUi"],
+      "additionalProperties": false,
+      "properties": {
+        "clickUi": {
+          "type": "object",
+          "required": ["id"],
+          "additionalProperties": false,
+          "properties": {
+            "id": { "type": "string" }
+          }
+        },
+        "comment": { "$ref": "#/definitions/comment" }
+      }
+    },
+    "hoverUi": {
+      "description": "Move the pointer over a named UI control, so its hover state and tooltip show.",
+      "type": "object",
+      "required": ["hoverUi"],
+      "additionalProperties": false,
+      "properties": {
+        "hoverUi": {
+          "type": "object",
+          "required": ["id"],
+          "additionalProperties": false,
+          "properties": {
+            "id": { "type": "string" }
+          }
+        },
         "comment": { "$ref": "#/definitions/comment" }
       }
     },

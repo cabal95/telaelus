@@ -1,3 +1,4 @@
+using Game.Presentation.Ui;
 using Game.Sim;
 using Game.Testing;
 using Godot;
@@ -20,6 +21,8 @@ public partial class GameRoot : Node3D
     private BuildingViews _buildingViews = null!;
     private BuildController _buildController = null!;
     private Hud _hud = null!;
+    private OverlayHost _overlays = null!;
+    private BuildMenu _buildMenu = null!;
     private TerrainView _terrainView = null!;
     private PerfMonitor _perf = null!;
     private DirectionalLight3D _light = null!;
@@ -32,6 +35,8 @@ public partial class GameRoot : Node3D
     public ResourceFieldViews FieldViews => _fieldViews;
     public TerrainView Terrain => _terrainView;
     public PerfMonitor Perf => _perf;
+    public OverlayHost Overlays => _overlays;
+    public BuildMenu BuildMenu => _buildMenu;
 
     public override void _Ready()
     {
@@ -43,11 +48,13 @@ public partial class GameRoot : Node3D
 
     public override void _Process(double delta)
     {
-        Vector2 moveDir = ReadWorldMoveInput();
+        // A modal overlay takes all input, so the world reads none.
+        bool worldInput = !_overlays.CapturesWorldInput;
+        Vector2 moveDir = worldInput ? ReadWorldMoveInput() : Vector2.Zero;
         _sim.Intent = new PlayerIntent
         {
             Move = moveDir,
-            Harvest = Input.IsPhysicalKeyPressed(Key.E)
+            Harvest = worldInput && Input.IsPhysicalKeyPressed(Key.E)
         };
 
         int steps = _clock.Advance(delta);
@@ -65,11 +72,8 @@ public partial class GameRoot : Node3D
         _light.DirectionalShadowMaxDistance = _camera.ViewDistance + _camera.Size;
         _fieldViews.Sync(_sim, _terrainView);
         _buildingViews.Sync(_sim.Buildings);
-        _hud.Refresh(
-            _sim,
-            _buildController.Selected,
-            _buildController.Facing,
-            _buildController.FieldsInRange);
+        _hud.Refresh(_sim);
+        UpdatePlacementTip();
         _hud.RefreshPerf(_perf);
     }
 
@@ -107,6 +111,30 @@ public partial class GameRoot : Node3D
         {
             _hud.ShowPerf = !_hud.ShowPerf;
         }
+        else if (@event is InputEventKey b && b.Pressed && !b.Echo && b.PhysicalKeycode == Key.B)
+        {
+            OpenBuildMenu();
+        }
+    }
+
+    /// <summary>Opens the build menu, leaving build mode.</summary>
+    public void OpenBuildMenu()
+    {
+        _buildController.Cancel();
+        _overlays.Open(_buildMenu);
+    }
+
+    /// <summary>Shows the placement tooltip beside the pointer while a building is selected.</summary>
+    private void UpdatePlacementTip()
+    {
+        if (_buildController.Selected is null || _overlays.CapturesWorldInput)
+        {
+            _overlays.PlacementTip.HideTip();
+            return;
+        }
+        // Below and to the right of the pointer, clear of the ghost under it.
+        Vector2 point = _overlays.ToUi(_buildController.PointerScreen()) + new Vector2(28f, 28f);
+        _overlays.PlacementTip.ShowAt(point, _buildController.PlacementLines(), _overlays.UiSize);
     }
 
     /// <summary>
@@ -210,5 +238,22 @@ public partial class GameRoot : Node3D
             Name = "Hud"
         };
         AddChild(_hud);
+
+        var pictures = new BuildingPictures
+        {
+            Name = "BuildingPictures"
+        };
+        AddChild(pictures);
+        _overlays = new OverlayHost
+        {
+            Name = "Overlays"
+        };
+        AddChild(_overlays);
+        _buildMenu = new BuildMenu
+        {
+            Name = "BuildMenu"
+        };
+        _buildMenu.Initialize(_sim, _buildController, pictures);
+        _overlays.Add(_buildMenu, "Buildings");
     }
 }

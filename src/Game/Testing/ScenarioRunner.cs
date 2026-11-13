@@ -51,6 +51,13 @@ public partial class ScenarioRunner : Node
             return;
         }
 
+        // A headless window is 64 x 64 and ignores --resolution; give it the scenario size so
+        // overlays lay out and UI clicks land as they do in a windowed run.
+        if (DisplayServer.GetName() == "headless")
+        {
+            root.GetWindow().Size = new Vector2I(1280, 720);
+        }
+
         var runner = new ScenarioRunner
         {
             Name = "ScenarioRunner",

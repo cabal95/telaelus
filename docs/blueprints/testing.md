@@ -95,12 +95,17 @@ pausing it and stepping frame by frame.
     `{ anchor }`.
   - Other setup: `placeBuilding` `{ type, anchor, facing? }` (the spatial placement rule, free
     and whether or not unlocked), `teleportPlayer` `{ x, z }`, `seedStockpile` `{ type, amount }`
-    (unlocks any building whose whole cost is then held; scenarios that place by key and click seed first), `cameraZoom` `{ size }` (the camera's zoom: world units across 720 pixels
+    (unlocks any building whose whole cost is then held; scenarios that place through the menu and a click seed first), `cameraZoom` `{ size }` (the camera's zoom: world units across 720 pixels
     of window height, so at the 1280 x 720 scenario resolution it is the visible world height).
   - Input: `press` (key down now, up at the start of the next frame), `keyDown`, `keyUp`, `hold`
     `{ key, frames }` (down, wait, up), `aimAt` `{ cell: [x, z] }` (a fine cell's center) or
-    `{ world: [x, z] }`, and `click` `{}` (left button at the aim, up the next frame). Keys are
-    Godot `Key` names (`R`, `E`, `Key1`, `Escape`).
+    `{ world: [x, z] }`, `click` `{}` (left button at the aim, up the next frame), `clickUi`
+    `{ id }` (moves the pointer over a registered UI control and clicks it, released the next
+    frame), and `hoverUi` `{ id }` (moves the pointer over one, so its hover state and tooltip
+    show). Keys are Godot `Key` names (`R`, `E`, `B`, `Escape`). UI ids are an overlay's id and a
+    control's name: `buildMenu/<BuildingType>` for a cell and `<overlay>/close` for the Close
+    button. UI pointer events go straight to the viewport (`PushInput`), so they reach the GUI in
+    headless runs too.
   - Time and capture: `wait` (frames), `screenshot` (label; records a snapshot and saves the next
     drawn frame as `NN-<label>.png`, taking one frame), `snapshot` (label; records state only).
   - Pause: `pause` `{}`, `resume` `{}`, and `step` `{ frames }` (see "Pause and frame stepping").
@@ -121,7 +126,10 @@ pausing it and stepping frame by frame.
   [x, z], `harvestTarget` field id or null, `harvestProgress` (0 to 1), the `terrain`, `biome`, and `feature` under the player,
   and their `chunk` [x, z]); `build` (null when not in build
   mode, else `selected`, `facing`, `fieldsInRange`, and `ghost`: `anchor`, `width`, `depth`,
-  `placeable` (the spot), `affordable` (the cost), or null); `buildings` (`id`, `type`, `anchor`, `facing`, `width`, `depth`,
+  `placeable` (the spot), `affordable` (the cost), or null, and `tooltip`: the placement
+  tooltip's lines, or null); `ui` (`open`: the open overlay's id or null, `tooltip`: the hover
+  tooltip's lines or null, and while the build menu is open, its `cells` in display order, each
+  `type`, `state` (`affordable`, `unaffordable`, or `undiscovered`), and `label`); `buildings` (`id`, `type`, `anchor`, `facing`, `width`, `depth`,
   `currentField`); `fields` (`id`, `type`, `mapCell`, `amount`, `stage`, `visibleModels`);
   `stockpile` (every resource); `unlockedBuildings` (type names, in enum order); and
   `shipsLaunched`. New checks are added as snapshot fields.
@@ -154,7 +162,9 @@ pausing it and stepping frame by frame.
   1280x720 -- --scenario=<file> [--output=<dir>] [--no-screenshots]`.
 - Headless, state only: `<godot.editor> --headless --path src/Game --fixed-fps 30 --
   --scenario=<file> [--output=<dir>]`. Headless implies `--no-screenshots`, which turns each
-  `screenshot` into a `snapshot`.
+  `screenshot` into a `snapshot`. A headless window is 64 x 64 and ignores `--resolution`, so
+  the scenario runner sizes it to 1280 x 720, and overlays lay out and UI clicks land as they do
+  windowed.
 - Relative `--scenario` and `--output` paths resolve against the repo root, because Godot changes
   its working directory to the project folder when given `--path`.
 - `--fixed-fps 30` matches the sim's 30 Hz tick, so every frame advances exactly one sim tick:
@@ -205,6 +215,10 @@ pausing it and stepping frame by frame.
   presentation state, views mirroring the sim). Sim rules belong in the unit tests. Screenshot
   steps in a kept scenario are for manual runs; the test suite skips them.
 - **Current scenarios:** `boot` (the game starts; player at the center, nothing on the map),
+  `build-menu` (B opens the menu with discovered buildings first, affordable in color and short
+  ones gray, then undiscovered ones; the modal menu stops the world; a hover shows the cost, none
+  for an undiscovered cell, which ignores clicks; B, Escape, and Close close it; clicking an
+  unaffordable discovered cell selects it with the placement tooltip),
   `build-rotate` (R rotates the Refinery ghost 2 x 3 to 3 x 2 and back), `place-at-mouse` (aim and
   click places a Mine at the expected anchor; the ghost counts an Iron Ore field in range),
   `harvest-input` (holding E fills the progress bar and harvests one Wood at 3 s, which does

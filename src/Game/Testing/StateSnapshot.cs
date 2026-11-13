@@ -1,6 +1,7 @@
 using System;
 using System.Text.Json.Nodes;
 using Game.Presentation;
+using Game.Presentation.Ui;
 using Game.Sim;
 using Godot;
 
@@ -32,7 +33,8 @@ public static class StateSnapshot
             ["world"] = World(sim, root.Terrain, root.FieldViews),
             ["perf"] = Perf(root.Perf),
             ["player"] = Player(sim),
-            ["build"] = Build(root.Builder),
+            ["build"] = Build(root.Builder, root.Overlays),
+            ["ui"] = Ui(root),
             ["buildings"] = Buildings(sim),
             ["fields"] = Fields(sim, root.FieldViews),
             ["stockpile"] = Stockpile(sim),
@@ -86,7 +88,51 @@ public static class StateSnapshot
         };
     }
 
-    private static JsonNode? Build(BuildController builder)
+    private static JsonObject Ui(GameRoot root)
+    {
+        var ui = new JsonObject
+        {
+            ["open"] = root.Overlays.Current?.Id,
+            ["tooltip"] = Lines(root.Overlays.HoverTip)
+        };
+        if (root.Overlays.Current == root.BuildMenu)
+        {
+            var cells = new JsonArray();
+            foreach ((BuildingType type, BuildCellState state, string label) in root.BuildMenu.Cells)
+            {
+                cells.Add(new JsonObject
+                {
+                    ["type"] = type.ToString(),
+                    ["state"] = Camel(state.ToString()),
+                    ["label"] = label
+                });
+            }
+            ui["cells"] = cells;
+        }
+        return ui;
+    }
+
+    /// <summary>A tooltip's lines while it shows, else null.</summary>
+    private static JsonArray? Lines(Tooltip tip)
+    {
+        if (!tip.Visible)
+        {
+            return null;
+        }
+        var lines = new JsonArray();
+        foreach (string line in tip.Lines)
+        {
+            lines.Add(line);
+        }
+        return lines;
+    }
+
+    private static string Camel(string name)
+    {
+        return char.ToLowerInvariant(name[0]) + name[1..];
+    }
+
+    private static JsonNode? Build(BuildController builder, OverlayHost overlays)
     {
         if (builder.Selected is not BuildingType selected)
         {
@@ -99,6 +145,7 @@ public static class StateSnapshot
             ["selected"] = selected.ToString(),
             ["facing"] = builder.Facing.ToString(),
             ["fieldsInRange"] = ghost?.FieldsInRange ?? 0,
+            ["tooltip"] = Lines(overlays.PlacementTip),
             ["ghost"] = ghost is BuildController.GhostInfo g
                 ? new JsonObject
                 {

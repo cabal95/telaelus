@@ -46,17 +46,36 @@ planned multiplayer feasible.
   `BuildingViews` (footprint-sized building boxes, created and freed as buildings appear and are
   removed), `PlayerView` (the character), `CameraRig` (the orthographic follow camera, with
   `ZoomTo` for a direct size),
-  `Hud` (a `CanvasLayer` label, outlined so it reads over bright ground, with resource totals, deposits on one line and refined goods on the
+  `Hud` (a UI layer of labels at the UI scale, outlined so they read over bright ground, with resource totals, deposits on one line and refined goods on the
   next, in table order and without terrain-sourced types until they can be collected; a
   diagnostics line for exploring (the seed or the bounded map's name, the biome and terrain under
   the player, their chunk, and their map cell, for example
   `seed 1234   Highlands / Rock   chunk (1, -2)   cell (87, -101)`); a performance line (see
-  Performance below; F3 hides it); launch status; the build line, which lists
-  the unlocked buildings with their keys and costs, or the selection with its cost, facing, and
-  fields in range, with each short cost amount marked as "(have n)"; and the harvest hint with a
-  text progress bar toward the next unit), and `BuildController` (build-mode selection and
-  rotation, the footprint ghost, the extractor work-area disc and field highlights, and the place
-  command).
+  Performance below; F3 hides it); launch status; and the harvest hint with a
+  text progress bar toward the next unit; it has no build text), `BuildController` (build-mode
+  selection and rotation, the footprint ghost, the extractor work-area disc and field highlights,
+  and the place command), and the `OverlayHost` with the build menu and tooltips (below).
+
+### UI: the build menu and placement tooltip
+
+The UI's look and the overlay rules are in ui-style.md.
+
+- **Build menu** (`BuildMenu`, a modal overlay titled "Buildings"): B opens it (leaving build
+  mode) and B, Escape, the Close button, or a click on the backdrop closes it. Its body is a grid
+  of 112-unit square cells, as many columns as fit, scrolling when taller than the panel allows.
+  Discovered buildings (`IsUnlocked`) come first, then undiscovered ones, each group by name.
+  A discovered cell shows the building's picture and name, in full color when affordable and in
+  grayscale when not; an undiscovered cell shows its silhouette labeled "Undiscovered" in the dim
+  text color. Hovering a cell outlines it; a discovered cell also shows its cost tooltip, while
+  an undiscovered one shows none, so its cost stays a mystery. Clicking a discovered cell,
+  affordable or not, closes the menu and selects the building for placement, so the player can
+  position it while materials build up; clicking an undiscovered cell does nothing. The cells
+  refresh while the menu is open, so a cell turns from gray to color as the stock arrives.
+- **Placement tooltip:** while a building is selected (and no modal overlay is open), a tooltip
+  follows the pointer 28 units below and to the right of it, clear of the ghost: the building's
+  name in the accent color, its cost (short amounts marked), fields in range for an extractor,
+  and the dim hint "R rotate   Esc cancel". The ghost itself shows the facing (the model is
+  turned) and whether the spot is open and affordable (green or red).
 
 ### Asset and model pipeline
 

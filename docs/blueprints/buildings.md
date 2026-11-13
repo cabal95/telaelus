@@ -113,8 +113,9 @@ loop.
   hangs over a wellhead at the front, with a crank, a counterweight, and a small tank, yellow and
   black). The front marks the facing, so a
   rotated building reads as rotated.
-- `BuildController` drives build mode: keys 1 Mine, 2 Lumber Camp, 3 Smelter, 4 Refinery, 5 Oil Well
-  (the key of a locked building does nothing); 0 or Escape cancels; R rotates the facing. The ghost is a translucent copy of the selected building's
+- `BuildController` drives build mode: a building is selected from the build menu (B; see
+  presentation.md), and only an unlocked one can be (`Select`); Escape cancels; R rotates the
+  facing. The ghost is a translucent copy of the selected building's
   model, turned to the chosen facing, over a thin plate covering the exact footprint; it is placed
   at the anchor whose footprint center is nearest the mouse's ground point, and every surface of
   it is tinted green when placeable and affordable, red when not. Left-click issues the placement command.
@@ -126,10 +127,10 @@ loop.
   (used by the `initMap` testing command).
 - For an extractor, the ghost also shows its work area as a flat translucent disc of the work
   radius around the footprint center and highlights each field in range of a type it works.
-- The HUD shows the resource totals, the launch progress and prompt, and the build line: with
-  nothing selected, the unlocked buildings with their keys and costs (or a note that gathering
-  unlocks them); with a selection, its cost, facing, and for an extractor, the count of fields in
-  range. A cost amount the stockpile is short of shows what it holds, as "15 Stone (have 3)".
+- The build menu lists every building (discovered first, then undiscovered silhouettes), and
+  while placing, a tooltip beside the pointer shows the building's name, its cost, and for an
+  extractor, the count of fields in range. A cost amount the stockpile is short of shows what it
+  holds, as "15 Stone (have 3)". See presentation.md and ui-style.md.
 
 ## Related
 

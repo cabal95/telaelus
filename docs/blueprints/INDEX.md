@@ -28,6 +28,9 @@ Read this index to find the right area, then open that blueprint for the detail.
 - **[art-style.md](art-style.md)** - How every asset looks and is built: the low-poly flat-color
   look, the view assets are judged from, the shared palette, scale, ground levels and cell-model
   rules, variants, sources, and naming.
+- **[ui-style.md](ui-style.md)** - How on-screen UI looks and behaves: the color and size
+  tokens and shared theme, the UI scale, the modal and side-panel overlay positions and their
+  input rules, and the shared buttons, cells, tooltips, and building pictures.
 - **[testing.md](testing.md)** - The engine-free sim unit tests and the seam check, JSON
   scenarios (commands, snapshot, running, output), the headless integration tests, and the live
   control channel with pause and frame stepping.

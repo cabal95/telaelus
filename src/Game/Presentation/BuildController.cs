@@ -1,12 +1,14 @@
 using System.Collections.Generic;
+using Game.Presentation.Ui;
 using Game.Sim;
 using Godot;
 
 namespace Game.Presentation;
 
 /// <summary>
-/// Handles build mode: selecting a building type with the number keys, rotating
-/// with R (keys 1 Mine, 2 Lumber Camp, 3 Smelter, 4 Refinery, 5 Oil Well), showing a ghost of the selected building centered on the mouse (a
+/// Handles build mode: a building type selected from the build menu
+/// (<see cref="Select"/>), rotating with R, cancelling with Escape, showing a ghost
+/// of the selected building centered on the mouse (a
 /// translucent copy of its model, tinted green or red, over a plate covering the
 /// exact footprint), and issuing a
 /// placement command to the simulation on a left click. For an extractor, it also
@@ -275,38 +277,58 @@ public partial class BuildController : Node3D
     {
         switch (key)
         {
-            case Key.Key1:
-                Select(BuildingType.Mine);
-                break;
-            case Key.Key2:
-                Select(BuildingType.LumberCamp);
-                break;
-            case Key.Key3:
-                Select(BuildingType.Smelter);
-                break;
-            case Key.Key4:
-                Select(BuildingType.Refinery);
-                break;
-            case Key.Key5:
-                Select(BuildingType.OilWell);
-                break;
             case Key.R:
                 Facing = (Facing)(((int)Facing + 1) % 4);
                 break;
-            case Key.Key0:
             case Key.Escape:
-                Selected = null;
+                Cancel();
                 break;
         }
     }
 
-    /// <summary>Selects a building; the key of a locked building does nothing.</summary>
-    private void Select(BuildingType type)
+    /// <summary>Selects a building for placement; a locked building cannot be selected.</summary>
+    public void Select(BuildingType type)
     {
         if (_sim.IsUnlocked(type))
         {
             Selected = type;
         }
+    }
+
+    /// <summary>Leaves build mode (the facing is kept).</summary>
+    public void Cancel()
+    {
+        Selected = null;
+    }
+
+    /// <summary>The pointer's screen position: the projected override, or the mouse.</summary>
+    public Vector2 PointerScreen()
+    {
+        return PointerOverride is Vector3 world
+            ? _camera.UnprojectPosition(world)
+            : GetViewport().GetMousePosition();
+    }
+
+    /// <summary>
+    /// The placement tooltip's lines while a building is selected: its name, its cost
+    /// (short amounts marked), fields in range for an extractor, and the key hint.
+    /// </summary>
+    public List<TipLine> PlacementLines()
+    {
+        var lines = new List<TipLine>();
+        if (Selected is not BuildingType type)
+        {
+            return lines;
+        }
+        BuildingDef def = BuildingDefs.For(type);
+        lines.Add(new TipLine(def.Name, UiTheme.Accent));
+        lines.AddRange(BuildMenu.CostLines(_sim, type));
+        if (def.IsExtractor)
+        {
+            lines.Add(new TipLine($"Fields in range: {FieldsInRange}"));
+        }
+        lines.Add(new TipLine("R rotate   Esc cancel", UiTheme.TextDim));
+        return lines;
     }
 
     private void TryPlaceAtMouse()
@@ -338,9 +360,7 @@ public partial class BuildController : Node3D
     {
         hit = Vector3.Zero;
 
-        Vector2 mouse = PointerOverride is Vector3 world
-            ? _camera.UnprojectPosition(world)
-            : GetViewport().GetMousePosition();
+        Vector2 mouse = PointerScreen();
         Vector3 origin = _camera.ProjectRayOrigin(mouse);
         Vector3 direction = _camera.ProjectRayNormal(mouse);
         if (Mathf.Abs(direction.Y) < 0.0001f)

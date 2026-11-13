@@ -68,6 +68,9 @@ Newest last. One line each; open the file for the full spec.
 - **2611121827-building-costs-and-gather-rates** - Gathering takes one unit at a time over a gather time per
   deposit, base extractors work at 0.75x hand speed, processors at half an extractor's pace, and
   buildings cost resources and unlock once their materials have been held.
+- **2611122002-ui-style-and-build-menu** - Starts the UI style blueprint (tokens, theme, UI scale, modal and side-panel
+  overlays) and replaces the HUD's build line with a build menu on B (discovered buildings in
+  color or gray, undiscovered silhouettes, cost tooltips) and a placement tooltip.
 
 ## Adding a changeset
 

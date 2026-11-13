@@ -35,6 +35,7 @@ public sealed class CommandExecutor
 
     // Keys this executor has pressed, for the snapshot's held-key list.
     private readonly HashSet<Key> _touchedKeys = new();
+    private readonly List<InputEvent> _pendingUiReleases = new();
 
     private int _waitFrames;
     private int _stepFrames;
@@ -104,6 +105,14 @@ public sealed class CommandExecutor
             return;
         }
 
+        if (_pendingUiReleases.Count > 0)
+        {
+            foreach (InputEvent release in _pendingUiReleases)
+            {
+                PushUi(release);
+            }
+            _pendingUiReleases.Clear();
+        }
         if (_pendingReleases.Count > 0)
         {
             foreach (InputEvent release in _pendingReleases)
@@ -309,6 +318,34 @@ public sealed class CommandExecutor
         return StepOutcome.Ok;
     }
 
+    /// <summary>
+    /// Moves the pointer over a registered UI control and presses the left button there;
+    /// released at the start of the next frame. Fails when the control is not on screen.
+    /// </summary>
+    public StepOutcome ClickUi(string id)
+    {
+        if (_root.Overlays.Find(id) is not Control control)
+        {
+            return new StepOutcome(false, $"no visible UI control '{id}'");
+        }
+        Vector2 screen = _root.Overlays.ScreenCenter(control);
+        PushUi(MotionEvent(screen));
+        PushUi(MouseEvent(screen, true));
+        _pendingUiReleases.Add(MouseEvent(screen, false));
+        return StepOutcome.Ok;
+    }
+
+    /// <summary>Moves the pointer over a registered UI control (its hover state and tooltip follow).</summary>
+    public StepOutcome HoverUi(string id)
+    {
+        if (_root.Overlays.Find(id) is not Control control)
+        {
+            return new StepOutcome(false, $"no visible UI control '{id}'");
+        }
+        PushUi(MotionEvent(_root.Overlays.ScreenCenter(control)));
+        return StepOutcome.Ok;
+    }
+
     // ---- Time and capture ----------------------------------------------
 
     /// <summary>Lets frames pass; while paused, that means stepping them.</summary>
@@ -457,6 +494,24 @@ public sealed class CommandExecutor
             Keycode = key,
             PhysicalKeycode = key,
             Pressed = pressed
+        };
+    }
+
+    /// <summary>
+    /// Delivers a pointer event straight to the viewport, so the GUI picks and hovers by
+    /// it in headless runs too (where events parsed through Input never reach the GUI).
+    /// </summary>
+    private void PushUi(InputEvent inputEvent)
+    {
+        _root.GetViewport().PushInput(inputEvent);
+    }
+
+    private static InputEventMouseMotion MotionEvent(Vector2 screen)
+    {
+        return new InputEventMouseMotion
+        {
+            Position = screen,
+            GlobalPosition = screen
         };
     }
 

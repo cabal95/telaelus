@@ -197,6 +197,16 @@ public sealed class ScenarioCommand
                     RequireObject(arg, name);
                     return e => e.Click();
                 }
+            case "clickUi":
+                {
+                    string id = Label(Required(arg, "id"), "id");
+                    return e => e.ClickUi(id);
+                }
+            case "hoverUi":
+                {
+                    string id = Label(Required(arg, "id"), "id");
+                    return e => e.HoverUi(id);
+                }
             case "pause":
                 {
                     RequireObject(arg, name);
