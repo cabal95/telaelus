@@ -24,6 +24,9 @@ public partial class OverlayHost : UiLayer
     public Tooltip HoverTip { get; private set; } = null!;
     public Tooltip PlacementTip { get; private set; } = null!;
 
+    /// <summary>Where a side panel's top may start, in UI units (below the HUD's text).</summary>
+    public float SideTop { get; set; }
+
     /// <summary>The open overlay, or null.</summary>
     public Overlay? Current { get; private set; }
 
@@ -41,6 +44,7 @@ public partial class OverlayHost : UiLayer
             Name = "Backdrop",
             Color = UiTheme.Backdrop,
             MouseFilter = Control.MouseFilterEnum.Stop,
+            MouseForcePassScrollEvents = false,
             Visible = false
         };
         _backdrop.SetAnchorsPreset(Control.LayoutPreset.FullRect);
@@ -88,7 +92,7 @@ public partial class OverlayHost : UiLayer
         _backdrop.Visible = overlay.Kind == OverlayKind.Modal;
         overlay.OnOpened();
         overlay.Refresh();
-        overlay.Place(UiSize);
+        overlay.Place(UiSize, SideTop);
     }
 
     public void Close(Overlay overlay)
@@ -165,7 +169,7 @@ public partial class OverlayHost : UiLayer
             Current.Refresh();
             if (Current is not null)
             {
-                Current.Place(UiSize);
+                Current.Place(UiSize, SideTop);
             }
         }
 

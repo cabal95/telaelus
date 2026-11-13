@@ -19,6 +19,9 @@ public sealed class Building
     public Facing Facing { get; }
     public Recipe? Recipe { get; }
 
+    /// <summary>Whether the building runs; a switched-off building does nothing (see Simulation.SetBuildingEnabled).</summary>
+    public bool Enabled { get; set; } = true;
+
     // Extractor: the field it is currently working (null when idle).
     public ResourceField? CurrentField { get; set; }
 

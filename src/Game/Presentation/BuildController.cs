@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Game.Presentation.Ui;
 using Game.Sim;
@@ -14,6 +15,9 @@ namespace Game.Presentation;
 /// placement command to the simulation on a left click. For an extractor, it also
 /// shows the work area as a translucent disc and highlights the matching fields
 /// in range. Placement itself is decided by the sim (CanPlace / TryPlace).
+/// Outside build mode, a placed building under the pointer gets a thin accent
+/// outline, and a left click on the world reports the building clicked
+/// (<see cref="BuildingClicked"/>) or that nothing was (<see cref="EmptyClicked"/>).
 /// The pointer is the viewport mouse position, unless a scenario sets
 /// <see cref="PointerOverride"/> to a world point; that point is projected to the
 /// screen each frame and then goes through the same screen-to-ground ray.
@@ -34,6 +38,21 @@ public partial class BuildController : Node3D
     private readonly List<MeshInstance3D> _highlights = new();
 
     public BuildingType? Selected { get; private set; }
+
+    /// <summary>Raised on a left click on a placed building outside build mode.</summary>
+    public event Action<Building>? BuildingClicked;
+
+    /// <summary>Raised on a left click on the world that hits no building, outside build mode.</summary>
+    public event Action? EmptyClicked;
+
+    /// <summary>The placed building under the pointer outside build mode, or null.</summary>
+    public Building? Hovered { get; private set; }
+
+    private MeshInstance3D _hoverOutline = null!;
+    private MeshInstance3D _focusOutline = null!;
+
+    /// <summary>The building a detail panel shows; it keeps its outline while set.</summary>
+    public Building? Focused { get; set; }
 
     public Facing Facing { get; private set; } = Facing.North;
 
@@ -111,6 +130,15 @@ public partial class BuildController : Node3D
         };
         AddChild(_workArea);
 
+        var outlineMaterial = new StandardMaterial3D
+        {
+            Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
+            ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
+            AlbedoColor = new Color(UiTheme.Accent, 0.55f)
+        };
+        _hoverOutline = MakeOutline("HoverOutline", outlineMaterial);
+        _focusOutline = MakeOutline("FocusOutline", outlineMaterial);
+
         _highlightMaterial = new StandardMaterial3D
         {
             Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
@@ -123,6 +151,7 @@ public partial class BuildController : Node3D
     {
         GhostInfo? ghost = CurrentGhost();
         FieldsInRange = ghost?.FieldsInRange ?? 0;
+        UpdateHover();
         if (Selected is null || ghost is null)
         {
             HideGhost();
@@ -194,7 +223,14 @@ public partial class BuildController : Node3D
         }
         else if (@event is InputEventMouseButton mb && mb.Pressed && mb.ButtonIndex == MouseButton.Left)
         {
-            TryPlaceAtMouse();
+            if (Selected is null)
+            {
+                ClickWorld();
+            }
+            else
+            {
+                TryPlaceAtMouse();
+            }
         }
     }
 
@@ -283,6 +319,68 @@ public partial class BuildController : Node3D
             case Key.Escape:
                 Cancel();
                 break;
+        }
+    }
+
+    /// <summary>The placed building under the pointer's ground point, or null.</summary>
+    private Building? BuildingUnderPointer()
+    {
+        if (!TryGetMouseGround(out Vector3 hit))
+        {
+            return null;
+        }
+        (int x, int z) = Simulation.CellAt(hit.X, hit.Z);
+        return _sim.BuildingAt(x, z);
+    }
+
+    private MeshInstance3D MakeOutline(string name, Material material)
+    {
+        var outline = new MeshInstance3D
+        {
+            Name = name,
+            Mesh = new BoxMesh(),
+            MaterialOverride = material,
+            CastShadow = GeometryInstance3D.ShadowCastingSetting.Off,
+            Visible = false
+        };
+        AddChild(outline);
+        return outline;
+    }
+
+    /// <summary>
+    /// Outlines the footprint of the building under the pointer outside build mode
+    /// (unless the pointer is over a UI control), and of the <see cref="Focused"/>
+    /// building, with a thin accent plate each.
+    /// </summary>
+    private void UpdateHover()
+    {
+        bool overUi = PointerOverride is null && GetViewport().GuiGetHoveredControl() is not null;
+        Hovered = Selected is null && !overUi ? BuildingUnderPointer() : null;
+        ShowOutline(_hoverOutline, Hovered != Focused ? Hovered : null);
+        ShowOutline(_focusOutline, Focused);
+    }
+
+    private static void ShowOutline(MeshInstance3D outline, Building? building)
+    {
+        outline.Visible = building is not null;
+        if (building is null)
+        {
+            return;
+        }
+        const float Border = 0.12f;
+        ((BoxMesh)outline.Mesh).Size = new Vector3(building.Width + Border * 2, PlateHeight, building.Depth + Border * 2);
+        outline.Position = building.Position + new Vector3(0f, PlateHeight * 0.5f, 0f);
+    }
+
+    private void ClickWorld()
+    {
+        if (BuildingUnderPointer() is Building building)
+        {
+            BuildingClicked?.Invoke(building);
+        }
+        else
+        {
+            EmptyClicked?.Invoke();
         }
     }
 

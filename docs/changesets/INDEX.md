@@ -71,6 +71,9 @@ Newest last. One line each; open the file for the full spec.
 - **2611122002-ui-style-and-build-menu** - Starts the UI style blueprint (tokens, theme, UI scale, modal and side-panel
   overlays) and replaces the HUD's build line with a build menu on B (discovered buildings in
   color or gray, undiscovered silhouettes, cost tooltips) and a placement tooltip.
+- **2611122022-building-detail-overlay** - Clicking a placed building opens a detail side panel: a turning picture, status
+  rows (power, state, fields in range, what it works on, recipe, progress), turn off or on, and
+  destroy (asks once) for half the cost back; the sim gains switching off, status, and destroying.
 
 ## Adding a changeset
 

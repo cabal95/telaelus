@@ -346,6 +346,36 @@ public sealed class CommandExecutor
         return StepOutcome.Ok;
     }
 
+    /// <summary>
+    /// Turns the mouse wheel over a registered UI control: positive ticks scroll down,
+    /// negative up, one press and release each.
+    /// </summary>
+    public StepOutcome ScrollUi(string id, int ticks)
+    {
+        if (_root.Overlays.Find(id) is not Control control)
+        {
+            return new StepOutcome(false, $"no visible UI control '{id}'");
+        }
+        Vector2 screen = _root.Overlays.ScreenCenter(control);
+        PushUi(MotionEvent(screen));
+        MouseButton button = ticks >= 0 ? MouseButton.WheelDown : MouseButton.WheelUp;
+        for (int i = 0; i < System.Math.Abs(ticks); i++)
+        {
+            foreach (bool pressed in new[] { true, false })
+            {
+                PushUi(new InputEventMouseButton
+                {
+                    ButtonIndex = button,
+                    Pressed = pressed,
+                    Factor = 1f,
+                    Position = screen,
+                    GlobalPosition = screen
+                });
+            }
+        }
+        return StepOutcome.Ok;
+    }
+
     // ---- Time and capture ----------------------------------------------
 
     /// <summary>Lets frames pass; while paused, that means stepping them.</summary>

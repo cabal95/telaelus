@@ -23,6 +23,10 @@ public partial class Hud : UiLayer
     private Label _label = null!;
     private Label _perfLabel = null!;
     private Label _lowerLabel = null!;
+    private VBoxContainer _lines = null!;
+
+    /// <summary>The bottom of the HUD's text in UI units, so a side panel can start below it.</summary>
+    public float Bottom => _lines.Position.Y + _lines.Size.Y;
 
     public bool ShowPerf
     {
@@ -33,19 +37,19 @@ public partial class Hud : UiLayer
     public override void _Ready()
     {
         base._Ready();
-        var lines = new VBoxContainer
+        _lines = new VBoxContainer
         {
             Position = new Vector2(16f, 12f),
             MouseFilter = Control.MouseFilterEnum.Ignore
         };
-        lines.AddThemeConstantOverride("separation", 0);
-        Root.AddChild(lines);
+        _lines.AddThemeConstantOverride("separation", 0);
+        Root.AddChild(_lines);
         _label = MakeLabel();
         _perfLabel = MakeLabel();
         _lowerLabel = MakeLabel();
-        lines.AddChild(_label);
-        lines.AddChild(_perfLabel);
-        lines.AddChild(_lowerLabel);
+        _lines.AddChild(_label);
+        _lines.AddChild(_perfLabel);
+        _lines.AddChild(_lowerLabel);
     }
 
     private static Label MakeLabel()

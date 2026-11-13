@@ -23,6 +23,7 @@ public partial class GameRoot : Node3D
     private Hud _hud = null!;
     private OverlayHost _overlays = null!;
     private BuildMenu _buildMenu = null!;
+    private BuildingDetail _buildingDetail = null!;
     private TerrainView _terrainView = null!;
     private PerfMonitor _perf = null!;
     private DirectionalLight3D _light = null!;
@@ -37,6 +38,7 @@ public partial class GameRoot : Node3D
     public PerfMonitor Perf => _perf;
     public OverlayHost Overlays => _overlays;
     public BuildMenu BuildMenu => _buildMenu;
+    public BuildingDetail BuildingDetail => _buildingDetail;
 
     public override void _Ready()
     {
@@ -73,6 +75,8 @@ public partial class GameRoot : Node3D
         _fieldViews.Sync(_sim, _terrainView);
         _buildingViews.Sync(_sim.Buildings);
         _hud.Refresh(_sim);
+        _overlays.SideTop = _hud.Bottom;
+        _buildController.Focused = _overlays.Current == _buildingDetail ? _buildingDetail.Building : null;
         UpdatePlacementTip();
         _hud.RefreshPerf(_perf);
     }
@@ -255,5 +259,21 @@ public partial class GameRoot : Node3D
         };
         _buildMenu.Initialize(_sim, _buildController, pictures);
         _overlays.Add(_buildMenu, "Buildings");
+
+        _buildingDetail = new BuildingDetail
+        {
+            Name = "BuildingDetail"
+        };
+        _buildingDetail.Initialize(_sim);
+        _overlays.Add(_buildingDetail, "");
+        _buildController.BuildingClicked += _buildingDetail.ShowBuilding;
+        // A click on the world that selects nothing closes a side panel.
+        _buildController.EmptyClicked += () =>
+        {
+            if (_overlays.Current is { Kind: OverlayKind.Side } side)
+            {
+                _overlays.Close(side);
+            }
+        };
     }
 }

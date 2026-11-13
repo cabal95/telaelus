@@ -101,10 +101,13 @@ pausing it and stepping frame by frame.
     `{ key, frames }` (down, wait, up), `aimAt` `{ cell: [x, z] }` (a fine cell's center) or
     `{ world: [x, z] }`, `click` `{}` (left button at the aim, up the next frame), `clickUi`
     `{ id }` (moves the pointer over a registered UI control and clicks it, released the next
-    frame), and `hoverUi` `{ id }` (moves the pointer over one, so its hover state and tooltip
-    show). Keys are Godot `Key` names (`R`, `E`, `B`, `Escape`). UI ids are an overlay's id and a
-    control's name: `buildMenu/<BuildingType>` for a cell and `<overlay>/close` for the Close
-    button. UI pointer events go straight to the viewport (`PushInput`), so they reach the GUI in
+    frame), `hoverUi` `{ id }` (moves the pointer over one, so its hover state and tooltip
+    show), and `scrollUi` `{ id, ticks }` (turns the wheel over one: positive ticks down,
+    negative up). Keys are Godot `Key` names (`R`, `E`, `B`, `Escape`). UI ids are an overlay's id and a
+    control's name: `buildMenu/<BuildingType>` for a cell, `buildingDetail/toggle` and
+    `buildingDetail/destroy` for the detail panel's actions, and `<overlay>/close` for the Close
+    button. Buttons act on release, the frame after a `clickUi`, so check their effect after
+    `wait` 2. UI pointer events go straight to the viewport (`PushInput`), so they reach the GUI in
     headless runs too.
   - Time and capture: `wait` (frames), `screenshot` (label; records a snapshot and saves the next
     drawn frame as `NN-<label>.png`, taking one frame), `snapshot` (label; records state only).
@@ -129,8 +132,15 @@ pausing it and stepping frame by frame.
   `placeable` (the spot), `affordable` (the cost), or null, and `tooltip`: the placement
   tooltip's lines, or null); `ui` (`open`: the open overlay's id or null, `tooltip`: the hover
   tooltip's lines or null, and while the build menu is open, its `cells` in display order, each
-  `type`, `state` (`affordable`, `unaffordable`, or `undiscovered`), and `label`); `buildings` (`id`, `type`, `anchor`, `facing`, `width`, `depth`,
-  `currentField`); `fields` (`id`, `type`, `mapCell`, `amount`, `stage`, `visibleModels`);
+  `type`, `state` (`affordable`, `unaffordable`, or `undiscovered`), and `label`; while the
+  detail panel is open, `building` (its id), `rows` (each shown status row, keyed in camel case:
+  `power`, `state`, `inRange`, `workingOn`, `recipe`), `destroy` (the Destroy button's text), and
+  `turnDegrees`); `buildings` (`id`, `type`, `anchor`, `facing`, `width`, `depth`,
+  `currentField`, `enabled`, `status` (`working`, `idle`, or `off`), and `idleReason` or null);
+  `hoveredBuilding` (the id of the building under the pointer outside build mode, or null);
+  `focusedBuilding` (the id of the building the detail panel shows and outlines, or null);
+  `camera` (`zoom`: world units across 720 pixels);
+  `fields` (`id`, `type`, `mapCell`, `amount`, `stage`, `visibleModels`);
   `stockpile` (every resource); `unlockedBuildings` (type names, in enum order); and
   `shipsLaunched`. New checks are added as snapshot fields.
 - **Input injection:** keys and mouse buttons go through `Input.ParseInputEvent` followed by
@@ -215,6 +225,10 @@ pausing it and stepping frame by frame.
   presentation state, views mirroring the sim). Sim rules belong in the unit tests. Screenshot
   steps in a kept scenario are for manual runs; the test suite skips them.
 - **Current scenarios:** `boot` (the game starts; player at the center, nothing on the map),
+  `building-detail` (clicking a building opens its side panel with the right status rows; the
+  player walks with it open; it turns the building off and on; clicking another building
+  switches it; empty ground, B, and Escape close it; Destroy asks once, then refunds half the
+  cost),
   `build-menu` (B opens the menu with discovered buildings first, affordable in color and short
   ones gray, then undiscovered ones; the modal menu stops the world; a hover shows the cost, none
   for an undiscovered cell, which ignores clicks; B, Escape, and Close close it; clicking an

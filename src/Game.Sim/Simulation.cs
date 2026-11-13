@@ -198,6 +198,152 @@ public sealed partial class Simulation
         return true;
     }
 
+    /// <summary>The building with an id, or null.</summary>
+    public Building? BuildingById(int id)
+    {
+        return _buildings.Find(b => b.Id == id);
+    }
+
+    /// <summary>The building whose footprint covers a fine cell, or null.</summary>
+    public Building? BuildingAt(int x, int z)
+    {
+        if (!_occupied.Contains((x, z)))
+        {
+            return null;
+        }
+        return _buildings.Find(b => x >= b.AnchorX && x < b.AnchorX + b.Width && z >= b.AnchorZ && z < b.AnchorZ + b.Depth);
+    }
+
+    /// <summary>
+    /// Switches a building on or off. Switching off drops the work in hand: progress
+    /// goes back to 0, and a processor's running cycle ends with its inputs returned to
+    /// the stockpile (fuel, once buildings burn it, will not be). False when there is
+    /// no such building.
+    /// </summary>
+    public bool SetBuildingEnabled(int id, bool enabled)
+    {
+        Building? building = BuildingById(id);
+        if (building is null)
+        {
+            return false;
+        }
+        if (building.Enabled && !enabled)
+        {
+            foreach (ResourceAmount input in RunningInputs(building))
+            {
+                AddToStockpile(input.Type, input.Amount);
+            }
+            building.Crafting = false;
+            building.Progress = 0f;
+        }
+        building.Enabled = enabled;
+        return true;
+    }
+
+    /// <summary>The inputs a processor's running cycle has consumed (none when idle or not a processor).</summary>
+    private static IReadOnlyList<ResourceAmount> RunningInputs(Building building)
+    {
+        return building.Crafting && building.Recipe is Recipe recipe
+            ? recipe.Inputs
+            : Array.Empty<ResourceAmount>();
+    }
+
+    /// <summary>
+    /// What a building would refund if destroyed now: half of each cost
+    /// amount, rounded up, plus the inputs of a processor's running cycle in full.
+    /// </summary>
+    public IReadOnlyList<ResourceAmount> DestroyRefund(Building building)
+    {
+        var refund = new Dictionary<ResourceType, float>();
+        foreach (ResourceAmount cost in building.Def.Cost)
+        {
+            Add(refund, cost.Type, Mathf.Ceil(cost.Amount * 0.5f));
+        }
+        foreach (ResourceAmount input in RunningInputs(building))
+        {
+            Add(refund, input.Type, input.Amount);
+        }
+        var list = new List<ResourceAmount>();
+        foreach ((ResourceType type, float amount) in refund)
+        {
+            list.Add(new ResourceAmount(type, amount));
+        }
+        return list;
+
+        static void Add(Dictionary<ResourceType, float> into, ResourceType type, float amount)
+        {
+            into.TryGetValue(type, out float current);
+            into[type] = current + amount;
+        }
+    }
+
+    /// <summary>
+    /// Destroys a building: removes it, frees its cells, and adds its refund
+    /// (<see cref="DestroyRefund"/>) to the stockpile. False when there is no such building.
+    /// </summary>
+    public bool TryDestroyBuilding(int id)
+    {
+        Building? building = BuildingById(id);
+        if (building is null)
+        {
+            return false;
+        }
+        foreach (ResourceAmount amount in DestroyRefund(building))
+        {
+            AddToStockpile(amount.Type, amount.Amount);
+        }
+        RemoveBuilding(building);
+        return true;
+    }
+
+    private void RemoveBuilding(Building building)
+    {
+        _buildings.Remove(building);
+        for (int x = building.AnchorX; x < building.AnchorX + building.Width; x++)
+        {
+            for (int z = building.AnchorZ; z < building.AnchorZ + building.Depth; z++)
+            {
+                _occupied.Remove((x, z));
+            }
+        }
+    }
+
+    /// <summary>
+    /// What a building is doing: Off when switched off; an extractor Works while it has a
+    /// field (or one in range to take up), else is Idle with "No fields in range"; a
+    /// processor Works during a cycle, else is Idle waiting for its missing inputs.
+    /// </summary>
+    public BuildingStatus BuildingStatusOf(Building building)
+    {
+        if (!building.Enabled)
+        {
+            return new BuildingStatus(BuildingState.Off, "Switched off");
+        }
+        if (building.Def.IsExtractor)
+        {
+            bool hasField = building.CurrentField is { Depleted: false } || NearestFieldInWorkArea(building) is not null;
+            return hasField
+                ? new BuildingStatus(BuildingState.Working, null)
+                : new BuildingStatus(BuildingState.Idle, "No fields in range");
+        }
+        if (building.Recipe is not Recipe recipe || building.Crafting)
+        {
+            return new BuildingStatus(BuildingState.Working, null);
+        }
+        var missing = new List<string>();
+        foreach (ResourceAmount input in recipe.Inputs)
+        {
+            _stockpile.TryGetValue(input.Type, out float have);
+            if (have < input.Amount)
+            {
+                missing.Add(ResourceDefs.For(input.Type).Name);
+            }
+        }
+        return missing.Count == 0
+            ? new BuildingStatus(BuildingState.Working, null)
+            : new BuildingStatus(BuildingState.Idle, "Waiting for " + string.Join(", ", missing));
+    }
+
     private Building AddBuilding(BuildingType type, int anchorX, int anchorZ, Facing facing)
     {
         var building = new Building(_nextBuildingId++, type, anchorX, anchorZ, facing, Recipes.For(type));
@@ -409,6 +555,10 @@ public sealed partial class Simulation
     {
         foreach (Building building in _buildings)
         {
+            if (!building.Enabled)
+            {
+                continue;
+            }
             if (building.Def.IsExtractor)
             {
                 StepExtractor(building, dt);

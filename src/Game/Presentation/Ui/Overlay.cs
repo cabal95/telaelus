@@ -40,6 +40,9 @@ public abstract partial class Overlay : PanelContainer
         Host = host;
         Visible = false;
         MouseFilter = MouseFilterEnum.Stop;
+        // Godot hands a wheel event the scroll body did not use (at the end of its range)
+        // up to the parent even through Stop; the panel keeps it from the world's zoom.
+        MouseForcePassScrollEvents = false;
 
         var column = new VBoxContainer();
         column.AddThemeConstantOverride("separation", UiTheme.Gap);
@@ -118,8 +121,12 @@ public abstract partial class Overlay : PanelContainer
         return Mathf.Min(width, uiSize.X - 2 * UiTheme.Padding);
     }
 
-    /// <summary>Sizes and positions the panel for its kind in a window of the given UI size.</summary>
-    public void Place(Vector2 uiSize)
+    /// <summary>
+    /// Sizes and positions the panel for its kind in a window of the given UI size. A
+    /// side panel starts below <paramref name="sideTop"/> (the HUD's text) and runs to the
+    /// bottom margin.
+    /// </summary>
+    public void Place(Vector2 uiSize, float sideTop)
     {
         float margin = UiTheme.Padding;
         if (Kind == OverlayKind.Modal)
@@ -136,8 +143,9 @@ public abstract partial class Overlay : PanelContainer
         else
         {
             float width = Mathf.Max(uiSize.X / 3f, 280f);
-            Size = new Vector2(width, uiSize.Y - 2 * margin);
-            Position = new Vector2(margin, margin);
+            float top = Mathf.Max(margin, sideTop + UiTheme.Gap);
+            Size = new Vector2(width, Mathf.Max(160f, uiSize.Y - top - margin));
+            Position = new Vector2(margin, top);
         }
     }
 }

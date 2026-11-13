@@ -184,14 +184,7 @@ public sealed partial class Simulation
                 throw new InvalidOperationException($"no building anchored at ({anchorX}, {anchorZ})");
             }
 
-            _sim._buildings.Remove(building);
-            for (int x = anchorX; x < anchorX + building.Width; x++)
-            {
-                for (int z = anchorZ; z < anchorZ + building.Depth; z++)
-                {
-                    _sim._occupied.Remove((x, z));
-                }
-            }
+            _sim.RemoveBuilding(building);
         }
 
         /// <summary>Moves the player to a world position on the ground.</summary>

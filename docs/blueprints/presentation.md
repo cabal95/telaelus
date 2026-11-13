@@ -71,6 +71,21 @@ The UI's look and the overlay rules are in ui-style.md.
   affordable or not, closes the menu and selects the building for placement, so the player can
   position it while materials build up; clicking an undiscovered cell does nothing. The cells
   refresh while the menu is open, so a cell turns from gray to color as the stock arrives.
+- **Building detail panel** (`BuildingDetail`, a side panel): opened by clicking a placed building
+  outside build mode, and switched to another building by clicking it. Its title is the
+  building's name. Below it, a `TurntableView` shows the building turning about its center once
+  every 18 seconds in a 180-unit square: a live view of the picture stage (ui-style.md), drawn
+  only while visible. Then the status rows, refreshed every frame: Power (On or Off), State
+  ("Working" or "Idle: " and the reason), In range (extractors: the fields in the work area
+  counted by type, each followed by what those fields hold in all, as "Iron Ore 2 (500), Stone 1
+  (250)", or "none"), Working on (only for a building that works
+  more than one type: the current field's type and amount left, as "Stone (212 left)"), Recipe
+  (processors: "1 Iron Ore to 1 Iron, 16 s"), and a progress bar (toward the next unit, or
+  through the cycle). Then its actions: Turn off / Turn on, and Destroy, which shows its refund
+  ("Destroy (refund 13 Wood, 8 Stone)") and asks once: the first click changes it to "Confirm
+  destroy" for 3 seconds, and a second click in that time destroys the building. The panel closes
+  itself when its building is gone. While it is open, its building keeps the hover outline in
+  the world.
 - **Placement tooltip:** while a building is selected (and no modal overlay is open), a tooltip
   follows the pointer 28 units below and to the right of it, clear of the ghost: the building's
   name in the accent color, its cost (short amounts marked), fields in range for an extractor,

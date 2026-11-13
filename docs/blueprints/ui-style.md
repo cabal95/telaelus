@@ -55,7 +55,10 @@ even while the game is paused) owns them:
 - One overlay is open at a time; opening one closes the other.
 - Escape closes the open overlay (the host takes it before the world sees it).
 - The game keeps running while an overlay is open (no pause: the sim is the future co-op server).
-- Clicks and the mouse wheel over a panel never reach the world.
+- Clicks and the mouse wheel over a panel never reach the world. A scroll body uses the wheel
+  first, and once it is at the end of its range the panel keeps the event (Godot otherwise
+  passes unused wheel events up through a stopping control, `MouseForcePassScrollEvents`), so
+  the world never zooms behind a panel or the modal backdrop.
 
 There are two positions:
 
@@ -66,7 +69,9 @@ There are two positions:
   harvest input while one is open (`OverlayHost.CapturesWorldInput`). Clicking the backdrop
   closes it. The build menu is modal.
 - **Side panel:** against the left edge with a 16 px margin, a third of the window wide (at least
-  280 UI units), the full height less the margins, with no backdrop. It captures only Escape, so
+  280 UI units), from just below the HUD's text to the bottom margin (so it never covers the
+  resource totals), with no backdrop; when its content is taller, the body scrolls and the Close
+  button stays pinned. It captures only Escape, so
   movement, harvesting, zoom over the world, and every other key still reach the game. It closes
   by its Close button, Escape, a click on the world that selects nothing, or another overlay
   opening.
@@ -75,6 +80,14 @@ There are two positions:
 
 - **Buttons:** `Cell` background with 16 px side padding; hover lightens to `CellHover` and draws
   the 2 px `Accent` outline; pressed darkens to `CellPressed`. Destructive buttons use `Danger`.
+- **Destructive buttons** ask once: the first click changes the label to a confirmation ("Confirm
+  destroy") for 3 seconds, and only a second click in that time acts. Buttons act on release.
+- **Status rows:** a two-column grid of 14 px label (in `TextDim`) and value (in `Text`) pairs;
+  rows that do not apply are hidden.
+- **Progress bars:** 8 units tall, a `Cell` track with an `Accent` fill, radius 3.
+- **Turntables** (`TurntableView`): a live 180-unit view of a building turning once every 18
+  seconds on a `Cell` box, drawn from the same stage as the building pictures and only while
+  visible.
 - **Grid cells:** a `Cell` box with a picture over a centered 14 px label; hover draws the
   `Accent` outline.
 - **Tooltips** (`Tooltip`): a `Panel` box with 8 px padding holding 14 px text lines, each

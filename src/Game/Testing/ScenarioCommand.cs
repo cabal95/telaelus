@@ -207,6 +207,12 @@ public sealed class ScenarioCommand
                     string id = Label(Required(arg, "id"), "id");
                     return e => e.HoverUi(id);
                 }
+            case "scrollUi":
+                {
+                    string id = Label(Required(arg, "id"), "id");
+                    int ticks = Int(Required(arg, "ticks"), "ticks");
+                    return e => e.ScrollUi(id, ticks);
+                }
             case "pause":
                 {
                     RequireObject(arg, name);

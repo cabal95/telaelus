@@ -94,6 +94,25 @@ loop.
 - All buildings operate on the shared global stockpile. This is the abstract stand-in for logistics
   until vehicles and belts are added.
 
+### Switching off, status, and destroying
+
+- `Building.Enabled` is true when placed. `SetBuildingEnabled(id, enabled)` switches a building.
+  A switched-off building does nothing, and switching off drops the work in hand: progress goes
+  back to 0, and a processor's running cycle ends with its inputs returned to the stockpile
+  (fuel, once buildings burn it, will not be). Switched back on, it starts a whole unit or cycle
+  over.
+- `BuildingStatusOf(building)` gives a `BuildingStatus`: a state (`Working`, `Idle`, `Off`) and,
+  when not working, a reason. Off reads "Switched off". An extractor works while it has a field
+  or one in range to take up, else is idle with "No fields in range". A processor works during a
+  cycle, else is idle "Waiting for" its missing inputs ("Waiting for Crude Oil").
+- `TryDestroyBuilding(id)` removes a building, frees its cells, and adds its refund
+  (`DestroyRefund`) to the stockpile: half of each cost amount, rounded up (a Mine's 25 Wood and
+  15 Stone return 13 Wood and 8 Stone), plus the inputs of a processor's running cycle in full.
+  Fuel, once buildings burn it, will not be refunded. The refund follows the type, so a building
+  placed for free through the debug tools refunds the same.
+- `BuildingAt(x, z)` finds the building covering a fine cell, and `BuildingById(id)` finds one by
+  id.
+
 ### Ship launch (win condition)
 
 - When the stockpile holds at least `LaunchRocketFuelCost` (500 Rocket Fuel) and `LaunchIronCost`
@@ -125,6 +144,11 @@ loop.
   `CurrentGhost()` reports the ghost (anchor, size, center, placeability, fields in range) for the
   current pointer, and `ResetBuildMode()` returns to no selection, facing North, and the real mouse
   (used by the `initMap` testing command).
+- Outside build mode, the placed building under the pointer gets a thin accent outline (a plate
+  over its footprint, unless the pointer is over UI), and a left click on it opens its detail
+  panel (see presentation.md); a left click on the world that hits no building closes a side
+  panel. The building the detail panel shows (`Focused`) keeps its outline until the panel
+  closes, so the player can tell which one they are looking at.
 - For an extractor, the ghost also shows its work area as a flat translucent disc of the work
   radius around the footprint center and highlights each field in range of a type it works.
 - The build menu lists every building (discovered first, then undiscovered silhouettes), and

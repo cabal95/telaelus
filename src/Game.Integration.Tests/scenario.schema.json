@@ -61,6 +61,7 @@
         { "$ref": "#/definitions/click" },
         { "$ref": "#/definitions/clickUi" },
         { "$ref": "#/definitions/hoverUi" },
+        { "$ref": "#/definitions/scrollUi" },
         { "$ref": "#/definitions/wait" },
         { "$ref": "#/definitions/pause" },
         { "$ref": "#/definitions/resume" },
@@ -363,6 +364,24 @@
           "additionalProperties": false,
           "properties": {
             "id": { "type": "string" }
+          }
+        },
+        "comment": { "$ref": "#/definitions/comment" }
+      }
+    },
+    "scrollUi": {
+      "description": "Turn the mouse wheel over a named UI control: positive ticks scroll down, negative up.",
+      "type": "object",
+      "required": ["scrollUi"],
+      "additionalProperties": false,
+      "properties": {
+        "scrollUi": {
+          "type": "object",
+          "required": ["id", "ticks"],
+          "additionalProperties": false,
+          "properties": {
+            "id": { "type": "string" },
+            "ticks": { "type": "integer" }
           }
         },
         "comment": { "$ref": "#/definitions/comment" }

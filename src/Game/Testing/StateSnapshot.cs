@@ -34,6 +34,12 @@ public static class StateSnapshot
             ["perf"] = Perf(root.Perf),
             ["player"] = Player(sim),
             ["build"] = Build(root.Builder, root.Overlays),
+            ["hoveredBuilding"] = root.Builder.Hovered?.Id,
+            ["focusedBuilding"] = root.Builder.Focused?.Id,
+            ["camera"] = new JsonObject
+            {
+                ["zoom"] = Math.Round(root.Camera.ZoomLevel, 2)
+            },
             ["ui"] = Ui(root),
             ["buildings"] = Buildings(sim),
             ["fields"] = Fields(sim, root.FieldViews),
@@ -109,6 +115,18 @@ public static class StateSnapshot
             }
             ui["cells"] = cells;
         }
+        if (root.Overlays.Current == root.BuildingDetail && root.BuildingDetail.Building is Building building)
+        {
+            var rows = new JsonObject();
+            foreach ((string name, string value) in root.BuildingDetail.Rows)
+            {
+                rows[RowKey(name)] = value;
+            }
+            ui["building"] = building.Id;
+            ui["rows"] = rows;
+            ui["destroy"] = root.BuildingDetail.DestroyText;
+            ui["turnDegrees"] = Math.Round(root.BuildingDetail.TurnDegrees, 1);
+        }
         return ui;
     }
 
@@ -125,6 +143,18 @@ public static class StateSnapshot
             lines.Add(line);
         }
         return lines;
+    }
+
+    /// <summary>A status row's label as a snapshot key: "In range" becomes "inRange".</summary>
+    private static string RowKey(string label)
+    {
+        string[] words = label.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var key = new System.Text.StringBuilder(words[0].ToLowerInvariant());
+        foreach (string word in words[1..])
+        {
+            key.Append(char.ToUpperInvariant(word[0])).Append(word[1..]);
+        }
+        return key.ToString();
     }
 
     private static string Camel(string name)
@@ -185,7 +215,10 @@ public static class StateSnapshot
                 ["facing"] = b.Facing.ToString(),
                 ["width"] = b.Width,
                 ["depth"] = b.Depth,
-                ["currentField"] = b.CurrentField?.Id
+                ["currentField"] = b.CurrentField?.Id,
+                ["enabled"] = b.Enabled,
+                ["status"] = Camel(sim.BuildingStatusOf(b).State.ToString()),
+                ["idleReason"] = sim.BuildingStatusOf(b).IdleReason
             });
         }
         return list;
