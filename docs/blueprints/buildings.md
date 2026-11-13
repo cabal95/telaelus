@@ -12,25 +12,37 @@ loop.
 
 - `BuildingType` has five values: **Mine**, **Lumber Camp**, **Smelter**, **Refinery**, **Oil Well**.
 - Each type has a `BuildingDef` (in `BuildingDefs`): a display name, a footprint in fine cells
-  (width along X, depth along Z when facing North), and for an extractor, the deposit types it
-  works (`Works`; a building is an extractor when the list is not empty) and its work radius.
+  (width along X, depth along Z when facing North), a cost, a speed, and for an extractor, the
+  deposit types it works (`Works`; a building is an extractor when the list is not empty) and its
+  work radius.
 
-  | Type        | Footprint | Works                                | Work radius |
-  |-------------|-----------|--------------------------------------|-------------|
-  | Mine        | 2 x 2     | Iron Ore, Copper Ore, Coal, Stone    | 6 units     |
-  | Lumber Camp | 2 x 2     | Wood                                 | 6 units     |
-  | Oil Well    | 2 x 2     | Crude Oil                            | 3 units     |
-  | Smelter     | 3 x 3     |                                      |             |
-  | Refinery    | 2 x 3     |                                      |             |
+  | Type        | Footprint | Cost                       | Works                             | Work radius |
+  |-------------|-----------|----------------------------|-----------------------------------|-------------|
+  | Lumber Camp | 2 x 2     | 15 Wood                    | Wood                              | 6 units     |
+  | Mine        | 2 x 2     | 25 Wood, 15 Stone          | Iron Ore, Copper Ore, Coal, Stone | 6 units     |
+  | Smelter     | 3 x 3     | 40 Stone, 15 Wood          |                                   |             |
+  | Oil Well    | 2 x 2     | 25 Iron, 20 Stone, 10 Wood | Crude Oil                         | 3 units     |
+  | Refinery    | 2 x 3     | 40 Iron, 30 Stone, 20 Wood |                                   |             |
 
   The Oil Well's short radius means it sits beside its seep.
+- **Costs** lean lightly on the real world: a building costs what most of it is made of (a Lumber
+  Camp is wood, a Smelter is a stone furnace), not every material it would really need. The
+  intended path is a Lumber Camp from hand-gathered Wood, a Mine from hand-gathered Stone, a
+  Smelter from the Mine's Stone, then the oil chain from the Smelter's Iron. Copper Ore and Coal
+  are in no cost yet.
+- **Speed**: every building is base level today, `BuildingDef.BaseSpeed` 0.75, so a base extractor
+  is slower than the player by hand. Its benefit is that it works unattended; two together
+  out-gather the player. Higher levels would raise the speed.
 
 - A `Recipe` has inputs, outputs (each a `ResourceAmount`), and a cycle time. Recipes are defined
   centrally:
-  - Extractors (Mine, Lumber Camp, Oil Well): no recipe; each pulls from a field at
-    `ExtractorRate` (5 per second).
-  - Smelter: 1 Iron Ore to 1 Iron, cycle 1 s.
-  - Refinery: 1 Crude Oil to 1 Rocket Fuel, cycle 2 s.
+  - Extractors (Mine, Lumber Camp, Oil Well): no recipe; each takes one unit at a time at the
+    deposit's gather time divided by its speed (at base speed: Wood 4 s, Stone and Coal 6 s, Iron
+    Ore and Copper Ore 8 s, Crude Oil 4 s).
+  - Smelter: 1 Iron Ore to 1 Iron, cycle 16 s.
+  - Refinery: 1 Crude Oil to 1 Rocket Fuel, cycle 8 s.
+  Processors run at half the pace of one base extractor, so one Mine keeps two Smelters busy and
+  one Oil Well two Refineries.
   These are placeholders until the production chain toward a ship (Steel Mill, Water into the
   Refinery, ship parts; see docs/game-plan.md) is built.
 
@@ -57,8 +69,15 @@ loop.
   overhangs water) is a new rule on that one definition.
 - An extractor may be placed with no matching field in its work area; it idles until one is in
   range. This allows planning ahead and later lets resources be created around a building.
-- `TryPlaceBuilding(type, anchorX, anchorZ, facing)` validates via `CanPlace`, then adds the
-  building and marks every footprint cell occupied. A building blocks player movement on its cells
+- **Unlocking**: a building is unlocked (`IsUnlocked`) once the stockpile has held its whole cost
+  at once (checked whenever an amount rises); it stays unlocked when the stock later runs short,
+  so it can still be selected while unaffordable. At the
+  start nothing is unlocked. `CanAfford` is whether the stockpile holds the whole cost now.
+- `TryPlaceBuilding(type, anchorX, anchorZ, facing)` is placement as the player does it: the spot
+  must pass `CanPlace` and the building must be unlocked and affordable. It deducts the cost, adds
+  the building, and marks every footprint cell occupied; a refused placement changes nothing.
+  There is no demolish yet, so no refund. `Debug.PlaceBuilding` places by `CanPlace` alone, free
+  and whether or not unlocked. A building blocks player movement on its cells
   for as long as it stands.
 
 ### Production
@@ -66,9 +85,9 @@ loop.
 - Each tick, every building steps.
 - An extractor works one field at a time: its current field, or if that is gone, the nearest
   non-depleted field of any type it works within its work area (distance from its footprint center
-  to the field's square, at most the work radius). It pulls `ExtractorRate` of that field's type
-  into the stockpile and clears
-  its current field when that field depletes. Several extractors may work the same field. With no
+  to the field's square, at most the work radius). It works toward one unit of that field's type
+  (`Progress`, in seconds, reset when it takes up a new field), adds the unit to the stockpile at
+  the gather time over its speed, and clears its current field when that field depletes. Several extractors may work the same field. With no
   field in range, it idles, and it picks up a field as soon as one is in range.
 - A processor, when idle, consumes its recipe inputs from the stockpile if available and starts a
   cycle, then adds the outputs when the cycle completes.
@@ -94,11 +113,11 @@ loop.
   hangs over a wellhead at the front, with a crank, a counterweight, and a small tank, yellow and
   black). The front marks the facing, so a
   rotated building reads as rotated.
-- `BuildController` drives build mode: keys 1 Mine, 2 Lumber Camp, 3 Smelter, 4 Refinery, 5 Oil Well; 0 or
-  Escape cancels; R rotates the facing. The ghost is a translucent copy of the selected building's
+- `BuildController` drives build mode: keys 1 Mine, 2 Lumber Camp, 3 Smelter, 4 Refinery, 5 Oil Well
+  (the key of a locked building does nothing); 0 or Escape cancels; R rotates the facing. The ghost is a translucent copy of the selected building's
   model, turned to the chosen facing, over a thin plate covering the exact footprint; it is placed
   at the anchor whose footprint center is nearest the mouse's ground point, and every surface of
-  it is tinted green when placeable, red when not. Left-click issues the placement command.
+  it is tinted green when placeable and affordable, red when not. Left-click issues the placement command.
 - The pointer is the viewport mouse position unless `PointerOverride` holds a world ground point
   (set by scenarios); that point is projected to the screen each frame and then goes through the
   same screen-to-ground ray, so aiming stays fixed on the ground while the camera moves.
@@ -107,8 +126,10 @@ loop.
   (used by the `initMap` testing command).
 - For an extractor, the ghost also shows its work area as a flat translucent disc of the work
   radius around the footprint center and highlights each field in range of a type it works.
-- The HUD shows the resource totals, the launch progress and prompt, the build selection with
-  its facing, and for an extractor, the count of fields in range.
+- The HUD shows the resource totals, the launch progress and prompt, and the build line: with
+  nothing selected, the unlocked buildings with their keys and costs (or a note that gathering
+  unlocks them); with a selection, its cost, facing, and for an extractor, the count of fields in
+  range. A cost amount the stockpile is short of shows what it holds, as "15 Stone (have 3)".
 
 ## Related
 

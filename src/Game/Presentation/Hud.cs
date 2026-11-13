@@ -73,16 +73,26 @@ public partial class Hud : CanvasLayer
         _perfLabel.AddThemeColorOverride("font_color", share < 0.5 ? Good : share < 0.8 ? Tight : Over);
     }
 
-    public void Refresh(
-        IReadOnlyDictionary<ResourceType, float> stockpile,
-        ResourceField? harvestTarget,
-        BuildingType? selectedBuild,
-        Facing facing,
-        int fieldsInRange,
-        bool canLaunch,
-        int shipsLaunched,
-        string diagnostics)
+    /// <summary>The build keys, in key order.</summary>
+    private static readonly (string Key, BuildingType Type)[] BuildKeys =
     {
+        ("1", BuildingType.Mine),
+        ("2", BuildingType.LumberCamp),
+        ("3", BuildingType.Smelter),
+        ("4", BuildingType.Refinery),
+        ("5", BuildingType.OilWell)
+    };
+
+    private const int ProgressBarWidth = 10;
+
+    public void Refresh(Simulation sim, BuildingType? selectedBuild, Facing facing, int fieldsInRange)
+    {
+        IReadOnlyDictionary<ResourceType, float> stockpile = sim.Stockpile;
+        ResourceField? harvestTarget = sim.HarvestTarget;
+        bool canLaunch = sim.CanLaunchShip();
+        int shipsLaunched = sim.ShipsLaunched;
+        string diagnostics = Diagnostics(sim);
+
         var text = new StringBuilder();
         AppendLine(text, stockpile, ResourceKind.Deposit);
         text.Append('\n');
@@ -105,7 +115,9 @@ public partial class Hud : CanvasLayer
         if (selectedBuild is not null)
         {
             BuildingDef def = BuildingDefs.For(selectedBuild.Value);
-            text.Append("\nBuild: ").Append(def.Name).Append("   facing ").Append(facing);
+            text.Append("\nBuild: ").Append(def.Name).Append(" (");
+            AppendCost(text, stockpile, def);
+            text.Append(")   facing ").Append(facing);
             if (def.IsExtractor)
             {
                 text.Append("   fields in range: ").Append(fieldsInRange);
@@ -114,15 +126,58 @@ public partial class Hud : CanvasLayer
         }
         else
         {
-            text.Append("\nBuild:  [1] Mine   [2] Lumber Camp   [3] Smelter   [4] Refinery   [5] Oil Well");
+            text.Append("\nBuild:");
+            bool any = false;
+            foreach ((string key, BuildingType type) in BuildKeys)
+            {
+                if (!sim.IsUnlocked(type))
+                {
+                    continue;
+                }
+                BuildingDef def = BuildingDefs.For(type);
+                text.Append("  [").Append(key).Append("] ").Append(def.Name).Append(" (");
+                AppendCost(text, stockpile, def);
+                text.Append(')');
+                any = true;
+            }
+            if (!any)
+            {
+                text.Append("  nothing yet: gather resources to unlock buildings");
+            }
         }
 
         if (harvestTarget is not null)
         {
-            text.Append("\n[E] harvest ").Append(ResourceDefs.For(harvestTarget.Type).Name);
+            text.Append("\n[E] harvest ").Append(ResourceDefs.For(harvestTarget.Type).Name).Append("  ");
+            AppendBar(text, sim.HarvestProgress);
         }
 
         _lowerLabel.Text = text.ToString();
+    }
+
+    /// <summary>
+    /// A building's cost as "25 Wood, 15 Stone", each amount the stockpile is short of
+    /// marked with what it holds, as "15 Stone (have 3)".
+    /// </summary>
+    private static void AppendCost(StringBuilder text, IReadOnlyDictionary<ResourceType, float> stockpile, BuildingDef def)
+    {
+        for (int i = 0; i < def.Cost.Count; i++)
+        {
+            ResourceAmount cost = def.Cost[i];
+            int have = Amount(stockpile, cost.Type);
+            text.Append(i == 0 ? "" : ", ").Append((int)cost.Amount).Append(' ').Append(ResourceDefs.For(cost.Type).Name);
+            if (have < cost.Amount)
+            {
+                text.Append(" (have ").Append(have).Append(')');
+            }
+        }
+    }
+
+    /// <summary>A text progress bar, as "[####------]".</summary>
+    private static void AppendBar(StringBuilder text, float progress)
+    {
+        int filled = Mathf.Clamp(Mathf.FloorToInt(progress * ProgressBarWidth), 0, ProgressBarWidth);
+        text.Append('[').Append('#', filled).Append('-', ProgressBarWidth - filled).Append(']');
     }
 
     /// <summary>

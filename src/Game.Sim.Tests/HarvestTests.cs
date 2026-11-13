@@ -27,7 +27,7 @@ public class HarvestTests
     }
 
     [Fact]
-    public void Harvest_PullsFromTheFieldIntoTheStockpile()
+    public void Harvest_TakesOneWholeUnitAtTheGatherTime()
     {
         var sim = new Simulation();
         ResourceField field = SimTestHelpers.FieldAtMapCell(sim, 10, 9);
@@ -37,11 +37,55 @@ public class HarvestTests
             Harvest = true
         };
 
-        SimTestHelpers.Ticks(sim, 30);
+        // Iron Ore takes 6 seconds a unit by hand.
+        SimTestHelpers.Seconds(sim, 5.9);
+        Assert.Equal(0f, SimTestHelpers.Stock(sim, ResourceType.IronOre));
+        Assert.InRange(sim.HarvestProgress, 0.95f, 1f);
 
-        // 10 per second for one second.
-        Assert.Equal(240f, field.Amount, 2);
-        Assert.Equal(10f, SimTestHelpers.Stock(sim, ResourceType.IronOre), 2);
+        SimTestHelpers.Seconds(sim, 0.2);
+        Assert.Equal(1f, SimTestHelpers.Stock(sim, ResourceType.IronOre));
+        Assert.Equal(249f, field.Amount);
+        Assert.InRange(sim.HarvestProgress, 0f, 0.05f);
+    }
+
+    [Fact]
+    public void Harvest_ReleasingDropsThePartialUnit()
+    {
+        var sim = new Simulation();
+        SimTestHelpers.Teleport(sim, 41.5f, 35f);
+        var harvest = new PlayerIntent
+        {
+            Harvest = true
+        };
+
+        sim.Intent = harvest;
+        SimTestHelpers.Seconds(sim, 5.0);
+        sim.Intent = default;
+        SimTestHelpers.Ticks(sim, 1);
+        Assert.Equal(0f, sim.HarvestProgress);
+
+        sim.Intent = harvest;
+        SimTestHelpers.Seconds(sim, 5.0);
+        Assert.Equal(0f, SimTestHelpers.Stock(sim, ResourceType.IronOre));
+    }
+
+    [Fact]
+    public void Harvest_ANewTargetDropsThePartialUnit()
+    {
+        var sim = new Simulation();
+        SimTestHelpers.Teleport(sim, 41.5f, 35f);
+        sim.Intent = new PlayerIntent
+        {
+            Harvest = true
+        };
+        SimTestHelpers.Seconds(sim, 3.0);
+        Assert.True(sim.HarvestProgress > 0f);
+
+        SimTestHelpers.Teleport(sim, 41.5f, 33f);
+        SimTestHelpers.Ticks(sim, 1);
+
+        Assert.Null(sim.HarvestTarget);
+        Assert.Equal(0f, sim.HarvestProgress);
     }
 
     [Fact]
@@ -49,9 +93,10 @@ public class HarvestTests
     {
         var sim = new Simulation();
         SimTestHelpers.Teleport(sim, 41.5f, 35f);
-        SimTestHelpers.Seconds(sim, 1.0);
+        SimTestHelpers.Seconds(sim, 7.0);
 
         Assert.Equal(0f, SimTestHelpers.Stock(sim, ResourceType.IronOre));
+        Assert.Equal(0f, sim.HarvestProgress);
     }
 
     [Fact]
@@ -59,18 +104,19 @@ public class HarvestTests
     {
         var sim = new Simulation();
         ResourceField field = SimTestHelpers.FieldAtMapCell(sim, 10, 9);
+        sim.Debug.SetFieldAmount(10, 9, 2f);
         SimTestHelpers.Teleport(sim, 41.5f, 35f);
         sim.Intent = new PlayerIntent
         {
             Harvest = true
         };
 
-        SimTestHelpers.Seconds(sim, 26.0);
+        SimTestHelpers.Seconds(sim, 12.5);
 
         Assert.True(field.Depleted);
         Assert.DoesNotContain(field, sim.Fields);
         Assert.Null(sim.FieldAt(41, 37));
         Assert.True(sim.IsWalkable(41, 37));
-        Assert.Equal(250f, SimTestHelpers.Stock(sim, ResourceType.IronOre), 2);
+        Assert.Equal(2f, SimTestHelpers.Stock(sim, ResourceType.IronOre));
     }
 }

@@ -52,6 +52,7 @@ public partial class BuildController : Node3D
         int Depth,
         Vector3 Center,
         bool Placeable,
+        bool Affordable,
         int FieldsInRange);
 
     private static readonly Color ValidColor = new(0.3f, 0.9f, 0.4f, 0.45f);
@@ -134,7 +135,7 @@ public partial class BuildController : Node3D
         ShowGhostModel(Selected.Value, Facing);
         _ghostPlateMesh.Size = new Vector3(g.Width, PlateHeight, g.Depth);
         _ghostPlate.Position = new Vector3(0f, PlateHeight * 0.5f, 0f);
-        _ghostMaterial.AlbedoColor = g.Placeable ? ValidColor : InvalidColor;
+        _ghostMaterial.AlbedoColor = g.Placeable && g.Affordable ? ValidColor : InvalidColor;
 
         if (def.IsExtractor)
         {
@@ -179,6 +180,7 @@ public partial class BuildController : Node3D
             depth,
             center,
             _sim.CanPlace(Selected.Value, anchorX, anchorZ, Facing),
+            _sim.CanAfford(Selected.Value),
             fieldsInRange);
     }
 
@@ -274,19 +276,19 @@ public partial class BuildController : Node3D
         switch (key)
         {
             case Key.Key1:
-                Selected = BuildingType.Mine;
+                Select(BuildingType.Mine);
                 break;
             case Key.Key2:
-                Selected = BuildingType.LumberCamp;
+                Select(BuildingType.LumberCamp);
                 break;
             case Key.Key3:
-                Selected = BuildingType.Smelter;
+                Select(BuildingType.Smelter);
                 break;
             case Key.Key4:
-                Selected = BuildingType.Refinery;
+                Select(BuildingType.Refinery);
                 break;
             case Key.Key5:
-                Selected = BuildingType.OilWell;
+                Select(BuildingType.OilWell);
                 break;
             case Key.R:
                 Facing = (Facing)(((int)Facing + 1) % 4);
@@ -295,6 +297,15 @@ public partial class BuildController : Node3D
             case Key.Escape:
                 Selected = null;
                 break;
+        }
+    }
+
+    /// <summary>Selects a building; the key of a locked building does nothing.</summary>
+    private void Select(BuildingType type)
+    {
+        if (_sim.IsUnlocked(type))
+        {
+            Selected = type;
         }
     }
 

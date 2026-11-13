@@ -34,8 +34,8 @@ public class LaunchTests
     {
         var sim = new Simulation();
 
-        // Mines beside the Iron Ore fields, one Oil Well between the two Crude Oil seeps, plus one
-        // Smelter and one Refinery.
+        // Mines beside the Iron Ore fields, one Oil Well between the two Crude Oil seeps, and two
+        // each of Smelters and Refineries, so the one Oil Well keeps both Refineries busy.
         (BuildingType Type, int X, int Z)[] placements =
         {
             (BuildingType.Mine, 40, 34),
@@ -44,16 +44,18 @@ public class LaunchTests
             (BuildingType.Mine, 20, 48),
             (BuildingType.OilWell, 58, 28),
             (BuildingType.Smelter, 28, 28),
-            (BuildingType.Refinery, 32, 28)
+            (BuildingType.Smelter, 24, 28),
+            (BuildingType.Refinery, 32, 28),
+            (BuildingType.Refinery, 34, 28)
         };
         foreach ((BuildingType type, int x, int z) in placements)
         {
-            Assert.True(sim.TryPlaceBuilding(type, x, z, Facing.North), $"{type} at ({x}, {z})");
+            sim.Debug.PlaceBuilding(type, x, z, Facing.North);
         }
 
-        // The Refinery makes 0.5 Rocket Fuel per second, so 500 takes about 1000 seconds.
+        // The Oil Well pumps one Crude Oil every 4 seconds, so 500 Rocket Fuel takes about 2000.
         int ticks = 0;
-        const int MaxTicks = 30 * 1500;
+        const int MaxTicks = 30 * 2200;
         while (!sim.CanLaunchShip() && ticks < MaxTicks)
         {
             sim.Step(SimTestHelpers.TickSeconds);

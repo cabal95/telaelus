@@ -45,8 +45,14 @@ public sealed partial class Simulation
     private readonly Dictionary<ResourceType, float> _stockpile = new();
     public IReadOnlyDictionary<ResourceType, float> Stockpile => _stockpile;
 
+    /// <summary>Buildings whose whole cost the stockpile has held at once; it never clears during play.</summary>
+    private readonly HashSet<BuildingType> _unlocked = new();
+
     /// <summary>The field currently in range to hand-harvest, or null.</summary>
     public ResourceField? HarvestTarget { get; private set; }
+
+    /// <summary>Progress toward the next hand-gathered unit, 0 to 1; drops to 0 on release or a target change.</summary>
+    public float HarvestProgress { get; private set; }
 
     /// <summary>How many ships have been launched (the initial win condition).</summary>
     public int ShipsLaunched { get; private set; }
@@ -55,7 +61,6 @@ public sealed partial class Simulation
     private int _nextFieldId;
 
     private const float HarvestRange = 1.5f;
-    private const float HarvestRate = 10f;
 
     public const float LaunchRocketFuelCost = 500f;
     public const float LaunchIronCost = 100f;
@@ -79,6 +84,10 @@ public sealed partial class Simulation
         if (Intent.Harvest)
         {
             Harvest(dt);
+        }
+        else
+        {
+            HarvestProgress = 0f;
         }
         StepBuildings(dt);
     }
@@ -154,13 +163,43 @@ public sealed partial class Simulation
         return true;
     }
 
+    /// <summary>
+    /// A building is unlocked once the stockpile has held its whole cost at once; it
+    /// stays unlocked when the stock later runs short.
+    /// </summary>
+    public bool IsUnlocked(BuildingType type)
+    {
+        return _unlocked.Contains(type);
+    }
+
+    /// <summary>Whether the stockpile holds the building's whole cost.</summary>
+    public bool CanAfford(BuildingType type)
+    {
+        return HasAll(BuildingDefs.For(type).Cost);
+    }
+
+    /// <summary>
+    /// Places a building as the player does: the spot must pass <see cref="CanPlace"/>,
+    /// and the building must be unlocked and affordable. Its cost is deducted; a
+    /// refused placement changes nothing.
+    /// </summary>
     public bool TryPlaceBuilding(BuildingType type, int anchorX, int anchorZ, Facing facing)
     {
-        if (!CanPlace(type, anchorX, anchorZ, facing))
+        if (!CanPlace(type, anchorX, anchorZ, facing) || !IsUnlocked(type) || !CanAfford(type))
         {
             return false;
         }
 
+        foreach (ResourceAmount cost in BuildingDefs.For(type).Cost)
+        {
+            AddToStockpile(cost.Type, -cost.Amount);
+        }
+        AddBuilding(type, anchorX, anchorZ, facing);
+        return true;
+    }
+
+    private Building AddBuilding(BuildingType type, int anchorX, int anchorZ, Facing facing)
+    {
         var building = new Building(_nextBuildingId++, type, anchorX, anchorZ, facing, Recipes.For(type));
         _buildings.Add(building);
         for (int x = anchorX; x < anchorX + building.Width; x++)
@@ -170,7 +209,7 @@ public sealed partial class Simulation
                 _occupied.Add((x, z));
             }
         }
-        return true;
+        return building;
     }
 
     // ---- Ship launch (initial win condition) -----------------------------
@@ -300,7 +339,10 @@ public sealed partial class Simulation
         return false;
     }
 
-    /// <summary>The nearest hand-harvestable field within reach (a Crude Oil field needs an Oil Well).</summary>
+    /// <summary>
+    /// The nearest hand-harvestable field within reach (a Crude Oil field needs an Oil
+    /// Well). A new target drops any partial progress.
+    /// </summary>
     private void UpdateHarvestTarget()
     {
         ResourceField? best = null;
@@ -318,9 +360,14 @@ public sealed partial class Simulation
                 best = field;
             }
         }
+        if (!ReferenceEquals(best, HarvestTarget))
+        {
+            HarvestProgress = 0f;
+        }
         HarvestTarget = best;
     }
 
+    /// <summary>Works toward one unit of the target at its gather time, then takes it.</summary>
     private void Harvest(double dt)
     {
         ResourceField? field = HarvestTarget;
@@ -329,7 +376,24 @@ public sealed partial class Simulation
             return;
         }
 
-        float take = Mathf.Min(field.Amount, HarvestRate * (float)dt);
+        HarvestProgress += (float)dt / GatherSeconds(field.Type);
+        if (HarvestProgress >= 1f)
+        {
+            HarvestProgress = 0f;
+            TakeUnit(field);
+        }
+    }
+
+    private static float GatherSeconds(ResourceType type)
+    {
+        return ResourceDefs.For(type).GatherSeconds
+            ?? throw new InvalidOperationException($"{type} has no gather time");
+    }
+
+    /// <summary>Moves one unit (or what is left) from a field to the stockpile, removing the field when it empties.</summary>
+    private void TakeUnit(ResourceField field)
+    {
+        float take = Mathf.Min(field.Amount, 1f);
         field.Amount -= take;
         AddToStockpile(field.Type, take);
 
@@ -366,19 +430,24 @@ public sealed partial class Simulation
         {
             field = NearestFieldInWorkArea(building);
             building.CurrentField = field;
+            building.Progress = 0f;
         }
         if (field is null)
         {
             return;
         }
 
-        float take = Mathf.Min(field.Amount, Recipes.ExtractorRate * (float)dt);
-        field.Amount -= take;
-        AddToStockpile(field.Type, take);
+        building.Progress += (float)dt;
+        float perUnit = GatherSeconds(field.Type) / building.Def.Speed;
+        if (building.Progress < perUnit)
+        {
+            return;
+        }
 
+        building.Progress -= perUnit;
+        TakeUnit(field);
         if (field.Depleted)
         {
-            RemoveField(field);
             building.CurrentField = null;
         }
     }
@@ -424,10 +493,15 @@ public sealed partial class Simulation
 
     private bool HasInputs(Recipe recipe)
     {
-        foreach (ResourceAmount input in recipe.Inputs)
+        return HasAll(recipe.Inputs);
+    }
+
+    private bool HasAll(IReadOnlyList<ResourceAmount> amounts)
+    {
+        foreach (ResourceAmount amount in amounts)
         {
-            _stockpile.TryGetValue(input.Type, out float have);
-            if (have < input.Amount)
+            _stockpile.TryGetValue(amount.Type, out float have);
+            if (have < amount.Amount)
             {
                 return false;
             }
@@ -455,5 +529,20 @@ public sealed partial class Simulation
     {
         _stockpile.TryGetValue(type, out float current);
         _stockpile[type] = current + amount;
+        if (amount > 0f)
+        {
+            UnlockAffordable();
+        }
+    }
+
+    private void UnlockAffordable()
+    {
+        foreach (BuildingType type in Enum.GetValues<BuildingType>())
+        {
+            if (!_unlocked.Contains(type) && CanAfford(type))
+            {
+                _unlocked.Add(type);
+            }
+        }
     }
 }

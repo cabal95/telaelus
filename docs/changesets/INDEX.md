@@ -65,6 +65,9 @@ Newest last. One line each; open the file for the full spec.
   so tall windows no longer clip the ground.
 - **2611112146-generated-trees** - Replaces the CC0 trees with generated tree families by biome (conifers in
   Forest, broadleaf in Grassland, swamp trees in Swamp), so every world model is generated.
+- **2611121827-building-costs-and-gather-rates** - Gathering takes one unit at a time over a gather time per
+  deposit, base extractors work at 0.75x hand speed, processors at half an extractor's pace, and
+  buildings cost resources and unlock once their materials have been held.
 
 ## Adding a changeset
 

@@ -58,7 +58,7 @@ public class PlacementTests
     public void CanPlace_RejectsOccupiedCells()
     {
         var sim = new Simulation();
-        Assert.True(sim.TryPlaceBuilding(BuildingType.Smelter, X, Z, Facing.North));
+        sim.Debug.PlaceBuilding(BuildingType.Smelter, X, Z, Facing.North);
         Assert.False(sim.CanPlace(BuildingType.Mine, X + 2, Z + 2, Facing.North));
         Assert.True(sim.CanPlace(BuildingType.Mine, X + 3, Z, Facing.North));
     }
@@ -88,14 +88,14 @@ public class PlacementTests
     {
         var sim = new Simulation();
         Assert.Empty(sim.FieldsInRange(BuildingDefs.For(BuildingType.Mine).Center(X, Z, Facing.North), 6f, ResourceType.IronOre));
-        Assert.True(sim.TryPlaceBuilding(BuildingType.Mine, X, Z, Facing.North));
+        sim.Debug.PlaceBuilding(BuildingType.Mine, X, Z, Facing.North);
     }
 
     [Fact]
     public void TryPlaceBuilding_OccupiesEveryFootprintCell()
     {
         var sim = new Simulation();
-        Assert.True(sim.TryPlaceBuilding(BuildingType.Refinery, X, Z, Facing.East));
+        sim.Debug.PlaceBuilding(BuildingType.Refinery, X, Z, Facing.East);
 
         for (int x = X; x < X + 3; x++)
         {
@@ -113,7 +113,7 @@ public class PlacementTests
     public void Building_DerivesItsSizeAndCenterFromAnchorAndFacing()
     {
         var sim = new Simulation();
-        Assert.True(sim.TryPlaceBuilding(BuildingType.Refinery, X, Z, Facing.East));
+        sim.Debug.PlaceBuilding(BuildingType.Refinery, X, Z, Facing.East);
         Building building = Assert.Single(sim.Buildings);
 
         Assert.Equal(3, building.Width);

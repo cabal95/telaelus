@@ -51,8 +51,10 @@ planned multiplayer feasible.
   diagnostics line for exploring (the seed or the bounded map's name, the biome and terrain under
   the player, their chunk, and their map cell, for example
   `seed 1234   Highlands / Rock   chunk (1, -2)   cell (87, -101)`); a performance line (see
-  Performance below; F3 hides it); launch status, build selection with facing
-  and fields in range, and the harvest hint), and `BuildController` (build-mode selection and
+  Performance below; F3 hides it); launch status; the build line, which lists
+  the unlocked buildings with their keys and costs, or the selection with its cost, facing, and
+  fields in range, with each short cost amount marked as "(have n)"; and the harvest hint with a
+  text progress bar toward the next unit), and `BuildController` (build-mode selection and
   rotation, the footprint ghost, the extractor work-area disc and field highlights, and the place
   command).
 

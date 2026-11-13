@@ -22,7 +22,8 @@ public sealed class Building
     // Extractor: the field it is currently working (null when idle).
     public ResourceField? CurrentField { get; set; }
 
-    // Processor: current cycle state.
+    // Extractor: seconds toward the next unit from its current field.
+    // Processor: seconds into the current cycle, and whether a cycle is running.
     public bool Crafting { get; set; }
     public float Progress { get; set; }
 

@@ -4,6 +4,9 @@
   "description": "Aiming and clicking places a Mine centered on the pointer, and the ghost counts Ore fields in its work area. Mouse-to-anchor mapping and the range count are presentation.",
   "steps": [
     { "initMap": {} },
+    { "comment": "Buildings cost resources and unlock once their materials are held.", "seedStockpile": { "type": "Wood", "amount": 500 } },
+    { "seedStockpile": { "type": "Stone", "amount": 500 } },
+    { "seedStockpile": { "type": "Iron", "amount": 500 } },
     { "press": "Key1" },
     { "comment": "A 2x2 Mine centered on the grid corner (21, 21) is anchored at (20, 20).", "aimAt": { "world": [21, 21] } },
     { "wait": 2 },

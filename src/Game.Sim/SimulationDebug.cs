@@ -162,14 +162,17 @@ public sealed partial class Simulation
             _sim.MapChanged?.Invoke();
         }
 
-        /// <summary>Places a building through the normal placement rules.</summary>
+        /// <summary>
+        /// Places a building by the spatial placement rule (<see cref="CanPlace"/>), free
+        /// of cost and whether or not it is unlocked.
+        /// </summary>
         public Building PlaceBuilding(BuildingType type, int anchorX, int anchorZ, Facing facing)
         {
-            if (!_sim.TryPlaceBuilding(type, anchorX, anchorZ, facing))
+            if (!_sim.CanPlace(type, anchorX, anchorZ, facing))
             {
                 throw new InvalidOperationException($"cannot place {type} at ({anchorX}, {anchorZ}) facing {facing}");
             }
-            return _sim._buildings[^1];
+            return _sim.AddBuilding(type, anchorX, anchorZ, facing);
         }
 
         /// <summary>Removes the building anchored at a fine cell and frees its cells.</summary>
@@ -197,7 +200,7 @@ public sealed partial class Simulation
             _sim.Player.Position = new Vector3(x, 0f, z);
         }
 
-        /// <summary>Adds an amount to the stockpile without playing for it.</summary>
+        /// <summary>Adds an amount to the stockpile without playing for it; it unlocks any building whose whole cost the stockpile then holds.</summary>
         public void SeedStockpile(ResourceType type, float amount)
         {
             _sim.AddToStockpile(type, amount);

@@ -10,21 +10,23 @@ buildings.md). A single global stockpile holds all amounts.
 
 ### Resource types
 
-- `ResourceType` has ten values. `ResourceDefs.For(type)` gives each a display name, a `Kind`, and
-  whether the player can harvest it by hand; rules read this table, not the enum:
+- `ResourceType` has ten values. `ResourceDefs.For(type)` gives each a display name, a `Kind`,
+  whether the player can harvest it by hand, and for a deposit, its gather time (`GatherSeconds`:
+  the seconds to gather one unit by hand, which reads as how hard the material is to work; an
+  extractor divides it by its speed, see buildings.md); rules read this table, not the enum:
 
-  | Type | Kind | Hand-harvest | Source |
-  |---|---|---|---|
-  | Wood | Deposit | yes | Wood fields (trees) |
-  | Stone | Deposit | yes | Stone fields (boulders) |
-  | IronOre | Deposit | yes | Iron Ore fields |
-  | CopperOre | Deposit | yes | Copper Ore fields |
-  | Coal | Deposit | yes | Coal fields |
-  | CrudeOil | Deposit | no | Crude Oil fields (oil seeps), by an Oil Well only |
-  | Sand | TerrainSourced | no | a collector on Sand (not yet built) |
-  | Water | TerrainSourced | no | a pump on ShallowWater (not yet built) |
-  | Iron | Refined | | Smelter |
-  | RocketFuel | Refined | | Refinery |
+  | Type | Kind | Hand-harvest | Gather time | Source |
+  |---|---|---|---|---|
+  | Wood | Deposit | yes | 3 s | Wood fields (trees) |
+  | Stone | Deposit | yes | 4.5 s | Stone fields (boulders) |
+  | IronOre | Deposit | yes | 6 s | Iron Ore fields |
+  | CopperOre | Deposit | yes | 6 s | Copper Ore fields |
+  | Coal | Deposit | yes | 4.5 s | Coal fields |
+  | CrudeOil | Deposit | no | 3 s | Crude Oil fields (oil seeps), by an Oil Well only |
+  | Sand | TerrainSourced | no | | a collector on Sand (not yet built) |
+  | Water | TerrainSourced | no | | a pump on ShallowWater (not yet built) |
+  | Iron | Refined | | | Smelter |
+  | RocketFuel | Refined | | | Refinery |
 
 - Deposits are finite resource fields. Terrain-sourced resources never run out but need a building
   on or beside the right terrain; Sand and Water are defined so the production plan (see
@@ -71,12 +73,17 @@ buildings.md). A single global stockpile holds all amounts.
 
 ### Stockpile and hand-harvesting
 
-- The stockpile is a map from `ResourceType` to amount, exposed read-only.
+- The stockpile is a map from `ResourceType` to amount, exposed read-only. It starts empty: the
+  player begins with nothing. Gathering adds whole units, so amounts stay whole.
+- Whenever an amount rises, the simulation unlocks each building whose whole cost the stockpile
+  now holds (see buildings.md).
 - Each tick the simulation finds the nearest hand-harvestable field within `HarvestRange` (1.5
   units) of the player, by distance to the field's square, as the `HarvestTarget`; a Crude Oil
-  field is never a target. While the player holds the harvest
-  intent, it pulls `HarvestRate` (10 per second) from that field into the stockpile; a depleted
-  field is removed.
+  field is never a target. Gathering is one unit at a time: while the player
+  holds the harvest intent, `HarvestProgress` grows from 0 toward 1 over the target's gather time;
+  at 1 one unit moves from the field to the stockpile and progress starts over. Releasing the
+  intent or a change of target (walking away, or a nearer field) drops the partial progress. A
+  depleted field is removed.
 
 ### Rendering
 
@@ -95,8 +102,8 @@ buildings.md). A single global stockpile holds all amounts.
   (1.2 units); it seats the model on the ground with a deterministic yaw and variant per slot. The
   models are required: a missing file throws (see presentation.md). Assets and conventions live in
   `src/Game/assets/models/nature/README.md`.
-- The HUD shows resource totals and an `[E] harvest` hint, with the resource's name, when a
-  hand-harvestable field is in range.
+- The HUD shows resource totals and an `[E] harvest` hint, with the resource's name and a
+  progress bar toward the next unit, when a hand-harvestable field is in range.
 
 ## Related
 

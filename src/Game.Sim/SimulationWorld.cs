@@ -59,7 +59,9 @@ public sealed partial class Simulation
         _buildings.Clear();
         _occupied.Clear();
         _stockpile.Clear();
+        _unlocked.Clear();
         HarvestTarget = null;
+        HarvestProgress = 0f;
         ShipsLaunched = 0;
         _generator = settings.Kind == WorldKind.Generated ? new WorldGenerator(settings.Seed, settings.Planet!) : null;
 

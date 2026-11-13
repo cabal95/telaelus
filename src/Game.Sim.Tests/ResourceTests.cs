@@ -66,20 +66,20 @@ public class ResourceTests
         // Mine anchored at (12, 17), center (13, 18), between Copper Ore at map cell (2, 4), 1 away,
         // and Coal at (4, 4), 3 away. The Wood at (4, 3) is in range too but is not a mineral.
         Simulation sim = EmptyMap();
-        ResourceField copper = sim.Debug.PlaceField(ResourceType.CopperOre, 2, 4, 5f);
+        ResourceField copper = sim.Debug.PlaceField(ResourceType.CopperOre, 2, 4, 1f);
         ResourceField coal = sim.Debug.PlaceField(ResourceType.Coal, 4, 4, 100f);
         sim.Debug.PlaceField(ResourceType.Wood, 4, 3, 100f);
-        Assert.True(sim.TryPlaceBuilding(BuildingType.Mine, 12, 17, Facing.North));
+        sim.Debug.PlaceBuilding(BuildingType.Mine, 12, 17, Facing.North);
         Building mine = Assert.Single(sim.Buildings);
 
         SimTestHelpers.Ticks(sim, 15);
         Assert.Same(copper, mine.CurrentField);
 
-        // 5 Copper Ore at 5 per second runs out in a second; then the Mine moves to the Coal.
-        SimTestHelpers.Seconds(sim, 2.0);
-        Assert.Equal(5f, SimTestHelpers.Stock(sim, ResourceType.CopperOre), 2);
+        // 1 Copper Ore at 8 s per unit runs out at 8 s; then the Mine moves to the Coal, 6 s per unit.
+        SimTestHelpers.Seconds(sim, 15.0);
+        Assert.Equal(1f, SimTestHelpers.Stock(sim, ResourceType.CopperOre));
         Assert.Same(coal, mine.CurrentField);
-        Assert.True(SimTestHelpers.Stock(sim, ResourceType.Coal) > 0f);
+        Assert.Equal(1f, SimTestHelpers.Stock(sim, ResourceType.Coal));
         Assert.Equal(0f, SimTestHelpers.Stock(sim, ResourceType.Wood));
     }
 
@@ -91,13 +91,14 @@ public class ResourceTests
         Simulation sim = EmptyMap();
         ResourceField near = sim.Debug.PlaceField(ResourceType.CrudeOil, 3, 3);
         sim.Debug.PlaceField(ResourceType.CrudeOil, 5, 2);
-        Assert.True(sim.TryPlaceBuilding(BuildingType.OilWell, 12, 10, Facing.North));
+        sim.Debug.PlaceBuilding(BuildingType.OilWell, 12, 10, Facing.North);
         Building well = Assert.Single(sim.Buildings);
 
-        SimTestHelpers.Seconds(sim, 1.0);
+        // 4 s per unit at base speed.
+        SimTestHelpers.Seconds(sim, 4.1);
 
         Assert.Same(near, well.CurrentField);
-        Assert.Equal(5f, SimTestHelpers.Stock(sim, ResourceType.CrudeOil), 1);
+        Assert.Equal(1f, SimTestHelpers.Stock(sim, ResourceType.CrudeOil));
         Assert.Single(sim.FieldsInRange(well.Position, well.Def.WorkRadius, well.Def.Works));
     }
 
@@ -120,7 +121,7 @@ public class ResourceTests
         // The same spot beside a Stone field harvests it.
         sim.Debug.RemoveField(2, 2);
         sim.Debug.PlaceField(ResourceType.Stone, 2, 2);
-        SimTestHelpers.Seconds(sim, 1.0);
-        Assert.True(SimTestHelpers.Stock(sim, ResourceType.Stone) > 0f);
+        SimTestHelpers.Seconds(sim, 4.6);
+        Assert.Equal(1f, SimTestHelpers.Stock(sim, ResourceType.Stone));
     }
 }

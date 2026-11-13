@@ -64,10 +64,15 @@ pausing it and stepping frame by frame.
   has no edge while bounded worlds keep theirs; resets switch the world kind.
 - `ResourceTests`: the resource definitions, biome deposits, the Mine and Oil Well, and
   hand-harvest rules.
-- `HarvestTests`: edge-based harvest range, harvest rate, and field removal reopening cells.
-- `ExtractorTests`: nearest field, moving on after depletion, idling, resource type filtering,
-  and two extractors sharing a field.
+- `HarvestTests`: edge-based harvest range, one whole unit at the gather time, partial progress
+  dropped on release or a new target, and field removal reopening cells.
+- `ExtractorTests`: base speed, one unit per gather time over speed, nearest field, moving on
+  after depletion, idling, resource type filtering, and two extractors sharing a field.
 - `ProductionTests`: Smelter and Refinery cycles, waiting for inputs, and recipe definitions.
+- `CostTests`: unlocking once the whole cost is held, by seeding and by hand gathering (kept
+  when the stock runs out), placement
+  deducting the cost, refusal with nothing deducted when locked, unaffordable, or blocked, free
+  debug placement, and every building having a cost and every deposit a gather time.
 - `LaunchTests`: launch cost and an end-to-end run from the starting fields to a launch.
 - `SeamTests`: the seam rule above.
 - `DebugTests`: each `Simulation.Debug` operation and the `MapChanged` event.
@@ -88,8 +93,9 @@ pausing it and stepping frame by frame.
     `placeResource` `{ type, mapCell, amount? }` (default: the biome's amount), `setResourceAmount`
     `{ mapCell, amount }` (0 removes), `removeResource` `{ mapCell }`, `removeBuilding`
     `{ anchor }`.
-  - Other setup: `placeBuilding` `{ type, anchor, facing? }` (normal placement rules),
-    `teleportPlayer` `{ x, z }`, `seedStockpile` `{ type, amount }`, `cameraZoom` `{ size }` (the camera's zoom: world units across 720 pixels
+  - Other setup: `placeBuilding` `{ type, anchor, facing? }` (the spatial placement rule, free
+    and whether or not unlocked), `teleportPlayer` `{ x, z }`, `seedStockpile` `{ type, amount }`
+    (unlocks any building whose whole cost is then held; scenarios that place by key and click seed first), `cameraZoom` `{ size }` (the camera's zoom: world units across 720 pixels
     of window height, so at the 1280 x 720 scenario resolution it is the visible world height).
   - Input: `press` (key down now, up at the start of the next frame), `keyDown`, `keyUp`, `hold`
     `{ key, frames }` (down, wait, up), `aimAt` `{ cell: [x, z] }` (a fine cell's center) or
@@ -112,12 +118,13 @@ pausing it and stepping frame by frame.
   `perf` (`workMs`, `scriptMs`, `renderCpuMs`, `gpuMs` or null, `simMs`, `frameMs` (wall time
   since the last frame), `worstMs`, `fps`, `draws`, `objects`, as of that frame; see
   presentation.md); `player` (`position`
-  [x, z], `harvestTarget` field id or null, the `terrain`, `biome`, and `feature` under the player,
+  [x, z], `harvestTarget` field id or null, `harvestProgress` (0 to 1), the `terrain`, `biome`, and `feature` under the player,
   and their `chunk` [x, z]); `build` (null when not in build
   mode, else `selected`, `facing`, `fieldsInRange`, and `ghost`: `anchor`, `width`, `depth`,
-  `placeable`, or null); `buildings` (`id`, `type`, `anchor`, `facing`, `width`, `depth`,
+  `placeable` (the spot), `affordable` (the cost), or null); `buildings` (`id`, `type`, `anchor`, `facing`, `width`, `depth`,
   `currentField`); `fields` (`id`, `type`, `mapCell`, `amount`, `stage`, `visibleModels`);
-  `stockpile` (every resource); and `shipsLaunched`. New checks are added as snapshot fields.
+  `stockpile` (every resource); `unlockedBuildings` (type names, in enum order); and
+  `shipsLaunched`. New checks are added as snapshot fields.
 - **Input injection:** keys and mouse buttons go through `Input.ParseInputEvent` followed by
   `Input.FlushBufferedEvents()`, so they are delivered in the current frame (Godot otherwise
   buffers them until its next flush). Aiming uses `BuildController.PointerOverride`, a world
@@ -200,7 +207,8 @@ pausing it and stepping frame by frame.
 - **Current scenarios:** `boot` (the game starts; player at the center, nothing on the map),
   `build-rotate` (R rotates the Refinery ghost 2 x 3 to 3 x 2 and back), `place-at-mouse` (aim and
   click places a Mine at the expected anchor; the ghost counts an Iron Ore field in range),
-  `harvest-input` (holding E harvests), `field-stage-views` (visible models track the stage and
+  `harvest-input` (holding E fills the progress bar and harvests one Wood at 3 s, which does
+  not yet unlock the Lumber Camp), `field-stage-views` (visible models track the stage and
   vanish with the field), `pause-step` (paused input waits for `step`, and steps advance exact
   ticks), `place-on-player` (a building cannot be placed on the player; right beside them it can,
   and the player can still walk), `terrain-types` (every terrain, a mountain on each ground that

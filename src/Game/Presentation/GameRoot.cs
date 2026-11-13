@@ -66,14 +66,10 @@ public partial class GameRoot : Node3D
         _fieldViews.Sync(_sim, _terrainView);
         _buildingViews.Sync(_sim.Buildings);
         _hud.Refresh(
-            _sim.Stockpile,
-            _sim.HarvestTarget,
+            _sim,
             _buildController.Selected,
             _buildController.Facing,
-            _buildController.FieldsInRange,
-            _sim.CanLaunchShip(),
-            _sim.ShipsLaunched,
-            Hud.Diagnostics(_sim));
+            _buildController.FieldsInRange);
         _hud.RefreshPerf(_perf);
     }
 

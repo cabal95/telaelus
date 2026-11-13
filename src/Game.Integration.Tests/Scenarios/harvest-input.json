@@ -8,9 +8,15 @@
     { "teleportPlayer": { "x": 33.5, "z": 33 } },
     { "wait": 2 },
     { "expect": "player.harvestTarget", "notEquals": null },
-    { "comment": "30 frames at --fixed-fps 30 is 30 sim ticks, one second, at 10 Wood per second.", "hold": { "key": "E", "frames": 30 } },
+    { "keyDown": "E" },
+    { "comment": "45 frames at --fixed-fps 30 is 1.5 s, half of Wood's 3 s gather time.", "wait": 45 },
+    { "expect": "stockpile.Wood", "equals": 0 },
+    { "expect": "player.harvestProgress", "gte": 0.4 },
+    { "comment": "One Wood once 3 s (90 frames) have passed.", "wait": 50 },
+    { "keyUp": "E" },
     { "screenshot": "after-harvest" },
-    { "expect": "stockpile.Wood", "gte": 8 },
-    { "expect": "fields[0].amount", "lte": 242 }
+    { "expect": "stockpile.Wood", "equals": 1 },
+    { "expect": "fields[0].amount", "equals": 249 },
+    { "comment": "One Wood is not the Lumber Camp's whole cost of 15.", "expect": "unlockedBuildings", "equals": [] }
   ]
 }

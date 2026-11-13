@@ -76,7 +76,7 @@ public class MovementTests
     public void Building_BlocksMovement()
     {
         var sim = new Simulation();
-        Assert.True(sim.TryPlaceBuilding(BuildingType.Smelter, 28, 28, Facing.North));
+        sim.Debug.PlaceBuilding(BuildingType.Smelter, 28, 28, Facing.North);
         SimTestHelpers.Teleport(sim, 25.5f, 29.5f);
         sim.Intent = new PlayerIntent
         {

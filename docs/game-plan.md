@@ -135,7 +135,7 @@ Rocket Fuel ──── Crude Oil + Water (refinery)
 
 - **Raw resources (8):** Wood, Stone, Iron Ore, Copper Ore, Coal, and Crude Oil as deposits; Sand
   and Water as terrain-sourced. Wood and Stone do not feed the ship: they are construction
-  materials, for when buildings have a cost.
+  materials (see blueprints/buildings.md for building costs).
 - **Buildings in the chain:** Smelter (Iron Ore to Iron, Copper Ore to Copper, Sand to Glass),
   Steel Mill (Iron and Coal to Steel), Press (Steel to Hull Plate or Steel Beam), Wire Mill
   (Copper to Copper Wire), Refinery (Crude Oil and Water to Rocket Fuel, with Plastic as a

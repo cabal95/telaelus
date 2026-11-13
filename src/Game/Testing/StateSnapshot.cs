@@ -36,6 +36,7 @@ public static class StateSnapshot
             ["buildings"] = Buildings(sim),
             ["fields"] = Fields(sim, root.FieldViews),
             ["stockpile"] = Stockpile(sim),
+            ["unlockedBuildings"] = Unlocked(sim),
             ["shipsLaunched"] = sim.ShipsLaunched
         };
     }
@@ -47,6 +48,7 @@ public static class StateSnapshot
         {
             ["position"] = Pair(sim.Player.Position.X, sim.Player.Position.Z),
             ["harvestTarget"] = sim.HarvestTarget?.Id,
+            ["harvestProgress"] = Math.Round(sim.HarvestProgress, 3),
             ["terrain"] = sim.TerrainAt(x, z).ToString(),
             ["biome"] = sim.BiomeAt(x, z).ToString(),
             ["feature"] = sim.FeatureAt(x, z).ToString(),
@@ -103,10 +105,24 @@ public static class StateSnapshot
                     ["anchor"] = Pair(g.AnchorX, g.AnchorZ),
                     ["width"] = g.Width,
                     ["depth"] = g.Depth,
-                    ["placeable"] = g.Placeable
+                    ["placeable"] = g.Placeable,
+                    ["affordable"] = g.Affordable
                 }
                 : null
         };
+    }
+
+    private static JsonArray Unlocked(Simulation sim)
+    {
+        var list = new JsonArray();
+        foreach (BuildingType type in Enum.GetValues<BuildingType>())
+        {
+            if (sim.IsUnlocked(type))
+            {
+                list.Add(type.ToString());
+            }
+        }
+        return list;
     }
 
     private static JsonArray Buildings(Simulation sim)
