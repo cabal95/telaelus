@@ -198,6 +198,21 @@ public sealed class ScenarioCommand
                     RequireObject(arg, name);
                     return e => e.Click();
                 }
+            case "drag":
+                {
+                    string button = Label(Required(arg, "button"), "button");
+                    MouseButton mouse = button switch
+                    {
+                        "right" => MouseButton.Right,
+                        "left" => MouseButton.Left,
+                        _ => throw new FormatException("'button' must be \"right\" or \"left\"")
+                    };
+                    bool ctrl = arg.TryGetProperty("ctrl", out JsonElement c) && c.GetBoolean();
+                    float[] from = Floats(Required(arg, "from"), "from");
+                    float[] to = Floats(Required(arg, "to"), "to");
+                    int frames = arg.TryGetProperty("frames", out JsonElement f) ? Int(f, "frames") : 5;
+                    return e => e.Drag(mouse, ctrl, new Vector2(from[0], from[1]), new Vector2(to[0], to[1]), frames);
+                }
             case "clickUi":
                 {
                     string id = Label(Required(arg, "id"), "id");

@@ -28,6 +28,9 @@ on-screen character and camera.
   using the camera's orientation, so "up" always moves away from the camera regardless of the fixed
   view angle. The result is written to `PlayerIntent.Move`.
 - Holding `E` sets `PlayerIntent.Harvest`, which drives hand-harvesting (see resources.md).
+- Dragging the map with the right mouse button, or the left with Ctrl held, pans the camera
+  without moving the character; Space brings it back (see the camera below). A Ctrl + left press
+  never selects, clicks, or places.
 
 ### Character and camera (presentation)
 
@@ -49,6 +52,21 @@ on-screen character and camera.
   world unit depend only on the zoom and resizing or maximizing the window shows more or less of
   the map at the same scale. Orientation is set once and never changed, so the angle stays locked
   while it pans.
+
+- **Free camera.** The camera looks at a ground point (`GroundCenter`). While **attached** that
+  point glides after the player. A drag over the world (right button, or left with Ctrl; a press
+  over a panel, a modal, or the top bar never starts one) **detaches** it once the pointer has
+  moved more than 4 pixels (less is a click): the ground point grabbed at the press stays under
+  the pointer at any zoom, the character does not move, and the view's center is kept inside the
+  explored area's bounding box (`Simulation.ExploredBounds`: the whole map on a bounded map
+  without fog), so panning never shows ground beyond the fog's edge. The drag's motion and release
+  are followed before the UI, so it keeps going over a panel. A detached camera stays put.
+- **Coming back.** Move input (WASD or the arrows, even when the character is blocked) or Space
+  brings a detached camera back: if the character is on screen (inside the view and not under an
+  open panel), it slides back over 0.25 s with an ease-out and then follows; if not, it jumps
+  straight to them. Harvesting, building, and opening dialogs leave it where it is. Hover, clicks,
+  the panels, and placement all work wherever the camera looks; harvesting still needs the
+  character beside a field.
 
 ## Related
 

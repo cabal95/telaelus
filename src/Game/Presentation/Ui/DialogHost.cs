@@ -150,6 +150,17 @@ public partial class DialogHost : UiLayer
         return ToScreen(control.GetGlobalRect().GetCenter());
     }
 
+    /// <summary>The screen rectangle (pixels) the open panel covers, or null when no panel is open.</summary>
+    public Rect2? PanelScreenRect()
+    {
+        if (Current is not { Kind: DialogKind.Panel } panel)
+        {
+            return null;
+        }
+        Rect2 rect = panel.GetGlobalRect();
+        return new Rect2(ToScreen(rect.Position), ToScreen(rect.Size));
+    }
+
     /// <summary>
     /// Starts the hover tooltip for an anchor control; it shows after the tooltip delay,
     /// beside the anchor, or below it (for controls in a row, such as the top bar).

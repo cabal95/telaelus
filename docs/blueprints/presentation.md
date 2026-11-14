@@ -33,8 +33,8 @@ planned multiplayer feasible.
   model, which Godot skips when the tile is off screen. The sim's `MapChanged` marks the view
   dirty, and every tile is rebuilt on the next frame; the sim's `CellsRevealed` rebuilds only the
   tiles holding the newly explored cells (and the tiles beside them whose fog border includes
-  them); it processes while paused. A tile draws only its explored cells. Where a tile or its
-  one-cell border has unexplored cells, it also gets a `FogOverlay`: a quad 0.2 above the ground
+  them); it processes while paused. A tile draws only its explored cells. In a world with fog,
+  where a tile or its one-cell border has unexplored cells, it also gets a `FogOverlay`: a quad 0.2 above the ground
   over the whole tile, with a mask texture of one texel per map cell (plus the border) sampled
   with linear filtering through a small shader, in near-black (the UI's panel color). It is
   opaque over unexplored cells and fades out across the outer half of the explored cells beside
@@ -54,7 +54,8 @@ planned multiplayer feasible.
   stage while its tile is built; fields in unexplored cells are left out),
   `BuildingViews` (footprint-sized building boxes, created and freed as buildings appear and are
   removed; `GameRoot` passes only the buildings on explored cells), `PlayerView` (the character), `CameraRig` (the orthographic follow camera, with
-  `ZoomTo` for a direct size),
+  `ZoomTo` for a direct size; attached it follows the player, a drag detaches it, and
+  `ReturnToPlayer` slides or jumps it back; see player.md),
   `BuildController` (build-mode selection and rotation, the footprint ghost, the extractor
   work-area disc and field highlights, and the place command; it ignores buildings and fields in
   unexplored cells under the pointer), and the screen UI (below).

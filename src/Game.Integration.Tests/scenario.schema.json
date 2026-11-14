@@ -59,6 +59,7 @@
         { "$ref": "#/definitions/hold" },
         { "$ref": "#/definitions/aimAt" },
         { "$ref": "#/definitions/click" },
+        { "$ref": "#/definitions/drag" },
         { "$ref": "#/definitions/clickUi" },
         { "$ref": "#/definitions/hoverUi" },
         { "$ref": "#/definitions/scrollUi" },
@@ -333,6 +334,27 @@
       "additionalProperties": false,
       "properties": {
         "click": { "type": "object", "maxProperties": 0 },
+        "comment": { "$ref": "#/definitions/comment" }
+      }
+    },
+    "drag": {
+      "description": "Drag with a mouse button (and Ctrl if asked) between two screen points (pixels): pressed at from now, moved in even steps over the given frames (default 5), released the frame after. The scenario waits until the release. Pushed like real input, so the UI gets it first.",
+      "type": "object",
+      "required": ["drag"],
+      "additionalProperties": false,
+      "properties": {
+        "drag": {
+          "type": "object",
+          "required": ["button", "from", "to"],
+          "additionalProperties": false,
+          "properties": {
+            "button": { "enum": ["right", "left"] },
+            "ctrl": { "type": "boolean" },
+            "from": { "$ref": "#/definitions/point" },
+            "to": { "$ref": "#/definitions/point" },
+            "frames": { "type": "integer", "minimum": 1 }
+          }
+        },
         "comment": { "$ref": "#/definitions/comment" }
       }
     },

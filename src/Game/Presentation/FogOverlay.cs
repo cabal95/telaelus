@@ -50,6 +50,10 @@ public static class FogOverlay
     /// <summary>The tile's darkness (the overlay and the solid plane under it), or null when the tile and its border are all explored.</summary>
     public static Node3D? Create(Simulation sim, int tileX, int tileZ)
     {
+        if (!sim.World.Fog)
+        {
+            return null; // nothing is hidden (and beyond a bounded map's edge is not "unexplored")
+        }
         int size = TerrainView.TileSize;
         int fromX = tileX * size;
         int fromZ = tileZ * size;

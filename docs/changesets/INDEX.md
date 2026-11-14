@@ -85,6 +85,10 @@ Newest last. One line each; open the file for the full spec.
 - **2611141051-fog-of-war** - Hides the world until the player sees it (reveal once, 24 units of
   sight): unexplored cells are soft-edged darkness, their contents are not drawn or pickable, and
   buildings need explored ground.
+- **2611141241-free-camera** - Right drag or Ctrl + left drag pans the camera without moving the
+  character, within the explored area; moving or Space brings it back (sliding when the character
+  is on screen, jumping when not). UI buttons no longer take keyboard focus, and maps without fog
+  no longer draw a dark rim at their edge.
 
 ## Adding a changeset
 

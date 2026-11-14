@@ -103,7 +103,10 @@ pausing it and stepping frame by frame.
     of window height, so at the 1280 x 720 scenario resolution it is the visible world height).
   - Input: `press` (key down now, up at the start of the next frame), `keyDown`, `keyUp`, `hold`
     `{ key, frames }` (down, wait, up), `aimAt` `{ cell: [x, z] }` (a fine cell's center) or
-    `{ world: [x, z] }`, `click` `{}` (left button at the aim, up the next frame), `clickUi`
+    `{ world: [x, z] }`, `click` `{}` (left button at the aim, up the next frame), `drag`
+    `{ button: right|left, ctrl?, from: [x, y], to: [x, y], frames? }` (screen pixels: pressed at
+    `from` now, moved in even steps over `frames` (default 5), released the frame after; the
+    scenario waits until the release; pushed through the viewport like real input), `clickUi`
     `{ id }` (moves the pointer over a registered UI control and clicks it, released the next
     frame), `hoverUi` `{ id }` (moves the pointer over one, so its hover state and tooltip
     show), and `scrollUi` `{ id, ticks }` (turns the wheel over one: positive ticks down,
@@ -151,7 +154,8 @@ pausing it and stepping frame by frame.
   `hoveredBuilding` (the id of the building under the pointer outside build mode, or null);
   `focusedBuilding` (the id of the building the detail panel shows and outlines, or null);
   `hoveredField` and `focusedField` (the same for resource fields);
-  `camera` (`zoom`: world units across 720 pixels);
+  `camera` (`zoom`: world units across 720 pixels, `target` [x, z]: the ground point at the view's
+  center, `detached`: whether a drag has moved it off the player);
   `fields` (`id`, `type`, `mapCell`, `amount`, `stage`, `visibleModels`, `explored`);
   `stockpile` (every resource); `unlockedBuildings` (type names, in enum order); and
   `shipsLaunched`. New checks are added as snapshot fields.
@@ -241,6 +245,12 @@ pausing it and stepping frame by frame.
   field keeps its outline; two Mines show as "2 Mines" and Remaining falls as they dig; a
   building and a Forest Wood field switch the panel; empty ground closes it; it closes when its
   field depletes),
+  `free-camera` (a right drag pans the camera and not the player, keeping the grabbed ground under
+  the pointer, and a 2-pixel drag does not; Space slides it back; Ctrl + left drags the same; a
+  building can be clicked while panned; Space after clicking a button does not press it again;
+  with the player under an open panel, moving jumps the camera back, and with them on screen it
+  slides; the camera stops at the map's edge; a drag over the build menu does nothing; a Ctrl +
+  left drag in build mode places nothing),
   `fog` (on the empty map with fog, a field beyond sight is not drawn and cannot be hovered;
   coming into sight reveals it, and it stays revealed after the player leaves),
   `hud` (the debug overlay starts hidden and F3 toggles it; the top bar shows all eight raw

@@ -65,6 +65,7 @@ public sealed partial class Simulation
         ShipsLaunched = 0;
         _revealedFrom = null;
         ExploredCount = 0;
+        _exploredBounds = null;
         _generator = settings.Kind == WorldKind.Generated ? new WorldGenerator(settings.Seed, settings.Planet!) : null;
 
         if (settings.IsBounded)

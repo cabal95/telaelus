@@ -15,6 +15,8 @@ rules and never sets its own colors or sizes. The code lives in `src/Game/Presen
   build menu.
 - **Panel**: docked against the left edge below the top bar; captures only Escape, so the world
   keeps its input. The building detail, the field detail, and the inventory.
+- Over the world (not over any UI), a right drag or a Ctrl + left drag pans the camera (see
+  player.md); over a panel, a modal, or the top bar it does nothing.
 - **Overlay**: part of the screen rather than something opened: always shown (the top bar),
   shown while it applies (the hint overlay, later notifications), or toggled by the player (the
   debug overlay). An overlay never takes keys and never closes anything.
@@ -122,6 +124,8 @@ The two kinds place themselves:
 
 - **Buttons:** `Cell` background with 16 px side padding; hover lightens to `CellHover` and draws
   the 2 px `Accent` outline; pressed darkens to `CellPressed`. Destructive buttons use `Danger`.
+- Buttons take no keyboard focus (`FocusMode` None): the UI is driven by the mouse, and Space
+  belongs to the camera, so it must never press the last-clicked button again.
 - **Destructive buttons** ask once: the first click changes the label to a confirmation ("Confirm
   destroy") for 3 seconds, and only a second click in that time acts. Buttons act on release.
 - **Icon rows:** a 22-unit resource icon, then the name and the amount in parentheses, as

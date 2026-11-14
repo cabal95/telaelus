@@ -83,8 +83,9 @@ and mirrors it onto nodes.
   center lies within `SightRadius` (24 units, 6 map cells; one constant) of the player becomes
   explored, for good: nothing is ever hidden again, and only the player reveals. `IsExplored(mapX,
   mapZ)` reads it (out of bounds: false; in a world without fog every in-bounds cell is explored),
-  `ExploredCount` counts the explored cells, and `CellsRevealed` reports each batch of newly
-  explored cells. Explored is world state, shared by everyone. The one rule it changes is
+  `ExploredCount` counts the explored cells, `ExploredBounds` is the smallest rectangle of map
+  cells holding them all (display only; the free camera stays inside it), and `CellsRevealed`
+  reports each batch of newly explored cells. Explored is world state, shared by everyone. The one rule it changes is
   placement: a building's footprint must lie on explored cells (buildings.md).
 - The walk and build rules (`IsWalkable`, `IsBuildable`) are defined in terrain.md.
 

@@ -71,7 +71,8 @@ public partial class BuildingDetail : Dialog
         });
         _toggle = new Button
         {
-            Name = "Toggle"
+            Name = "Toggle",
+            FocusMode = FocusModeEnum.None
         };
         _toggle.Pressed += OnToggle;
         Body.AddChild(_toggle);
@@ -79,7 +80,8 @@ public partial class BuildingDetail : Dialog
 
         _destroy = new Button
         {
-            Name = "Destroy"
+            Name = "Destroy",
+            FocusMode = FocusModeEnum.None
         };
         StyleBoxFlat danger = UiTheme.Box(UiTheme.Danger, UiTheme.CellRadius, padding: UiTheme.Gap);
         StyleBoxFlat dangerHover = (StyleBoxFlat)danger.Duplicate();

@@ -36,6 +36,7 @@ public sealed class CommandExecutor
     // Keys this executor has pressed, for the snapshot's held-key list.
     private readonly HashSet<Key> _touchedKeys = new();
     private readonly List<InputEvent> _pendingUiReleases = new();
+    private readonly Queue<List<InputEvent>> _dragFrames = new(); // a drag's events, one batch per frame
 
     private int _waitFrames;
     private int _stepFrames;
@@ -121,6 +122,13 @@ public sealed class CommandExecutor
             }
             _pendingReleases.Clear();
             Input.FlushBufferedEvents();
+        }
+        if (_dragFrames.Count > 0)
+        {
+            foreach (InputEvent dragEvent in _dragFrames.Dequeue())
+            {
+                PushUi(dragEvent);
+            }
         }
         if (_waitFrames > 0)
         {
@@ -319,6 +327,64 @@ public sealed class CommandExecutor
         Inject(MouseEvent(screen, true));
         Release(MouseEvent(screen, false));
         return StepOutcome.Ok;
+    }
+
+    /// <summary>
+    /// Drags with a mouse button (and Ctrl if asked) from one screen point to another: the
+    /// pointer moves there and presses now, moves in even steps over the next frames, and
+    /// releases on the frame after; the scenario waits until the release. Pushed through the
+    /// viewport like real input, so the UI gets it first.
+    /// </summary>
+    public StepOutcome Drag(MouseButton button, bool ctrl, Vector2 from, Vector2 to, int frames)
+    {
+        if (Paused)
+        {
+            return new StepOutcome(false, "drag needs the game running");
+        }
+        frames = System.Math.Max(1, frames);
+        MouseButtonMask mask = button == MouseButton.Right ? MouseButtonMask.Right : MouseButtonMask.Left;
+        PushUi(DragMotion(from, from, 0, ctrl));
+        PushUi(DragButton(button, true, from, ctrl));
+        Vector2 last = from;
+        for (int i = 1; i <= frames; i++)
+        {
+            Vector2 at = from.Lerp(to, i / (float)frames);
+            _dragFrames.Enqueue(new List<InputEvent>
+            {
+                DragMotion(at, last, mask, ctrl)
+            });
+            last = at;
+        }
+        _dragFrames.Enqueue(new List<InputEvent>
+        {
+            DragButton(button, false, to, ctrl)
+        });
+        _waitFrames = frames + 1;
+        return StepOutcome.Ok;
+    }
+
+    private static InputEventMouseMotion DragMotion(Vector2 at, Vector2 last, MouseButtonMask mask, bool ctrl)
+    {
+        return new InputEventMouseMotion
+        {
+            Position = at,
+            GlobalPosition = at,
+            Relative = at - last,
+            ButtonMask = mask,
+            CtrlPressed = ctrl
+        };
+    }
+
+    private static InputEventMouseButton DragButton(MouseButton button, bool pressed, Vector2 at, bool ctrl)
+    {
+        return new InputEventMouseButton
+        {
+            ButtonIndex = button,
+            Pressed = pressed,
+            Position = at,
+            GlobalPosition = at,
+            CtrlPressed = ctrl
+        };
     }
 
     /// <summary>

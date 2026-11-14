@@ -77,6 +77,7 @@ public abstract partial class Dialog : PanelContainer
         CloseButton = new Button
         {
             Text = "Close",
+            FocusMode = FocusModeEnum.None,
             SizeFlagsHorizontal = SizeFlags.ShrinkCenter,
             CustomMinimumSize = new Vector2(120f, 0f)
         };

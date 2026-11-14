@@ -231,8 +231,9 @@ public partial class BuildController : Node3D
         {
             HandleKey(key.PhysicalKeycode);
         }
-        else if (@event is InputEventMouseButton mb && mb.Pressed && mb.ButtonIndex == MouseButton.Left)
+        else if (@event is InputEventMouseButton mb && mb.Pressed && mb.ButtonIndex == MouseButton.Left && !mb.CtrlPressed)
         {
+            // (Ctrl + left belongs to dragging the camera, in GameRoot.)
             if (Selected is null)
             {
                 ClickWorld();

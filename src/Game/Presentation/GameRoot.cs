@@ -35,6 +35,7 @@ public partial class GameRoot : Node3D
     private PerfMonitor _perf = null!;
     private DirectionalLight3D _light = null!;
     private readonly System.Diagnostics.Stopwatch _simWatch = new();
+    private MouseButton? _dragButton; // the button holding a camera drag, if any
 
     // Read-only access for the testing code (scenario runner and live channel).
     public Simulation Sim => _sim;
@@ -66,6 +67,12 @@ public partial class GameRoot : Node3D
         // A modal takes all input, so the world reads none.
         bool worldInput = !_dialogs.CapturesWorldInput;
         Vector2 moveDir = worldInput ? ReadWorldMoveInput() : Vector2.Zero;
+        if (moveDir != Vector2.Zero && _camera.Detached)
+        {
+            // Moving brings a dragged-away camera back to the player.
+            _dragButton = null;
+            _camera.ReturnToPlayer(PlayerOnScreen());
+        }
         _sim.Intent = new PlayerIntent
         {
             Move = moveDir,
@@ -124,8 +131,62 @@ public partial class GameRoot : Node3D
         return (int)(GD.Randi() & 0x7FFFFFFF);
     }
 
+    /// <summary>
+    /// While a camera drag is held, its motion and release are followed from here, before the UI,
+    /// so the drag keeps going when the pointer crosses a panel.
+    /// </summary>
+    public override void _Input(InputEvent @event)
+    {
+        if (_dragButton is not MouseButton button)
+        {
+            return;
+        }
+        if (@event is InputEventMouseMotion motion)
+        {
+            _camera.DragTo(motion.Position);
+        }
+        else if (@event is InputEventMouseButton mb && !mb.Pressed && mb.ButtonIndex == button)
+        {
+            _camera.CancelDrag();
+            _dragButton = null;
+        }
+    }
+
+    /// <summary>Whether the player is inside the view and not under an open panel.</summary>
+    private bool PlayerOnScreen()
+    {
+        Rect2 view = GetViewport().GetVisibleRect();
+        Vector2 at = _camera.UnprojectPosition(_sim.Player.Position);
+        return view.HasPoint(at) && !(_dialogs.PanelScreenRect() is Rect2 panel && panel.HasPoint(at));
+    }
+
+    /// <summary>The ground rectangle the detached camera's center stays in: the explored area's bounding box.</summary>
+    private Rect2? CameraBounds()
+    {
+        if (_sim.ExploredBounds is not (int minX, int minZ, int maxX, int maxZ))
+        {
+            return null;
+        }
+        float cell = Simulation.FineCellsPerMapCell;
+        return new Rect2(minX * cell, minZ * cell, (maxX - minX + 1) * cell, (maxZ - minZ + 1) * cell);
+    }
+
     public override void _UnhandledInput(InputEvent @event)
     {
+        // A press over the world with the right button, or the left with Ctrl, may drag the map.
+        if (@event is InputEventMouseButton press && press.Pressed && _dragButton is null
+            && (press.ButtonIndex == MouseButton.Right || (press.ButtonIndex == MouseButton.Left && press.CtrlPressed)))
+        {
+            _dragButton = press.ButtonIndex;
+            _camera.BeginDrag(press.Position);
+            return;
+        }
+        if (@event is InputEventKey space && space.Pressed && !space.Echo && space.PhysicalKeycode == Key.Space)
+        {
+            _dragButton = null;
+            _camera.ReturnToPlayer(PlayerOnScreen());
+            return;
+        }
         if (@event is InputEventMouseButton mb && mb.Pressed)
         {
             if (mb.ButtonIndex == MouseButton.WheelUp)
@@ -273,7 +334,10 @@ public partial class GameRoot : Node3D
         };
         AddChild(_playerView);
 
-        _camera = new CameraRig();
+        _camera = new CameraRig
+        {
+            Bounds = CameraBounds
+        };
         _camera.SetTarget(_sim.Player.Position);
         AddChild(_camera);
         _terrainView.Initialize(_sim, _camera);

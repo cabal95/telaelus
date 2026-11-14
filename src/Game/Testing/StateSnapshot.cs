@@ -40,7 +40,9 @@ public static class StateSnapshot
             ["focusedField"] = root.Builder.FocusedField?.Id,
             ["camera"] = new JsonObject
             {
-                ["zoom"] = Math.Round(root.Camera.ZoomLevel, 2)
+                ["zoom"] = Math.Round(root.Camera.ZoomLevel, 2),
+                ["target"] = Pair(root.Camera.GroundCenter.X, root.Camera.GroundCenter.Z),
+                ["detached"] = root.Camera.Detached
             },
             ["ui"] = Ui(root),
             ["buildings"] = Buildings(sim),

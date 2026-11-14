@@ -94,6 +94,22 @@ public class FogTests
     }
 
     [Fact]
+    public void ExploredBounds_HoldsEveryExploredCell()
+    {
+        Simulation sim = FoggyMap();
+        // 6 cells of sight around (32, 32): cells 2 to 13 on each axis.
+        Assert.Equal((2, 2, 13, 13), sim.ExploredBounds);
+
+        sim.Debug.TeleportPlayer(60f, 32f);
+        sim.Step(Tick);
+        Assert.Equal((2, 2, 15, 13), sim.ExploredBounds);
+
+        var open = new Simulation();
+        open.Debug.ResetToEmptyMap();
+        Assert.Equal((0, 0, 15, 15), open.ExploredBounds);
+    }
+
+    [Fact]
     public void CanPlace_RefusesAFootprintOnUnexploredCells()
     {
         Simulation sim = FoggyMap();

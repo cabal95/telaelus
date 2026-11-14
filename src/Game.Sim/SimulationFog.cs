@@ -21,6 +21,25 @@ public sealed partial class Simulation
     /// <summary>How many map cells are explored (counted only in a world with fog).</summary>
     public int ExploredCount { get; private set; }
 
+    private (int MinX, int MinZ, int MaxX, int MaxZ)? _exploredBounds;
+
+    /// <summary>
+    /// The smallest rectangle of map cells holding every explored cell (inclusive): in a world
+    /// without fog, a bounded map's whole rectangle, and null for a generated one. Display only
+    /// (the free camera keeps its view inside it).
+    /// </summary>
+    public (int MinX, int MinZ, int MaxX, int MaxZ)? ExploredBounds => World.Fog
+        ? _exploredBounds
+        : World.IsBounded ? (0, 0, MapWidth - 1, MapHeight - 1) : null;
+
+    private void MarkExplored(int mapX, int mapZ)
+    {
+        ExploredCount++;
+        _exploredBounds = _exploredBounds is (int minX, int minZ, int maxX, int maxZ)
+            ? (Math.Min(minX, mapX), Math.Min(minZ, mapZ), Math.Max(maxX, mapX), Math.Max(maxZ, mapZ))
+            : (mapX, mapZ, mapX, mapZ);
+    }
+
     /// <summary>Raised with the map cells that just became explored, so views redraw only those.</summary>
     public event Action<IReadOnlyList<(int MapX, int MapZ)>>? CellsRevealed;
 
@@ -79,7 +98,7 @@ public sealed partial class Simulation
                 if (!chunk.Explored[lx, lz])
                 {
                     chunk.Explored[lx, lz] = true;
-                    ExploredCount++;
+                    MarkExplored(mapX, mapZ);
                     revealed.Add((mapX, mapZ));
                 }
             }
@@ -108,7 +127,7 @@ public sealed partial class Simulation
                     if (MapInBounds(mapX, mapZ) && !chunk.Explored[lx, lz])
                     {
                         chunk.Explored[lx, lz] = true;
-                        ExploredCount++;
+                        MarkExplored(mapX, mapZ);
                     }
                 }
             }
