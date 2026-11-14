@@ -12,11 +12,16 @@ namespace Game.Presentation;
 /// the game times its own frame work: a frame-start node processes first each frame
 /// and this monitor processes last, so the time between them is every node's update
 /// (the simulation steps included). Adding the renderer's CPU time for the viewport
-/// gives the frame's <b>work</b> time, compared against the 16.7 ms budget. The GPU
-/// time is Godot's measurement for the viewport; on the Compatibility renderer it is
-/// coarse (about 2 ms steps) and can include waiting, so it is shown for reference
-/// only. The wall time between frames is recorded too: with vsync off
-/// (<c>--uncapped</c>) it is the true cost of a frame, GPU included.
+/// gives the frame's CPU <b>work</b> time. The GPU time is Godot's measurement for the
+/// viewport. On the Mobile and Forward+ renderers (Direct3D 12, Vulkan, Metal) it is taken
+/// with GPU timestamps, so it never includes the wait for the display; under vsync it is
+/// higher than uncapped because the GPU clocks down when it has time to spare, which is
+/// still the real time it took. There the <b>headline</b> is the larger of the CPU and GPU
+/// times: how much of the 16.7 ms budget the frame used, whichever side is busier. On the
+/// Compatibility renderer the GPU time is coarse (about 2 ms steps) and can include waiting,
+/// and the CPU waits on the GPU inside the render step anyway, so the headline is the CPU
+/// time and the GPU time is for reference only. The wall time between frames is recorded
+/// too: with vsync off (<c>--uncapped</c>) it is the true cost of a frame.
 ///
 /// It keeps one second of samples for an average and the worst frame.
 /// </summary>
@@ -28,6 +33,7 @@ public partial class PerfMonitor : Node
     private const ulong WindowMs = 1000;
 
     public readonly record struct Sample(
+        double HeadlineMs,
         double WorkMs,
         double ScriptMs,
         double RenderCpuMs,
@@ -46,6 +52,12 @@ public partial class PerfMonitor : Node
     /// <summary>Whether vsync and the frame cap are off (<c>--uncapped</c>), so frames run as fast as they can.</summary>
     public bool Uncapped { get; private set; }
 
+    /// <summary>Whether the GPU time is a timestamp measurement (every renderer but Compatibility).</summary>
+    public bool GpuMeasured { get; private set; }
+
+    /// <summary>The renderer and its driver, as "Mobile D3D12".</summary>
+    public string Renderer { get; private set; } = "";
+
     /// <summary>The time spent in simulation steps this frame, set by the game root.</summary>
     public double SimMs { get; set; }
 
@@ -54,7 +66,7 @@ public partial class PerfMonitor : Node
     /// <summary>The average over the last second.</summary>
     public Sample Average { get; private set; }
 
-    /// <summary>The slowest frame's work time in the last second.</summary>
+    /// <summary>The slowest frame's headline time in the last second.</summary>
     public double WorstMs { get; private set; }
 
     /// <summary>Raised after each frame is sampled, for collectors such as the scenario runner.</summary>
@@ -65,6 +77,25 @@ public partial class PerfMonitor : Node
         ProcessPriority = int.MaxValue;
         _viewport = GetViewport().GetViewportRid();
         RenderingServer.ViewportSetMeasureRenderTime(_viewport, true);
+        string method = RenderingServer.GetCurrentRenderingMethod();
+        string driver = RenderingServer.GetCurrentRenderingDriverName();
+        GpuMeasured = method != "gl_compatibility";
+        string methodName = method switch
+        {
+            "mobile" => "Mobile",
+            "forward_plus" => "Forward+",
+            "gl_compatibility" => "Compatibility",
+            _ => method
+        };
+        string driverName = driver switch
+        {
+            "d3d12" => "D3D12",
+            "vulkan" => "Vulkan",
+            "metal" => "Metal",
+            "opengl3" or "opengl3_angle" or "opengl3_es" => "OpenGL",
+            _ => driver
+        };
+        Renderer = $"{methodName} {driverName}";
         foreach (string arg in OS.GetCmdlineUserArgs())
         {
             if (arg == "--uncapped")
@@ -91,11 +122,14 @@ public partial class PerfMonitor : Node
         double frame = _lastFrameUsec == 0 ? 0.0 : (now - _lastFrameUsec) / 1000.0;
         _lastFrameUsec = now;
 
+        double? gpu = gpuRaw > 0.0 ? gpuRaw : null;
+        double work = script + render;
         var sample = new Sample(
-            script + render,
+            GpuMeasured && gpu is double g ? System.Math.Max(work, g) : work,
+            work,
             script,
             render,
-            gpuRaw > 0.0 ? gpuRaw : null,
+            gpu,
             SimMs,
             frame,
             Engine.GetFramesPerSecond(),
@@ -115,10 +149,11 @@ public partial class PerfMonitor : Node
 
     private void Summarize()
     {
-        double work = 0, script = 0, render = 0, gpu = 0, sim = 0, frame = 0, fps = 0, draws = 0, objects = 0, worst = 0;
+        double headline = 0, work = 0, script = 0, render = 0, gpu = 0, sim = 0, frame = 0, fps = 0, draws = 0, objects = 0, worst = 0;
         int gpuCount = 0;
         foreach ((ulong _, Sample s) in _window)
         {
+            headline += s.HeadlineMs;
             work += s.WorkMs;
             script += s.ScriptMs;
             render += s.RenderCpuMs;
@@ -127,7 +162,7 @@ public partial class PerfMonitor : Node
             fps += s.Fps;
             draws += s.Draws;
             objects += s.Objects;
-            worst = System.Math.Max(worst, s.WorkMs);
+            worst = System.Math.Max(worst, s.HeadlineMs);
             if (s.GpuMs is double g)
             {
                 gpu += g;
@@ -135,7 +170,7 @@ public partial class PerfMonitor : Node
             }
         }
         int n = System.Math.Max(1, _window.Count);
-        Average = new Sample(work / n, script / n, render / n, gpuCount > 0 ? gpu / gpuCount : null,
+        Average = new Sample(headline / n, work / n, script / n, render / n, gpuCount > 0 ? gpu / gpuCount : null,
             sim / n, frame / n, fps / n, (int)(draws / n), (int)(objects / n));
         WorstMs = worst;
     }

@@ -73,6 +73,7 @@ public static class StateSnapshot
         PerfMonitor.Sample s = perf.Latest;
         return new JsonObject
         {
+            ["headlineMs"] = Math.Round(s.HeadlineMs, 2),
             ["workMs"] = Math.Round(s.WorkMs, 2),
             ["scriptMs"] = Math.Round(s.ScriptMs, 2),
             ["renderCpuMs"] = Math.Round(s.RenderCpuMs, 2),

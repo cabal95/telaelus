@@ -131,7 +131,9 @@ errors to the terminal.
 ### Godot renderer (engine check, opens a window)
 
 A Godot script run against a minimal project (`src/asset-factory/tools/preview/` holds
-`project.godot`). It uses the engine that draws the real game, so use it for a final check.
+`project.godot`). It uses the engine and renderer that draw the real game (Mobile on Direct3D 12,
+with hard shadows), so use it for a final check. Its lighting is its own (a grey background and some
+ambient light, so shapes read), not the game's.
 
 ```bash
 <godot.editor> --path src/asset-factory/tools/preview --resolution 800x800 -s render.gd -- <abs model.obj|model.glb> <abs out.png> [ortho_size]

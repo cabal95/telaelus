@@ -149,16 +149,23 @@ ui-style.md. There is no text HUD; the screen holds:
   load and cannot show headroom. Instead the game times its own work: `PerfFrameStart` processes
   first each frame and `PerfMonitor` last, and the time between them is every node's update (the
   simulation steps included), the **scripts** time. Adding the renderer's CPU time for the viewport
-  gives the frame's **work** time, the headline number. `GameRoot` times the sim steps (**sim**). The
-  GPU time is Godot's viewport measurement; on the Compatibility renderer it is coarse (about 2 ms
-  steps) and under vsync includes the wait, so it is shown only when running uncapped. The monitor
-  also records the wall time between frames, fps, draw calls, and objects drawn, and keeps one
-  second of samples for an average and the worst frame.
+  gives the frame's CPU **work** time. `GameRoot` times the sim steps (**sim**). The **GPU** time is
+  Godot's viewport measurement. On the Mobile renderer (and Forward+) it is taken with GPU
+  timestamps, so it never includes the wait for the display; under vsync it reads higher than
+  uncapped (on this machine about 3 ms against 1 ms) because the GPU clocks down when it has time
+  to spare, which is still the time the frame took. The **headline** is the larger of the CPU and
+  GPU times: how much of the budget the frame used, whichever side is busier. (On the Compatibility
+  renderer, should Godot fall back to it, the GPU time is coarse and can include waiting, so the
+  headline is the CPU time and the GPU time shows only uncapped; there the CPU also waits on the
+  GPU inside the render step, so the CPU time already covers most of the frame.) `Renderer` names
+  the renderer and driver. The monitor also records the wall time between frames, fps, draw calls,
+  and objects drawn, and keeps one second of samples for an average and the worst frame.
 - The debug overlay's performance line reads, for example,
-  `frame 6.6 / 16.7 ms (40%)   scripts 0.7 (sim 0.1)  render 5.9  gpu (uncapped only)   worst 9.8   fps 60   draws 580`.
-  The frame figure is the average work time over the last second, green under 50% of the budget,
-  yellow to 80%, red above; worst is the slowest frame in that second (one-off spikes such as a
-  chunk generating). F3 shows and hides the debug overlay, which starts hidden.
+  `frame 3.1 / 16.7 ms (18%)   cpu 0.9 (scripts 0.6, sim 0.2, render 0.2)   gpu 3.0   worst 4.5   fps 60   draws 58   Mobile D3D12`.
+  The frame figure is the average headline over the last second, green under 50% of the budget,
+  yellow to 80%, red above; then the CPU time with its parts, the GPU time, the worst headline in
+  that second (one-off spikes such as a chunk generating), fps, draw calls, and the renderer. F3
+  shows and hides the debug overlay, which starts hidden.
 - `--uncapped` (a game argument after `--`) turns off vsync and the frame cap, so frames run as fast
   as they can; the wall time between frames is then the true cost of a frame, GPU included. With
   `--fixed-fps 30`, the game still advances one 30 Hz tick per frame, so a scenario plays out the
@@ -174,6 +181,22 @@ ui-style.md. There is no text HUD; the screen holds:
   | Field models batched per tile | 6.6 (runs 6.4 to 8.3) | 583 | 1,117 |
   | With fog of war (three runs) | 4.5 (runs 4.2 to 4.9) | 347 | 356 |
 
+  The rows above ran on Compatibility at 1280x720, where the frame figure was the CPU time (which
+  then included waiting on the GPU). On the Mobile renderer, `perf-walk` (two runs each):
+
+  | Window | Capped | Headline (ms) | CPU (ms) | GPU (ms) | Wall (ms) | Draw calls |
+  |---|---|---|---|---|---|---|
+  | 1280x720 | uncapped | 1.2 | 0.7 | 0.9 | 1.8 | 71 |
+  | 1280x720 | 60 fps | 3.2 to 4.1 | 1.1 | 3.0 to 3.9 | 16.7 | 71 |
+  | 2304x1536 (fullscreen) | uncapped | 1.9 | 0.8 | 1.7 | 2.4 | 105 |
+  | 2304x1536 (fullscreen) | 60 fps | 5.9 | 1.0 | 5.7 | 16.8 | 105 |
+
+  Fullscreen at 60 fps uses about 35% of the budget (Compatibility used about 52% to 58% of it
+  fullscreen); capped, the GPU clocks down and takes longer per frame than uncapped. The worst
+  frame, about 130 ms, is still the first one. Mobile draws the same scene in fewer, larger draw
+  calls. Compatibility, Forward+, and the measurements that led to Mobile are in
+  `docs/changesets/future/graphics-settings.md`.
+
   With fog of war, only the cells the walk has seen are drawn, so the same walk draws about 40%
   fewer calls and is about 2 ms faster; its worst frame (the first one, which builds every tile at
   once) fell from about 170 ms to about 130 ms, and revealing as the player walks adds no
@@ -186,9 +209,20 @@ ui-style.md. There is no text HUD; the screen holds:
 
 ### Rendering
 
-- The project uses Godot 4.7 with C# and the **Compatibility (OpenGL)** renderer. The Godot project
-  root is `src/Game`; `Game.csproj` references the `Game.Sim` project (see simulation.md), whose
-  `Game.Sim.dll` is built beside `Game.dll` and loaded by the engine.
+- The project uses Godot 4.7 with C# and the **Mobile** renderer, on Direct3D 12 on Windows (the
+  `driver.windows` project setting; Godot's defaults elsewhere: Metal on macOS, Vulkan on Linux).
+  Where neither is available Godot falls back to the Compatibility (OpenGL) renderer
+  (`fallback_to_opengl3`), which shades differently. Mobile suits the integrated, tile-based GPUs
+  of laptops; a player setting for Forward+ (for the space mode's features) is parked in
+  `docs/changesets/future/graphics-settings.md`. The Godot project root is `src/Game`;
+  `Game.csproj` references the `Game.Sim` project (see simulation.md), whose `Game.Sim.dll` is built
+  beside `Game.dll` and loaded by the engine.
+- Lighting (see art-style.md): one `DirectionalLight3D` (the sun, rotated -50 and -40 degrees,
+  energy 1, shadows on) and a `WorldEnvironment` with a clear-color background, ambient light off,
+  and linear tone mapping; without one, the Mobile renderer would add ambient fill. Directional
+  shadows use the hard filter (`soft_shadow_filter_quality` 0), so they stay crisp and dark. The
+  first launch on a new machine compiles shaders once (one frame of about a second); Godot caches
+  them.
 
 ### Testing code
 

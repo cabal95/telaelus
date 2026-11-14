@@ -315,6 +315,19 @@ public partial class GameRoot : Node3D
         };
         _light.RotationDegrees = new Vector3(-50, -40, 0);
         AddChild(_light);
+        // The look is one sun and no ambient light: a face turned from the sun reads near black
+        // (art-style.md). Without an environment the Mobile renderer adds ambient fill, so the
+        // world has one with ambient light off.
+        AddChild(new WorldEnvironment
+        {
+            Name = "Environment",
+            Environment = new Godot.Environment
+            {
+                BackgroundMode = Godot.Environment.BGMode.ClearColor,
+                AmbientLightSource = Godot.Environment.AmbientSource.Disabled,
+                TonemapMode = Godot.Environment.ToneMapper.Linear
+            }
+        });
 
         _fieldViews = new ResourceFieldViews
         {

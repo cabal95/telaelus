@@ -9,9 +9,10 @@ namespace Game.Presentation.Ui;
 /// <summary>
 /// The small world a model is drawn in for the UI (building pictures, resource icons,
 /// and the detail panel's turntable): its own <see cref="World3D"/>, lit like the
-/// game's world (its sun angle and no environment: under the Compatibility renderer, an
-/// environment in any world carries over into the game's world, which has none), an
-/// orthographic camera at the game camera's angle fitted to the model, and the model.
+/// game's world (its sun angle; with no environment of its own, the pictures match the
+/// game's no-ambient look, checked side by side against the Compatibility renderer they were
+/// tuned under), an orthographic camera at the game camera's angle fitted to the model, and
+/// the model.
 /// <see cref="RenderOnce{TKey}"/> draws a set of stages once into cached textures.
 /// </summary>
 public static class PictureStage

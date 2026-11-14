@@ -15,8 +15,10 @@ generate, preview, and export an asset is in docs/asset-pipeline.md.
 - Flat colors from material base colors; no textures. Emission only for glowing materials (lava,
   the furnace mouth). Materials are matte (no metal, no specular).
 - Small surface details (grass patches, sand ripples, pebbles, puddles) stay nearly flat. The game
-  lights with one sun and a dark ambient, so any steep face turned from the sun reads as black; a
-  small steep detail becomes a black speck.
+  lights with one sun and no ambient light (an environment with ambient off, linear tone mapping,
+  and hard-edged shadows; see presentation.md), so any steep face turned from the sun reads as
+  black; a small steep detail becomes a black speck. The look was set under the Compatibility
+  renderer and matched under the Mobile renderer side by side.
 - The character is the one textured asset, an accepted CC0 exception.
 
 ### View

@@ -66,17 +66,18 @@ public partial class DebugOverlay : UiLayer
         }
         _world.Text = WorldLine(sim);
 
-        // The frame's work time against the budget (green under 50%, yellow to 80%, red
-        // above), then its parts (scripts, with the sim's share, and the renderer's CPU
-        // time), the approximate GPU time, the worst frame in the last second, fps, and
-        // draw calls. Under vsync Godot's GPU time includes the wait for the refresh, so it
-        // is only shown when running uncapped.
+        // The frame's headline time against the budget (green under 50%, yellow to 80%, red
+        // above): the larger of the CPU and GPU times (see PerfMonitor). Then the CPU time and
+        // its parts (scripts, the sim's share of them, and the renderer's CPU time), the GPU
+        // time, the worst frame in the last second, fps, draw calls, and the renderer. On the
+        // Compatibility renderer the GPU time is only meaningful uncapped.
         PerfMonitor.Sample avg = perf.Average;
-        double share = avg.WorkMs / PerfMonitor.BudgetMs;
-        string gpu = !perf.Uncapped ? "(uncapped only)" : avg.GpuMs is double g ? "~" + g.ToString("F1") : "n/a";
-        _perf.Text = $"frame {avg.WorkMs:F1} / {PerfMonitor.BudgetMs:F1} ms ({share * 100:F0}%)   " +
-            $"scripts {avg.ScriptMs:F1} (sim {avg.SimMs:F1})  render {avg.RenderCpuMs:F1}  gpu {gpu}   " +
-            $"worst {perf.WorstMs:F1}   fps {avg.Fps:F0}   draws {avg.Draws}";
+        double share = avg.HeadlineMs / PerfMonitor.BudgetMs;
+        string gpu = !perf.GpuMeasured && !perf.Uncapped ? "(uncapped only)"
+            : avg.GpuMs is double g ? g.ToString("F1") : "n/a";
+        _perf.Text = $"frame {avg.HeadlineMs:F1} / {PerfMonitor.BudgetMs:F1} ms ({share * 100:F0}%)   " +
+            $"cpu {avg.WorkMs:F1} (scripts {avg.ScriptMs:F1}, sim {avg.SimMs:F1}, render {avg.RenderCpuMs:F1})   gpu {gpu}   " +
+            $"worst {perf.WorstMs:F1}   fps {avg.Fps:F0}   draws {avg.Draws}   {perf.Renderer}";
         _perf.AddThemeColorOverride("font_color", share < 0.5 ? Good : share < 0.8 ? Tight : Over);
     }
 

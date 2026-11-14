@@ -240,8 +240,9 @@ public partial class ScenarioRunner : Node
     }
 
     /// <summary>
-    /// The run's performance over every sampled frame: average and worst work time (scripts
-    /// plus the renderer's CPU time), its parts, the approximate GPU time, the sim time, the
+    /// The run's performance over every sampled frame: the renderer, the average and worst
+    /// headline (the larger of the CPU and GPU times, or the CPU time on Compatibility), the
+    /// average and worst work time (scripts plus the renderer's CPU time), its parts, the approximate GPU time, the sim time, the
     /// wall time between frames (the true frame cost when uncapped), average and peak draw
     /// calls and objects, whether it ran uncapped, and whether it ran windowed or headless
     /// (headless has no real renderer, so its numbers are not measurements).
@@ -257,7 +258,10 @@ public partial class ScenarioRunner : Node
             ["mode"] = TestArgs.IsHeadless ? "headless" : "windowed",
             ["uncapped"] = _root.Perf.Uncapped,
             ["frames"] = n,
+            ["renderer"] = _root.Perf.Renderer,
             ["budgetMs"] = Math.Round(PerfMonitor.BudgetMs, 2),
+            ["headlineMsAvg"] = Avg(s => s.HeadlineMs),
+            ["headlineMsWorst"] = Max(s => s.HeadlineMs),
             ["workMsAvg"] = Avg(s => s.WorkMs),
             ["workMsWorst"] = Max(s => s.WorkMs),
             ["scriptMsAvg"] = Avg(s => s.ScriptMs),

@@ -133,7 +133,7 @@ pausing it and stepping frame by frame.
   (`kind`, `seed` or null, `chunks` generated, `tiles` of terrain built, `fieldBatches` built,
   `fog` whether the world has fog of war, `explored` the count of explored map cells or null
   without fog);
-  `perf` (`workMs`, `scriptMs`, `renderCpuMs`, `gpuMs` or null, `simMs`, `frameMs` (wall time
+  `perf` (`headlineMs` (the larger of the CPU and GPU times), `workMs`, `scriptMs`, `renderCpuMs`, `gpuMs` or null, `simMs`, `frameMs` (wall time
   since the last frame), `worstMs`, `fps`, `draws`, `objects`, as of that frame; see
   presentation.md); `player` (`position`
   [x, z], `harvestTarget` field id or null, `harvestProgress` (0 to 1), the `terrain`, `biome`, and `feature` under the player,
@@ -207,7 +207,8 @@ pausing it and stepping frame by frame.
   command, frame, the step's JSON, outcome, message, and detail: expectation results with
   expected and actual values, or the snapshot for a capture). `hold` records as its three parts.
 - **Performance summary:** the report's `perf` covers every frame of the run: `mode` (`windowed`
-  or `headless`), `uncapped`, `frames`, `budgetMs`, the average and worst `workMs`, the average
+  or `headless`), `uncapped`, `frames`, `renderer`, `budgetMs`, the average and worst
+  `headlineMs` (the larger of the CPU and GPU times) and `workMs`, the average
   `scriptMs`, `renderCpuMs`, and `gpuMs`, the average and worst `simMs` and `frameMs`, and the
   average and peak `draws` and `objects`. Headless runs use a dummy renderer, so their timings and
   render counts are not measurements; measure windowed, with `--uncapped` for true frame times.

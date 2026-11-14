@@ -98,6 +98,9 @@ Newest last. One line each; open the file for the full spec.
   character, within the explored area; moving or Space brings it back (sliding when the character
   is on screen, jumping when not). UI buttons no longer take keyboard focus, and maps without fog
   no longer draw a dark rim at their edge.
+- **2611141406-mobile-renderer** - Switches to the Mobile renderer on Direct3D 12 (about 3 times
+  faster fullscreen on the laptop's integrated GPU), keeping the look with no ambient light and
+  hard shadows; the debug line's frame figure becomes the larger of CPU and GPU time.
 
 ## Adding a changeset
 
