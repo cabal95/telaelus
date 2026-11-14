@@ -2,8 +2,17 @@
 
 A changeset is one coherent unit of change: what we are adding or altering, the code it requires,
 and the blueprint updates it entails. A changeset in progress lives here as `<slug>.md`; once
-implemented it is stamped `YYMMDDHHMM-slug.md` and moved to `completed/`. (The lifecycle and naming
+implemented it is stamped `YYMMDDHHMM-slug.md` and moved to `completed/`. Plans we expect to want
+but are not building yet are parked in `future/` until their time comes. (The lifecycle and naming
 rules are in ../development.md.)
+
+## Future
+
+Parked plans, not approved; see `future/`.
+
+- **graphics-settings** - A player graphics settings panel: the renderer (Forward+ or Mobile, on
+  restart, with a first-launch default by GPU), display mode, render scale with FSR upscaling,
+  vsync, and a frame cap, kept in a settings file in the player's data folder.
 
 ## Completed
 

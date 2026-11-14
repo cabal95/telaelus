@@ -54,6 +54,13 @@ See `docs/changesets/INDEX.md` for the completed-changeset index and the templat
 
 Once committed, an Implemented changeset is immutable; a later change is a new changeset.
 
+**Future** is a parking place outside the lifecycle: `docs/changesets/future/<slug>.md` holds a
+plan we expect to want but have decided not to build yet, so the research and decisions behind it
+are not lost. A future changeset records what we learned (measurements, options weighed, why it
+waits) as well as the plan, and may be rough or out of date. Nothing in it is approved. When its
+time comes, it moves to `docs/changesets/<slug>.md` as **Proposed**, is brought up to date against
+the current blueprints, and goes through the normal lifecycle from there.
+
 ### When a change needs a changeset
 
 - A changeset is required when a change alters what the blueprints describe: new behavior, a new
