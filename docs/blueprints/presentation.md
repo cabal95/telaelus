@@ -31,7 +31,16 @@ planned multiplayer feasible.
   once every chunk it reads is generated, so drawing never generates. A tile is
   `TerrainTileView`: every cell's terrain placements grouped into one `MultiMeshInstance3D` per
   model, which Godot skips when the tile is off screen. The sim's `MapChanged` marks the view
-  dirty, and every tile is rebuilt on the next frame; it processes while paused. `TileCount` and
+  dirty, and every tile is rebuilt on the next frame; the sim's `CellsRevealed` rebuilds only the
+  tiles holding the newly explored cells (and the tiles beside them whose fog border includes
+  them); it processes while paused. A tile draws only its explored cells. Where a tile or its
+  one-cell border has unexplored cells, it also gets a `FogOverlay`: a quad 0.2 above the ground
+  over the whole tile, with a mask texture of one texel per map cell (plus the border) sampled
+  with linear filtering through a small shader, in near-black (the UI's panel color). It is
+  opaque over unexplored cells and fades out across the outer half of the explored cells beside
+  them, for a soft edge; a solid plane of the same color 3 units below the ground covers the tile
+  too, so where the blend thins around an unexplored cell's corner, darkness shows rather than the
+  background. A fully explored tile has neither. `TileCount` and
   `ViewArea` report what is built and the ground area in range. Measured walking a generated
   world at the widest zoom: about 25 to 30 tiles built, about 330,000 triangles and 870 draw calls
   a frame (most draw calls are resource field models), terrain work under 0.2 ms a frame, and
@@ -42,12 +51,13 @@ planned multiplayer feasible.
   built, a `FieldTileView` draws the visible slots of the fields in that tile as one multimesh per
   model, casting shadows; a tile's batch is rebuilt when a field in it is added, removed, or
   changes stage, and freed with the terrain tile; it reports each field's visible model count, its
-  stage while its tile is built),
+  stage while its tile is built; fields in unexplored cells are left out),
   `BuildingViews` (footprint-sized building boxes, created and freed as buildings appear and are
-  removed), `PlayerView` (the character), `CameraRig` (the orthographic follow camera, with
+  removed; `GameRoot` passes only the buildings on explored cells), `PlayerView` (the character), `CameraRig` (the orthographic follow camera, with
   `ZoomTo` for a direct size),
   `BuildController` (build-mode selection and rotation, the footprint ghost, the extractor
-  work-area disc and field highlights, and the place command), and the screen UI (below).
+  work-area disc and field highlights, and the place command; it ignores buildings and fields in
+  unexplored cells under the pointer), and the screen UI (below).
 
 ### Screen UI
 
@@ -161,8 +171,12 @@ ui-style.md. There is no text HUD; the screen holds:
   |---|---|---|---|
   | One node per field model | 6.9 (runs 6.4 to 7.0) | 1,012 | 1,547 |
   | Field models batched per tile | 6.6 (runs 6.4 to 8.3) | 583 | 1,117 |
+  | With fog of war (three runs) | 4.5 (runs 4.2 to 4.9) | 347 | 356 |
 
-  Batching cut draw calls by 42% and objects by 28%, but the frame time barely moved (within the
+  With fog of war, only the cells the walk has seen are drawn, so the same walk draws about 40%
+  fewer calls and is about 2 ms faster; its worst frame (the first one, which builds every tile at
+  once) fell from about 170 ms to about 130 ms, and revealing as the player walks adds no
+  noticeable spikes. Batching cut draw calls by 42% and objects by 28%, but the frame time barely moved (within the
   run-to-run noise): on this machine (Windows on ARM, the Compatibility renderer through a D3D12
   translation layer) the renderer's CPU time has a base of about 3 ms even for an empty map, the
   remaining draw calls are mostly terrain multimeshes (several per tile, and casters again in each

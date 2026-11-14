@@ -179,8 +179,11 @@ public sealed class CommandExecutor
 
     // ---- Map and other setup --------------------------------------------
 
-    /// <summary>Resets to the bounded empty map, or to a generated world when a seed is given.</summary>
-    public StepOutcome InitMap(int? seed)
+    /// <summary>
+    /// Resets to the bounded empty map (fully explored, or with fog only around the player), or
+    /// to a generated world when a seed is given (always with fog).
+    /// </summary>
+    public StepOutcome InitMap(int? seed, bool fog)
     {
         if (seed is int s)
         {
@@ -188,7 +191,7 @@ public sealed class CommandExecutor
         }
         else
         {
-            _root.Sim.Debug.ResetToEmptyMap();
+            _root.Sim.Debug.ResetToEmptyMap(fog);
         }
         _root.Builder.ResetBuildMode();
         return StepOutcome.Ok;

@@ -9,7 +9,8 @@ namespace Game.Presentation;
 /// of terrain. It gathers every cell's placements (see <see cref="TerrainTiles"/>)
 /// and groups them by model into one multimesh per model, so a tile is a few dozen
 /// draw calls rather than thousands of nodes. Godot skips the tile's multimeshes
-/// whenever the tile is outside the camera's view.
+/// whenever the tile is outside the camera's view. Unexplored cells draw nothing; the
+/// tile's <see cref="FogOverlay"/> darkens them.
 /// </summary>
 public static class TerrainTileView
 {
@@ -25,7 +26,7 @@ public static class TerrainTileView
         {
             for (int mapZ = fromZ; mapZ < fromZ + size; mapZ++)
             {
-                if (sim.MapInBounds(mapX, mapZ))
+                if (sim.IsExplored(mapX, mapZ))
                 {
                     TerrainTiles.AddPlacements(sim, mapX, mapZ, origin, placements);
                 }
@@ -71,6 +72,10 @@ public static class TerrainTileView
                     ? GeometryInstance3D.ShadowCastingSetting.On
                     : GeometryInstance3D.ShadowCastingSetting.Off
             });
+        }
+        if (FogOverlay.Create(sim, tileX, tileZ) is Node3D fog)
+        {
+            root.AddChild(fog);
         }
         return root;
     }

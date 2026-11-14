@@ -18,6 +18,9 @@ public sealed class Chunk
     internal readonly MapFeature[,] Features = new MapFeature[Size, Size];
     internal readonly Facing?[,] RiverFlow = new Facing?[Size, Size];
 
+    /// <summary>Whether the player has seen each cell (used only in a world with fog).</summary>
+    internal readonly bool[,] Explored = new bool[Size, Size];
+
     public Chunk(int chunkX, int chunkZ)
     {
         ChunkX = chunkX;

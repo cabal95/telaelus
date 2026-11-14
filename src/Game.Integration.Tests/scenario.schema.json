@@ -72,7 +72,7 @@
       ]
     },
     "initMap": {
-      "description": "Reset to an empty all-grass map (no fields or buildings, empty stockpile, player at the map center), or with generate, to a generated world from that seed with the player at its spawn.",
+      "description": "Reset to an empty all-grass map (no fields or buildings, empty stockpile, player at the map center; fully explored unless fog is true), or with generate, to a generated world from that seed with the player at its spawn (always with fog).",
       "type": "object",
       "required": ["initMap"],
       "additionalProperties": false,
@@ -81,7 +81,8 @@
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "generate": { "type": "integer", "description": "World seed; omit for the bounded empty map." }
+            "generate": { "type": "integer", "description": "World seed; omit for the bounded empty map." },
+            "fog": { "type": "boolean", "description": "Give the empty map fog of war: only the cells in sight of the player start explored." }
           }
         },
         "comment": { "$ref": "#/definitions/comment" }

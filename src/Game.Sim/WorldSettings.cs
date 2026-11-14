@@ -15,7 +15,9 @@ public enum WorldKind
 
 /// <summary>
 /// How to build a simulation's world. Bounded worlds (the test map and the empty
-/// map) are a fixed rectangle of map cells; a generated world has no edge.
+/// map) are a fixed rectangle of map cells; a generated world has no edge. With
+/// <see cref="Fog"/> on, only the map cells the player has seen are explored (a
+/// generated world always has fog; the bounded maps start fully explored unless asked).
 /// </summary>
 public sealed record WorldSettings(WorldKind Kind, int Seed, PlanetDef? Planet)
 {
@@ -28,8 +30,14 @@ public sealed record WorldSettings(WorldKind Kind, int Seed, PlanetDef? Planet)
 
     public static WorldSettings Generated(int seed, PlanetDef? planet = null)
     {
-        return new WorldSettings(WorldKind.Generated, seed, planet ?? PlanetDefs.Starter);
+        return new WorldSettings(WorldKind.Generated, seed, planet ?? PlanetDefs.Starter)
+        {
+            Fog = true
+        };
     }
+
+    /// <summary>Whether the world starts hidden and is revealed as the player sees it.</summary>
+    public bool Fog { get; init; }
 
     public bool IsBounded => Kind != WorldKind.Generated;
 }

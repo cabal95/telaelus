@@ -332,26 +332,37 @@ public partial class BuildController : Node3D
         }
     }
 
-    /// <summary>The placed building under the pointer's ground point, or null.</summary>
+    /// <summary>The placed building under the pointer's ground point, or null (also in unexplored cells).</summary>
     private Building? BuildingUnderPointer()
     {
-        if (!TryGetMouseGround(out Vector3 hit))
+        if (!TryGetExploredPointerCell(out int x, out int z))
         {
             return null;
         }
-        (int x, int z) = Simulation.CellAt(hit.X, hit.Z);
         return _sim.BuildingAt(x, z);
     }
 
-    /// <summary>The resource field covering the pointer's ground point, or null.</summary>
+    /// <summary>The resource field covering the pointer's ground point, or null (also in unexplored cells).</summary>
     private ResourceField? FieldUnderPointer()
     {
-        if (!TryGetMouseGround(out Vector3 hit))
+        if (!TryGetExploredPointerCell(out int x, out int z))
         {
             return null;
         }
-        (int x, int z) = Simulation.CellAt(hit.X, hit.Z);
         return _sim.FieldAt(x, z);
+    }
+
+    /// <summary>The fine cell under the pointer, when its map cell is explored.</summary>
+    private bool TryGetExploredPointerCell(out int x, out int z)
+    {
+        x = 0;
+        z = 0;
+        if (!TryGetMouseGround(out Vector3 hit))
+        {
+            return false;
+        }
+        (x, z) = Simulation.CellAt(hit.X, hit.Z);
+        return _sim.IsExplored(Simulation.MapCellOf(x), Simulation.MapCellOf(z));
     }
 
     /// <summary>An outline: four thin accent bars, laid around a footprint by <see cref="ShowOutline"/>.</summary>

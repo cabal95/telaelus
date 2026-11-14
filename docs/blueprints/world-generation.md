@@ -23,11 +23,11 @@ terrain.md; the deposits it places are in resources.md.
 
 `WorldSettings` picks the kind of world; `Simulation.World` reports it.
 
-| Kind | Bounded | Built |
-|---|---|---|
-| TestMap | 16 x 16 map cells in chunk (0, 0) | the fixed test layout and its fields (terrain.md, resources.md) |
-| Empty | 16 x 16 map cells in chunk (0, 0) | all Grassland grass, no features or fields |
-| Generated | no edge | chunk by chunk from a seed and a planet |
+| Kind | Bounded | Built | Fog |
+|---|---|---|---|
+| TestMap | 16 x 16 map cells in chunk (0, 0) | the fixed test layout and its fields (terrain.md, resources.md) | no |
+| Empty | 16 x 16 map cells in chunk (0, 0) | all Grassland grass, no features or fields | only if asked |
+| Generated | no edge | chunk by chunk from a seed and a planet | always |
 
 - A bounded world behaves as a fixed rectangle: `MapWidth`, `MapHeight`, `GridWidth`, and
   `GridHeight` give its size, `InBounds` and `MapInBounds` test against it, reads outside return
@@ -41,9 +41,11 @@ terrain.md; the deposits it places are in resources.md.
   reports each new chunk.
 - A generated chunk's deposits are added to the field list as it is generated.
 - `new Simulation()` builds the test map; `new Simulation(WorldSettings.Generated(seed))` a
-  generated world on the starter planet. `Debug.ResetToEmptyMap()` and
+  generated world on the starter planet. `Debug.ResetToEmptyMap(fog)` and
   `Debug.ResetToGeneratedWorld(seed)` replace the whole world (clearing fields, buildings, the
-  stockpile, and launches) and put the player at the new spawn.
+  stockpile, launches, and what is explored) and put the player at the new spawn.
+  `Debug.RevealAll()` explores every cell of every existing chunk.
+- A world with fog starts with only the cells in sight of the spawn explored (simulation.md).
 - The game runs a generated world from `--seed=<n>` (after the `--` separator), or a random seed.
 
 ### The generator

@@ -63,6 +63,8 @@ public sealed partial class Simulation
         HarvestTarget = null;
         HarvestProgress = 0f;
         ShipsLaunched = 0;
+        _revealedFrom = null;
+        ExploredCount = 0;
         _generator = settings.Kind == WorldKind.Generated ? new WorldGenerator(settings.Seed, settings.Planet!) : null;
 
         if (settings.IsBounded)
@@ -77,6 +79,7 @@ public sealed partial class Simulation
 
         Player.Position = SpawnPoint;
         EnsureChunksAroundPlayer();
+        RevealAroundPlayer();
     }
 
     /// <summary>Generates the player's chunk and every chunk within <see cref="LoadRadius"/> of it.</summary>

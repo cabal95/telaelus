@@ -59,7 +59,7 @@ loop.
 ### Placement
 
 - `CanPlace(type, anchorX, anchorZ, facing)` applies the standard rule: every footprint cell is in
-  bounds, buildable (`IsBuildable`: Grass, Sand, Snow, or Rock with no blocking feature, so a
+  bounds, explored (fog of war, simulation.md), buildable (`IsBuildable`: Grass, Sand, Snow, or Rock with no blocking feature, so a
   river bank is buildable but its channel and a mountain are not; see terrain.md), unoccupied,
   and not covered by a resource field, and no unit is inside the
   footprint. Today the only unit is the player, whose cell is the fine cell their position floors

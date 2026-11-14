@@ -10,8 +10,9 @@ namespace Game.Presentation;
 /// view and around the player, plus a one-tile margin, builds the missing ones whose cells are ready, and
 /// frees tiles that have fallen two tiles outside that range (their chunks stay in
 /// the sim and are drawn again on return). An edit to the map marks the view
-/// dirty and the tiles are rebuilt on the next frame. It processes while the tree
-/// is paused, so edits made while paused still show.
+/// dirty and the tiles are rebuilt on the next frame; newly explored cells rebuild
+/// only the tiles they touch (with their neighbors' borders). It processes while the
+/// tree is paused, so edits made while paused still show.
 /// </summary>
 public partial class TerrainView : Node3D
 {
@@ -25,6 +26,7 @@ public partial class TerrainView : Node3D
     private Camera3D _camera = null!;
     private readonly Dictionary<(int X, int Z), Node3D> _tiles = new();
     private bool _dirty = true;
+    private readonly HashSet<(int X, int Z)> _stale = new();
 
     /// <summary>How many render tiles are built right now.</summary>
     public int TileCount => _tiles.Count;
@@ -51,6 +53,26 @@ public partial class TerrainView : Node3D
         _dirty = true;
     }
 
+    /// <summary>Marks the tiles that show newly explored cells (or hold them in a fog border) for a rebuild.</summary>
+    public void Reveal(IReadOnlyList<(int MapX, int MapZ)> cells)
+    {
+        foreach ((int mapX, int mapZ) in cells)
+        {
+            for (int dx = -1; dx <= 1; dx++)
+            {
+                for (int dz = -1; dz <= 1; dz++)
+                {
+                    _stale.Add((TileOf(mapX + dx), TileOf(mapZ + dz)));
+                }
+            }
+        }
+    }
+
+    private static int TileOf(int mapCoordinate)
+    {
+        return Mathf.FloorToInt(mapCoordinate / (float)TileSize);
+    }
+
     public override void _Process(double delta)
     {
         if (_dirty)
@@ -62,6 +84,14 @@ public partial class TerrainView : Node3D
             }
             _tiles.Clear();
         }
+        foreach ((int X, int Z) key in _stale)
+        {
+            if (_tiles.Remove(key, out Node3D? old))
+            {
+                old.QueueFree();
+            }
+        }
+        _stale.Clear();
 
         // The camera's view, plus the area around the player: after a reset or a
         // teleport the camera glides over for a moment, and the player's surroundings

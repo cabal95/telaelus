@@ -82,6 +82,9 @@ Newest last. One line each; open the file for the full spec.
 - **2611122136-field-detail-panel** - Clicking a resource field opens a field detail panel: the resource's name, a
   picture of a full field drawn once at startup (per tree family for Wood), Remaining, and Worked
   by.
+- **2611141051-fog-of-war** - Hides the world until the player sees it (reveal once, 24 units of
+  sight): unexplored cells are soft-edged darkness, their contents are not drawn or pickable, and
+  buildings need explored ground.
 
 ## Adding a changeset
 

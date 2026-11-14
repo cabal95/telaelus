@@ -71,7 +71,8 @@ it (None out of bounds). A feature adds its own blocking on top of the terrain's
 
 ### Walk and build rules
 
-- `IsBuildable(x, z)`: the terrain is buildable and no feature blocks the fine cell.
+- `IsBuildable(x, z)`: the terrain is buildable and no feature blocks the fine cell. (Placement
+  also needs the cell explored; see buildings.md.)
 - `IsWalkable(x, z)`: the terrain is walkable, no feature blocks the fine cell, no resource field
   covers it (until depleted), and no building stands on it (see resources.md, buildings.md,
   player.md).
@@ -129,7 +130,8 @@ The center map cells around the spawn are clear Grassland grass.
 - `TerrainView` draws the terrain in render tiles of 16 x 16 map cells, batched into one
   multimesh per model (see presentation.md); `TerrainTiles` lists each map cell's models from the
   generated terrain models (files and conventions in `src/Game/assets/models/terrain/README.md`; the look and
-  the ground levels in art-style.md).
+  the ground levels in art-style.md). Only explored cells draw their models; unexplored cells are
+  darkness (the fog overlay, presentation.md), so their terrain, mountains, and rivers are unseen.
 - A plain cell draws its **ground tile**, `ground_<terrain>_<a|b|c>`: one of three variants at a
   90-degree yaw, both from the map cell's coordinates. Land tiles are faceted surfaces at y = 0
   with small flat details (grass patches, sand ripples, snow drifts, rock slabs and pebbles, mud

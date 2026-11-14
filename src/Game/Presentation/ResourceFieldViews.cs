@@ -49,7 +49,7 @@ public partial class ResourceFieldViews : Node3D
         foreach (ResourceField field in fields)
         {
             (int, int) key = (FloorDiv(field.MapX, TerrainView.TileSize), FloorDiv(field.MapZ, TerrainView.TileSize));
-            if (!terrain.HasTile(key))
+            if (!terrain.HasTile(key) || !sim.IsExplored(field.MapX, field.MapZ))
             {
                 continue;
             }

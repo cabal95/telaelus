@@ -1,0 +1,34 @@
+{
+  "$schema": "../scenario.schema.json",
+  "name": "fog",
+  "description": "Fog of war, reveal once: on the empty map with fog, only the cells within 24 units of the player start explored; a field beyond sight is not drawn and cannot be hovered; coming into sight reveals it, and it stays revealed after the player leaves.",
+  "steps": [
+    { "initMap": { "fog": true } },
+    { "comment": "The player is at (32, 32). Map cell (15, 8) is centered at (62, 34), 30 units away.", "placeResource": { "type": "Wood", "mapCell": [15, 8] } },
+    { "wait": 2 },
+    { "expect": "world.fog", "equals": true },
+    { "expect": "world.explored", "gte": 100 },
+    { "expect": "fields[0].explored", "equals": false },
+    { "expect": "fields[0].visibleModels", "equals": null },
+    { "comment": "Map cell (13, 8) is 22 units away, inside the edge.", "aimAt": { "world": [54, 34] } },
+    { "wait": 2 },
+    { "screenshot": "spawn" },
+    { "aimAt": { "world": [62, 34] } },
+    { "wait": 2 },
+    { "comment": "A field in the dark cannot be hovered.", "expect": "hoveredField", "equals": null },
+
+    { "teleportPlayer": { "x": 48, "z": 32 } },
+    { "wait": 3 },
+    { "expect": "fields[0].explored", "equals": true },
+    { "expect": "fields[0].visibleModels", "equals": 5 },
+    { "aimAt": { "world": [62, 34] } },
+    { "wait": 2 },
+    { "expect": "hoveredField", "notEquals": null },
+    { "screenshot": "revealed" },
+
+    { "comment": "Leaving does not hide it again.", "teleportPlayer": { "x": 12, "z": 32 } },
+    { "wait": 3 },
+    { "expect": "fields[0].explored", "equals": true },
+    { "screenshot": "west" }
+  ]
+}

@@ -31,11 +31,21 @@ public sealed partial class Simulation
         /// <summary>
         /// Resets to the bounded empty map: all-grass Grassland with no features, no
         /// fields or buildings, an empty stockpile, no launches, and the player at the
-        /// map center.
+        /// map center. With fog, only the cells around the player start explored.
         /// </summary>
-        public void ResetToEmptyMap()
+        public void ResetToEmptyMap(bool fog = false)
         {
-            _sim.ResetWorld(WorldSettings.Empty);
+            _sim.ResetWorld(WorldSettings.Empty with
+            {
+                Fog = fog
+            });
+            _sim.MapChanged?.Invoke();
+        }
+
+        /// <summary>Explores every map cell that exists (the bounded map, or every generated chunk).</summary>
+        public void RevealAll()
+        {
+            _sim.RevealAllExisting();
             _sim.MapChanged?.Invoke();
         }
 

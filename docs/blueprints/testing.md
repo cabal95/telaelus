@@ -89,8 +89,8 @@ pausing it and stepping frame by frame.
   defines the format; scenarios reference it with `$schema`.
 - **Commands:**
   - Map setup: `initMap` `{}` (the bounded empty map: all-Grassland grass with no features, player
-    at the center) or `{ generate: <seed> }` (a generated world from that seed, player at its
-    spawn), either way with build mode reset: nothing selected, facing North, no aim override; `changeTiles`
+    at the center, fully explored; `{ fog: true }` gives it fog of war) or `{ generate: <seed> }`
+    (a generated world from that seed, player at its spawn, always with fog), either way with build mode reset: nothing selected, facing North, no aim override; `changeTiles`
     `{ type?, biome?, feature?, flow?, cells: [[x, z], ...] }` or the same with `from, to` (map
     cells, inclusive; at least one of `type`, `biome`, `feature`; `flow` goes with a River and
     sets biome, then terrain, then feature),
@@ -127,7 +127,9 @@ pausing it and stepping frame by frame.
 - **The state snapshot** (`StateSnapshot`) is the contract for `expect`, the report, and the live
   channel: `frame` (game frames processed since the executor started; paused frames do not
   count); `paused`; `input` (`heldKeys`: keys the executor pressed that are still down); `world`
-  (`kind`, `seed` or null, `chunks` generated, `tiles` of terrain built, `fieldBatches` built);
+  (`kind`, `seed` or null, `chunks` generated, `tiles` of terrain built, `fieldBatches` built,
+  `fog` whether the world has fog of war, `explored` the count of explored map cells or null
+  without fog);
   `perf` (`workMs`, `scriptMs`, `renderCpuMs`, `gpuMs` or null, `simMs`, `frameMs` (wall time
   since the last frame), `worstMs`, `fps`, `draws`, `objects`, as of that frame; see
   presentation.md); `player` (`position`
@@ -150,7 +152,7 @@ pausing it and stepping frame by frame.
   `focusedBuilding` (the id of the building the detail panel shows and outlines, or null);
   `hoveredField` and `focusedField` (the same for resource fields);
   `camera` (`zoom`: world units across 720 pixels);
-  `fields` (`id`, `type`, `mapCell`, `amount`, `stage`, `visibleModels`);
+  `fields` (`id`, `type`, `mapCell`, `amount`, `stage`, `visibleModels`, `explored`);
   `stockpile` (every resource); `unlockedBuildings` (type names, in enum order); and
   `shipsLaunched`. New checks are added as snapshot fields.
 - **Input injection:** keys and mouse buttons go through `Input.ParseInputEvent` followed by
@@ -239,6 +241,8 @@ pausing it and stepping frame by frame.
   field keeps its outline; two Mines show as "2 Mines" and Remaining falls as they dig; a
   building and a Forest Wood field switch the panel; empty ground closes it; it closes when its
   field depletes),
+  `fog` (on the empty map with fog, a field beyond sight is not drawn and cannot be hovered;
+  coming into sight reveals it, and it stays revealed after the player leaves),
   `hud` (the debug overlay starts hidden and F3 toggles it; the top bar shows all eight raw
   resources with name tooltips and the launch progress; the hint overlay shows the harvest hint
   and its bar; I opens and closes the inventory with raw resources first; the inventory and a

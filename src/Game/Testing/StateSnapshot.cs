@@ -92,7 +92,9 @@ public static class StateSnapshot
             ["seed"] = sim.World.Kind == WorldKind.Generated ? sim.World.Seed : null,
             ["chunks"] = sim.ChunkCount,
             ["tiles"] = terrain.TileCount,
-            ["fieldBatches"] = fieldViews.BatchCount
+            ["fieldBatches"] = fieldViews.BatchCount,
+            ["fog"] = sim.World.Fog,
+            ["explored"] = sim.World.Fog ? sim.ExploredCount : null
         };
     }
 
@@ -290,7 +292,8 @@ public static class StateSnapshot
                 ["mapCell"] = Pair(f.MapX, f.MapZ),
                 ["amount"] = Round(f.Amount),
                 ["stage"] = f.Stage,
-                ["visibleModels"] = views.VisibleModels(f.Id)
+                ["visibleModels"] = views.VisibleModels(f.Id),
+                ["explored"] = sim.IsExplored(f.MapX, f.MapZ)
             });
         }
         return list;

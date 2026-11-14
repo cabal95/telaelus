@@ -80,6 +80,7 @@ public sealed partial class Simulation
     {
         EnsureChunksAroundPlayer();
         MovePlayer(dt);
+        RevealAroundPlayer();
         UpdateHarvestTarget();
         if (Intent.Harvest)
         {
@@ -150,7 +151,7 @@ public sealed partial class Simulation
         {
             for (int z = anchorZ; z < anchorZ + depth; z++)
             {
-                if (!InBounds(x, z) || _occupied.Contains((x, z)) || !IsBuildable(x, z) || FieldAt(x, z) is not null)
+                if (!InBounds(x, z) || !IsExplored(MapCellOf(x), MapCellOf(z)) || _occupied.Contains((x, z)) || !IsBuildable(x, z) || FieldAt(x, z) is not null)
                 {
                     return false;
                 }

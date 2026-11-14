@@ -75,7 +75,17 @@ and mirrors it onto nodes.
 - The player spawns at the bounded map's center, `(32, 0, 32)`, or at a generated world's spawn
   point.
 - Each step first generates any missing chunk within one chunk of the player (a generated world
-  only), then moves the player, harvests, and steps the buildings.
+  only), then moves the player, reveals what the player can see (fog of war, below), harvests,
+  and steps the buildings.
+- **Fog of war (reveal once):** in a world with fog (`WorldSettings.Fog`: always for a generated
+  world; the bounded maps only when asked), each map cell has an explored flag, stored in its
+  chunk. When the player enters a map cell (and when the world is built), every map cell whose
+  center lies within `SightRadius` (24 units, 6 map cells; one constant) of the player becomes
+  explored, for good: nothing is ever hidden again, and only the player reveals. `IsExplored(mapX,
+  mapZ)` reads it (out of bounds: false; in a world without fog every in-bounds cell is explored),
+  `ExploredCount` counts the explored cells, and `CellsRevealed` reports each batch of newly
+  explored cells. Explored is world state, shared by everyone. The one rule it changes is
+  placement: a building's footprint must lie on explored cells (buildings.md).
 - The walk and build rules (`IsWalkable`, `IsBuildable`) are defined in terrain.md.
 
 ### Architecture posture (single-player now, multiplayer-ready)

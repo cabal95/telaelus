@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Game.Presentation.Ui;
 using Game.Sim;
 using Game.Testing;
@@ -85,7 +86,7 @@ public partial class GameRoot : Node3D
         // view grows (see CameraRig.ViewDistance), so the range follows it.
         _light.DirectionalShadowMaxDistance = _camera.ViewDistance + _camera.Size;
         _fieldViews.Sync(_sim, _terrainView);
-        _buildingViews.Sync(_sim.Buildings);
+        _buildingViews.Sync(ExploredBuildings());
         _topBar.Refresh(_sim, _dialogs.UiSize);
         _hint.Refresh(_sim, _dialogs.UiSize);
         _debug.Refresh(_sim, _perf);
@@ -93,6 +94,21 @@ public partial class GameRoot : Node3D
         _buildController.Focused = _dialogs.Current == _buildingDetail ? _buildingDetail.Building : null;
         _buildController.FocusedField = _dialogs.Current == _fieldDetail ? _fieldDetail.Field : null;
         UpdatePlacementTip();
+    }
+
+    /// <summary>The placed buildings standing on explored cells (only debug placement can put one elsewhere).</summary>
+    private List<Building> ExploredBuildings()
+    {
+        var shown = new List<Building>(_sim.Buildings.Count);
+        foreach (Building building in _sim.Buildings)
+        {
+            (int x, int z) = (building.AnchorX, building.AnchorZ);
+            if (_sim.IsExplored(Simulation.MapCellOf(x), Simulation.MapCellOf(z)))
+            {
+                shown.Add(building);
+            }
+        }
+        return shown;
     }
 
     /// <summary>The world seed from <c>--seed=&lt;n&gt;</c> after the <c>--</c> separator, or a random one.</summary>
@@ -230,6 +246,7 @@ public partial class GameRoot : Node3D
         };
         AddChild(_terrainView);
         _sim.MapChanged += _terrainView.MarkDirty;
+        _sim.CellsRevealed += _terrainView.Reveal;
 
         _light = new DirectionalLight3D
         {
