@@ -155,6 +155,11 @@ or 1.05 for facet variation). A new material extends the table.
 | electronics_accent | 0.24, 0.72, 0.38 | Electronics Works band, annex, and spools (a circuit green) |
 | assembly_accent | 0.20, 0.32, 0.70 | Assembly Plant band, crane rail, and bay door frame (a deep blue) |
 | shipyard_accent | 0.94, 0.95, 0.96 | Shipyard hall, gantry, and the ship's hull (a launch white) |
+| cement_accent | 0.80, 0.76, 0.66 | Cement Kiln drum and band, Concrete Mixer silo and drum band (a pale grey-beige) |
+| lithium_accent | 0.78, 0.70, 0.92 | Brine Well pump-house roof, band, and wellhead (a pale lilac) |
+| fab_accent | 0.42, 0.40, 0.92 | Semiconductor Fab band, door frame, and tank cap (a clean violet-blue) |
+| nuclear_accent | 0.74, 0.90, 0.20 | Enrichment Plant bands and cask bands (a hazard yellow-green) |
+| brine | 0.86, 0.92, 0.96 | The Brine Well's brine pond |
 
 Crown greens are mid tones with no near-black shade: a crown's shaded side would otherwise read
 as black under the dark ambient light. Crowns shade light on upward faces and dark underneath.
@@ -203,6 +208,17 @@ Emissive materials glow at half their base color. Mountains keep their own stone
   pad, stacking 1 unit apart: `ship_engine` (a thrust frame over two bells, about 1.0 high),
   `ship_hull_ring` (a white ring 1.0 high with a dark band), `ship_nose` (a white cone with a
   window band, about 1.6 high).
+- The later tiers: Sawmill (3 x 5, an open-sided shed with a `lumber_accent` gabled roof over a
+  saw bench with a round blade, logs at the back, plank stacks either side at the front), Cement
+  Kiln (3 x 7, a sloped rotary drum on piers with tyre rings from a preheater tower and chimney at
+  the back down to a glowing firing end, a fuel hopper, clinker heaps at the front), Concrete Mixer
+  (3 x 4, a cement silo raised on legs, a tilted mixing drum, a chute to a wet heap at the front),
+  Brine Well (4 x 6, a pump house and wellhead at the back, two bermed evaporation ponds down the
+  front, the nearer drying to white, a salt heap), Semiconductor Fab (5 x 6, a white clean-room
+  block with a raised back, air handlers and fans on the roof, a loading door, a chemical tank),
+  Air Separator (4 x 5, a compressor house, two tall banded cold boxes, a frosted oxygen tank on
+  saddles at the front; `gas_accent`), Enrichment Plant (6 x 7, a concrete containment dome at the
+  back, a cascade hall with rows of centrifuges at its open front, a cask pad at the front).
 
 ### Ground levels
 

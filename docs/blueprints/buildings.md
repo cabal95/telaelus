@@ -10,7 +10,7 @@ ship from a Shipyard, which closes the on-planet loop.
 
 ### Building types and definitions
 
-- `BuildingType` has forty values: **Mine**, **Lumber Camp**, **Smelter**, **Refinery**,
+- `BuildingType` has forty-seven values: **Mine**, **Lumber Camp**, **Smelter**, **Refinery**,
   **Oil Well**, the **HQ**, the storage buildings **Silo**, **Stockyard**, **Tank Farm**,
   **Warehouse**, and **Vault**, the hubs **Small Hub** and **Relay**, the generators **Water
   Wheel** and **Burner Generator**, the powered extractors **Lumber Mill** and **Drill Rig**, the
@@ -19,7 +19,9 @@ ship from a Shipyard, which closes the on-planet loop.
   **Charcoal Kiln**, **Rock Crusher**, **Deep Well**, and **Deep Mine**, and the tier-1 refining
   **Steel Mill**, **Electrolyzer**, **Fuel Plant**, **Chemical Plant**, **Aluminum Smelter**, and
   **Electric Furnace**, and the parts buildings **Fabricator**, **Electronics Works**, **Tile
-  Kiln**, **Assembly Plant**, and **Shipyard**.
+  Kiln**, **Assembly Plant**, and **Shipyard**, and the later tiers' **Sawmill**, **Cement
+  Kiln**, **Concrete Mixer**, **Brine Well**, **Semiconductor Fab**, **Air Separator**, and
+  **Enrichment Plant**.
 - Each type has a `BuildingDef` (in `BuildingDefs`): a display name, a footprint in fine cells
   (width along X, depth along Z when facing North), a cost, a speed, and for an extractor, the
   deposit types it works (`Works`; a building is an extractor when the list is not empty) and its
@@ -31,7 +33,8 @@ ship from a Shipyard, which closes the on-planet loop.
   has a `Tier` (0 unpowered, 1 the first powered tier), the capacity it `Draws` and `Supplies`
   (maps from `CapacityType` to amount; `Draw(type)` and `Supply(type)` read 0 for a type not
   listed, and `IsProvider` when it supplies any), `BurnsFuel` (a fuel slot, `FuelSlotSize` 5
-  units), and its `Placement` rule (Standard, AcrossStraightRiver, BesideWater, or OnSand).
+  units), and its `Placement` rule (Standard, AcrossStraightRiver, BesideWater, OnSand,
+  OnDesertSand, or the renewables' three).
 
   | Type        | Footprint | Cost                       | Works                             | Work radius |
   |-------------|-----------|----------------------------|-----------------------------------|-------------|
@@ -97,7 +100,9 @@ ship from a Shipyard, which closes the on-planet loop.
   the player could not walk into. A building may be placed right next to the player. No building
   may sit on a resource. The rule is the definition's `Placement`: Standard is the rule above;
   BesideWater adds that at least one footprint cell is edge-adjacent (not corner) to ShallowWater,
-  DeepWater, or river channel; OnSand adds that every footprint cell is Sand terrain; and
+  DeepWater, or river channel; OnSand adds that every footprint cell is Sand terrain;
+  OnDesertSand (the Brine Well's salt flats) adds that every cell is Sand terrain in a Desert map
+  cell; and
   AcrossStraightRiver is the Water Wheel's own rule (Capacity, below). The renewables add three
   (Renewables, below): BesideMountain (the standard rule, with a cell edge-adjacent to a mountain),
   OpenGrassCell (the footprint is exactly one map cell, all Grass), and OverSite (the footprint is
@@ -283,6 +288,38 @@ the tier-4 Hull Section and Engine. A recipe may make more than one unit (`Recip
 - Each tier is built from the one before: tier-2 buildings from Steel and Copper (and Stone, Glass),
   the Assembly Plant and Shipyard from tier-2 parts. All have an output buffer of 10 (the
   Shipyard's 2) and 5 cycles of each input.
+
+**Later tiers.** Every catalog item has a maker. The later tiers add recipes to buildings above,
+each listed after the ones in the tables:
+
+- Chemical Plant: 2 Sulfuric Acid: 1 Sulfur, 8 s (the plant's Water).
+- Fabricator: 2 Magnet: 1 Rare Earths, 1 Iron, 12 s; Electric Motor: 1 Steel, 2 Copper Wire, 1
+  Magnet, 15 s; Armor Plate: 2 Steel, 1 Titanium, 15 s.
+- Electronics Works: 2 Insulated Cable: 2 Copper Wire, 1 Rubber, 8 s; Battery: 1 Lithium, 1
+  Copper, 1 Plastic, 15 s.
+- Assembly Plant: Computer: 2 Processor, 2 Circuit, 2 Insulated Cable, 40 s; Heat Shield: 6 Ceramic
+  Tile, 2 Composite Panel, 40 s; Life Support Unit: 2 Electric Motor, 2 Machine Parts, 2 Glass,
+  45 s; Sensor Array: 1 Processor, 2 Magnet, 2 Glass, 40 s.
+
+And seven buildings, all processors (output buffer 10, 5 cycles of each input):
+
+| Building | Footprint | Cost | Tier | Draws | Recipes (inputs to output, cycle) |
+|---|---|---|---|---|---|
+| Sawmill | 3 x 5 | 30 Wood, 20 Stone | 0 | | Lumber: 2 Wood, 8 s |
+| Cement Kiln | 3 x 7 | 40 Stone, 20 Iron, 20 Lumber | 0 | burns fuel | Cement: 2 Limestone, 12 s |
+| Concrete Mixer | 3 x 4 | 30 Iron, 20 Lumber | 1 | 10 Power, 2 Sand, 2 Water | 2 Concrete: 1 Cement, 10 s |
+| Brine Well | 4 x 6 | 30 Steel, 20 Concrete | 1 | 15 Power, 2 Water | Lithium: no inputs, 10 s |
+| Semiconductor Fab | 5 x 6 | 40 Steel, 30 Concrete, 20 Glass | 2 | 40 Power, 4 Water | 2 Silicon Wafer: 1 Silicon, 10 s; Processor: 2 Silicon Wafer, 1 Circuit, 1 Sulfuric Acid, 20 s; Solar Cell: 1 Silicon Wafer, 1 Glass, 2 Copper Wire, 15 s |
+| Air Separator | 4 x 5 | 30 Steel, 20 Concrete, 6 Electric Motor | 2 | 40 Power | Liquid Oxygen: no inputs, 5 s |
+| Enrichment Plant | 6 x 7 | 40 Concrete, 20 Armor Plate, 10 Electric Motor, 10 Computer | 3 | 80 Power, 2 Water | Enriched Uranium: 2 Uranium Ore, 1 Sulfuric Acid, 30 s; Fuel Rod: 2 Enriched Uranium, 2 Steel, 40 s |
+
+- The Cement Kiln burns fuel like the Glassworks (Coal, Charcoal, or Wood, Best by default) and
+  needs no Power, so Cement and Concrete come early. The Brine Well stands on Desert Sand
+  (OnDesertSand) and the Air Separator anywhere; both make their output from nothing, as the
+  Electrolyzer does, which keeps its Liquid Oxygen recipe beside the Air Separator.
+- The new buildings' costs use the new materials: Lumber, Concrete, Electric Motors, Armor Plate,
+  and Computers. Batteries, Solar Cells, Heat Shields, Life Support Units, Sensor Arrays, and
+  Fuel Rods have no consumer yet.
 
 ### Renewables
 

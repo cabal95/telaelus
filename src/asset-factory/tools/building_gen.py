@@ -1011,6 +1011,205 @@ def ship_nose():
     return m, mat.mats
 
 
+def sawmill():
+    """3 x 5: an open-sided plank shed over a long saw bench, logs feeding in at the back, and
+    stacked planks at the front."""
+    m, mat = Mesh(), Materials()
+    hx, hz = half(3), half(5)
+    box(m, mat("wet_earth"), -hx, 0, -hz, hx, 0.05, hz, mat_top=mat("mud", 1.1))
+    # the shed: posts and a gabled plank roof over the bench
+    for x in (-1.1, 1.1):
+        for z in (-1.0, 0.4, 1.8):
+            cylinder(m, mat("wood_dark"), (x, 0.05, z), (x, 1.2, z), 0.06, segs=5)
+    prism_roof(m, mat("lumber_accent"), -1.3, 1.3, -1.2, 2.0, 1.2, 1.75, mat_gable=mat("plank_dark"))
+    # the saw bench down the middle, its round blade, a log on the carriage
+    box(m, mat("plank_dark"), -0.35, 0.05, -0.9, 0.35, 0.5, 1.9, mat_top=mat("plank"))
+    cylinder(m, mat("steel_light"), (-0.02, 0.62, 0.3), (0.02, 0.62, 0.3), 0.32, segs=14)
+    cylinder(m, mat("bark"), (0, 0.68, 0.9), (0, 0.68, 1.85), 0.18, segs=8, mat_cap=mat("log_end"))
+    # logs waiting at the back
+    for k in range(3):
+        y = 0.2 + (0.3 if k == 2 else 0.0)
+        x = -0.9 + k * 0.6 if k < 2 else -0.6
+        cylinder(m, mat("bark"), (x - 0.3, y, 2.15), (x + 0.6, y, 2.15), 0.17, segs=8, mat_cap=mat("log_end"))
+    # stacked planks at the front, either side of the open middle
+    for side in (-1, 1):
+        for k in range(4):
+            y = 0.05 + k * 0.09
+            box(m, mat("plank"), side * 0.55 - 0.35, y, -2.25, side * 0.55 + 0.35, y + 0.08, -1.4,
+                mat_top=mat("plank", 1.1))
+    return m, mat.mats
+
+
+def cement_kiln():
+    """3 x 7: a long sloped rotary kiln drum on piers, a preheater tower and chimney at the back, and
+    a clinker pile at the front; it burns fuel and has no power pole."""
+    m, mat = Mesh(), Materials()
+    hx, hz = half(3), half(7)
+    box(m, mat("stone_dark"), -hx, 0, -hz, hx, 0.06, hz, mat_top=mat("stone", 0.85))
+    # the preheater tower at the back, its chimney, the fuel hopper beside it
+    box(m, mat("concrete"), -0.9, 0.06, 1.9, 0.6, 2.4, 3.3, mat_top=mat("concrete_dark"))
+    box(m, mat("cement_accent"), -0.92, 1.9, 1.88, 0.62, 2.05, 3.32)
+    cylinder(m, mat("concrete_dark"), (0.95, 0.06, 2.9), (0.95, 3.0, 2.9), 0.2, segs=8)
+    cylinder(m, mat("shadow"), (0.95, 3.0, 2.9), (0.95, 3.001, 2.9), 0.13, segs=8)
+    box(m, mat("metal_dark"), 0.75, 0.06, 1.7, 1.3, 0.8, 2.3, mat_top=mat("coal"))
+    # the drum: sloping down from the tower to the front, on three piers, with tyre rings
+    a, b = (-0.15, 1.35, 1.9), (-0.15, 0.65, -2.3)
+    cylinder(m, mat("cement_accent", 0.85), a, b, 0.42, segs=14, mat_cap=mat("metal_dark"))
+    for t in (0.15, 0.5, 0.85):
+        p = tuple(a[i] + (b[i] - a[i]) * t for i in range(3))
+        q = tuple(a[i] + (b[i] - a[i]) * (t + 0.02) for i in range(3))
+        cylinder(m, mat("metal_dark"), p, q, 0.47, segs=14, caps=False)
+        box(m, mat("concrete_dark"), -0.45, 0.06, p[2] - 0.15, 0.15, p[1] - 0.4, p[2] + 0.15)
+    # the glowing firing end and the clinker pile at the front
+    cylinder(m, mat("furnace_glow"), (-0.15, 0.66, -2.31), (-0.15, 0.6, -2.4), 0.3, segs=12)
+    spike(m, mat("concrete_dark"), (0.6, 0.06, -2.9), (0.6, 0.6, -2.9), 0.55, segs=9)
+    spike(m, mat("concrete"), (-0.75, 0.06, -3.0), (-0.75, 0.4, -3.0), 0.4, segs=9)
+    return m, mat.mats
+
+
+def concrete_mixer():
+    """3 x 4: a raised cement silo on legs, a mixing drum on a frame, and a chute at the front, a
+    power pole."""
+    m, mat = Mesh(), Materials()
+    hx, hz = half(3), half(4)
+    box(m, mat("stone_dark"), -hx, 0, -hz, hx, 0.06, hz, mat_top=mat("concrete", 0.9))
+    # the silo at the back, raised on four legs, with a cone underneath
+    for x in (-0.95, -0.15):
+        for z in (0.55, 1.35):
+            cylinder(m, mat("metal_dark"), (x, 0.06, z), (x, 1.2, z), 0.05, segs=5)
+    spike(m, mat("cement_accent"), (-0.55, 1.4, 0.95), (-0.55, 0.85, 0.95), 0.5, segs=12)
+    cylinder(m, mat("cement_accent"), (-0.55, 1.4, 0.95), (-0.55, 2.6, 0.95), 0.5, segs=12, mat_cap=mat("metal"))
+    cylinder(m, mat("power_accent"), (-0.55, 2.3, 0.95), (-0.55, 2.38, 0.95), 0.51, segs=12, caps=False)
+    # the mixing drum, tilted on its frame
+    box(m, mat("metal_dark"), 0.1, 0.06, -0.8, 1.2, 0.5, 0.6, mat_top=mat("metal"))
+    cylinder(m, mat("concrete_dark"), (0.65, 0.95, 0.5), (0.65, 0.7, -0.6), 0.45, segs=12, mat_cap=mat("metal_dark"))
+    cylinder(m, mat("cement_accent"), (0.65, 0.88, 0.2), (0.65, 0.84, 0.05), 0.47, segs=12, caps=False)
+    # the chute down to the front, a wet heap below it
+    quad(m, mat("metal"), (0.4, 0.75, -0.6), (0.9, 0.75, -0.6), (0.9, 0.25, -1.5), (0.4, 0.25, -1.5), (0, 0.9, -0.5))
+    spike(m, mat("concrete"), (0.65, 0.06, -1.6), (0.65, 0.3, -1.6), 0.35, segs=9)
+    power_pole(m, mat, 1.15, 1.65, 1.6)
+    return m, mat.mats
+
+
+def brine_well():
+    """4 x 6: a small wellhead and pump at the back and two shallow evaporation ponds in pale
+    blue-white down the front, a salt heap, a power pole."""
+    m, mat = Mesh(), Materials()
+    hx, hz = half(4), half(6)
+    box(m, mat("sand"), -hx, 0, -hz, hx, 0.05, hz, mat_top=mat("sand", 1.05))
+    # the wellhead and its pump house at the back
+    box(m, mat("concrete"), -1.6, 0.05, 1.5, 0.2, 0.9, 2.8, mat_top=mat("lithium_accent"))
+    box(m, mat("lithium_accent"), -1.62, 0.7, 1.48, 0.22, 0.78, 2.82)
+    cylinder(m, mat("metal_dark"), (0.8, 0.05, 2.2), (0.8, 0.9, 2.2), 0.18, segs=8, mat_cap=mat("metal"))
+    cylinder(m, mat("lithium_accent"), (0.8, 0.9, 2.2), (0.8, 1.0, 2.2), 0.24, segs=8)
+    cylinder(m, mat("metal_dark"), (0.8, 0.5, 2.0), (0.8, 0.5, 1.2), 0.06, segs=6)
+    # two ponds down the front: low berms round shallow brine, the nearer one drying to white
+    for z0, z1, top in ((-0.3, 1.1, "brine"), (-2.75, -0.5, "frost")):
+        box(m, mat(top), -1.65, 0.05, z0 + 0.12, 1.65, 0.1, z1 - 0.12)
+        for bx0, bz0, bx1, bz1 in ((-1.8, z0, 1.8, z0 + 0.12), (-1.8, z1 - 0.12, 1.8, z1),
+                                   (-1.8, z0, -1.65, z1), (1.65, z0, 1.8, z1)):
+            box(m, mat("sand", 0.8), bx0, 0.05, bz0, bx1, 0.18, bz1)
+    cylinder(m, mat("metal_dark"), (0.8, 0.2, 1.2), (0.8, 0.2, -0.4), 0.05, segs=6)
+    # a salt heap at the side
+    spike(m, mat("sack_white"), (1.45, 0.05, -2.2), (1.45, 0.5, -2.2), 0.4, segs=9)
+    power_pole(m, mat, 1.65, 2.65, 1.6)
+    return m, mat.mats
+
+
+def semiconductor_fab():
+    """5 x 6: a sealed white clean-room block with a stepped roof of air handlers, a chemical tank,
+    and a loading door at the front, a power pole."""
+    m, mat = Mesh(), Materials()
+    hx, hz = half(5), half(6)
+    box(m, mat("stone_dark"), -hx, 0, -hz, hx, 0.08, hz, mat_top=mat("concrete", 0.95))
+    # the clean room and its raised back block
+    box(m, mat("ceramic"), -2.2, 0.08, -1.6, 1.4, 1.3, 2.8, mat_top=mat("metal"))
+    box(m, mat("ceramic"), -2.2, 1.3, 0.8, 1.4, 1.9, 2.8, mat_top=mat("metal"))
+    box(m, mat("fab_accent"), -2.22, 1.1, -1.62, 1.42, 1.2, 2.82)
+    # air handlers along the roof, fans on top
+    for k in range(3):
+        x = -1.6 + k * 1.1
+        box(m, mat("metal_dark"), x - 0.35, 1.9, 1.1, x + 0.35, 2.25, 2.5, mat_top=mat("metal"))
+        cylinder(m, mat("shadow"), (x, 2.25, 1.8), (x, 2.26, 1.8), 0.25, segs=10)
+    for k in range(2):
+        x = -1.3 + k * 1.4
+        box(m, mat("metal_dark"), x - 0.3, 1.3, -1.2, x + 0.3, 1.55, 0.4, mat_top=mat("metal"))
+    # the loading door at the front, off to the right of the stand, with a violet frame
+    box(m, mat("fab_accent"), 0.3, 0.08, -1.62, 1.2, 0.95, -1.6)
+    box(m, mat("metal_dark"), 0.38, 0.08, -1.63, 1.12, 0.87, -1.62)
+    # the chemical tank and pipes on the right
+    cylinder(m, mat("metal"), (2.0, 0.08, 1.6), (2.0, 1.4, 1.6), 0.38, segs=10, mat_cap=mat("fab_accent"))
+    cylinder(m, mat("metal_dark"), (1.62, 0.9, 1.6), (1.4, 0.9, 1.6), 0.05, segs=6)
+    power_pole(m, mat, 2.15, -2.65, 1.6)
+    return m, mat.mats
+
+
+def air_separator():
+    """4 x 5: two tall cold boxes, a compressor house, and a frosted Liquid Oxygen tank at the
+    front, a power pole."""
+    m, mat = Mesh(), Materials()
+    hx, hz = half(4), half(5)
+    box(m, mat("stone_dark"), -hx, 0, -hz, hx, 0.08, hz, mat_top=mat("concrete", 0.9))
+    # the compressor house at the back
+    box(m, mat("metal"), -1.8, 0.08, 1.0, 0.6, 1.0, 2.3, mat_top=mat("metal_dark"))
+    box(m, mat("gas_accent"), -1.82, 0.8, 0.98, 0.62, 0.88, 2.32)
+    for k in range(3):
+        cylinder(m, mat("shadow"), (-1.4 + k * 0.7, 1.0, 1.65), (-1.4 + k * 0.7, 1.01, 1.65), 0.22, segs=10)
+    # two tall cold boxes, square columns with bands
+    for x in (1.0, 1.55):
+        box(m, mat("ceramic"), x - 0.22, 0.08, 0.3, x + 0.22, 3.0, 0.75, mat_top=mat("metal"))
+        for y in (1.0, 2.0, 2.8):
+            box(m, mat("gas_accent"), x - 0.23, y, 0.29, x + 0.23, y + 0.08, 0.76)
+    cylinder(m, mat("metal_dark"), (0.6, 0.7, 1.4), (1.0, 0.7, 0.75), 0.06, segs=6)
+    # the frosted oxygen tank lying at the front, on saddles
+    for x in (-1.3, -0.3):
+        box(m, mat("metal_dark"), x - 0.1, 0.08, -1.75, x + 0.1, 0.35, -1.05)
+    cylinder(m, mat("frost"), (-1.65, 0.6, -1.4), (0.05, 0.6, -1.4), 0.38, segs=12, mat_cap=mat("gas_accent"))
+    cylinder(m, mat("gas_accent"), (-0.85, 0.6, -1.4), (-0.75, 0.6, -1.4), 0.39, segs=12, caps=False)
+    power_pole(m, mat, 1.65, -2.15, 1.6)
+    return m, mat.mats
+
+
+def enrichment_plant():
+    """6 x 7: a long hall of centrifuge cascades under a raised roof, a containment dome at the back,
+    and a cask pad at the front, a power pole."""
+    m, mat = Mesh(), Materials()
+    hx, hz = half(6), half(7)
+    box(m, mat("stone_dark"), -hx, 0, -hz, hx, 0.08, hz, mat_top=mat("concrete", 0.9))
+    # the containment dome at the back
+    cylinder(m, mat("concrete"), (-1.0, 0.08, 2.0), (-1.0, 1.4, 2.0), 1.2, segs=18)
+    n = 6
+    for k in range(n):
+        a0 = (math.pi / 2) * k / n
+        a1 = (math.pi / 2) * (k + 1) / n
+        r0, y0 = 1.2 * math.cos(a0), 1.4 + 1.2 * math.sin(a0)
+        r1, y1 = 1.2 * math.cos(a1), 1.4 + 1.2 * math.sin(a1)
+        for s in range(18):
+            b0 = 2 * math.pi * s / 18
+            b1 = 2 * math.pi * (s + 1) / 18
+            p = [(-1.0 + r * math.cos(b), y, 2.0 + r * math.sin(b)) for r, y, b in
+                 ((r0, y0, b0), (r0, y0, b1), (r1, y1, b1), (r1, y1, b0))]
+            mid = (math.cos((b0 + b1) / 2) * math.cos(a0), math.sin(a0) + 0.1, math.sin((b0 + b1) / 2) * math.cos(a0))
+            quad(m, mat("concrete", 1.05), p[0], p[1], p[2], p[3], mid)
+    cylinder(m, mat("nuclear_accent"), (-1.0, 1.1, 2.0), (-1.0, 1.25, 2.0), 1.21, segs=18, caps=False)
+    # the cascade hall along the right: a raised roof, rows of centrifuges visible through its open front
+    box(m, mat("metal"), 0.5, 0.08, -1.8, 2.8, 1.6, 3.3, mat_top=mat("metal_dark"))
+    box(m, mat("nuclear_accent"), 0.48, 1.3, -1.82, 2.82, 1.42, 3.32)
+    box(m, mat("shadow"), 0.7, 0.08, -1.81, 2.6, 1.2, -1.8)
+    for row in range(2):
+        for k in range(4):
+            x = 0.95 + k * 0.45
+            z = -2.1 - row * 0.4
+            cylinder(m, mat("metal_dark" if row else "steel_light"), (x, 0.08, z), (x, 0.9, z), 0.12, segs=8)
+    # the cask pad at the front left, two casks with hazard bands
+    box(m, mat("concrete_dark"), -2.6, 0.08, -3.3, -1.1, 0.14, -2.0)
+    for x in (-2.2, -1.5):
+        cylinder(m, mat("metal_dark"), (x, 0.14, -2.65), (x, 0.9, -2.65), 0.28, segs=10, mat_cap=mat("metal"))
+        cylinder(m, mat("nuclear_accent"), (x, 0.55, -2.65), (x, 0.65, -2.65), 0.29, segs=10, caps=False)
+    power_pole(m, mat, -2.65, 0.6, 1.8)
+    return m, mat.mats
+
+
 BUILDINGS = {"mine": mine, "lumber_camp": lumber_camp, "smelter": smelter, "refinery": refinery,
              "oil_well": oil_well, "hq": hq, "silo": silo, "stockyard": stockyard, "tank_farm": tank_farm,
              "warehouse": warehouse, "vault": vault, "small_hub": small_hub, "relay": relay,
@@ -1024,7 +1223,10 @@ BUILDINGS = {"mine": mine, "lumber_camp": lumber_camp, "smelter": smelter, "refi
              "electric_furnace": electric_furnace, "fabricator": fabricator,
              "electronics_works": electronics_works, "tile_kiln": tile_kiln, "assembly_plant": assembly_plant,
              "shipyard": shipyard, "display_stand": display_stand, "ship_engine": ship_engine,
-             "ship_hull_ring": ship_hull_ring, "ship_nose": ship_nose}
+             "ship_hull_ring": ship_hull_ring, "ship_nose": ship_nose, "sawmill": sawmill,
+             "cement_kiln": cement_kiln, "concrete_mixer": concrete_mixer, "brine_well": brine_well,
+             "semiconductor_fab": semiconductor_fab, "air_separator": air_separator,
+             "enrichment_plant": enrichment_plant}
 
 
 def build_all():

@@ -1,0 +1,36 @@
+newmtl sand
+Kd 0.780 0.700 0.480
+
+newmtl sand_105
+Kd 0.819 0.735 0.504
+
+newmtl concrete
+Kd 0.660 0.660 0.640
+
+newmtl lithium_accent
+Kd 0.780 0.700 0.920
+
+newmtl metal_dark
+Kd 0.300 0.310 0.340
+
+newmtl metal
+Kd 0.580 0.600 0.630
+
+newmtl brine
+Kd 0.860 0.920 0.960
+
+newmtl sand_80
+Kd 0.624 0.560 0.384
+
+newmtl frost
+Kd 0.780 0.900 0.980
+
+newmtl sack_white
+Kd 0.920 0.920 0.900
+
+newmtl wood_dark
+Kd 0.400 0.280 0.170
+
+newmtl power_accent
+Kd 1.000 0.860 0.120
+

@@ -31,16 +31,21 @@ buildings.md). A single global stockpile holds all amounts, within storage limit
   | RareEarths, UraniumOre, Crystals | Deposit | no | 9 s | fields (Drill Rig only) |
   | Sand | TerrainSourced | no | | capacity from a Sand Collector or Sand Dredge on Sand (buildings.md) |
   | Water | TerrainSourced | no | | capacity from a Water Pump or Pumping Station beside water (buildings.md) |
-  | Lithium | TerrainSourced | no | | a Brine Well (not yet built) |
+  | Lithium | TerrainSourced | no | | a Brine Well on Desert Sand (buildings.md) |
 
-  The refined resources, by tier. What makes them today: the Smelter Iron and Copper; the
+  The refined resources, by tier. What makes them: the Smelter Iron and Copper; the
   Refinery Kerosene; the Fuel Plant Rocket Fuel (Kerosene and Hydrogen); the Electrolyzer Hydrogen
   and Liquid Oxygen; the Steel Mill Steel; the Chemical Plant Plastic, Rubber, and Carbon Fiber;
   the Aluminum Smelter Aluminum; the Electric Furnace Silicon and Titanium; the Glassworks Glass;
   the Charcoal Kiln Charcoal; the Fabricator Hull Plate, Steel Beam, Aluminum Frame, Machine Parts,
   and Composite Panel; the Electronics Works Copper Wire and Circuit; the Tile Kiln Ceramic Tile;
   the Assembly Plant Control Module, Thruster Assembly, and Fuel Tank; the Shipyard Hull Section
-  and Engine (buildings.md has the recipes). Nothing makes the others yet:
+  and Engine. The later tiers: the Sawmill Lumber; the Cement Kiln Cement; the Concrete Mixer
+  Concrete; the Chemical Plant also Sulfuric Acid; the Enrichment Plant Enriched Uranium and Fuel
+  Rod; the Air Separator Liquid Oxygen too; the Fabricator also Magnet, Electric Motor, and Armor
+  Plate; the Electronics Works also Insulated Cable and Battery; the Semiconductor Fab Silicon
+  Wafer, Processor, and Solar Cell; the Assembly Plant also Computer, Heat Shield, Life Support
+  Unit, and Sensor Array (buildings.md has the recipes). Every refined resource has a maker:
 
   | Tier | Refined resources |
   |---|---|

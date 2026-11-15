@@ -5,10 +5,10 @@ namespace Game.Sim.Tests;
 public class PartsTests
 {
     [Theory]
-    [InlineData(BuildingType.Fabricator, "Hull Plate,Steel Beam,Aluminum Frame,Machine Parts,Composite Panel")]
-    [InlineData(BuildingType.ElectronicsWorks, "Copper Wire,Circuit")]
+    [InlineData(BuildingType.Fabricator, "Hull Plate,Steel Beam,Aluminum Frame,Machine Parts,Composite Panel,Magnet,Electric Motor,Armor Plate")]
+    [InlineData(BuildingType.ElectronicsWorks, "Copper Wire,Circuit,Insulated Cable,Battery")]
     [InlineData(BuildingType.TileKiln, "Ceramic Tile")]
-    [InlineData(BuildingType.AssemblyPlant, "Control Module,Thruster Assembly,Fuel Tank")]
+    [InlineData(BuildingType.AssemblyPlant, "Control Module,Thruster Assembly,Fuel Tank,Computer,Heat Shield,Life Support Unit,Sensor Array")]
     [InlineData(BuildingType.Shipyard, "Hull Section,Engine")]
     public void EachPartsBuilding_RunsItsRecipes(BuildingType type, string names)
     {

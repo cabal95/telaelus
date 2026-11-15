@@ -147,6 +147,11 @@ Newest last. One line each; open the file for the full spec.
   launch needs 4 Hull Sections, an Engine, a Control Module, 500 Rocket Fuel, and 200 Liquid Oxygen
   and an online Shipyard; display stands show what a building makes, and the ship grows on the
   Shipyard's pad as its parts arrive.
+- **2611151049-later-tiers** - Gives every catalog item a maker: Sulfuric Acid, Magnet, Electric
+  Motor, Armor Plate, Insulated Cable, Battery, Computer, Heat Shield, Life Support Unit, and Sensor
+  Array as new recipes; the Sawmill, Cement Kiln, Concrete Mixer, Brine Well (Lithium on Desert
+  Sand), Semiconductor Fab, Air Separator, and Enrichment Plant with their models; the new
+  buildings cost Lumber, Concrete, and parts.
 
 ## Adding a changeset
 

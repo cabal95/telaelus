@@ -46,6 +46,12 @@ public static class BuildingModels
             BuildingType.ElectronicsWorks => "electronics_works",
             BuildingType.TileKiln => "tile_kiln",
             BuildingType.AssemblyPlant => "assembly_plant",
+            BuildingType.CementKiln => "cement_kiln",
+            BuildingType.ConcreteMixer => "concrete_mixer",
+            BuildingType.BrineWell => "brine_well",
+            BuildingType.SemiconductorFab => "semiconductor_fab",
+            BuildingType.AirSeparator => "air_separator",
+            BuildingType.EnrichmentPlant => "enrichment_plant",
             _ => type.ToString().ToLowerInvariant()
         };
     }

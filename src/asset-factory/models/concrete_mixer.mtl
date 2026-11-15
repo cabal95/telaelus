@@ -1,0 +1,27 @@
+newmtl stone_dark
+Kd 0.360 0.340 0.330
+
+newmtl concrete_90
+Kd 0.594 0.594 0.576
+
+newmtl metal_dark
+Kd 0.300 0.310 0.340
+
+newmtl cement_accent
+Kd 0.800 0.760 0.660
+
+newmtl metal
+Kd 0.580 0.600 0.630
+
+newmtl power_accent
+Kd 1.000 0.860 0.120
+
+newmtl concrete_dark
+Kd 0.540 0.540 0.520
+
+newmtl concrete
+Kd 0.660 0.660 0.640
+
+newmtl wood_dark
+Kd 0.400 0.280 0.170
+

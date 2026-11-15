@@ -29,7 +29,7 @@ public class RefiningTests
     [InlineData(BuildingType.SteelMill, "Steel")]
     [InlineData(BuildingType.Electrolyzer, "Hydrogen,Liquid Oxygen")]
     [InlineData(BuildingType.FuelPlant, "Rocket Fuel")]
-    [InlineData(BuildingType.ChemicalPlant, "Plastic,Rubber,Carbon Fiber")]
+    [InlineData(BuildingType.ChemicalPlant, "Plastic,Rubber,Carbon Fiber,Sulfuric Acid")]
     [InlineData(BuildingType.AluminumSmelter, "Aluminum")]
     [InlineData(BuildingType.ElectricFurnace, "Silicon,Titanium")]
     public void EachBuilding_RunsItsRecipes(BuildingType type, string names)

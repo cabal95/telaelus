@@ -61,6 +61,9 @@ public enum Placement
     /// <summary>The standard rule, with every cell on Sand terrain.</summary>
     OnSand,
 
+    /// <summary>The standard rule, with every cell on Sand terrain in a Desert map cell (the Brine Well's salt flats).</summary>
+    OnDesertSand,
+
     /// <summary>The standard rule, with at least one cell edge-adjacent to a mountain (the Quarry).</summary>
     BesideMountain,
 

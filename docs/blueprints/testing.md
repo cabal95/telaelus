@@ -140,6 +140,13 @@ pausing it and stepping frame by frame.
   putting two wires in storage, and an end-to-end run from seeded tier-1 materials through five
   Fabricators, two Electronics Works, a Tile Kiln, three Assembly Plants, and two Shipyards (on
   Burner Generators, with Warehouses for the parts) to a launch.
+- `LaterTiersTests`: each building's recipe list (the new buildings and the added recipes), every
+  refined resource having a maker, a Silicon Wafer cycle making two, the Brine Well's placement (on
+  Desert Sand, refused on Sand elsewhere and off the Sand) and its Lithium into a Stockyard, the Air
+  Separator's Liquid Oxygen with no Water, the Cement Kiln waiting for fuel and then burning it
+  with no Power, the Concrete Mixer in a Sand blackout and then making Concrete, and an
+  end-to-end run from seeded materials through two Semiconductor Fabs, an Electronics Works, an
+  Assembly Plant, and two Enrichment Plants to a Computer and a Fuel Rod.
 - `RefiningTests`: each building's recipes; the Steel Mill on Auto taking Coal, on Charcoal only
   Charcoal, waiting for it, and back on Auto; a recipe change waiting for the running cycle and
   unused inputs going back to storage; the Electrolyzer's two gases and the Fuel Plant's Rocket
@@ -360,6 +367,9 @@ pausing it and stepping frame by frame.
   generator's panel shows its supply and Best fuel),
   `refining` (a Steel Mill's Auto input picker and its note and recipe text; an Electrolyzer on
   Hydrogen feeding a Fuel Plant to Rocket Fuel; the launch progress with Liquid Oxygen),
+  `later-tiers` (a Sawmill's Lumber; a Cement Kiln's Cement turned into Concrete by a Concrete
+  Mixer on Sand and Water; a Brine Well on Desert Sand pumping Lithium into a Stockyard; a
+  Semiconductor Fab's display stand and recipe changing to Processor),
   `first-ship` (a Fabricator making Hull Plate, its display stand showing the part and changing
   at once when Steel Beam is chosen; with the ship bill seeded, the top bar asking for a Shipyard;
   a Shipyard placed, the ship on its pad and "[L] Launch ship"; L launching it and the bill

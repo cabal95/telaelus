@@ -693,6 +693,107 @@ public static class BuildingDefs
         }
     };
 
+    private static readonly BuildingDef Sawmill = new("Sawmill", 3, 5, new ResourceAmount[]
+    {
+        new(ResourceType.Wood, 30f),
+        new(ResourceType.Stone, 20f)
+    }, Array.Empty<ResourceType>(), 0f)
+    {
+        OutputBuffer = 10f,
+        InputCycles = 5
+    };
+    private static readonly BuildingDef CementKiln = new("Cement Kiln", 3, 7, new ResourceAmount[]
+    {
+        new(ResourceType.Stone, 40f),
+        new(ResourceType.Iron, 20f),
+        new(ResourceType.Lumber, 20f)
+    }, Array.Empty<ResourceType>(), 0f)
+    {
+        OutputBuffer = 10f,
+        InputCycles = 5,
+        BurnsFuel = true
+    };
+    private static readonly BuildingDef ConcreteMixer = new("Concrete Mixer", 3, 4, new ResourceAmount[]
+    {
+        new(ResourceType.Iron, 30f),
+        new(ResourceType.Lumber, 20f)
+    }, Array.Empty<ResourceType>(), 0f)
+    {
+        Tier = 1,
+        OutputBuffer = 10f,
+        InputCycles = 5,
+        Draws = new Dictionary<CapacityType, float>
+        {
+            [CapacityType.Power] = 10f,
+            [CapacityType.Sand] = 2f,
+            [CapacityType.Water] = 2f
+        }
+    };
+    private static readonly BuildingDef BrineWell = new("Brine Well", 4, 6, new ResourceAmount[]
+    {
+        new(ResourceType.Steel, 30f),
+        new(ResourceType.Concrete, 20f)
+    }, Array.Empty<ResourceType>(), 0f)
+    {
+        Tier = 1,
+        Placement = Placement.OnDesertSand,
+        OutputBuffer = 10f,
+        InputCycles = 5,
+        Draws = new Dictionary<CapacityType, float>
+        {
+            [CapacityType.Power] = 15f,
+            [CapacityType.Water] = 2f
+        }
+    };
+    private static readonly BuildingDef SemiconductorFab = new("Semiconductor Fab", 5, 6, new ResourceAmount[]
+    {
+        new(ResourceType.Steel, 40f),
+        new(ResourceType.Concrete, 30f),
+        new(ResourceType.Glass, 20f)
+    }, Array.Empty<ResourceType>(), 0f)
+    {
+        Tier = 2,
+        OutputBuffer = 10f,
+        InputCycles = 5,
+        Draws = new Dictionary<CapacityType, float>
+        {
+            [CapacityType.Power] = 40f,
+            [CapacityType.Water] = 4f
+        }
+    };
+    private static readonly BuildingDef AirSeparator = new("Air Separator", 4, 5, new ResourceAmount[]
+    {
+        new(ResourceType.Steel, 30f),
+        new(ResourceType.Concrete, 20f),
+        new(ResourceType.ElectricMotor, 6f)
+    }, Array.Empty<ResourceType>(), 0f)
+    {
+        Tier = 2,
+        OutputBuffer = 10f,
+        InputCycles = 5,
+        Draws = new Dictionary<CapacityType, float>
+        {
+            [CapacityType.Power] = 40f
+        }
+    };
+    private static readonly BuildingDef EnrichmentPlant = new("Enrichment Plant", 6, 7, new ResourceAmount[]
+    {
+        new(ResourceType.Concrete, 40f),
+        new(ResourceType.ArmorPlate, 20f),
+        new(ResourceType.ElectricMotor, 10f),
+        new(ResourceType.Computer, 10f)
+    }, Array.Empty<ResourceType>(), 0f)
+    {
+        Tier = 3,
+        OutputBuffer = 10f,
+        InputCycles = 5,
+        Draws = new Dictionary<CapacityType, float>
+        {
+            [CapacityType.Power] = 80f,
+            [CapacityType.Water] = 2f
+        }
+    };
+
     public static BuildingDef For(BuildingType type)
     {
         return type switch
@@ -737,6 +838,13 @@ public static class BuildingDefs
             BuildingType.TileKiln => TileKiln,
             BuildingType.AssemblyPlant => AssemblyPlant,
             BuildingType.Shipyard => Shipyard,
+            BuildingType.Sawmill => Sawmill,
+            BuildingType.CementKiln => CementKiln,
+            BuildingType.ConcreteMixer => ConcreteMixer,
+            BuildingType.BrineWell => BrineWell,
+            BuildingType.SemiconductorFab => SemiconductorFab,
+            BuildingType.AirSeparator => AirSeparator,
+            BuildingType.EnrichmentPlant => EnrichmentPlant,
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, "no building definition")
         };
     }

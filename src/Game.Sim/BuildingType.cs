@@ -42,5 +42,12 @@ public enum BuildingType
     ElectronicsWorks,
     TileKiln,
     AssemblyPlant,
-    Shipyard
+    Shipyard,
+    Sawmill,
+    CementKiln,
+    ConcreteMixer,
+    BrineWell,
+    SemiconductorFab,
+    AirSeparator,
+    EnrichmentPlant
 }
