@@ -3,6 +3,7 @@
   "name": "build-rotate",
   "description": "R rotates the Refinery ghost between 2x3 and 3x2, and four presses return to North. Facing lives in BuildController, not the sim.",
   "steps": [
+    { "newGame": {} },
     { "initMap": {} },
     { "comment": "Buildings cost resources and unlock once their materials are held.", "seedStockpile": { "type": "Wood", "amount": 500 } },
     { "seedStockpile": { "type": "Stone", "amount": 500 } },

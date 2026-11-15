@@ -36,7 +36,7 @@ public partial class ControlChannel : Node
             new(TaskCreationOptions.RunContinuationsAsynchronously);
     }
 
-    private GameRoot _root = null!;
+    private AppRoot _root = null!;
     private TestArgs _args = null!;
     private CommandExecutor _executor = null!;
     private string _outputDir = "";
@@ -57,7 +57,7 @@ public partial class ControlChannel : Node
     private bool _quitting;
 
     /// <summary>Attaches the channel if the command line asks for one (debug builds only).</summary>
-    public static void AttachIfRequested(GameRoot root)
+    public static void AttachIfRequested(AppRoot root)
     {
         TestArgs args = TestArgs.Parse();
         if (args.ControlPort is null)
@@ -79,6 +79,7 @@ public partial class ControlChannel : Node
         {
             Name = "ControlChannel",
             ProcessMode = ProcessModeEnum.Always,
+            ProcessPriority = 100,
             _root = root,
             _args = args
         };

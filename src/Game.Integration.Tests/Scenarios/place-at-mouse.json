@@ -3,6 +3,7 @@
   "name": "place-at-mouse",
   "description": "Aiming and clicking places a Mine centered on the pointer, and the ghost counts Ore fields in its work area. Mouse-to-anchor mapping and the range count are presentation.",
   "steps": [
+    { "newGame": {} },
     { "initMap": {} },
     { "comment": "Buildings cost resources and unlock once their materials are held.", "seedStockpile": { "type": "Wood", "amount": 500 } },
     { "seedStockpile": { "type": "Stone", "amount": 500 } },

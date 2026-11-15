@@ -193,7 +193,7 @@ pausing it and stepping frame by frame.
     and whether or not unlocked), `teleportPlayer` `{ x, z }` (the camera jumps onto the player too), `seedStockpile` `{ type, amount }`, `fillBuffer` `{ anchor, type, amount }` (sets one
     resource in the output buffer of the building at that anchor; 0 removes it), `setRecipe`
     `{ anchor, index }` (chooses the recipe of the building at that anchor, as its picker does),
-    `setTimeOfDay` (a number from 0 up to 1, 0.5 midday), `placeRoad` and `placeBridge`
+    `newGame` `{ seed? }` (see above), `setTimeOfDay` (a number from 0 up to 1, 0.5 midday), `placeRoad` and `placeBridge`
     `{ from: [x, z], to: [x, z] }` (lay a road line or bridge span free, as `placeBuilding` places;
     fail when nothing can be laid), `removeRoad` and `removeBridge` (the same, with the refund), `startResearch` (a project name; fails
     when it cannot start), `pauseResearch` (`{}`), `setResearchProgress` `{ project, seconds }` (at
@@ -292,6 +292,8 @@ pausing it and stepping frame by frame.
   center, `detached`: whether a drag has moved it off the player);
   `fields` (`id`, `type`, `mapCell`, `amount`, `stage`, `visibleModels`, `explored`, `growing`,
   `motherlode` or null);
+  `app` (`loading`, `menu`, or `game`; before a game the snapshot is only `app`, `loading` (the
+  progress, 0 to 1), and `ui` with `open` (`mainMenu` on the menu) and `menu` (`title`, `buttons`));
   `stockpile` (every resource); `capacity` (`power`, `water`, and `sand`, each with `supply`,
   `demand`, `speed`, and `state`: `normal`, `brownout`, or `blackout`, and once there is a Battery
   Bank, `stored`, `storeCapacity`, and `storeFlow`); `timeOfDay` and `daylight`; `research` (its
@@ -335,9 +337,13 @@ pausing it and stepping frame by frame.
   `screenshot` into a `snapshot`. A headless window is 64 x 64 and ignores `--resolution`, so
   the scenario runner sizes it to 1280 x 720, and the UI lays out and UI clicks land as they do
   windowed.
-- A windowed run holds its first command until the startup pictures (resource icons, field and
-  building pictures, `GameRoot.PicturesReady`) are drawn, so screenshots show them; they draw in
-  batches over several frames.
+- **A scenario starts at the main menu.** Its first command runs once the loading screen is done
+  (the models loaded and the pictures drawn, so screenshots show them). `newGame` `{ seed? }` goes
+  into a new game whatever the current state, from the menu or replacing the game in play (the seed
+  when given, else the scenario seed, 1); the next command runs a frame later. Every game scenario
+  begins with it; commands that need a game fail with "no game yet: start one with newGame" before
+  one. `wait`, `pause`, `step`, `expect`, `snapshot`, and `screenshot` work on the menu too. Commands
+  that work the menu and the options come later, with those screens.
 - Relative `--scenario` and `--output` paths resolve against the repo root, because Godot changes
   its working directory to the project folder when given `--path`.
 - `--fixed-fps 30` matches the sim's 30 Hz tick, so every frame advances exactly one sim tick:
@@ -345,13 +351,14 @@ pausing it and stepping frame by frame.
   that input held for a single frame (a `press`) overlaps a sim tick; at 60 fps the sim ticks only
   every other frame, so a one-frame press of a polled key (movement, E) could be missed. If the
   sim tick rate changes, this value changes with it.
-- `GameRoot` attaches the `ScenarioRunner` only with `--scenario` and only in debug builds. The
-  runner processes with `ProcessMode.Always`, so scenarios can use `pause` and `step`.
-- **A fixed start:** with `--scenario` and no `--seed`, `GameRoot` builds its startup world from
-  `GameRoot.ScenarioSeed` (1) instead of a random seed, so the world, spawn, and camera before the
-  first command are the same every run (interactive runs keep a random world). Together with the
-  camera jump in `initMap` and `teleportPlayer`, a scenario's first frames no longer depend on where
-  a random startup world put the camera.
+- `AppRoot` attaches the `ScenarioRunner` only with `--scenario` and only in debug builds. The
+  runner processes with `ProcessMode.Always`, so scenarios can use `pause` and `step`, and with a
+  process priority after the game's, as when it was the game's child. Its report's perf summary
+  samples whichever game is in play.
+- **A fixed start:** a scenario's game is built from `AppRoot.ScenarioSeed` (1) unless `newGame` or
+  `--seed` names another, so the world, spawn, and camera before the next command are the same
+  every run (interactive runs keep a random world). Together with the camera jump in `initMap` and
+  `teleportPlayer`, a scenario's first frames do not depend on chance.
 - **Output:** by default `test-output/runs/<yyMMdd-HHmmss>-<name>/` at the repo root
   (git-ignored), or `--output`. It holds the PNGs and `report.json`: scenario name and file,
   result, exit code, message, frame count, a run-level `perf` summary, and one record per
@@ -445,6 +452,9 @@ pausing it and stepping frame by frame.
   generator's panel shows its supply and Best fuel),
   `refining` (a Steel Mill's Auto input picker and its note and recipe text; an Electrolyzer on
   Hydrogen feeding a Fuel Plant to Rocket Fuel; the launch progress with Liquid Oxygen),
+  `menu` (the loading screen done and the menu showing its title and New Game and Quit; `newGame`
+  going into a game, and a second replacing it with a fresh world; windowed screenshots of the menu
+  and the game),
   `roads` (the menu's Road tool laying an L of tiles by drag and taking their Stone, a right drag
   removing three for half back, Escape leaving build mode; a Mine across a strip of ShallowWater out
   of a truck's reach until the Bridge tool spans it, then the truck hauling its ore home over it),

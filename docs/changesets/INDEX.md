@@ -172,6 +172,10 @@ Newest last. One line each; open the file for the full spec.
   trucks and the player, laid as an L by drag) and bridges (straight spans over ShallowWater or across
   a straight river), with costs, half refunds, buildings kept off them, truck paths using them, the
   build menu's Infrastructure cells, and the joining road and bridge pieces.
+- **2611151428-loading-and-menu** - Adds a loading screen (the town splash image, "Loading", and a
+  progress bar while every model loads and the pictures draw, once per run) and a main menu over the
+  live town with a blurred panel (New Game, Quit); an editable town scene and `--render-splash`; games
+  created on New Game; scenarios start at the menu with a `newGame` step.
 
 ## Adding a changeset
 

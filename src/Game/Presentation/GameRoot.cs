@@ -67,12 +67,21 @@ public partial class GameRoot : Node3D
     public ResearchTree ResearchTree => _researchTree;
     public FieldDetail FieldDetail => _fieldDetail;
 
+    private int _seed;
+
+    /// <summary>Sets up a new game before it enters the tree: its world's seed and the pictures every game shares.</summary>
+    public void Initialize(int seed, ResourceIcons icons, BuildingPictures buildingPictures, FieldPictures fieldPictures)
+    {
+        _seed = seed;
+        _icons = icons;
+        _buildingPictures = buildingPictures;
+        _fieldPictures = fieldPictures;
+    }
+
     public override void _Ready()
     {
-        _sim = new Simulation(WorldSettings.Generated(ReadSeed()));
+        _sim = new Simulation(WorldSettings.Generated(_seed));
         BuildWorld();
-        ScenarioRunner.AttachIfRequested(this);
-        ControlChannel.AttachIfRequested(this);
     }
 
     /// <summary>
@@ -150,27 +159,6 @@ public partial class GameRoot : Node3D
             }
         }
         return shown;
-    }
-
-    /// <summary>The seed a scenario run starts from when it names none, so every run begins the same.</summary>
-    public const int ScenarioSeed = 1;
-
-    /// <summary>
-    /// The world seed from <c>--seed=&lt;n&gt;</c> after the <c>--</c> separator, else
-    /// <see cref="ScenarioSeed"/> for a scenario run, else a random one.
-    /// </summary>
-    private static int ReadSeed()
-    {
-        bool scenario = false;
-        foreach (string arg in OS.GetCmdlineUserArgs())
-        {
-            if (arg.StartsWith("--seed=") && int.TryParse(arg["--seed=".Length..], out int seed))
-            {
-                return seed;
-            }
-            scenario |= arg.StartsWith("--scenario=");
-        }
-        return scenario ? ScenarioSeed : (int)(GD.Randi() & 0x7FFFFFFF);
     }
 
     /// <summary>
@@ -489,21 +477,6 @@ public partial class GameRoot : Node3D
         };
         AddChild(_debug);
 
-        _buildingPictures = new BuildingPictures
-        {
-            Name = "BuildingPictures"
-        };
-        AddChild(_buildingPictures);
-        _icons = new ResourceIcons
-        {
-            Name = "ResourceIcons"
-        };
-        AddChild(_icons);
-        _fieldPictures = new FieldPictures
-        {
-            Name = "FieldPictures"
-        };
-        AddChild(_fieldPictures);
         _dialogs = new DialogHost
         {
             Name = "Dialogs"

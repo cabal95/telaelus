@@ -3,6 +3,7 @@
   "name": "terrain-types",
   "description": "Every terrain type, a mountain on each ground that takes one (both model families), and rivers in every shape on grass, sand, snow, mud, and rock (with a mouth into water) render; a river channel blocks placement while its bank allows it; the snapshot reports the terrain, biome, and feature under the player.",
   "steps": [
+    { "newGame": {} },
     { "initMap": {} },
     { "comment": "Buildings cost resources and unlock once their materials are held.", "seedStockpile": { "type": "Wood", "amount": 500 } },
     { "seedStockpile": { "type": "Stone", "amount": 500 } },

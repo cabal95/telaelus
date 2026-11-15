@@ -3,6 +3,7 @@
   "name": "field-stage-views",
   "description": "A field's view shows one model per remaining stage and disappears with the field.",
   "steps": [
+    { "newGame": {} },
     { "initMap": {} },
     { "placeResource": { "type": "IronOre", "mapCell": [9, 9] } },
     { "wait": 1 },

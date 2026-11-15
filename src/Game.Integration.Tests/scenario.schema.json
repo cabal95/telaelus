@@ -56,6 +56,7 @@
         { "$ref": "#/definitions/placeMotherlode" },
         { "$ref": "#/definitions/setRecipe" },
         { "$ref": "#/definitions/setTimeOfDay" },
+        { "$ref": "#/definitions/newGame" },
         { "$ref": "#/definitions/placeRoad" },
         { "$ref": "#/definitions/removeRoad" },
         { "$ref": "#/definitions/placeBridge" },
@@ -273,6 +274,22 @@
           "properties": {
             "project": { "$ref": "#/definitions/research" },
             "seconds": { "type": "number", "minimum": 0 }
+          }
+        },
+        "comment": { "$ref": "#/definitions/comment" }
+      }
+    },
+    "newGame": {
+      "description": "Go into a new game whatever the current state: from the main menu it starts one, in a game it replaces it. The seed defaults to the scenario seed (1). The next command runs a frame later.",
+      "type": "object",
+      "required": ["newGame"],
+      "additionalProperties": false,
+      "properties": {
+        "newGame": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "seed": { "type": "integer" }
           }
         },
         "comment": { "$ref": "#/definitions/comment" }

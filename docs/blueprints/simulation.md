@@ -39,7 +39,8 @@ and mirrors it onto nodes.
 
 ### Ownership and the loop
 
-- `GameRoot` (presentation) owns a single `Simulation` and a `SimClock`. Each rendered frame it
+- `GameRoot` (presentation, one per game, created on New Game; presentation.md) owns a single
+  `Simulation` and a `SimClock`. Each rendered frame it
   reads input into intent, advances the clock, steps the simulation zero or more times, then syncs
   the views.
 - `SimClock` runs a fixed tick of **30 Hz**. It accumulates real frame time and releases it in

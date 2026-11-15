@@ -3,6 +3,7 @@
   "name": "network",
   "description": "The HQ network: a Mine out of the HQ's reach is offline, shows the warning marker, and fills its own buffer; the player collects from it by hand; N shows the network overlay; a chain of Small Hubs brings the Mine online; the placement tooltip says whether a spot is online; a selected hub shows its coverage.",
   "steps": [
+    { "newGame": {} },
     { "initMap": {} },
     { "comment": "Iron Ore at map cell (5, 8) is 1 unit from the Mine's center (25, 34); the HQ is in the north-east corner.", "placeResource": { "type": "IronOre", "mapCell": [5, 8] } },
     { "placeBuilding": { "type": "Mine", "anchor": [24, 33] } },

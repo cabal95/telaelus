@@ -14,7 +14,37 @@ namespace Game.Testing;
 /// </summary>
 public static class StateSnapshot
 {
-    public static JsonObject Build(GameRoot root, CommandExecutor executor)
+    /// <summary>
+    /// The app's state: on the loading screen its progress, on the menu its buttons, in a game every
+    /// game field; `app` says which (`loading`, `menu`, or `game`).
+    /// </summary>
+    public static JsonObject Build(AppRoot app, CommandExecutor executor)
+    {
+        if (app.Game is not GameRoot game)
+        {
+            return new JsonObject
+            {
+                ["app"] = Camel(app.Current.ToString()),
+                ["loading"] = Round(app.LoadingProgress),
+                ["ui"] = new JsonObject
+                {
+                    ["open"] = app.Current == AppRoot.Stage.Menu ? "mainMenu" : null,
+                    ["menu"] = app.Menu is MainMenu menu
+                        ? new JsonObject
+                        {
+                            ["title"] = MainMenu.Title,
+                            ["buttons"] = new JsonArray(menu.ButtonTexts.Select(t => (JsonNode)t).ToArray())
+                        }
+                        : null
+                }
+            };
+        }
+        JsonObject snapshot = BuildGame(game, executor);
+        snapshot["app"] = "game";
+        return snapshot;
+    }
+
+    private static JsonObject BuildGame(GameRoot root, CommandExecutor executor)
     {
         Simulation sim = root.Sim;
         var heldKeys = new JsonArray();

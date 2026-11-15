@@ -3,6 +3,7 @@
   "name": "roads",
   "description": "Roads and bridges by drag in build mode: the menu's Road tool lays an L of 2 x 2 tiles and takes their Stone; a right drag removes three for half back; across a strip of ShallowWater a Mine is out of a truck's reach until the Bridge tool spans it, and then the truck hauls its ore home over the bridge.",
   "steps": [
+    { "newGame": {} },
     { "initMap": {} },
     { "seedStockpile": { "type": "Stone", "amount": 200 } },
     { "seedStockpile": { "type": "Wood", "amount": 100 } },

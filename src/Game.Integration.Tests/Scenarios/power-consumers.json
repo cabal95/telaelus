@@ -3,6 +3,7 @@
   "name": "power-consumers",
   "description": "Power from the later tiers through a day: at midday a Solar Array supplies its full 60 Power and a Battery Bank charges from it, shown on the top bar with the clock, the bolt, and the battery readout; at night the array gives nothing and the bank carries a Drill Rig, the store falling in the warning color; a Fission Reactor on Fuel Rods and Water then supplies 400 Power.",
   "steps": [
+    { "newGame": {} },
     { "initMap": {} },
     { "setTimeOfDay": 0.5 },
     { "teleportPlayer": { "x": 36, "z": 24 } },

@@ -3,6 +3,7 @@
   "name": "perf-walk",
   "description": "The standing performance benchmark: a fixed generated world (seed 2) at the widest zoom, walking a set path for about 30 seconds across grassland and forest. Run it windowed and read the perf summary in report.json; in the headless suite it is a smoke test of a long walk across chunks, with no timing checks.",
   "steps": [
+    { "newGame": {} },
     { "initMap": { "generate": 2 } },
     { "cameraZoom": { "size": 40 } },
     { "wait": 30 },

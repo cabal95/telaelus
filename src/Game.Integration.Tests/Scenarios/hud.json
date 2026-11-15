@@ -3,6 +3,7 @@
   "name": "hud",
   "description": "The screen UI: the debug overlay starts hidden and F3 toggles it; the top bar shows all eight raw resources with name tooltips and the launch progress; the hint overlay shows the harvest hint and its bar; I opens and closes the inventory, grouped by tier with discovered resources first; the inventory and a building's detail panel replace each other; a panel covers the debug overlay.",
   "steps": [
+    { "newGame": {} },
     { "initMap": {} },
     { "wait": 2 },
     { "comment": "Debug data is off by default.", "expect": "ui.debug", "equals": false },

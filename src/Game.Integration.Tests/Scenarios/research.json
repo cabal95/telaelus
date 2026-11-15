@@ -3,6 +3,7 @@
   "name": "research",
   "description": "Research from a Research Lab: T opens the tree over most of the screen, cards on the left and the selected project's drawer on the right; Advanced Material Transfer is locked behind Material Transfer; starting Material Transfer from the drawer takes its fee; pausing keeps its progress, resuming charges nothing; once complete, an online Mine's Iron Ore flows into storage and Advanced Material Transfer becomes available.",
   "steps": [
+    { "newGame": {} },
     { "initMap": {} },
     { "seedStockpile": { "type": "Coal", "amount": 60 } },
     { "seedStockpile": { "type": "Iron", "amount": 40 } },

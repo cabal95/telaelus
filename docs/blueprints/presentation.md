@@ -10,14 +10,47 @@ planned multiplayer feasible.
 
 ### Entry point and the frame loop
 
-- The main scene (`src/Game/scenes/Main.tscn`) has a single root node running `GameRoot`. `GameRoot`
-  builds the world in code and owns the `Simulation` and `SimClock`.
+- **The app's stages.** The main scene (`src/Game/scenes/App.tscn`) has a single root node running
+  `AppRoot`, which owns the stages (`AppRoot.Stage`: Loading, Menu, Game). Godot's own boot splash
+  (project settings) is the same splash image, full size, so the window shows the town from the
+  first frame.
+  - **Loading** (`LoadingScreen`, a `UiLayer`): the splash image (`assets/ui/splash.png`) covering
+    the window, cropped and never stretched, over the panel-dark background; a dark band along the
+    bottom 84 units with "Loading" (`TitleSize`) and a progress bar under it, centered. Meanwhile
+    `AppRoot` loads every `.glb` under `assets/models/` once into `ModelLibrary`'s cache
+    (`ModelLibrary.Preload`, 24 a frame) and creates the shared pictures, `ResourceIcons`,
+    `BuildingPictures`, and `FieldPictures`, which draw on the picture stage. Progress is half the
+    models loaded and half the three pictures ready (`LoadingProgress`); headless runs draw no
+    pictures. At the end the menu replaces it.
+  - **Menu** (`MainMenu`): the town scene (`scenes/Town.tscn`) instanced live, through its own
+    camera, and over it a `UiLayer` covering the whole window that blurs and darkens a little what is
+    behind it (`assets/ui/blur.gdshader`: the screen texture at mip 2.5, mixed 27.5% toward the panel
+    tint). At the left third, from 30% down and 48 units in: the title ("Game", twice `TitleSize`) and the
+    buttons, 44 units tall, left aligned, `BodySize` + 4: **New Game** (Enter does the same) and
+    **Quit**. Load Game and Options are planned between them. Escape does nothing on the menu.
+  - **Game:** New Game (`AppRoot.NewGame(seed)`) frees the menu, or a game already in play, and
+    creates a `GameRoot` with a new world (`--seed=<n>`, else the scenario seed for a scenario run,
+    else random; `AppRoot.ReadSeed`), handing it the shared pictures (`GameRoot.Initialize`), and
+    raises `GameStarted`. There is no way back to the menu yet; closing the window quits.
+- **The town scene** (`scenes/Town.tscn`, script `TownLife`): ground cells, a straight river with a
+  Water Wheel, a road across it on a bridge, a handful of buildings, trees and ore, the character, a
+  truck on a road loop (`TruckRoute`, a `Path3D`, with a `PathFollow3D`), a camera at the game's angle
+  (orthographic, size 30), the sun, and an environment as the game's. Its starting layout was
+  written by `src/asset-factory/tools/town_layout.py`; it is meant to be arranged by hand in the
+  editor from there. While `TownLife.Alive` the truck drives the loop unhurried (4 units a second, a
+  third of a truck's road speed) and the light follows a clock at the game's pace from mid-morning (`DayLight`); not
+  alive, it holds midday with the truck at the loop's start.
+- **The splash image:** `<godot.editor> --path src/Game -- --render-splash` (windowed) renders the
+  town, not alive, in a 1920 x 1080 viewport, waits six frames, saves `assets/ui/splash.png`, and
+  quits (`SplashRenderer`). Re-run it after changing the town; the image is committed.
+- `GameRoot` (one per game) builds the world in code and owns the `Simulation` and `SimClock`.
 - Each `_Process(delta)`: read input into `PlayerIntent` (camera-relative move, held `E` harvest),
   advance the clock and step the simulation, then sync the views from read-only simulation state.
   `_UnhandledInput` handles mouse-wheel zoom and the `L` launch command.
 - `GameRoot` exposes the sim, camera, build controller, and field views read-only for the testing
-  code, and after building the world attaches a `ScenarioRunner` when the command line has
-  `--scenario`, or a `ControlChannel` when it has `--control-port` (debug builds only; see
+  code. `AppRoot` attaches a `ScenarioRunner` when the command line has `--scenario`, or a
+  `ControlChannel` when it has `--control-port` (debug builds only, processed after the game each
+  frame; see
   testing.md). Both run with `ProcessMode.Always` so they keep working while the scene tree is
   paused; every other game node pauses.
 

@@ -22,7 +22,10 @@ namespace Game.Testing;
 /// </summary>
 public sealed class CommandExecutor
 {
-    private readonly GameRoot _root;
+    private readonly AppRoot _app;
+
+    // The game the commands act on: the one in play.
+    private GameRoot _root => _app.Game ?? throw new System.InvalidOperationException("no game yet: start one with newGame");
     private readonly string _outputDir;
     private readonly bool _screenshots;
 
@@ -46,9 +49,9 @@ public sealed class CommandExecutor
     private string? _screenshotPath;
     private int _screenshotCount;
 
-    public CommandExecutor(GameRoot root, string outputDir, bool screenshots)
+    public CommandExecutor(AppRoot app, string outputDir, bool screenshots)
     {
-        _root = root;
+        _app = app;
         _outputDir = outputDir;
         _screenshots = screenshots;
     }
@@ -65,7 +68,7 @@ public sealed class CommandExecutor
     /// <summary>True while waiting for frames to pass, a step to finish, or a screenshot.</summary>
     public bool Busy => _waitFrames > 0 || _stepFrames > 0 || _awaitingScreenshot;
 
-    public bool Paused => _root.GetTree().Paused;
+    public bool Paused => _app.GetTree().Paused;
 
     /// <summary>Keys the executor pressed that Godot currently reports as held.</summary>
     public IEnumerable<Key> HeldKeys
@@ -98,7 +101,7 @@ public sealed class CommandExecutor
             _stepFrames--;
             if (_stepFrames == 0)
             {
-                _root.GetTree().Paused = true;
+                _app.GetTree().Paused = true;
             }
             return;
         }
@@ -154,7 +157,7 @@ public sealed class CommandExecutor
     {
         if (!Paused)
         {
-            _root.GetTree().Paused = true;
+            _app.GetTree().Paused = true;
             _queuedInput.AddRange(_pendingReleases);
             _pendingReleases.Clear();
         }
@@ -166,7 +169,7 @@ public sealed class CommandExecutor
     {
         if (Paused)
         {
-            _root.GetTree().Paused = false;
+            _app.GetTree().Paused = false;
             DeliverNow(_queuedInput);
             _pendingReleases.AddRange(_deferredInput);
             _queuedInput = new List<InputEvent>();
@@ -188,7 +191,7 @@ public sealed class CommandExecutor
         }
 
         // Unpause first: input flushed while paused is dropped.
-        _root.GetTree().Paused = false;
+        _app.GetTree().Paused = false;
         DeliverNow(_queuedInput);
         _queuedInput = _deferredInput;
         _deferredInput = new List<InputEvent>();
@@ -360,6 +363,20 @@ public sealed class CommandExecutor
             Position = end,
             GlobalPosition = end
         });
+        return StepOutcome.Ok;
+    }
+
+    /// <summary>Goes into a new game whatever the current state (from the menu, or replacing the game in play); the next command runs a frame later.</summary>
+    public StepOutcome NewGame(int? seed)
+    {
+        _pendingReleases.Clear();
+        _queuedInput.Clear();
+        _deferredInput.Clear();
+        _pendingUiReleases.Clear();
+        _scrolledUi.Clear();
+        _dragFrames.Clear();
+        _app.NewGame(seed ?? AppRoot.ScenarioSeed);
+        _waitFrames = 1;
         return StepOutcome.Ok;
     }
 
@@ -629,7 +646,7 @@ public sealed class CommandExecutor
         return new StepOutcome(true, null, new JsonObject
         {
             ["label"] = label,
-            ["snapshot"] = StateSnapshot.Build(_root, this)
+            ["snapshot"] = StateSnapshot.Build(_app, this)
         });
     }
 
@@ -655,13 +672,13 @@ public sealed class CommandExecutor
         {
             ["label"] = label,
             ["file"] = file,
-            ["snapshot"] = StateSnapshot.Build(_root, this)
+            ["snapshot"] = StateSnapshot.Build(_app, this)
         });
     }
 
     public StepOutcome Expect(string path, string op, JsonNode? expected, double tolerance)
     {
-        JsonObject snapshot = StateSnapshot.Build(_root, this);
+        JsonObject snapshot = StateSnapshot.Build(_app, this);
         bool exists = SnapshotPath.TryResolve(snapshot, path, out JsonNode? actual);
         bool passed = op switch
         {
@@ -693,7 +710,7 @@ public sealed class CommandExecutor
     private void CaptureScreenshot()
     {
         RenderingServer.FramePostDraw -= CaptureScreenshot;
-        Image image = _root.GetViewport().GetTexture().GetImage();
+        Image image = _app.GetViewport().GetTexture().GetImage();
         Error error = image.SavePng(_screenshotPath!);
         if (error != Error.Ok)
         {

@@ -3,6 +3,7 @@
   "name": "fog",
   "description": "Fog of war, reveal once: on the empty map with fog, only the cells within 24 units of the player start explored; a field beyond sight is not drawn and cannot be hovered; coming into sight reveals it, and it stays revealed after the player leaves.",
   "steps": [
+    { "newGame": {} },
     { "initMap": { "fog": true } },
     { "comment": "The player is at (32, 32). Map cell (15, 8) is centered at (62, 34), 30 units away.", "placeResource": { "type": "Wood", "mapCell": [15, 8] } },
     { "wait": 2 },

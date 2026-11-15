@@ -3,6 +3,7 @@
   "name": "resource-fields",
   "description": "Every deposit type renders its field model; Crude Oil offers no hand harvest; a Mine fills from the nearest mineral deposit and ignores the rest; an Oil Well pumps Crude Oil from the seep beside it. Extraction rules themselves are unit tested.",
   "steps": [
+    { "newGame": {} },
     { "initMap": {} },
     { "comment": "One field of each deposit along map row z 4, x 3 to 8.", "placeResource": { "type": "Wood", "mapCell": [3, 4] } },
     { "placeResource": { "type": "Stone", "mapCell": [4, 4] } },

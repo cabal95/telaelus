@@ -3,6 +3,7 @@
   "name": "renewables",
   "description": "Renewables beside the HQ: a Forester on Water and Power grows its trees (they rise as they grow) and a Lumber Camp cuts them once grown; a Quarry beside a mountain yields Stone; a Deep Mine on a Laterite motherlode yields its chosen resource and its panel shows the site and the Output picker; a worked-out Crude Oil cell shows its marker and names it on hover; a Rock Crusher supplies Sand from Stone.",
   "steps": [
+    { "newGame": {} },
     { "initMap": {} },
     { "seedStockpile": { "type": "Coal", "amount": 60 } },
     { "seedStockpile": { "type": "Stone", "amount": 20 } },

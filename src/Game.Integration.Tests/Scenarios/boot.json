@@ -3,6 +3,7 @@
   "name": "boot",
   "description": "Smoke test: the main scene loads, the world builds, and the game runs a few frames.",
   "steps": [
+    { "newGame": {} },
     { "initMap": {} },
     { "wait": 5 },
     { "screenshot": "spawn" },

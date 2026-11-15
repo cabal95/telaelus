@@ -166,6 +166,13 @@ public sealed class ScenarioCommand
                     float seconds = (float)Number(Required(arg, "seconds"), "seconds");
                     return e => e.SetResearchProgress(project, seconds);
                 }
+            case "newGame":
+                {
+                    int? seed = arg.ValueKind == System.Text.Json.JsonValueKind.Object && arg.TryGetProperty("seed", out JsonElement sd)
+                        ? (int)Number(sd, "seed")
+                        : null;
+                    return e => e.NewGame(seed);
+                }
             case "placeRoad":
             case "removeRoad":
             case "placeBridge":

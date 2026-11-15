@@ -3,6 +3,7 @@
   "name": "field-batches",
   "description": "Field models are drawn in batches per render tile: on a generated world every built terrain tile has a field batch, and batches follow the tiles when the player crosses into another chunk. That a field's batch shows one model per remaining stage and drops it when the field is gone is covered by field-stage-views.",
   "steps": [
+    { "newGame": {} },
     { "initMap": { "generate": 1 } },
     { "cameraZoom": { "size": 40 } },
     { "wait": 10 },

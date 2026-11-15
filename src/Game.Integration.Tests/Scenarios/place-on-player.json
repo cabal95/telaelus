@@ -3,6 +3,7 @@
   "name": "place-on-player",
   "description": "A building cannot be placed with the player inside its footprint; the ghost shows it, a click does nothing, and the player can still walk. Placing right next to the player works.",
   "steps": [
+    { "newGame": {} },
     { "initMap": {} },
     { "comment": "Buildings cost resources and unlock once their materials are held.", "seedStockpile": { "type": "Wood", "amount": 500 } },
     { "seedStockpile": { "type": "Stone", "amount": 500 } },

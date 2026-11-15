@@ -70,7 +70,9 @@ simulation is a separate class library in `src/Game.Sim`, referenced by `Game.cs
   (open the returned screenshot paths to see the frame; use `pause` and `step` to go frame by
   frame), and finish with `curl -s -X POST localhost:7777/quit`.
 - Open the editor: `<godot.editor> --editor --path src/Game`
-- Run the game: `<godot.editor> --path src/Game`
+- Run the game: `<godot.editor> --path src/Game` (it opens on the loading screen, then the main menu)
+- Re-render the splash image after changing `src/Game/scenes/Town.tscn`: `<godot.editor> --path
+  src/Game -- --render-splash` (windowed; writes `src/Game/assets/ui/splash.png`)
 - Headless runtime check: `<godot.editor> --headless --path src/Game --quit-after 20` (stderr
   should be empty on success)
 

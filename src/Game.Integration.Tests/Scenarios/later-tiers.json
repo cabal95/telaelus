@@ -3,6 +3,7 @@
   "name": "later-tiers",
   "description": "The later tiers beside the HQ: a Sawmill makes Lumber; a Cement Kiln burns fuel to make Cement and a Concrete Mixer on Sand and Water turns it into Concrete; a Brine Well on Desert Sand pumps Lithium into a Stockyard; a Semiconductor Fab's display stand changes with its recipe.",
   "steps": [
+    { "newGame": {} },
     { "initMap": {} },
     { "seedStockpile": { "type": "Coal", "amount": 60 } },
     { "seedStockpile": { "type": "Wood", "amount": 4 } },

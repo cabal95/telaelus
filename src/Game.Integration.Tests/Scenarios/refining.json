@@ -3,6 +3,7 @@
   "name": "refining",
   "description": "Tier-1 refining beside the HQ: a Steel Mill's panel shows its Coal or Charcoal picker on Auto with a note naming what it uses and why; an Electrolyzer makes Hydrogen by default and its panel shows the Recipe picker; a Fuel Plant turns Kerosene and Hydrogen into Rocket Fuel; the top bar's launch progress lists Liquid Oxygen.",
   "steps": [
+    { "newGame": {} },
     { "initMap": {} },
     { "seedStockpile": { "type": "Coal", "amount": 60 } },
     { "seedStockpile": { "type": "Charcoal", "amount": 4 } },

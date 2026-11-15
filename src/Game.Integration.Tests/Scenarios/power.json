@@ -3,6 +3,7 @@
   "name": "power",
   "description": "Power on the HQ network: a Drill Rig with no supply is in a blackout; a Burner Generator on Coal powers it; Refineries push demand into a brownout (warning color) and then a blackout (danger color) on the top bar; the generator's panel shows what it supplies, what burns, and its Best fuel.",
   "steps": [
+    { "newGame": {} },
     { "initMap": {} },
     { "seedStockpile": { "type": "Coal", "amount": 20 } },
     { "comment": "Beside the HQ in the north-east corner, so everything here is online.", "placeBuilding": { "type": "DrillRig", "anchor": [49, 13] } },

@@ -25,6 +25,7 @@ src/asset-factory/
     unit_gen.py      unit models (the truck), exported to assets/models/units/
     resource_gen.py  resource field models (the deposits), and site models (worked-out markers, the motherlode base)
     item_gen.py      resource item models (the UI's resource icons) and icon models, exported to assets/models/icons/
+    town_layout.py   the town scene's starting layout (src/Game/scenes/Town.tscn); plain Python, run once
     arrange.py       composes test maps from terrain models (for previews)
     export_glb.py    OBJ to .glb exporter
     preview.py       preview renderer (no window)

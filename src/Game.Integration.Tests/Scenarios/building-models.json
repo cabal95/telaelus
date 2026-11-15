@@ -3,6 +3,7 @@
   "name": "building-models",
   "description": "Every building type renders its model, the Refinery in all four facings; placement still works with models; the ghost is a tinted copy of the selected building that turns with R and goes red over a blocked spot.",
   "steps": [
+    { "newGame": {} },
     { "initMap": {} },
     { "comment": "Buildings cost resources and unlock once their materials are held.", "seedStockpile": { "type": "Wood", "amount": 500 } },
     { "seedStockpile": { "type": "Stone", "amount": 500 } },

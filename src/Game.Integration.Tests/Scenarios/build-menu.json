@@ -3,6 +3,7 @@
   "name": "build-menu",
   "description": "B opens the build menu: discovered buildings first (color when affordable, gray when not), then undiscovered ones; a hover shows the cost (none for undiscovered); a modal menu stops the world; clicking a discovered cell selects it for placement with the placement tooltip; B, Escape, and the close button close the menu.",
   "steps": [
+    { "newGame": {} },
     { "initMap": {} },
     { "comment": "30 Wood and 15 Stone unlock the Lumber Camp, the Mine, and the Silo; spending 10 Stone leaves the Mine short.", "seedStockpile": { "type": "Wood", "amount": 30 } },
     { "seedStockpile": { "type": "Stone", "amount": 15 } },

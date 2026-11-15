@@ -3,6 +3,7 @@
   "name": "trucks",
   "description": "Depot trucks: a new Depot, online beside the HQ, comes with one truck; the panel buys a second; a Mine off the network with 12 Iron Ore in its buffer gets a truck, which loads it, carries it to the HQ, unloads it into storage, and parks; the collector's panel shows the truck on its way; hovering a parked truck names its state.",
   "steps": [
+    { "newGame": {} },
     { "initMap": {} },
     { "comment": "Beside the HQ, so it is online. It faces North: its bays are on the apron at z 14..15.", "placeBuilding": { "type": "Depot", "anchor": [46, 14] } },
     { "placeBuilding": { "type": "Mine", "anchor": [30, 30] } },

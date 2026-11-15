@@ -3,6 +3,7 @@
   "name": "building-detail",
   "description": "Clicking a placed building opens its detail side panel: status rows, walking with it open, turning it off and on, switching to another building, closing by empty ground, B, and Escape, and destroying with a confirming second click for half the cost back.",
   "steps": [
+    { "newGame": {} },
     { "initMap": {} },
     { "comment": "A Mine centered at (45, 35) has these two Iron Ore fields and the Stone in range.", "placeResource": { "type": "IronOre", "mapCell": [10, 9] } },
     { "placeResource": { "type": "IronOre", "mapCell": [11, 10] } },

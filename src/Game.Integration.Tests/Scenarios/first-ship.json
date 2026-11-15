@@ -3,6 +3,7 @@
   "name": "first-ship",
   "description": "The first ship: a Fabricator makes Hull Plate from Steel, its display stand shows the part and changes with its recipe; with the whole ship bill in storage the top bar asks for a Shipyard; once one stands, the ship shows on its pad and L launches it.",
   "steps": [
+    { "newGame": {} },
     { "initMap": {} },
     { "seedStockpile": { "type": "Coal", "amount": 60 } },
     { "seedStockpile": { "type": "Steel", "amount": 20 } },

@@ -3,6 +3,7 @@
   "name": "capacity",
   "description": "Sand as capacity on the HQ network: a Glassworks with no Sand is in a blackout (danger on the top bar's Sand pin); a Sand Collector on Sand terrain supplies it and Glass is made; five Glassworks on four Collectors push Sand into a brownout at half speed (warning on the pin, and the Glassworks panel's Sand row).",
   "steps": [
+    { "newGame": {} },
     { "initMap": {} },
     { "comment": "Sand south-west of the HQ (fine cells x 48..55, z 16..19), in its coverage.", "changeTiles": { "type": "Sand", "biome": "Desert", "cells": [[12, 4], [13, 4]] } },
     { "seedStockpile": { "type": "Coal", "amount": 50 } },

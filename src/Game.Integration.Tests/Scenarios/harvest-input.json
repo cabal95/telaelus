@@ -3,6 +3,7 @@
   "name": "harvest-input",
   "description": "Holding E reaches the sim's harvest intent. Harvest rules themselves are unit tested.",
   "steps": [
+    { "newGame": {} },
     { "initMap": {} },
     { "comment": "Map cell (8, 7) spans z 28..32; the player stands 1 unit past its edge.", "placeResource": { "type": "Wood", "mapCell": [8, 7] } },
     { "teleportPlayer": { "x": 33.5, "z": 33 } },

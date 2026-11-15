@@ -13,7 +13,8 @@ namespace Game.Testing;
 /// Runs one JSON scenario against the live game, then writes report.json (and any
 /// screenshots) to the run folder and quits with an exit code: 0 passed, 1 an
 /// expectation failed, 2 the scenario was invalid or a step threw. Attached by
-/// GameRoot only when --scenario is given, and only in debug builds.
+/// AppRoot only when --scenario is given, and only in debug builds. A scenario starts at the main
+/// menu once loading is done; its newGame step goes into a game.
 /// </summary>
 public partial class ScenarioRunner : Node
 {
@@ -25,7 +26,7 @@ public partial class ScenarioRunner : Node
         "steps"
     };
 
-    private GameRoot _root = null!;
+    private AppRoot _app = null!;
     private TestArgs _args = null!;
     private string _scenarioFile = "";
     private string _name = "";
@@ -36,12 +37,12 @@ public partial class ScenarioRunner : Node
     private int _next;
     private bool _finished;
 
-    // Windowed runs hold the first command until the startup pictures are drawn, so screenshots show icons.
-    private bool _waitForPictures;
+    // The game whose frames are sampled for the report's perf summary.
+    private GameRoot? _sampled;
     private readonly List<PerfMonitor.Sample> _perfSamples = new();
 
     /// <summary>Attaches a runner to the game root if the command line asks for a scenario.</summary>
-    public static void AttachIfRequested(GameRoot root)
+    public static void AttachIfRequested(AppRoot root)
     {
         TestArgs args = TestArgs.Parse();
         if (args.ScenarioPath is null)
@@ -65,7 +66,9 @@ public partial class ScenarioRunner : Node
         {
             Name = "ScenarioRunner",
             ProcessMode = ProcessModeEnum.Always,
-            _root = root,
+            // After the game in the tree's processing order, as when it was the game's own child.
+            ProcessPriority = 100,
+            _app = root,
             _args = args
         };
         root.AddChild(runner);
@@ -88,15 +91,25 @@ public partial class ScenarioRunner : Node
 
         _outputDir = ResolveOutputDir();
         ShutdownTrace.Start(_outputDir);
-        _root.AddChild(new ShutdownTrace.Watcher
+        _app.AddChild(new ShutdownTrace.Watcher
         {
             Name = "ShutdownWatcher"
         });
         bool screenshots = !_args.NoScreenshots && !TestArgs.IsHeadless;
-        _executor = new CommandExecutor(_root, _outputDir, screenshots);
-        _waitForPictures = screenshots;
-        _root.Perf.Sampled += _perfSamples.Add;
+        _executor = new CommandExecutor(_app, _outputDir, screenshots);
+        _app.GameStarted += Sample;
         GD.Print($"SCENARIO {_name}: {_commands.Count} commands, output {_outputDir}");
+    }
+
+    /// <summary>Samples the game in play for the perf summary (a new game takes over from the last).</summary>
+    private void Sample(GameRoot game)
+    {
+        if (_sampled?.Perf is PerfMonitor old)
+        {
+            old.Sampled -= _perfSamples.Add;
+        }
+        _sampled = game;
+        game.Perf.Sampled += _perfSamples.Add;
     }
 
     public override void _Process(double delta)
@@ -106,11 +119,11 @@ public partial class ScenarioRunner : Node
             return;
         }
 
-        if (_waitForPictures && !_root.PicturesReady)
+        // Commands wait for the loading screen: the menu (and the pictures) are ready after it.
+        if (_app.Current == AppRoot.Stage.Loading)
         {
             return;
         }
-        _waitForPictures = false;
 
         _executor.BeginFrame();
         while (!_executor.Busy && _next < _commands.Count)
@@ -218,7 +231,8 @@ public partial class ScenarioRunner : Node
     private void Finish(int exitCode, string? message)
     {
         _finished = true;
-        if (_root?.Perf is PerfMonitor perf)
+        _app.GameStarted -= Sample;
+        if (_sampled?.Perf is PerfMonitor perf)
         {
             perf.Sampled -= _perfSamples.Add;
         }
@@ -295,9 +309,9 @@ public partial class ScenarioRunner : Node
         return new JsonObject
         {
             ["mode"] = TestArgs.IsHeadless ? "headless" : "windowed",
-            ["uncapped"] = _root.Perf.Uncapped,
+            ["uncapped"] = _sampled?.Perf.Uncapped ?? false,
             ["frames"] = n,
-            ["renderer"] = _root.Perf.Renderer,
+            ["renderer"] = _sampled?.Perf.Renderer ?? "",
             ["budgetMs"] = Math.Round(PerfMonitor.BudgetMs, 2),
             ["headlineMsAvg"] = Avg(s => s.HeadlineMs),
             ["headlineMsWorst"] = Max(s => s.HeadlineMs),

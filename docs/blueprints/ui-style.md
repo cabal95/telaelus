@@ -104,6 +104,11 @@ The two kinds place themselves:
 
 ### Overlays
 
+- **Loading screen and main menu** (presentation.md): full-window `UiLayer`s outside the dialog
+  host. The loading screen is the splash image with "Loading" in `TitleSize` and a progress bar on
+  a dark band at the bottom center. The menu blurs and darkens a little the whole live town behind
+  it, with the menu at the left third: the title at twice `TitleSize` and the buttons in the shared
+  button style, 44 units tall, left aligned.
 - **Top bar** (`TopBar`): a full-width strip across the top of the window, 36 UI units tall, in
   the panel color with a 1 px `PanelEdge` bottom border and no rounded corners. Left: every
   pinned resource as a 22-unit icon and "amount / limit" in whole numbers (the amount alone for a

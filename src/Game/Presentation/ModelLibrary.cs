@@ -37,6 +37,16 @@ public static class ModelLibrary
         return model;
     }
 
+    /// <summary>Loads a model into the cache without instancing it (the loading screen does every model once).</summary>
+    public static void Preload(string path)
+    {
+        string full = Root + path + ".glb";
+        if (!Cache.ContainsKey(full) && ResourceLoader.Exists(full) && GD.Load<PackedScene>(full) is PackedScene loaded)
+        {
+            Cache[full] = loaded;
+        }
+    }
+
     /// <summary>Instances the model rotated by <paramref name="yawDegrees"/> about Y.</summary>
     public static Node3D Instance(string path, float yawDegrees)
     {

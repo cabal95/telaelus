@@ -3,6 +3,7 @@
   "name": "free-camera",
   "description": "Dragging the map: a right drag (or Ctrl + left) moves the camera, not the player, keeping the grabbed ground under the pointer; a tiny drag is a click; a drag over a modal does nothing; the camera stops at the explored area's edge; Space or moving brings it back, sliding when the player is on screen and jumping when not; buildings can be clicked while panned, and a Ctrl + left drag in build mode places nothing.",
   "steps": [
+    { "newGame": {} },
     { "initMap": {} },
     { "comment": "A Mine to the east, to click on while panned.", "placeBuilding": { "type": "Mine", "anchor": [52, 30] } },
     { "wait": 30 },

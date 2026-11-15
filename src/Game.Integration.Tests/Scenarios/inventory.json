@@ -3,6 +3,7 @@
   "name": "inventory",
   "description": "The inventory lists every resource under tier headings: on an empty map nothing is discovered and every row is darkened; a field in sight discovers its deposit, holding a resource discovers it, and discovered rows move to the top of their tier.",
   "steps": [
+    { "newGame": {} },
     { "initMap": {} },
     { "wait": 2 },
     { "press": "I" },

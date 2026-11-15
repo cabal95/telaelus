@@ -3,6 +3,7 @@
   "name": "generated-world",
   "description": "A generated world from a fixed seed: the player starts on open Grassland in chunk (0, 0) with the 3 x 3 chunks around them generated and render tiles drawn around the camera; crossing into another chunk generates the chunks around it and the tiles follow. Generation rules themselves are unit tested.",
   "steps": [
+    { "newGame": {} },
     { "initMap": { "generate": 1 } },
     { "wait": 5 },
     { "expect": "world.kind", "equals": "Generated" },

@@ -3,6 +3,7 @@
   "name": "storage",
   "description": "Storage limits: with Wood at the HQ's 100 the top bar shows it full in the warning color and the harvest hint says Storage full; a Silo raises the limit and harvesting resumes; the inventory pins and unpins resources on the top bar; the Silo's detail panel lists what it adds.",
   "steps": [
+    { "newGame": {} },
     { "initMap": {} },
     { "seedStockpile": { "type": "Wood", "amount": 100 } },
     { "comment": "Map cell (8, 7) spans z 28..32; the player stands 1 unit past its edge.", "placeResource": { "type": "Wood", "mapCell": [8, 7] } },
