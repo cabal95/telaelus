@@ -165,6 +165,9 @@ Newest last. One line each; open the file for the full spec.
   events finalized while Godot freed them): injected events are disposed once delivered, and the
   game root finishes .NET's finalizers on exit; adds the scenario stress script with crash dumps,
   shutdown breadcrumbs, and a forced-race knob.
+- **2611151337-scenario-camera** - Fixes the `trucks` click flake: scenario runs start from seed 1,
+  `initMap` and `teleportPlayer` jump the camera onto the player, and `click` fails when the aim is
+  outside the window instead of clicking there.
 
 ## Adding a changeset
 

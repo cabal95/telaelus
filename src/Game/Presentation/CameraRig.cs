@@ -135,6 +135,20 @@ public partial class CameraRig : Camera3D
         }
     }
 
+    /// <summary>
+    /// Puts the camera on the player at once, attached, with no slide or follow easing (scenarios
+    /// use it after resetting the map or moving the player, so their first frames see a settled view).
+    /// </summary>
+    public void JumpTo(Vector3 player)
+    {
+        CancelDrag();
+        Detached = false;
+        _slideTime = -1f;
+        _player = player;
+        _center = player;
+        Place();
+    }
+
     /// <summary>A press over the world that may become a drag of the map.</summary>
     public void BeginDrag(Vector2 screen)
     {

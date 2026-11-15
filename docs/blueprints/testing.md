@@ -175,7 +175,7 @@ pausing it and stepping frame by frame.
 - **Commands:**
   - Map setup: `initMap` `{}` (the bounded empty map: all-Grassland grass with no features, player
     at the center, fully explored; `{ fog: true }` gives it fog of war) or `{ generate: <seed> }`
-    (a generated world from that seed, player at its spawn, always with fog), either way with build mode reset: nothing selected, facing North, no aim override; `changeTiles`
+    (a generated world from that seed, player at its spawn, always with fog), either way with build mode reset: nothing selected, facing North, no aim override, and the camera jumped onto the player (`CameraRig.JumpTo`: attached, no slide or easing); `changeTiles`
     `{ type?, biome?, feature?, flow?, cells: [[x, z], ...] }` or the same with `from, to` (map
     cells, inclusive; at least one of `type`, `biome`, `feature`; `flow` goes with a River and
     sets biome, then terrain, then feature),
@@ -183,7 +183,7 @@ pausing it and stepping frame by frame.
     `{ mapCell, amount }` (0 removes), `removeResource` `{ mapCell }`, `removeBuilding`
     `{ anchor }`.
   - Other setup: `placeBuilding` `{ type, anchor, facing? }` (the spatial placement rule, free
-    and whether or not unlocked), `teleportPlayer` `{ x, z }`, `seedStockpile` `{ type, amount }`, `fillBuffer` `{ anchor, type, amount }` (sets one
+    and whether or not unlocked), `teleportPlayer` `{ x, z }` (the camera jumps onto the player too), `seedStockpile` `{ type, amount }`, `fillBuffer` `{ anchor, type, amount }` (sets one
     resource in the output buffer of the building at that anchor; 0 removes it), `setRecipe`
     `{ anchor, index }` (chooses the recipe of the building at that anchor, as its picker does),
     `setTimeOfDay` (a number from 0 up to 1, 0.5 midday), `startResearch` (a project name; fails
@@ -195,7 +195,9 @@ pausing it and stepping frame by frame.
     of window height, so at the 1280 x 720 scenario resolution it is the visible world height).
   - Input: `press` (key down now, up at the start of the next frame), `keyDown`, `keyUp`, `hold`
     `{ key, frames }` (down, wait, up), `aimAt` `{ cell: [x, z] }` (a fine cell's center) or
-    `{ world: [x, z] }`, `click` `{}` (left button at the aim, up the next frame), `drag`
+    `{ world: [x, z] }`, `click` `{}` (left button at the aim, up the next frame; it fails, "click at
+    (x, y) is outside the window", when the aim projects outside the window, since a player cannot
+    click there), `drag`
     `{ button: right|left, ctrl?, from: [x, y], to: [x, y], frames? }` (screen pixels: pressed at
     `from` now, moved in even steps over `frames` (default 5), released the frame after; the
     scenario waits until the release; pushed through the viewport like real input), `clickUi`
@@ -330,6 +332,11 @@ pausing it and stepping frame by frame.
   sim tick rate changes, this value changes with it.
 - `GameRoot` attaches the `ScenarioRunner` only with `--scenario` and only in debug builds. The
   runner processes with `ProcessMode.Always`, so scenarios can use `pause` and `step`.
+- **A fixed start:** with `--scenario` and no `--seed`, `GameRoot` builds its startup world from
+  `GameRoot.ScenarioSeed` (1) instead of a random seed, so the world, spawn, and camera before the
+  first command are the same every run (interactive runs keep a random world). Together with the
+  camera jump in `initMap` and `teleportPlayer`, a scenario's first frames no longer depend on where
+  a random startup world put the camera.
 - **Output:** by default `test-output/runs/<yyMMdd-HHmmss>-<name>/` at the repo root
   (git-ignored), or `--output`. It holds the PNGs and `report.json`: scenario name and file,
   result, exit code, message, frame count, a run-level `perf` summary, and one record per

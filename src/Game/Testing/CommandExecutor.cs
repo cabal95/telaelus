@@ -203,6 +203,7 @@ public sealed class CommandExecutor
             _root.Sim.Debug.ResetToEmptyMap(fog);
         }
         _root.Builder.ResetBuildMode();
+        _root.Camera.JumpTo(_root.Sim.Player.Position);
         return StepOutcome.Ok;
     }
 
@@ -270,6 +271,7 @@ public sealed class CommandExecutor
     public StepOutcome TeleportPlayer(float x, float z)
     {
         _root.Sim.Debug.TeleportPlayer(x, z);
+        _root.Camera.JumpTo(_root.Sim.Player.Position);
         return StepOutcome.Ok;
     }
 
@@ -376,6 +378,11 @@ public sealed class CommandExecutor
         Vector2 screen = _root.Builder.PointerOverride is Vector3 world
             ? _root.Camera.UnprojectPosition(world)
             : _root.GetViewport().GetMousePosition();
+        // A player cannot click outside the window; a scenario that does depends on luck.
+        if (!_root.GetViewport().GetVisibleRect().HasPoint(screen))
+        {
+            return new StepOutcome(false, $"click at ({screen.X:0}, {screen.Y:0}) is outside the window");
+        }
         Inject(MouseEvent(screen, true));
         Release(MouseEvent(screen, false));
         return StepOutcome.Ok;

@@ -150,17 +150,25 @@ public partial class GameRoot : Node3D
         return shown;
     }
 
-    /// <summary>The world seed from <c>--seed=&lt;n&gt;</c> after the <c>--</c> separator, or a random one.</summary>
+    /// <summary>The seed a scenario run starts from when it names none, so every run begins the same.</summary>
+    public const int ScenarioSeed = 1;
+
+    /// <summary>
+    /// The world seed from <c>--seed=&lt;n&gt;</c> after the <c>--</c> separator, else
+    /// <see cref="ScenarioSeed"/> for a scenario run, else a random one.
+    /// </summary>
     private static int ReadSeed()
     {
+        bool scenario = false;
         foreach (string arg in OS.GetCmdlineUserArgs())
         {
             if (arg.StartsWith("--seed=") && int.TryParse(arg["--seed=".Length..], out int seed))
             {
                 return seed;
             }
+            scenario |= arg.StartsWith("--scenario=");
         }
-        return (int)(GD.Randi() & 0x7FFFFFFF);
+        return scenario ? ScenarioSeed : (int)(GD.Randi() & 0x7FFFFFFF);
     }
 
     /// <summary>
