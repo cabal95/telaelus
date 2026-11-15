@@ -36,6 +36,17 @@ public sealed class ResourcePins
         return _pinned.Contains(type);
     }
 
+    /// <summary>Replaces the pins (a loaded game's).</summary>
+    public void SetAll(IEnumerable<ResourceType> types)
+    {
+        _pinned.Clear();
+        foreach (ResourceType type in types)
+        {
+            _pinned.Add(type);
+        }
+        Changed?.Invoke();
+    }
+
     public void Toggle(ResourceType type)
     {
         if (!_pinned.Remove(type))

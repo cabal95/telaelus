@@ -26,12 +26,18 @@ planned multiplayer feasible.
     camera, and over it a `UiLayer` covering the whole window that blurs and darkens a little what is
     behind it (`assets/ui/blur.gdshader`: the screen texture at mip 2.5, mixed 27.5% toward the panel
     tint). At the left third, from 30% down and 48 units in: the title ("Game", twice `TitleSize`) and the
-    buttons, 44 units tall, left aligned, `BodySize` + 4: **New Game** (Enter does the same) and
-    **Quit**. Load Game and Options are planned between them. Escape does nothing on the menu.
+    buttons, 44 units tall, left aligned, `BodySize` + 4: **Continue** (shown when there is a
+    loadable save; it loads the newest), **New Game** (Enter does the same), **Load Game**
+    (disabled with no saves; it shows the save list (`SaveList`, as in the load dialog) under a
+    "Load Game" title in place of the buttons, with Back), and **Quit**. Options is planned before
+    Quit. Escape does nothing on the menu.
   - **Game:** New Game (`AppRoot.NewGame(seed)`) frees the menu, or a game already in play, and
     creates a `GameRoot` with a new world (`--seed=<n>`, else the scenario seed for a scenario run,
     else random; `AppRoot.ReadSeed`), handing it the shared pictures (`GameRoot.Initialize`), and
-    raises `GameStarted`. There is no way back to the menu yet; closing the window quits.
+    raises `GameStarted`. Loading a save (`AppRoot.LoadGame`) shows the loading screen over the
+    save's thumbnail for two frames and then creates the `GameRoot` from it (saving.md). Escape in a
+    game opens the game menu (ui-style.md), whose Main Menu (`AppRoot.ReturnToMenu`) frees the game
+    and shows the menu again.
 - **The town scene** (`scenes/Town.tscn`, script `TownLife`): ground cells, a straight river with a
   Water Wheel, a road across it on a bridge, a handful of buildings, trees and ore, the character, a
   truck on a road loop (`TruckRoute`, a `Path3D`, with a `PathFollow3D`), a camera at the game's angle

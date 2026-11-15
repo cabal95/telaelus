@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Game.Presentation.Ui;
+using Game.Sim;
 using Game.Testing;
 using Godot;
 
@@ -17,6 +18,15 @@ public partial class AppRoot : Node
 {
     /// <summary>The seed a scenario's game starts from when it names none, so every run begins the same.</summary>
     public const int ScenarioSeed = 1;
+
+    /// <summary>The game's version, written into saves.</summary>
+    public const string GameVersion = "0.1.0";
+
+    /// <summary>Frames the loading screen shows (over the save's thumbnail) before a loaded game is built.</summary>
+    public const int LoadFrames = 2;
+
+    // A load waiting for its loading screen to be drawn.
+    private (SaveFile Save, int Frames)? _pendingLoad;
 
     public enum Stage
     {
@@ -96,6 +106,17 @@ public partial class AppRoot : Node
         {
             return;
         }
+        if (_pendingLoad is (SaveFile save, int frames))
+        {
+            if (frames > 0)
+            {
+                _pendingLoad = (save, frames - 1);
+                return;
+            }
+            _pendingLoad = null;
+            StartGame(null, save);
+            return;
+        }
         int end = Math.Min(_models.Count, _modelsLoaded + ModelsPerFrame);
         for (; _modelsLoaded < end; _modelsLoaded++)
         {
@@ -116,13 +137,24 @@ public partial class AppRoot : Node
 
     private void ShowMenu()
     {
-        _loading?.QueueFree();
-        _loading = null;
+        if (_loading is not null)
+        {
+            RemoveChild(_loading);
+            _loading.QueueFree();
+            _loading = null;
+        }
         _menu = new MainMenu
         {
             Name = "MainMenu"
         };
         _menu.NewGameRequested += () => NewGame(null);
+        _menu.LoadRequested += name =>
+        {
+            if (LoadGame(name) is string problem)
+            {
+                _menu?.ShowProblem(problem);
+            }
+        };
         _menu.QuitRequested += () => GetTree().Quit();
         AddChild(_menu);
         Current = Stage.Menu;
@@ -131,27 +163,102 @@ public partial class AppRoot : Node
     /// <summary>Goes into a new game, from the menu or replacing the game in play: a new world from the seed (or <see cref="ReadSeed"/>).</summary>
     public GameRoot NewGame(int? seed)
     {
+        return StartGame(seed ?? ReadSeed(), null);
+    }
+
+    private GameRoot StartGame(int? seed, SaveFile? save)
+    {
+        ClearStage();
+        var game = new GameRoot
+        {
+            Name = "GameRoot"
+        };
+        game.Initialize(this, seed ?? 0, save, Icons, BuildingPictures, FieldPictures);
+        AddChild(game);
+        Game = game;
+        Current = Stage.Game;
+        GameStarted?.Invoke(game);
+        return game;
+    }
+
+    /// <summary>Frees whatever is showing: the menu, the game, or a loading screen.</summary>
+    private void ClearStage()
+    {
         if (_menu is not null)
         {
             RemoveChild(_menu);
             _menu.QueueFree();
             _menu = null;
         }
+        if (_loading is not null)
+        {
+            RemoveChild(_loading);
+            _loading.QueueFree();
+            _loading = null;
+        }
         if (Game is not null)
         {
             RemoveChild(Game);
             Game.QueueFree();
+            Game = null;
         }
-        var game = new GameRoot
+    }
+
+    /// <summary>
+    /// Loads a save: the loading screen over its thumbnail for a few frames, then a game built from it.
+    /// Returns why it cannot be loaded, or null when the load has begun.
+    /// </summary>
+    public string? LoadGame(string name)
+    {
+        SaveFile save;
+        try
         {
-            Name = "GameRoot"
+            save = SaveStore.Read(name);
+        }
+        catch (SaveFormatException ex)
+        {
+            return ex.Message;
+        }
+        ClearStage();
+        _loading = new LoadingScreen
+        {
+            Name = "LoadingScreen",
+            Image = SaveStore.Thumbnail(name)
         };
-        game.Initialize(seed ?? ReadSeed(), Icons, BuildingPictures, FieldPictures);
-        AddChild(game);
-        Game = game;
-        Current = Stage.Game;
-        GameStarted?.Invoke(game);
-        return game;
+        AddChild(_loading);
+        _loading.SetProgress(1f);
+        Current = Stage.Loading;
+        _pendingLoad = (save, LoadFrames);
+        return null;
+    }
+
+    /// <summary>Saves the game in play under a name (its thumbnail from when the game menu opened).</summary>
+    public void SaveGame(string name)
+    {
+        if (Game is not GameRoot game)
+        {
+            throw new InvalidOperationException("no game to save");
+        }
+        SaveStore.Write(name, game.MakeSave(), game.SaveThumbnail);
+        game.MarkSaved();
+    }
+
+    /// <summary>Saves the game in play into the older of the two autosaves.</summary>
+    public void Autosave()
+    {
+        if (Game is not GameRoot game)
+        {
+            return;
+        }
+        SaveStore.Write(SaveStore.NextAutosave(), game.MakeSave(), game.CaptureThumbnail());
+        game.MarkSaved();
+    }
+
+    /// <summary>Leaves the game for the main menu.</summary>
+    public void ReturnToMenu()
+    {
+        ClearStage();
+        ShowMenu();
     }
 
     /// <summary>

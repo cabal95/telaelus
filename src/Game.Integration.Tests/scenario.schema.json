@@ -57,6 +57,8 @@
         { "$ref": "#/definitions/setRecipe" },
         { "$ref": "#/definitions/setTimeOfDay" },
         { "$ref": "#/definitions/newGame" },
+        { "$ref": "#/definitions/saveGame" },
+        { "$ref": "#/definitions/loadGame" },
         { "$ref": "#/definitions/placeRoad" },
         { "$ref": "#/definitions/removeRoad" },
         { "$ref": "#/definitions/placeBridge" },
@@ -290,6 +292,40 @@
           "additionalProperties": false,
           "properties": {
             "seed": { "type": "integer" }
+          }
+        },
+        "comment": { "$ref": "#/definitions/comment" }
+      }
+    },
+    "saveGame": {
+      "description": "Save the game in play under a name (into the run's own saves folder), as the Save Game dialog does.",
+      "type": "object",
+      "required": ["saveGame"],
+      "additionalProperties": false,
+      "properties": {
+        "saveGame": {
+          "type": "object",
+          "required": ["name"],
+          "additionalProperties": false,
+          "properties": {
+            "name": { "type": "string", "minLength": 1 }
+          }
+        },
+        "comment": { "$ref": "#/definitions/comment" }
+      }
+    },
+    "loadGame": {
+      "description": "Load a save from the run's saves folder whatever the current state; the next command runs once the loaded game is in play. Fails when the save is missing or damaged.",
+      "type": "object",
+      "required": ["loadGame"],
+      "additionalProperties": false,
+      "properties": {
+        "loadGame": {
+          "type": "object",
+          "required": ["name"],
+          "additionalProperties": false,
+          "properties": {
+            "name": { "type": "string", "minLength": 1 }
           }
         },
         "comment": { "$ref": "#/definitions/comment" }

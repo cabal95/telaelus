@@ -176,6 +176,11 @@ Newest last. One line each; open the file for the full spec.
   progress bar while every model loads and the pictures draw, once per run) and a main menu over the
   live town with a blurred panel (New Game, Quit); an editable town scene and `--render-splash`; games
   created on New Game; scenarios start at the menu with a `newGame` step.
+- **2611151454-save-and-load** - Saves and loads a game: the sim's whole state as versioned gzip
+  JSON that continues exactly, named saves and two rotating autosaves with thumbnails in the
+  player's data folder, an in-game menu on Escape (Resume, Save Game, Load Game, Main Menu, Quit)
+  that pauses the game and asks before throwing away unsaved play, and Continue and Load Game on
+  the main menu; `saveGame` and `loadGame` scenario commands.
 
 ## Adding a changeset
 

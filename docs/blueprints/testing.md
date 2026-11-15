@@ -153,6 +153,11 @@ pausing it and stepping frame by frame.
   letting a path cross and refusing a building; bridges refused when not straight, along the water,
   over dry land, too long, or over DeepWater; a bridge across a straight river only at right angles
   and not over a bend; removing refunding half, and a bridge with the player on it staying.
+- `SaveTests`: a save loaded into a fresh sim saving identically; a game saved at a tick and
+  loaded continuing identically to the one that ran on; every kind of state (buildings mid-cycle,
+  fuel, choices, trucks mid-trip, roads and bridges, research, the clock, Battery charge) surviving;
+  a generated fog world round trip that keeps exploring the same; and the file format's round
+  trip, a newer version refused, and a damaged file refused.
 - `PowerStoreTests`: the clock starting mid-morning, advancing, and wrapping; daylight through the
   day; the Solar Array's supply by daylight and its night status; a Battery Bank charging at its
   rate up to its capacity, covering a shortage at Normal until it runs dry, giving at most its rate
@@ -193,7 +198,9 @@ pausing it and stepping frame by frame.
     and whether or not unlocked), `teleportPlayer` `{ x, z }` (the camera jumps onto the player too), `seedStockpile` `{ type, amount }`, `fillBuffer` `{ anchor, type, amount }` (sets one
     resource in the output buffer of the building at that anchor; 0 removes it), `setRecipe`
     `{ anchor, index }` (chooses the recipe of the building at that anchor, as its picker does),
-    `newGame` `{ seed? }` (see above), `setTimeOfDay` (a number from 0 up to 1, 0.5 midday), `placeRoad` and `placeBridge`
+    `newGame` `{ seed? }` (see above), `saveGame` `{ name }` (saves the game in play, as the save
+    dialog does), `loadGame` `{ name }` (loads a save whatever the state; the next command runs
+    once the loaded game is in play; fails when the save cannot be loaded), `setTimeOfDay` (a number from 0 up to 1, 0.5 midday), `placeRoad` and `placeBridge`
     `{ from: [x, z], to: [x, z] }` (lay a road line or bridge span free, as `placeBuilding` places;
     fail when nothing can be laid), `removeRoad` and `removeBridge` (the same, with the refund), `startResearch` (a project name; fails
     when it cannot start), `pauseResearch` (`{}`), `setResearchProgress` `{ project, seconds }` (at
@@ -259,7 +266,11 @@ pausing it and stepping frame by frame.
   `danger`), its `power` readout ("45 / 100", "Blackout: 140 / 100"), its `clock` ("14:00"), its
   `store` (the Battery Banks' readout, or null with none), and its `launch` text, `hint`: the hint's `text`, `progress`,
   and `storageFull` or null, `tooltip`: the hover
-  tooltip's lines or null, `worldTip`: the truck tooltip's lines outside build mode, or null, and while the build menu is open, its `cells` in display order (`Road` and `Bridge`, then the buildings), each
+  tooltip's lines or null, `worldTip`: the truck tooltip's lines outside build mode, or null,
+  `playTime` (game seconds played) and `unsaved` (unsaved progress), while the game menu is open
+  its `buttons`, `confirm` (the question shown, or null), and `status`, while the save dialog is
+  open its `name` and `confirm`, while the load dialog is open its `saves` (each `name` and
+  `loadable`) and `confirm`, and while the build menu is open, its `cells` in display order (`Road` and `Bridge`, then the buildings), each
   `type`, `state` (`affordable`, `unaffordable`, or `undiscovered`), and `label`; while the
   research tree is open, its `header`, its `cards` (each `project`, `running`, `progress` 0 to 1,
   `selected`, and `locked`), and its `drawer` (the selected `project`, its `state` as shown,
@@ -293,7 +304,9 @@ pausing it and stepping frame by frame.
   `fields` (`id`, `type`, `mapCell`, `amount`, `stage`, `visibleModels`, `explored`, `growing`,
   `motherlode` or null);
   `app` (`loading`, `menu`, or `game`; before a game the snapshot is only `app`, `loading` (the
-  progress, 0 to 1), and `ui` with `open` (`mainMenu` on the menu) and `menu` (`title`, `buttons`));
+  progress, 0 to 1), and `ui` with `open` (`mainMenu` on the menu) and `menu` (`title`, `buttons`:
+  the shown, enabled ones, and `saves`: the main menu's save list (each `name` and `loadable`)
+  while it shows, else null));
   `stockpile` (every resource); `capacity` (`power`, `water`, and `sand`, each with `supply`,
   `demand`, `speed`, and `state`: `normal`, `brownout`, or `blackout`, and once there is a Battery
   Bank, `stored`, `storeCapacity`, and `storeFlow`); `timeOfDay` and `daylight`; `research` (its
@@ -342,8 +355,14 @@ pausing it and stepping frame by frame.
   into a new game whatever the current state, from the menu or replacing the game in play (the seed
   when given, else the scenario seed, 1); the next command runs a frame later. Every game scenario
   begins with it; commands that need a game fail with "no game yet: start one with newGame" before
-  one. `wait`, `pause`, `step`, `expect`, `snapshot`, and `screenshot` work on the menu too. Commands
-  that work the menu and the options come later, with those screens.
+  one. `wait`, `pause`, `step`, `expect`, `snapshot`, and `screenshot` work on the menu too. Clicks
+  on the main menu's buttons come later.
+- **A run's saves are its own:** the executor points `SaveStore.Folder` at `<output>/saves`, so a
+  scenario or live run never reads or changes the player's saves, and every run's menu starts
+  with none.
+- **Wait a frame or two after opening a dialog before `clickUi`:** a control's place comes from its
+  layout, and a dialog opened the frame before (the game menu on Escape in a freshly loaded game)
+  has not been laid out yet, so the click lands where the control is not.
 - Relative `--scenario` and `--output` paths resolve against the repo root, because Godot changes
   its working directory to the project folder when given `--path`.
 - `--fixed-fps 30` matches the sim's 30 Hz tick, so every frame advances exactly one sim tick:
@@ -455,6 +474,10 @@ pausing it and stepping frame by frame.
   `menu` (the loading screen done and the menu showing its title and New Game and Quit; `newGame`
   going into a game, and a second replacing it with a fresh world; windowed screenshots of the menu
   and the game),
+  `save-load` (Escape opening the game menu and standing the game still; Save Game saving "Save
+  1" through the dialog; Load Game asking first with unsaved progress and bringing the saved
+  stockpile back; `saveGame` and `loadGame`; Main Menu asking first, and the menu then showing
+  Continue and Load Game; windowed screenshots of the game menu, the dialogs, and the menu),
   `roads` (the menu's Road tool laying an L of tiles by drag and taking their Stone, a right drag
   removing three for half back, Escape leaving build mode; a Mine across a strip of ShallowWater out
   of a truck's reach until the Bridge tool spans it, then the truck hauling its ore home over it),

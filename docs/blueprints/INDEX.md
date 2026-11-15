@@ -23,6 +23,9 @@ Read this index to find the right area, then open that blueprint for the detail.
   placement, extractor work areas, the production chain, the ship launch win, and the build UI.
 - **[research.md](research.md)** - Global research: projects, fees, prerequisites, progress in
   game time, research speed from Research Labs, Material Transfer's effect, and the research tree.
+- **[saving.md](saving.md)** - Saving and loading: what a save holds, the versioned gzip JSON
+  format, where saves go (named saves, two rotating autosaves, thumbnails), loading, and unsaved
+  progress.
 - **[player.md](player.md)** - The player's simulation state and movement, camera-relative input,
   and the on-screen character and follow camera.
 - **[presentation.md](presentation.md)** - The presentation layer: the frame loop and view-sync

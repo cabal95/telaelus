@@ -173,6 +173,16 @@ public sealed class ScenarioCommand
                         : null;
                     return e => e.NewGame(seed);
                 }
+            case "saveGame":
+                {
+                    string save = Label(Required(arg, "name"), "saveGame");
+                    return e => e.SaveGame(save);
+                }
+            case "loadGame":
+                {
+                    string load = Label(Required(arg, "name"), "loadGame");
+                    return e => e.LoadGame(load);
+                }
             case "placeRoad":
             case "removeRoad":
             case "placeBridge":

@@ -33,7 +33,8 @@ public static class StateSnapshot
                         ? new JsonObject
                         {
                             ["title"] = MainMenu.Title,
-                            ["buttons"] = new JsonArray(menu.ButtonTexts.Select(t => (JsonNode)t).ToArray())
+                            ["buttons"] = new JsonArray(menu.ButtonTexts.Select(t => (JsonNode)t).ToArray()),
+                            ["saves"] = Saves(menu.SaveRows)
                         }
                         : null
                 }
@@ -169,6 +170,17 @@ public static class StateSnapshot
         };
     }
 
+    private static JsonArray? Saves(System.Collections.Generic.IReadOnlyList<(string Name, bool Loadable)>? rows)
+    {
+        return rows is null
+            ? null
+            : new JsonArray(rows.Select(r => (JsonNode)new JsonObject
+            {
+                ["name"] = r.Name,
+                ["loadable"] = r.Loadable
+            }).ToArray());
+    }
+
     private static JsonObject Ui(GameRoot root)
     {
         var ui = new JsonObject
@@ -193,6 +205,24 @@ public static class StateSnapshot
                 }
                 : null
         };
+        ui["playTime"] = Math.Round(root.PlayTime, 1);
+        ui["unsaved"] = root.HasUnsavedProgress;
+        if (root.Dialogs.Current == root.GameMenu)
+        {
+            ui["buttons"] = new JsonArray(root.GameMenu.ButtonTexts.Select(t => (JsonNode)t).ToArray());
+            ui["confirm"] = root.GameMenu.ConfirmText;
+            ui["status"] = root.GameMenu.StatusText;
+        }
+        if (root.Dialogs.Current == root.SaveDialog)
+        {
+            ui["name"] = root.SaveDialog.NameText;
+            ui["confirm"] = root.SaveDialog.ConfirmText;
+        }
+        if (root.Dialogs.Current == root.LoadDialog)
+        {
+            ui["saves"] = Saves(root.LoadDialog.List.Rows);
+            ui["confirm"] = root.LoadDialog.Confirming ? "Unsaved progress will be lost." : null;
+        }
         if (root.Dialogs.Current == root.FieldDetail && root.FieldDetail.Field is ResourceField field)
         {
             var fieldRows = new JsonObject();

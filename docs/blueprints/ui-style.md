@@ -79,7 +79,8 @@ even while the game is paused) owns them:
 
 - One dialog is open at a time; opening one closes the other.
 - Escape closes the open dialog (the host takes it before the world sees it).
-- The game keeps running while a dialog is open (no pause: the sim is the future co-op server).
+- The game keeps running while a dialog is open (no pause: the sim is the future co-op server),
+  except the game menu and the save and load dialogs (`Dialog.PausesGame`), which stand it still.
 - Clicks and the mouse wheel over a dialog never reach the world. A scroll body uses the wheel
   first, and once it is at the end of its range the dialog keeps the event (Godot otherwise
   passes unused wheel events up through a stopping control, `MouseForcePassScrollEvents`), so
@@ -102,13 +103,35 @@ The two kinds place themselves:
   It closes by its Close button, Escape, a click on the world that selects nothing, or another
   dialog opening.
 
+### The game menu and the save and load dialogs
+
+- **Game menu** (`GameMenu`, a modal titled "Paused", id `gameMenu`): Escape opens it when nothing
+  else takes Escape (no open dialog, not in build mode), and the frame behind it is kept as the
+  thumbnail for a save made from it. Buttons, 240 x 40 and centered: Resume, Save Game, Load Game,
+  Main Menu, and Quit; Resume takes the place of the Close button. Main Menu and Quit with unsaved
+  progress swap the buttons for "Unsaved progress will be lost." in `Warning` with Leave without
+  saving and Cancel. A status line under them in `TextDim` says what just happened ("Saved as
+  Save 1", or why a load failed).
+- **Save dialog** (`SaveDialog`, "Save Game", id `saveGame`): "Existing saves" (the named saves,
+  newest first, as left-aligned buttons that fill in the name; "None yet" without any), then "Name"
+  with a name field (suggesting the first free "Save n"; Enter saves) and Save. Saving over an
+  existing name asks "Overwrite <name>?" with Overwrite and Cancel. Saving returns to the game
+  menu with its status.
+- **Load dialog** (`LoadDialog`, "Load Game", id `loadGame`): the save list (`SaveList`), a row per
+  save, newest first, with its thumbnail (128 x 72), name, "Saved <date time>   Played <time>", and
+  "<n> buildings   <n> ships launched" (singular for one); a save that cannot be loaded is dimmed
+  with its reason. The selected row has an `Accent` outline; a double-click loads it. Under the
+  list, Load and Delete; Delete asks first. With unsaved progress, Load asks "Unsaved progress will
+  be lost." with Load anyway and Cancel.
+
 ### Overlays
 
 - **Loading screen and main menu** (presentation.md): full-window `UiLayer`s outside the dialog
   host. The loading screen is the splash image with "Loading" in `TitleSize` and a progress bar on
   a dark band at the bottom center. The menu blurs and darkens a little the whole live town behind
   it, with the menu at the left third: the title at twice `TitleSize` and the buttons in the shared
-  button style, 44 units tall, left aligned.
+  button style, 44 units tall, left aligned. While a save loads, the loading screen shows the
+  save's thumbnail in place of the splash.
 - **Top bar** (`TopBar`): a full-width strip across the top of the window, 36 UI units tall, in
   the panel color with a 1 px `PanelEdge` bottom border and no rounded corners. Left: every
   pinned resource as a 22-unit icon and "amount / limit" in whole numbers (the amount alone for a

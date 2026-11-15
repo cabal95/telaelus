@@ -27,6 +27,9 @@ public abstract partial class Dialog : PanelContainer
     /// <summary>The dialog's id for the snapshot and the <c>clickUi</c> command, as "buildMenu".</summary>
     public abstract string Id { get; }
 
+    /// <summary>Whether the game stands still while this dialog is open (the game menu and the save and load dialogs).</summary>
+    public virtual bool PausesGame => false;
+
     protected DialogHost Host { get; private set; } = null!;
     protected Label TitleLabel { get; private set; } = null!;
     protected VBoxContainer Body { get; private set; } = null!;

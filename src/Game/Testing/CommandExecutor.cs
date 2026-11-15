@@ -54,6 +54,8 @@ public sealed class CommandExecutor
         _app = app;
         _outputDir = outputDir;
         _screenshots = screenshots;
+        // A run's saves live in its own folder, so a run never sees (or changes) the player's saves.
+        SaveStore.Folder = System.IO.Path.Combine(outputDir, "saves");
     }
 
     /// <summary>
@@ -369,15 +371,39 @@ public sealed class CommandExecutor
     /// <summary>Goes into a new game whatever the current state (from the menu, or replacing the game in play); the next command runs a frame later.</summary>
     public StepOutcome NewGame(int? seed)
     {
+        ClearInput();
+        _app.NewGame(seed ?? AppRoot.ScenarioSeed);
+        _waitFrames = 1;
+        return StepOutcome.Ok;
+    }
+
+    /// <summary>Saves the game in play under a name, as the Save Game dialog does.</summary>
+    public StepOutcome SaveGame(string name)
+    {
+        _app.SaveGame(name);
+        return StepOutcome.Ok;
+    }
+
+    /// <summary>Loads a save whatever the current state; the next command runs once the loaded game is in play.</summary>
+    public StepOutcome LoadGame(string name)
+    {
+        ClearInput();
+        if (_app.LoadGame(name) is string problem)
+        {
+            return new StepOutcome(false, $"loadGame: {problem}");
+        }
+        _waitFrames = AppRoot.LoadFrames + 2;
+        return StepOutcome.Ok;
+    }
+
+    private void ClearInput()
+    {
         _pendingReleases.Clear();
         _queuedInput.Clear();
         _deferredInput.Clear();
         _pendingUiReleases.Clear();
         _scrolledUi.Clear();
         _dragFrames.Clear();
-        _app.NewGame(seed ?? AppRoot.ScenarioSeed);
-        _waitFrames = 1;
-        return StepOutcome.Ok;
     }
 
     public StepOutcome SetTimeOfDay(float timeOfDay)

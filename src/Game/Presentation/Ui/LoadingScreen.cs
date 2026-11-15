@@ -12,6 +12,9 @@ public partial class LoadingScreen : UiLayer
 
     private ProgressBar _bar = null!;
 
+    /// <summary>The picture behind the band: the splash, or a save's thumbnail while it loads.</summary>
+    public Texture2D? Image { get; init; }
+
     public override void _Ready()
     {
         base._Ready();
@@ -23,11 +26,12 @@ public partial class LoadingScreen : UiLayer
         };
         background.SetAnchorsPreset(Control.LayoutPreset.FullRect);
         Root.AddChild(background);
-        if (ResourceLoader.Exists(SplashPath))
+        Texture2D? picture = Image ?? (ResourceLoader.Exists(SplashPath) ? GD.Load<Texture2D>(SplashPath) : null);
+        if (picture is not null)
         {
             var image = new TextureRect
             {
-                Texture = GD.Load<Texture2D>(SplashPath),
+                Texture = picture,
                 ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
                 StretchMode = TextureRect.StretchModeEnum.KeepAspectCovered,
                 MouseFilter = Control.MouseFilterEnum.Ignore

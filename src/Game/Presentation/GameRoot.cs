@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Collections.Generic;
 using Game.Presentation.Ui;
 using Game.Sim;
@@ -7,9 +8,10 @@ using Godot;
 namespace Game.Presentation;
 
 /// <summary>
-/// Entry point node (attached to the Main scene root). It owns the simulation
-/// and the presentation, reads input into per-tick intent, steps the sim on a
-/// fixed clock, and mirrors sim state onto visible nodes.
+/// One game, created by <see cref="AppRoot"/> for New Game or a loaded save. It owns the simulation
+/// and the presentation, reads input into per-tick intent, steps the sim on a fixed clock (standing
+/// still while the game menu or a save or load dialog is open), mirrors sim state onto visible
+/// nodes, and autosaves every <see cref="AutosaveSeconds"/> of play.
 /// </summary>
 public partial class GameRoot : Node3D
 {
@@ -68,11 +70,40 @@ public partial class GameRoot : Node3D
     public FieldDetail FieldDetail => _fieldDetail;
 
     private int _seed;
+    private SaveFile? _save;
+    private GameMenu _gameMenu = null!;
+    private SaveDialog _saveDialog = null!;
+    private LoadDialog _loadDialog = null!;
+    private Image? _menuThumbnail;
 
-    /// <summary>Sets up a new game before it enters the tree: its world's seed and the pictures every game shares.</summary>
-    public void Initialize(int seed, ResourceIcons icons, BuildingPictures buildingPictures, FieldPictures fieldPictures)
+    /// <summary>The app the game belongs to (saving, loading, and the way back to the menu).</summary>
+    public AppRoot App { get; private set; } = null!;
+
+    /// <summary>Game seconds played (sim time), carried through saves.</summary>
+    public double PlayTime { get; private set; }
+
+    /// <summary>The play time when last saved or loaded.</summary>
+    public double SavedPlayTime { get; private set; }
+
+    /// <summary>Whether there is play since the last save (or the start): leaving asks first.</summary>
+    public bool HasUnsavedProgress => PlayTime - SavedPlayTime > 1.0;
+
+    public GameMenu GameMenu => _gameMenu;
+    public SaveDialog SaveDialog => _saveDialog;
+    public LoadDialog LoadDialog => _loadDialog;
+
+    /// <summary>Seconds of play between autosaves.</summary>
+    public const double AutosaveSeconds = 300.0;
+
+    /// <summary>
+    /// Sets up a game before it enters the tree: its world's seed (or the save it is loaded from), the
+    /// app, and the pictures every game shares.
+    /// </summary>
+    public void Initialize(AppRoot app, int seed, SaveFile? save, ResourceIcons icons, BuildingPictures buildingPictures, FieldPictures fieldPictures)
     {
+        App = app;
         _seed = seed;
+        _save = save;
         _icons = icons;
         _buildingPictures = buildingPictures;
         _fieldPictures = fieldPictures;
@@ -80,8 +111,94 @@ public partial class GameRoot : Node3D
 
     public override void _Ready()
     {
-        _sim = new Simulation(WorldSettings.Generated(_seed));
+        _sim = _save is SaveFile save ? Simulation.FromSave(save.Sim) : new Simulation(WorldSettings.Generated(_seed));
         BuildWorld();
+        if (_save is SaveFile loaded)
+        {
+            ApplyPresentation(loaded.Presentation);
+            PlayTime = loaded.Header.PlayTimeSeconds;
+            SavedPlayTime = PlayTime;
+        }
+        _save = null;
+    }
+
+    /// <summary>The game as a save: its header, the sim's state, and the pins and zoom.</summary>
+    public SaveFile MakeSave()
+    {
+        return new SaveFile
+        {
+            Header = new SaveHeader
+            {
+                GameVersion = AppRoot.GameVersion,
+                SavedAt = System.DateTime.Now.ToString("s", System.Globalization.CultureInfo.InvariantCulture),
+                PlayTimeSeconds = PlayTime,
+                Seed = _sim.World.Seed,
+                ShipsLaunched = _sim.ShipsLaunched,
+                Buildings = _sim.Buildings.Count
+            },
+            Sim = _sim.Save(),
+            Presentation = new System.Text.Json.Nodes.JsonObject
+            {
+                ["pins"] = new System.Text.Json.Nodes.JsonArray(_pins.Pinned.Select(t => (System.Text.Json.Nodes.JsonNode)t.ToString()).ToArray()),
+                ["zoom"] = _camera.ZoomLevel
+            }
+        };
+    }
+
+    private void ApplyPresentation(System.Text.Json.Nodes.JsonObject? presentation)
+    {
+        if (presentation is null)
+        {
+            return;
+        }
+        if (presentation["pins"] is System.Text.Json.Nodes.JsonArray pins)
+        {
+            var types = new List<ResourceType>();
+            foreach (System.Text.Json.Nodes.JsonNode? pin in pins)
+            {
+                if (pin is not null && System.Enum.TryParse(pin.GetValue<string>(), out ResourceType type))
+                {
+                    types.Add(type);
+                }
+            }
+            _pins.SetAll(types);
+        }
+        if (presentation["zoom"] is System.Text.Json.Nodes.JsonNode zoom)
+        {
+            _camera.ZoomTo(zoom.GetValue<float>());
+        }
+    }
+
+    /// <summary>Marks the game saved now (no unsaved progress).</summary>
+    public void MarkSaved()
+    {
+        SavedPlayTime = PlayTime;
+    }
+
+    /// <summary>A 320 x 180 picture of the game as last drawn, for a save's thumbnail (null headless).</summary>
+    public Image? CaptureThumbnail()
+    {
+        if (DisplayServer.GetName() == "headless")
+        {
+            return null;
+        }
+        Image image = GetViewport().GetTexture().GetImage();
+        image.Resize(320, 180, Image.Interpolation.Bilinear);
+        return image;
+    }
+
+    /// <summary>The thumbnail for a save from the game menu: the game as it was when the menu opened.</summary>
+    public Image? SaveThumbnail => _menuThumbnail ?? CaptureThumbnail();
+
+    /// <summary>Opens the game menu (Escape with nothing else open), keeping the frame behind it as the thumbnail.</summary>
+    public void OpenGameMenu(string status = "")
+    {
+        if (_dialogs.Current is null)
+        {
+            _menuThumbnail = CaptureThumbnail();
+        }
+        _dialogs.Open(_gameMenu);
+        _gameMenu.SetStatus(status);
     }
 
     /// <summary>
@@ -117,11 +234,19 @@ public partial class GameRoot : Node3D
             Harvest = worldInput && Input.IsPhysicalKeyPressed(Key.E)
         };
 
-        int steps = _clock.Advance(delta);
+        // The game menu and the save and load dialogs stand the game still.
+        bool paused = _dialogs.Current?.PausesGame == true;
+        int steps = paused ? 0 : _clock.Advance(delta);
         _simWatch.Restart();
+        double before = PlayTime;
         for (int i = 0; i < steps; i++)
         {
             _sim.Step(_clock.FixedDelta);
+            PlayTime += _clock.FixedDelta;
+        }
+        if (steps > 0 && System.Math.Floor(PlayTime / AutosaveSeconds) > System.Math.Floor(before / AutosaveSeconds))
+        {
+            App.Autosave();
         }
         _perf.SimMs = _simWatch.Elapsed.TotalMilliseconds;
 
@@ -203,6 +328,13 @@ public partial class GameRoot : Node3D
 
     public override void _UnhandledInput(InputEvent @event)
     {
+        if (@event is InputEventKey { Pressed: true, Echo: false } escape && escape.PhysicalKeycode == Key.Escape
+            && _dialogs.Current is null && !_buildController.InBuildMode)
+        {
+            OpenGameMenu();
+            GetViewport().SetInputAsHandled();
+            return;
+        }
         // A press over the world with the right button, or the left with Ctrl, may drag the map.
         if (@event is InputEventMouseButton press && press.Pressed && _dragButton is null
             && (press.ButtonIndex == MouseButton.Right || (press.ButtonIndex == MouseButton.Left && press.CtrlPressed)))
@@ -532,6 +664,40 @@ public partial class GameRoot : Node3D
         _researchTree.Initialize(_sim, _icons);
         _dialogs.Add(_researchTree, "Research");
         _buildingDetail.ResearchRequested += OpenResearchTree;
+
+        _gameMenu = new GameMenu
+        {
+            Name = "GameMenu",
+            HasUnsavedProgress = () => HasUnsavedProgress
+        };
+        _dialogs.Add(_gameMenu, "Paused");
+        _saveDialog = new SaveDialog
+        {
+            Name = "SaveDialog"
+        };
+        _dialogs.Add(_saveDialog, "Save Game");
+        _loadDialog = new LoadDialog
+        {
+            Name = "LoadDialog",
+            HasUnsavedProgress = () => HasUnsavedProgress
+        };
+        _dialogs.Add(_loadDialog, "Load Game");
+        _gameMenu.SaveRequested += () => _dialogs.Open(_saveDialog);
+        _gameMenu.LoadRequested += () => _dialogs.Open(_loadDialog);
+        _gameMenu.MainMenuRequested += () => App.ReturnToMenu();
+        _gameMenu.QuitRequested += () => GetTree().Quit();
+        _saveDialog.SaveRequested += name =>
+        {
+            App.SaveGame(name);
+            OpenGameMenu($"Saved as {name}");
+        };
+        _loadDialog.LoadRequested += name =>
+        {
+            if (App.LoadGame(name) is string problem)
+            {
+                OpenGameMenu(problem);
+            }
+        };
 
         _fieldDetail = new FieldDetail
         {

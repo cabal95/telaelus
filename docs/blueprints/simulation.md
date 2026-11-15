@@ -55,6 +55,13 @@ and mirrors it onto nodes.
   through dawn (0.15 to 0.25), is 1 from 0.25 to 0.75, and falls through dusk (0.75 to 0.85): six
   minutes of full light, two of twilight, two of dark. The Solar Array reads it (buildings.md).
 
+### Saving and loading
+
+- `Simulation.Save()` captures the whole state as plain data (`SaveData`); `Simulation.Load` puts
+  a save's state back, rebuilding what is derived, and `Simulation.FromSave` makes a sim from one.
+  A loaded sim continues exactly as the saved one would have. The format, the files, and the UI
+  are in saving.md.
+
 ### Input: intent and commands
 
 - Continuous, per-tick input is a `PlayerIntent` struct the presentation sets before each step:

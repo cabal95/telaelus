@@ -273,7 +273,14 @@ public partial class BuildController : Node3D
         }
         if (@event is InputEventKey key && key.Pressed && !key.Echo)
         {
+            // Escape in build mode leaves it (or a line drag) and goes no further: outside build mode
+            // it opens the game menu.
+            bool consumed = key.PhysicalKeycode != Key.Escape || InBuildMode;
             HandleKey(key.PhysicalKeycode);
+            if (consumed && key.PhysicalKeycode == Key.Escape)
+            {
+                GetViewport().SetInputAsHandled();
+            }
         }
         else if (@event is InputEventMouseButton mb && mb.Pressed && mb.ButtonIndex == MouseButton.Left && !mb.CtrlPressed)
         {
