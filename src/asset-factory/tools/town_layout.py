@@ -1,4 +1,4 @@
-"""Write the town scene's starting layout: src/Game/scenes/Town.tscn.
+"""Write the town scene's starting layout: src/Telaelus/scenes/Town.tscn.
 
 The town is the loading screen's image and the main menu's backdrop: a small settlement built from
 the shipped models (instanced, so it stays current when they change). This script places a
@@ -16,7 +16,7 @@ import math
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
-OUT = REPO / "src" / "Game" / "scenes" / "Town.tscn"
+OUT = REPO / "src" / "Telaelus" / "scenes" / "Town.tscn"
 
 # The town sits in map cells 0..9 by 0..7 (40 x 32 units); the ground runs well past it so the
 # camera's view never reaches its edge. The river runs North-South down column 6.

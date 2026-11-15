@@ -5,7 +5,7 @@
 How every piece of on-screen UI looks and behaves: the three kinds of UI (modals, panels, and
 overlays) and how each routes input, the color and size tokens, the shared Godot theme, the UI
 scale, the layers, and the shared components (buttons, cells, tooltips, icons). All UI uses these
-rules and never sets its own colors or sizes. The code lives in `src/Game/Presentation/Ui/`.
+rules and never sets its own colors or sizes. The code lives in `src/Telaelus/Presentation/Ui/`.
 
 ## Current state
 

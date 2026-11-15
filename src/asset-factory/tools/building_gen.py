@@ -3,7 +3,7 @@
 Each model fills its footprint (in fine cells, 1 unit each) minus a 0.1 inset per side, origin at
 the footprint center on the ground. The front marks the building's facing; the accent color is
 the building's identity color. See docs/blueprints/art-style.md and
-src/Game/assets/models/buildings/README.md.
+src/Telaelus/assets/models/buildings/README.md.
 """
 import math
 

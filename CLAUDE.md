@@ -1,4 +1,4 @@
-# Project: Game (working title)
+# Project: Telaelus
 
 A 2.5D on-planet resource/factory game (Part A) that feeds a space exploration and combat game
 (Part B), built in Godot 4.7 with C#. See [docs/game-plan.md](docs/game-plan.md) for the full
@@ -32,15 +32,15 @@ repo root. This file is git-ignored and differs per machine.
 Use the Godot editor path from `tools.json` wherever `<godot.editor>` appears below.
 
 `src/` holds one folder per C# project, plus `src/asset-factory` (asset source and generators, not
-a C# project; see [docs/asset-pipeline.md](docs/asset-pipeline.md)). The Godot project root is `src/Game` (that is where
-`project.godot` and `Game.csproj` live), so Godot commands take `--path src/Game`. The
-simulation is a separate class library in `src/Game.Sim`, referenced by `Game.csproj`.
-`game.slnx` at the repo root lists every project; building it needs .NET SDK 9.0.200 or later
+a C# project; see [docs/asset-pipeline.md](docs/asset-pipeline.md)). The Godot project root is `src/Telaelus` (that is where
+`project.godot` and `Telaelus.csproj` live), so Godot commands take `--path src/Telaelus`. The
+simulation is a separate class library in `src/Telaelus.Sim`, referenced by `Telaelus.csproj`.
+`Telaelus.slnx` at the repo root lists every project; building it needs .NET SDK 9.0.200 or later
 (older SDKs cannot read `.slnx`), while each project still targets net8.0.
 
-- Build without the editor: `dotnet build game.slnx -c Debug`
-- After adding a C# script or asset under `src/Game`, run `<godot.editor> --headless --path
-  src/Game --import` (a headless project scan and import that quits in seconds) and commit the
+- Build without the editor: `dotnet build Telaelus.slnx -c Debug`
+- After adding a C# script or asset under `src/Telaelus`, run `<godot.editor> --headless --path
+  src/Telaelus --import` (a headless project scan and import that quits in seconds) and commit the
   `.uid` files it creates with the script, so they do not appear later when the editor opens.
 - Asset factory tools (generator, `.glb` exporter, preview renderer) run in a private Python
   environment: `python src/asset-factory/setup_env.py` once per machine, then
@@ -48,12 +48,12 @@ simulation is a separate class library in `src/Game.Sim`, referenced by `Game.cs
   [docs/asset-pipeline.md](docs/asset-pipeline.md). Every new or updated model ships with its
   kept preview in `src/asset-factory/previews/` (its own sheet, plus its family overview such as
   `items.png`), committed with the model; see "Kept previews" there.
-- Run the sim unit tests: `dotnet test src/Game.Sim.Tests` (engine-free; must pass before a
+- Run the sim unit tests: `dotnet test src/Telaelus.Sim.Tests` (engine-free; must pass before a
   changeset is stamped Implemented)
-- Run the integration tests: `dotnet test src/Game.Integration.Tests` (each JSON scenario in
-  `src/Game.Integration.Tests/Scenarios/` runs headless as its own test; must pass when a change
+- Run the integration tests: `dotnet test src/Telaelus.Integration.Tests` (each JSON scenario in
+  `src/Telaelus.Integration.Tests/Scenarios/` runs headless as its own test; must pass when a change
   touches presentation or input)
-- Run one scenario windowed with screenshots: `<godot.editor> --path src/Game --fixed-fps 30
+- Run one scenario windowed with screenshots: `<godot.editor> --path src/Telaelus --fixed-fps 30
   --resolution 1280x720 -- --scenario=<file> [--output=<dir>]` (relative paths resolve against
   the repo root; output defaults to `test-output/runs/<timestamp>-<name>/`; read the PNGs and
   `report.json` there). Add `--headless` for a state-only run. See
@@ -63,17 +63,17 @@ simulation is a separate class library in `src/Game.Sim`, referenced by `Game.cs
   `--minimized` and off-screen `--position` are ignored or clamped, a hidden process launch still
   takes keyboard focus briefly, and the `no_focus` window setting leaves the window visible. Use
   `--headless` (state only) when you do not need pixels.
-- Drive a running game live: start it in the background with `<godot.editor> --path src/Game
+- Drive a running game live: start it in the background with `<godot.editor> --path src/Telaelus
   --fixed-fps 30 --resolution 1280x720 -- --control-port=7777 [--start-paused]`, poll
   `curl -s localhost:7777/status` until it answers, send scenario commands with
   `curl -s localhost:7777/commands -d '[{"press":"Key4"},{"wait":2},{"screenshot":"ghost"}]'`
   (open the returned screenshot paths to see the frame; use `pause` and `step` to go frame by
   frame), and finish with `curl -s -X POST localhost:7777/quit`.
-- Open the editor: `<godot.editor> --editor --path src/Game`
-- Run the game: `<godot.editor> --path src/Game` (it opens on the loading screen, then the main menu)
-- Re-render the splash image after changing `src/Game/scenes/Town.tscn`: `<godot.editor> --path
-  src/Game -- --render-splash` (windowed; writes `src/Game/assets/ui/splash.png`)
-- Headless runtime check: `<godot.editor> --headless --path src/Game --quit-after 20` (stderr
+- Open the editor: `<godot.editor> --editor --path src/Telaelus`
+- Run the game: `<godot.editor> --path src/Telaelus` (it opens on the loading screen, then the main menu)
+- Re-render the splash image after changing `src/Telaelus/scenes/Town.tscn`: `<godot.editor> --path
+  src/Telaelus -- --render-splash` (windowed; writes `src/Telaelus/assets/ui/splash.png`)
+- Headless runtime check: `<godot.editor> --headless --path src/Telaelus --quit-after 20` (stderr
   should be empty on success)
 
 Avoid the headless editor `--build-solutions --quit` flow; it can hang after building. Prefer
@@ -81,8 +81,8 @@ Avoid the headless editor `--build-solutions --quit` flow; it can hang after bui
 
 ## Architecture (keep this seam intact)
 
-The simulation (`src/Game.Sim`, its own project) is authoritative and free of Godot nodes,
-advanced on a fixed-timestep clock. The presentation (`src/Game/Presentation`) reads sim state and
+The simulation (`src/Telaelus.Sim`, its own project) is authoritative and free of Godot nodes,
+advanced on a fixed-timestep clock. The presentation (`src/Telaelus/Presentation`) reads sim state and
 mirrors it onto nodes. The project reference runs one way (the game references the sim), so the
 compiler stops the sim from depending on presentation code. Keep game logic in the sim and rendering/input in the presentation. This separation is
 what makes the planned co-op multiplayer feasible. See the "Architecture Posture" section of

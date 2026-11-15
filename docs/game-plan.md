@@ -1,4 +1,4 @@
-# Game Plan
+# Telaelus: Game Plan
 
 > Living design document. This is a learning project first and a playable game second.
 > This file holds the long-term vision and roadmap (the "why" and "where we are going").

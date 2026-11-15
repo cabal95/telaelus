@@ -277,7 +277,7 @@ buildings.md). A single global stockpile holds all amounts, within storage limit
   deposit with no field models of its own would draw its item model in every slot at ~0.6 units;
   every deposit has its own today. The
   models are required: a missing file throws (see presentation.md). Assets and conventions live in
-  `src/Game/assets/models/nature/README.md`.
+  `src/Telaelus/assets/models/nature/README.md`.
 - The top bar shows the pinned resources' amounts and limits, and the inventory panel (I) the
   Cargo pool and every resource by tier, discovered or not;
   the hint overlay shows "[E] Harvest" with the resource's icon, name, and a progress bar toward

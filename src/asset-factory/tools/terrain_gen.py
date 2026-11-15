@@ -3,7 +3,7 @@
 Every model is one 4 x 4 map cell (or a piece of one), origin at the cell center, north is -Z.
 Ground levels: land surfaces at y = 0, liquid surfaces (water, lava) at y = -0.1. Land carries a
 skirt from its surface down to -0.1 on every open side, which shows as a bank beside a liquid.
-See docs/blueprints/art-style.md and src/Game/assets/models/terrain/README.md.
+See docs/blueprints/art-style.md and src/Telaelus/assets/models/terrain/README.md.
 """
 import math
 import random

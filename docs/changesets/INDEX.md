@@ -181,6 +181,9 @@ Newest last. One line each; open the file for the full spec.
   player's data folder, an in-game menu on Escape (Resume, Save Game, Load Game, Main Menu, Quit)
   that pauses the game and asks before throwing away unsaved play, and Continue and Load Game on
   the main menu; `saveGame` and `loadGame` scenario commands.
+- **2611151521-telaelus-rename** - Names the game Telaelus: the window title, main menu, C#
+  namespaces and assemblies, project folders (`src/Telaelus*`), solution (`Telaelus.slnx`), and
+  docs, plus a root README that introduces the game, its name and pronunciation, and how it is built.
 
 ## Adding a changeset
 

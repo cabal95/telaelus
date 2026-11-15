@@ -159,7 +159,7 @@ The center map cells around the spawn are clear Grassland grass.
 
 - `TerrainView` draws the terrain in render tiles of 16 x 16 map cells, batched into one
   multimesh per model (see presentation.md); `TerrainTiles` lists each map cell's models from the
-  generated terrain models (files and conventions in `src/Game/assets/models/terrain/README.md`; the look and
+  generated terrain models (files and conventions in `src/Telaelus/assets/models/terrain/README.md`; the look and
   the ground levels in art-style.md). Only explored cells draw their models; unexplored cells are
   darkness (the fog overlay, presentation.md), so their terrain, mountains, and rivers are unseen.
 - A plain cell draws its **ground tile**, `ground_<terrain>_<a|b|c>`: one of three variants at a
@@ -182,7 +182,7 @@ The center map cells around the spawn are clear Grassland grass.
   the Stone family on every other ground, one of three shapes at a deterministic 90-degree
   rotation per map cell. The model stays inside its map cell with every edge flat on the
   ground, so each mountain is a standalone peak and neighbors form a cluster. The six files are required (see
-  `src/Game/assets/models/terrain/README.md`).
+  `src/Telaelus/assets/models/terrain/README.md`).
 - A **river** cell draws `river_<shape>_<bank terrain>` (`RiverPieces`): one model per shape and
   bank terrain (Grass, Sand, Snow, Mud, Rock), banks at y = 0 in that terrain's look and the sim's
   channel (the middle 2 x 2 fine cells plus a 2-wide arm per connection) sunk to a water surface at

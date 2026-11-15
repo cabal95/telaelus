@@ -2,7 +2,7 @@
 
 Origin at the unit's center on the ground. A unit occupies no cells; its size is chosen to read
 beside buildings (a fine cell is 1 unit, the player about 1.4 tall). See
-src/Game/assets/models/units/README.md.
+src/Telaelus/assets/models/units/README.md.
 """
 from mesh import Materials, Mesh, box, cylinder, quad
 

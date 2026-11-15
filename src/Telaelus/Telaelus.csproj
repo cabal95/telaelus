@@ -1,0 +1,13 @@
+<Project Sdk="Godot.NET.Sdk/4.7.2">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Telaelus</RootNamespace>
+    <!-- Run code-style (IDE*) analyzers, configured in .editorconfig, during build. -->
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Telaelus.Sim/Telaelus.Sim.csproj" />
+  </ItemGroup>
+</Project>

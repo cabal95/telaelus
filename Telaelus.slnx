@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Telaelus/Telaelus.csproj" />
+    <Project Path="src/Telaelus.Sim/Telaelus.Sim.csproj" />
+    <Project Path="src/Telaelus.Sim.Tests/Telaelus.Sim.Tests.csproj" />
+    <Project Path="src/Telaelus.Integration.Tests/Telaelus.Integration.Tests.csproj" />
+  </Folder>
+</Solution>

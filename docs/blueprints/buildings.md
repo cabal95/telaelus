@@ -502,7 +502,7 @@ And seven buildings, all processors (output buffer 10, 5 cycles of each input):
 ### Rendering and interaction
 
 - `BuildingViews` renders each building's model (`BuildingModels`, files in
-  `src/Game/assets/models/buildings/`), placed at the footprint center and turned to its facing.
+  `src/Telaelus/assets/models/buildings/`), placed at the footprint center and turned to its facing.
   Each model is authored facing North with its front toward -Z, fills its footprint minus a 0.1
   inset per side, and carries its type's accent color: Mine (a headframe over a shaft, ore cart at
   the front, orange), Lumber Camp (a plank shed, log pile and saw bench at the front, brown),

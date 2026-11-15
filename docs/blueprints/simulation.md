@@ -11,10 +11,10 @@ and mirrors it onto nodes.
 
 ### Project and dependencies
 
-- The simulation is the `Game.Sim` class library in `src/Game.Sim` (namespace `Game.Sim`). It
+- The simulation is the `Telaelus.Sim` class library in `src/Telaelus.Sim` (namespace `Telaelus.Sim`). It
   references only the `GodotSharp` package, for Godot's math types (`Vector2`, `Vector3`,
   `Mathf`); that package version matches the Godot.NET.Sdk version of the game project.
-- The game project (`src/Game/Game.csproj`) references `Game.Sim`; `Game.Sim` never references
+- The game project (`src/Telaelus/Telaelus.csproj`) references `Telaelus.Sim`; `Telaelus.Sim` never references
   the game, so the compiler keeps the sim free of presentation code.
 - The sim may use Godot math types only (`Vector2`, `Vector3`, `Mathf`), never engine objects.
   The unit test project checks this (see testing.md).

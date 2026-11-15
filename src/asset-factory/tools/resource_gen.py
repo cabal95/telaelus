@@ -2,7 +2,7 @@
 
 A field shows five of these, one per depletion stage; the game scales each to its deposit's target
 height and fits it in a 1.2-unit slot (NodeModels). Origin at the base center, resting on y = 0.
-See docs/blueprints/art-style.md and src/Game/assets/models/nature/README.md.
+See docs/blueprints/art-style.md and src/Telaelus/assets/models/nature/README.md.
 """
 import math
 import random

@@ -2,7 +2,7 @@
 
 Each is a single chunky object about 1 unit across, built to read as a silhouette at icon size;
 the game renders it once at startup into an icon (ResourceIcons). Origin at the base center,
-resting on y = 0. See docs/blueprints/art-style.md and src/Game/assets/models/items/README.md.
+resting on y = 0. See docs/blueprints/art-style.md and src/Telaelus/assets/models/items/README.md.
 """
 import math
 import random

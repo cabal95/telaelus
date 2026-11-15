@@ -12,7 +12,7 @@ Game; in a game, Escape opens the game menu (Resume, Save Game, Load Game, Main 
 ### What a save holds
 
 - **The sim's whole state** (`Simulation.Save()` to a `SaveData`, `Simulation.Load(SaveData)`, and
-  `Simulation.FromSave(SaveData)` for a new sim; `src/Game.Sim/SaveData.cs` and
+  `Simulation.FromSave(SaveData)` for a new sim; `src/Telaelus.Sim/SaveData.cs` and
   `SimulationSave.cs`):
   - the world settings (kind, seed, planet, fog) and every generated chunk in full (its terrain,
     biome, feature, river flow, and explored layers as byte arrays), plus where the fog was last
@@ -40,7 +40,7 @@ Game; in a game, Escape opens the game menu (Resume, Save Game, Load Game, Main 
 
 ### The format
 
-- `SaveFormat` (`src/Game.Sim/SaveFormat.cs`) writes a `SaveFile` as gzip-compressed JSON
+- `SaveFormat` (`src/Telaelus.Sim/SaveFormat.cs`) writes a `SaveFile` as gzip-compressed JSON
   (`System.Text.Json`, enums by name): a `SaveHeader` (format version, the game's version
   (`AppRoot.GameVersion`), the save time, play time in game seconds, the world seed, ships
   launched, and buildings), the sim's `SaveData`, and the presentation's object.
@@ -51,7 +51,8 @@ Game; in a game, Escape opens the game menu (Resume, Save Game, Load Game, Main 
 
 ### Where saves go
 
-- `SaveStore` (presentation) keeps saves in `user://saves/` (Godot's per-user data folder;
+- `SaveStore` (presentation) keeps saves in `user://saves/` (Godot's per-user data folder,
+  named after the project: `%APPDATA%\Godot\app_userdata\Telaelus\` on Windows;
   `SaveStore.Folder`): `<name>.save` and a `<name>.png` thumbnail beside it (320 x 180, the game as
   drawn; none headless).
 - Writing goes to a temporary file that is then moved over the old one, so a crash mid-save never

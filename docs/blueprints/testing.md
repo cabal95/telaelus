@@ -14,18 +14,18 @@ pausing it and stepping frame by frame.
 
 ### Sim unit tests
 
-- **Project:** `src/Game.Sim.Tests/Game.Sim.Tests.csproj`, net8.0, xUnit, with a
-  `ProjectReference` to `Game.Sim`. It is listed in `game.slnx` and sits beside the Godot project,
+- **Project:** `src/Telaelus.Sim.Tests/Telaelus.Sim.Tests.csproj`, net8.0, xUnit, with a
+  `ProjectReference` to `Telaelus.Sim`. It is listed in `Telaelus.slnx` and sits beside the Godot project,
   so Godot never imports it.
-- **Engine-free:** `Game.Sim` uses only Godot's math types from the `GodotSharp` package, which
+- **Engine-free:** `Telaelus.Sim` uses only Godot's math types from the `GodotSharp` package, which
   are plain managed structs, so the tests need no Godot install, window, or editor.
-- **Run:** `dotnet test src/Game.Sim.Tests`. The suite takes well under a second to execute.
+- **Run:** `dotnet test src/Telaelus.Sim.Tests`. The suite takes well under a second to execute.
 
 ### The seam rule
 
 - The sim may use Godot math types only: `Vector2`, `Vector3`, and `Mathf`. Any engine object
   (anything derived from `GodotObject`) needs the native engine.
-- `SeamTests` reads `Game.Sim.dll`'s metadata and fails, naming the type, if the sim references
+- `SeamTests` reads `Telaelus.Sim.dll`'s metadata and fails, naming the type, if the sim references
   any Godot type outside that allow-list. This matters because actually *running* engine code
   outside the engine does not fail a test cleanly: it crashes the test host with an access
   violation and the whole run is reported as aborted.
@@ -182,7 +182,7 @@ pausing it and stepping frame by frame.
 
 - A scenario is a JSON file: `name`, optional `description`, and an ordered `steps` array, one
   command per step. Any step may also carry a `comment` string, which is ignored. Comments and
-  trailing commas in the file are tolerated. `src/Game.Integration.Tests/scenario.schema.json`
+  trailing commas in the file are tolerated. `src/Telaelus.Integration.Tests/scenario.schema.json`
   defines the format; scenarios reference it with `$schema`.
 - **Commands:**
   - Map setup: `initMap` `{}` (the bounded empty map: all-Grassland grass with no features, player
@@ -343,9 +343,9 @@ pausing it and stepping frame by frame.
 
 ### Running a scenario
 
-- Windowed, with screenshots: `<godot.editor> --path src/Game --fixed-fps 30 --resolution
+- Windowed, with screenshots: `<godot.editor> --path src/Telaelus --fixed-fps 30 --resolution
   1280x720 -- --scenario=<file> [--output=<dir>] [--no-screenshots]`.
-- Headless, state only: `<godot.editor> --headless --path src/Game --fixed-fps 30 --
+- Headless, state only: `<godot.editor> --headless --path src/Telaelus --fixed-fps 30 --
   --scenario=<file> [--output=<dir>]`. Headless implies `--no-screenshots`, which turns each
   `screenshot` into a `snapshot`. A headless window is 64 x 64 and ignores `--resolution`, so
   the scenario runner sizes it to 1280 x 720, and the UI lays out and UI clicks land as they do
@@ -391,8 +391,8 @@ pausing it and stepping frame by frame.
   average and peak `draws` and `objects`. Headless runs use a dummy renderer, so their timings and
   render counts are not measurements; measure windowed, with `--uncapped` for true frame times.
   Scenarios never assert on timings or draw counts, which vary by machine. To compare a change,
-  run `perf-walk` several times before and after (`<godot.editor> --path src/Game --fixed-fps 30
-  --resolution 1280x720 -- --uncapped --scenario=src/Game.Integration.Tests/Scenarios/perf-walk.json`)
+  run `perf-walk` several times before and after (`<godot.editor> --path src/Telaelus --fixed-fps 30
+  --resolution 1280x720 -- --uncapped --scenario=src/Telaelus.Integration.Tests/Scenarios/perf-walk.json`)
   and compare the medians: run-to-run noise is about 10%.
 - **Exit codes:** 0 passed; 1 an expectation failed; 2 the scenario was invalid (unreadable file,
   bad JSON, unknown command, bad arguments) or a step threw. A run stops at its first failure and
@@ -410,8 +410,8 @@ pausing it and stepping frame by frame.
 
 ### Stress runs
 
-- **`src/Game.Integration.Tests/tools/stress_scenarios.py`** runs scenarios many times to catch
-  intermittent failures: `python src/Game.Integration.Tests/tools/stress_scenarios.py <names...>
+- **`src/Telaelus.Integration.Tests/tools/stress_scenarios.py`** runs scenarios many times to catch
+  intermittent failures: `python src/Telaelus.Integration.Tests/tools/stress_scenarios.py <names...>
   [--all] [--runs N] [--jobs J] [--timeout S] [--dumps] [--dump-type 1-4] [--exit-garbage N]
   [--keep-ok]` (Godot from `tools.json`). Each run is the headless launch the integration tests
   use, in its own folder under `test-output/stress/<yyMMdd-HHmmss>/`.
@@ -430,21 +430,21 @@ pausing it and stepping frame by frame.
 
 ### Integration tests
 
-- **Project:** `src/Game.Integration.Tests/`, xUnit, separate from the engine-free sim tests. A
-  `ProjectReference` to `Game.csproj` with `ReferenceOutputAssembly="false"` builds the game first.
+- **Project:** `src/Telaelus.Integration.Tests/`, xUnit, separate from the engine-free sim tests. A
+  `ProjectReference` to `Telaelus.csproj` with `ReferenceOutputAssembly="false"` builds the game first.
 - **One test per file:** `ScenarioTests.Scenario` is a `[Theory]` over the file names in
   `Scenarios/*.json`, so each file is its own test in Test Explorer and `dotnet test`.
 - Each test runs Godot headless with `--fixed-fps 30`, an output folder under
   `test-output/integration/`, and a 60 s timeout. It passes on exit code 0; a failure message
   gives the exit code, the report's message, the run folder, and the end of stderr.
 - **Godot path:** the `GODOT_EDITOR` environment variable, else `godot.editor` in `tools.json` at
-  the repo root (found by walking up to `game.slnx`); with neither, the test fails with setup
+  the repo root (found by walking up to `Telaelus.slnx`); with neither, the test fails with setup
   instructions.
 - **Schema checks:** `ScenarioSchemaTests`, in the same project but without launching Godot,
   checks that `scenario.schema.json` has no duplicate keys (JSON lets a later key silently replace
   an earlier one) and validates every scenario file against it with JsonSchema.Net, one test per
   file. This keeps the `$schema` that editors use accurate.
-- **Run:** `dotnet test src/Game.Integration.Tests`, or `dotnet test game.slnx` for everything.
+- **Run:** `dotnet test src/Telaelus.Integration.Tests`, or `dotnet test Telaelus.slnx` for everything.
 - **What belongs here:** what only the running game can show (input reaching the right place,
   presentation state, views mirroring the sim). Sim rules belong in the unit tests. Screenshot
   steps in a kept scenario are for manual runs; the test suite skips them.
@@ -543,7 +543,7 @@ pausing it and stepping frame by frame.
 
 ### Live control channel
 
-- **Starting:** `<godot.editor> --path src/Game --fixed-fps 30 --resolution 1280x720 --
+- **Starting:** `<godot.editor> --path src/Telaelus --fixed-fps 30 --resolution 1280x720 --
   --control-port=<n> [--start-paused] [--output=<dir>] [--no-screenshots]`. Debug builds only;
   ignored if `--scenario` is also given. `--start-paused` pauses once the world is built.
   Screenshots and the session log go to `test-output/runs/<yyMMdd-HHmmss>-live/` or `--output`.

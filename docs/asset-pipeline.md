@@ -2,7 +2,7 @@
 
 How 3D assets are generated, previewed, converted, and updated. This is a how-to, not a
 blueprint: it describes the workflow, not the art style or how the game consumes assets (see
-`src/Game/assets/models/*/README.md` for the in-game conventions: file names, scale targets,
+`src/Telaelus/assets/models/*/README.md` for the in-game conventions: file names, scale targets,
 slot sizes).
 
 ## Status
@@ -25,14 +25,14 @@ src/asset-factory/
     unit_gen.py      unit models (the truck), exported to assets/models/units/
     resource_gen.py  resource field models (the deposits), and site models (worked-out markers, the motherlode base)
     item_gen.py      resource item models (the UI's resource icons) and icon models, exported to assets/models/icons/
-    town_layout.py   the town scene's starting layout (src/Game/scenes/Town.tscn); plain Python, run once
+    town_layout.py   the town scene's starting layout (src/Telaelus/scenes/Town.tscn); plain Python, run once
     arrange.py       composes test maps from terrain models (for previews)
     export_glb.py    OBJ to .glb exporter
     preview.py       preview renderer (no window)
     preview/         Godot preview renderer (render.gd + a minimal project.godot)
 ```
 
-The `.glb` files are not stored here; the shipped copies live in `src/Game/assets/models/`.
+The `.glb` files are not stored here; the shipped copies live in `src/Telaelus/assets/models/`.
 Throwaway output (scratch renders, test scenarios, trial exports) goes in the git-ignored
 `test-output/`.
 
@@ -41,7 +41,7 @@ Throwaway output (scratch renders, test scenarios, trial exports) goes in the gi
 ```
 gen.py  ->  models/<name>.obj + .mtl  ->  preview.py (PNG)  ->  review and adjust
                                       |                     \->  previews/<name>.png (kept)
-                                      \->  export_glb.py  ->  <name>.glb  ->  src/Game/assets/models/...
+                                      \->  export_glb.py  ->  <name>.glb  ->  src/Telaelus/assets/models/...
 ```
 
 Every new or updated model ships with its kept preview (see Kept previews below).
@@ -193,7 +193,7 @@ previews in the same commit:
 ```
 
 Each model is written to `<out_dir>/<name>.glb`; pass the shipped folder (for example
-`src/Game/assets/models/terrain`) to export in place. It handles any number of models in one run
+`src/Telaelus/assets/models/terrain`) to export in place. It handles any number of models in one run
 and takes milliseconds.
 
 - Positions are copied as they are (OBJ and glTF are both Y up), and each triangle gets its face
@@ -208,7 +208,7 @@ and takes milliseconds.
 1. Change the generator (parameters, seed, or logic) and rerun it.
 2. Render the preview and review it against the previous result.
 3. For anything tileable, render the arrangement test as well.
-4. Export to `.glb` over the shipped file under `src/Game/assets/models/`. Keep the file name;
+4. Export to `.glb` over the shipped file under `src/Telaelus/assets/models/`. Keep the file name;
    the game loads by name.
 5. Update its kept previews (its own sheet and its family overview, see Kept previews).
 6. Open the game (or run a scenario with screenshots, see `docs/blueprints/testing.md`) to
@@ -217,17 +217,17 @@ and takes milliseconds.
 ## Adding a new asset
 
 The same steps as updating, plus: follow the naming rules of its `README.md` under
-`src/Game/assets/models/` and add the model to that README's table, create its kept preview
+`src/Telaelus/assets/models/` and add the model to that README's table, create its kept preview
 sheet, add it to its family overview, and commit the new `.glb` with its `.import` file (see
 Shipping below).
 
 ## Shipping an asset to the game
 
 - Follow the folder and naming rules in the relevant `README.md` under
-  `src/Game/assets/models/` (for example `iron_ore_a.glb`, `tree_conifer_a.glb`).
+  `src/Telaelus/assets/models/` (for example `iron_ore_a.glb`, `tree_conifer_a.glb`).
 - Godot caches imported assets. Replacing a `.glb` is not enough for a plain game run, which keeps
   drawing the old cached model. Re-import first with
-  `<godot.editor> --headless --path src/Game --import` (it exits on its own), or just open the
+  `<godot.editor> --headless --path src/Telaelus --import` (it exits on its own), or just open the
   editor once. When replacing an existing model the `.import` file is unchanged; for a new model
   Godot writes a sibling `.import` file, which is committed together with the model.
 - Wiring a new asset class into the presentation code is a normal changeset (see
