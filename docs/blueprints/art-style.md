@@ -165,6 +165,7 @@ or 1.05 for facet variation). A new material extends the table.
 | reactor_accent | 0.46, 0.42, 0.90 | Fission Reactor bands (a radiation blue-violet) |
 | sun | 1.00, 0.84, 0.30 | The sun icon |
 | moon | 0.86, 0.89, 0.96 | The moon icon |
+| research_accent | 0.36, 0.86, 0.66 | Research Lab band and awning (a mint green) |
 
 Crown greens are mid tones with no near-black shade: a crown's shaded side would otherwise read
 as black under the dark ambient light. Crowns shade light on upward faces and dark underneath.
@@ -221,6 +222,11 @@ Emissive materials glow at half their base color. Mountains keep their own stone
   across the front, an intake pipe). Icons (`assets/models/icons/`): `icon_sun` (a pale yellow
   disc with eight rays), `icon_moon` (a pale crescent), `icon_power` (a lightning bolt in
   `power_accent`), flat shapes facing the game camera.
+- The Research Lab (4 x 5, a low white lab with a mint band, a glass-roofed bay at the back, a
+  slotted dome and a small dish on the roof, an instrument bench under a mint awning at the front).
+  Project icons: `icon_material_transfer` (a crate under a `hub_accent` arrow arcing over it) and
+  `icon_advanced_material_transfer` (two crates under two arrows, the inner with a `power_accent`
+  band).
 - The later tiers: Sawmill (3 x 5, an open-sided shed with a `lumber_accent` gabled roof over a
   saw bench with a round blade, logs at the back, plank stacks either side at the front), Cement
   Kiln (3 x 7, a sloped rotary drum on piers with tyre rings from a preheater tower and chimney at

@@ -52,5 +52,6 @@ public enum BuildingType
     EnrichmentPlant,
     SolarArray,
     BatteryBank,
-    FissionReactor
+    FissionReactor,
+    ResearchLab
 }

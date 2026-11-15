@@ -10,7 +10,7 @@ ship from a Shipyard, which closes the on-planet loop.
 
 ### Building types and definitions
 
-- `BuildingType` has fifty values: **Mine**, **Lumber Camp**, **Smelter**, **Refinery**,
+- `BuildingType` has fifty-one values: **Mine**, **Lumber Camp**, **Smelter**, **Refinery**,
   **Oil Well**, the **HQ**, the storage buildings **Silo**, **Stockyard**, **Tank Farm**,
   **Warehouse**, and **Vault**, the hubs **Small Hub** and **Relay**, the generators **Water
   Wheel** and **Burner Generator**, the powered extractors **Lumber Mill** and **Drill Rig**, the
@@ -22,7 +22,7 @@ ship from a Shipyard, which closes the on-planet loop.
   Kiln**, **Assembly Plant**, and **Shipyard**, and the later tiers' **Sawmill**, **Cement
   Kiln**, **Concrete Mixer**, **Brine Well**, **Semiconductor Fab**, **Air Separator**, and
   **Enrichment Plant**, and the power buildings **Solar Array**, **Battery Bank**, and **Fission
-  Reactor**.
+  Reactor**, and the **Research Lab**.
 - Each type has a `BuildingDef` (in `BuildingDefs`): a display name, a footprint in fine cells
   (width along X, depth along Z when facing North), a cost, a speed, and for an extractor, the
   deposit types it works (`Works`; a building is an extractor when the list is not empty) and its
@@ -442,7 +442,19 @@ And seven buildings, all processors (output buffer 10, 5 cycles of each input):
   drains into storage as far as room allows.
 - Storage buildings do no work each tick; they only raise limits while they stand.
 - Online buildings share the one storage. Moving raw resources from collectors to storage is the
-  player's hand work until Depot trucks and Material Transfer arrive.
+  player's hand work, then Depot trucks', until research lets online collectors drain their
+  buffers into storage (Material Transfer for Wood, Stone, Iron Ore, Copper Ore, and Coal; Advanced
+  Material Transfer for the rest; research.md).
+
+### The Research Lab
+
+| Building | Footprint | Cost | Tier | Draws |
+|---|---|---|---|---|
+| Research Lab | 4 x 5 | 40 Stone, 30 Wood, 30 Iron | 1 | 10 Power |
+
+- It does no work of its own: while switched on and online it adds to the research speed
+  (`BuildingDef.Researches`; research.md). Its State is "Idle: No research running" with no active
+  project.
 
 ### Switching off, status, and destroying
 

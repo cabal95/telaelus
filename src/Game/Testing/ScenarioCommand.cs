@@ -151,6 +151,21 @@ public sealed class ScenarioCommand
                     float z = Number(Required(arg, "z"), "z");
                     return e => e.TeleportPlayer(x, z);
                 }
+            case "startResearch":
+                {
+                    ResearchProject project = ParseEnum<ResearchProject>(arg);
+                    return e => e.StartResearch(project);
+                }
+            case "pauseResearch":
+                {
+                    return e => e.PauseResearch();
+                }
+            case "setResearchProgress":
+                {
+                    ResearchProject project = ParseEnum<ResearchProject>(Required(arg, "project"));
+                    float seconds = (float)Number(Required(arg, "seconds"), "seconds");
+                    return e => e.SetResearchProgress(project, seconds);
+                }
             case "setTimeOfDay":
                 {
                     float time = (float)Number(arg, "setTimeOfDay");

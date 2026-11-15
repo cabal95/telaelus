@@ -28,6 +28,7 @@ public partial class GameRoot : Node3D
     private TopBar _topBar = null!;
     private HintOverlay _hint = null!;
     private InventoryPanel _inventory = null!;
+    private ResearchTree _researchTree = null!;
     private FieldDetail _fieldDetail = null!;
     private FieldPictures _fieldPictures = null!;
     private BuildingPictures _buildingPictures = null!;
@@ -62,6 +63,7 @@ public partial class GameRoot : Node3D
     public TopBar TopBar => _topBar;
     public HintOverlay Hint => _hint;
     public InventoryPanel Inventory => _inventory;
+    public ResearchTree ResearchTree => _researchTree;
     public FieldDetail FieldDetail => _fieldDetail;
 
     public override void _Ready()
@@ -228,6 +230,10 @@ public partial class GameRoot : Node3D
         {
             ToggleInventory();
         }
+        else if (@event is InputEventKey t && t.Pressed && !t.Echo && t.PhysicalKeycode == Key.T)
+        {
+            OpenResearchTree();
+        }
         else if (@event is InputEventKey n && n.Pressed && !n.Echo && n.PhysicalKeycode == Key.N)
         {
             _network.OverlayShown = !_network.OverlayShown;
@@ -239,6 +245,13 @@ public partial class GameRoot : Node3D
     {
         _buildController.Cancel();
         _dialogs.Open(_buildMenu);
+    }
+
+    /// <summary>Opens the research tree, leaving build mode.</summary>
+    public void OpenResearchTree()
+    {
+        _buildController.Cancel();
+        _dialogs.Open(_researchTree);
     }
 
     /// <summary>Opens the inventory panel, or closes it when it is open.</summary>
@@ -506,6 +519,14 @@ public partial class GameRoot : Node3D
         };
         _inventory.Initialize(_sim, _icons, _pins);
         _dialogs.Add(_inventory, "Inventory");
+
+        _researchTree = new ResearchTree
+        {
+            Name = "ResearchTree"
+        };
+        _researchTree.Initialize(_sim, _icons);
+        _dialogs.Add(_researchTree, "Research");
+        _buildingDetail.ResearchRequested += OpenResearchTree;
 
         _fieldDetail = new FieldDetail
         {

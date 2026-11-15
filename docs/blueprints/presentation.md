@@ -128,6 +128,9 @@ ui-style.md. There is no text HUD; the screen holds:
   pin. The
   body scrolls. Like every panel, opening it closes a building's detail panel and the other way
   round.
+- **Research tree** (`ResearchTree`, a modal titled "Research"): T opens it; see research.md for
+  its cards, link lines, and buttons. The Research Lab's detail panel adds a Research row and a
+  "Research tree [T]" button.
 - **Build menu** (`BuildMenu`, a modal titled "Buildings"): B opens it (leaving build
   mode) and B, Escape, the Close button, or a click on the backdrop closes it. Its body is a grid
   of 112-unit square cells, as many columns as fit, scrolling when taller than the panel allows.

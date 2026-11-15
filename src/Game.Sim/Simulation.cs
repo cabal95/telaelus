@@ -482,6 +482,12 @@ public sealed partial class Simulation
                 ? new BuildingStatus(BuildingState.Working, null)
                 : new BuildingStatus(BuildingState.Idle, "Offline: stores nothing");
         }
+        if (building.Def.Researches)
+        {
+            return ActiveResearch is null
+                ? new BuildingStatus(BuildingState.Idle, "No research running")
+                : new BuildingStatus(BuildingState.Working, null);
+        }
         if (building.Def.Solar && building.Online && Daylight <= 0f)
         {
             return new BuildingStatus(BuildingState.Idle, "Night: supplies nothing");
@@ -851,6 +857,8 @@ public sealed partial class Simulation
                 StepProcessor(building, recipe, dt);
             }
         }
+        StepResearch(dt);
+        TransferFromCollectors();
     }
 
     private void StepExtractor(Building building, double dt)

@@ -46,7 +46,8 @@ and mirrors it onto nodes.
   fixed `1/30 s` steps, clamping the backlog to 8 steps so a stall cannot trigger a runaway
   catch-up.
 - `Simulation.Step(dt)` runs in order: move the player, update the harvest target, harvest (if
-  intended), advance the time of day, then step buildings.
+  intended), advance the time of day, then step buildings (capacity, then each building, then
+  research and the transfer from collectors; research.md), then trucks.
 - **The time of day** (`TimeOfDay`, 0 to 1 over `DayLength`, 600 s; 0 midnight, 0.5 midday)
   advances with the fixed tick, so peers agree on it, and wraps. A new or reset world starts at
   `StartTimeOfDay` 0.3. `Daylight` (`DaylightAt(t)`) is 0 from 0.85 to 0.15, rises linearly

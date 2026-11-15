@@ -21,6 +21,8 @@ Read this index to find the right area, then open that blueprint for the detail.
   depletion stages, the global stockpile, hand-harvesting, and field rendering.
 - **[buildings.md](buildings.md)** - Building types, footprints, and recipes, anchor and facing
   placement, extractor work areas, the production chain, the ship launch win, and the build UI.
+- **[research.md](research.md)** - Global research: projects, fees, prerequisites, progress in
+  game time, research speed from Research Labs, Material Transfer's effect, and the research tree.
 - **[player.md](player.md)** - The player's simulation state and movement, camera-relative input,
   and the on-screen character and follow camera.
 - **[presentation.md](presentation.md)** - The presentation layer: the frame loop and view-sync

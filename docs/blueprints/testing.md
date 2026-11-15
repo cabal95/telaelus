@@ -140,6 +140,12 @@ pausing it and stepping frame by frame.
   putting two wires in storage, and an end-to-end run from seeded tier-1 materials through five
   Fabricators, two Electronics Works, a Tile Kiln, three Assembly Plants, and two Shipyards (on
   Burner Generators, with Warehouses for the parts) to a launch.
+- `ResearchTests`: the fee taken once and refused short; Advanced Material Transfer locked until
+  Material Transfer is complete; pausing keeping progress and the fee, resuming charging nothing;
+  research speed at 0, 1, 2, 3, and 5 labs; one lab finishing Material Transfer in two game days;
+  two labs at 1.5x; no lab working leaving research waiting; Material Transfer draining an online
+  Mine but not an offline one nor a Drill Rig's Bauxite until Advanced Material Transfer;
+  transfer stopping when storage is full.
 - `PowerStoreTests`: the clock starting mid-morning, advancing, and wrapping; daylight through the
   day; the Solar Array's supply by daylight and its night status; a Battery Bank charging at its
   rate up to its capacity, covering a shortage at Normal until it runs dry, giving at most its rate
@@ -180,7 +186,9 @@ pausing it and stepping frame by frame.
     and whether or not unlocked), `teleportPlayer` `{ x, z }`, `seedStockpile` `{ type, amount }`, `fillBuffer` `{ anchor, type, amount }` (sets one
     resource in the output buffer of the building at that anchor; 0 removes it), `setRecipe`
     `{ anchor, index }` (chooses the recipe of the building at that anchor, as its picker does),
-    `setTimeOfDay` (a number from 0 up to 1, 0.5 midday),
+    `setTimeOfDay` (a number from 0 up to 1, 0.5 midday), `startResearch` (a project name; fails
+    when it cannot start), `pauseResearch` (`{}`), `setResearchProgress` `{ project, seconds }` (at
+    full work it completes),
     `placeMotherlode`
     `{ kind, mapCell }`, `setWorkedOut` `{ mapCell, deposit }`
     (unlocks any building whose whole cost is then held; scenarios that place through the menu and a click seed first), `cameraZoom` `{ size }` (the camera's zoom: world units across 720 pixels
@@ -237,9 +245,13 @@ pausing it and stepping frame by frame.
   and `storageFull` or null, `tooltip`: the hover
   tooltip's lines or null, `worldTip`: the truck tooltip's lines outside build mode, or null, and while the build menu is open, its `cells` in display order, each
   `type`, `state` (`affordable`, `unaffordable`, or `undiscovered`), and `label`; while the
+  research tree is open, its `header`, its `cards` (each `project`, `running`, `progress` 0 to 1,
+  `selected`, and `locked`), and its `drawer` (the selected `project`, its `state` as shown,
+  `button`, `enabled`, `fee`, `time`, and `progress` 0 to 1); while the
   detail panel is open, `building` (its id), `rows` (each shown status row, keyed in camel case:
   `network`, `switch`, `power`, `water`, `sand`, `state`, `inRange`, `workingOn`, `recipe`, `buffer`,
-  `truck`, `burning`, `links`, `reach`, `trucks`, `truck1` to `truck4`, `site`, `plot`, `eats`),
+  `truck`, `burning`, `links`, `reach`, `trucks`, `truck1` to `truck4`, `site`, `plot`, `eats`,
+  `charge`, `research`),
   `fuel` (the fuel picker's choice, or null), `output` (the Output picker's choice as shown, or
   null), `recipe` (the Recipe picker's choice, or null), `input` (the input picker's `choice` and
   `note`, or null), `buyTruck` (a Depot's button: `text` and `enabled`, or null), `adds` (what a storage building adds, by
@@ -266,7 +278,9 @@ pausing it and stepping frame by frame.
   `motherlode` or null);
   `stockpile` (every resource); `capacity` (`power`, `water`, and `sand`, each with `supply`,
   `demand`, `speed`, and `state`: `normal`, `brownout`, or `blackout`, and once there is a Battery
-  Bank, `stored`, `storeCapacity`, and `storeFlow`); `timeOfDay` and `daylight`; `discovered` (the discovered resources' type names, in enum
+  Bank, `stored`, `storeCapacity`, and `storeFlow`); `timeOfDay` and `daylight`; `research` (its
+  `active` project or null, `speed`, and `projects`, each camel-cased with `state`, `progress`, and
+  `paid`); `discovered` (the discovered resources' type names, in enum
   order); `unlockedBuildings` (type names, in enum order); and
   `shipsLaunched`. New checks are added as snapshot fields.
 - **Input injection:** keys and mouse buttons go through `Input.ParseInputEvent` followed by
@@ -377,6 +391,11 @@ pausing it and stepping frame by frame.
   generator's panel shows its supply and Best fuel),
   `refining` (a Steel Mill's Auto input picker and its note and recipe text; an Electrolyzer on
   Hydrogen feeding a Fuel Plant to Rocket Fuel; the launch progress with Liquid Oxygen),
+  `research` (a Research Lab; T opening the tree on Material Transfer with Advanced Material
+  Transfer locked, selecting its card showing it disabled in the drawer; starting Material
+  Transfer from the drawer taking its fee; pausing keeping progress; resuming without a second fee; the
+  project completing, Advanced Material Transfer turning available, and an online Mine's Iron Ore
+  reaching storage),
   `power-consumers` (at midday a Solar Array's 60 Power charging a Battery Bank at 50, with the
   clock, power, and store readouts; at night the bank carrying a Drill Rig at Normal; a Fission
   Reactor on Fuel Rods and Water adding 400),

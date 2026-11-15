@@ -13,3 +13,5 @@ Every file is required: the game throws if one is missing.
 | Sun | `icon_sun.glb` | A pale yellow disc with eight short rays | The top bar's clock by day |
 | Moon | `icon_moon.glb` | A pale crescent | The top bar's clock by night |
 | Power | `icon_power.glb` | A lightning bolt in the power yellow | The top bar's power readout |
+| Material Transfer | `icon_material_transfer.glb` | A crate under a green arrow arcing over it | Its research tree card |
+| Advanced Material Transfer | `icon_advanced_material_transfer.glb` | Two crates under two green arrows, the inner with a yellow band | Its research tree card |

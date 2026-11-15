@@ -89,7 +89,8 @@ The two kinds place themselves:
 
 - **Modal:** centered over the dimmed backdrop, 60% of the window wide (at least 420 and at most
   900 UI units) and as tall as its content up to 80% of the window, after which the body
-  scrolls. It takes all input until it is dismissed: the host swallows every key (handing it to
+  scrolls. A modal may place itself otherwise (`Dialog.Place` is virtual): the research tree
+  fills the window below the top bar, 24 units in from every edge. It takes all input until it is dismissed: the host swallows every key (handing it to
   the modal first, so the build menu can close on B), and the world reads no movement or
   harvest input while one is open (`DialogHost.CapturesWorldInput`). Clicking the backdrop
   closes it.

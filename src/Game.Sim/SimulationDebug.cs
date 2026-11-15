@@ -217,6 +217,16 @@ public sealed partial class Simulation
             }
         }
 
+        /// <summary>Sets a project's work done, in game seconds; at its full work it completes (its fee counted as paid).</summary>
+        public void SetResearchProgress(ResearchProject project, float seconds)
+        {
+            if (seconds < 0f)
+            {
+                throw new ArgumentOutOfRangeException(nameof(seconds), seconds, "research progress is 0 or more");
+            }
+            _sim.SetResearchProgressForDebug(project, seconds);
+        }
+
         /// <summary>Sets the time of day (0 to 1; 0.5 is midday).</summary>
         public void SetTimeOfDay(float timeOfDay)
         {

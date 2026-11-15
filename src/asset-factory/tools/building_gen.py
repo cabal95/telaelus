@@ -1315,6 +1315,49 @@ def fission_reactor():
     return m, mat.mats
 
 
+def research_lab():
+    """4 x 5: a low white lab with a glass-roofed bay at the back, a small dome with a slot and a dish
+    on the roof, and a bench of instruments under an awning at the front; a power pole."""
+    m, mat = Mesh(), Materials()
+    hx, hz = half(4), half(5)
+    box(m, mat("stone_dark"), -hx, 0, -hz, hx, 0.08, hz, mat_top=mat("concrete", 0.95))
+    # the lab block and its mint band
+    box(m, mat("ceramic"), -1.8, 0.08, -1.0, 1.2, 1.0, 1.4, mat_top=mat("metal"))
+    box(m, mat("research_accent"), -1.82, 0.78, -1.02, 1.22, 0.88, 1.42)
+    box(m, mat("shadow"), -0.4, 0.08, -1.01, 0.4, 0.75, -1.0)
+    # the glass-roofed bay at the back
+    box(m, mat("ceramic"), -1.8, 0.08, 1.4, 1.2, 0.7, 2.3, mat_top=mat("metal"))
+    quad(m, mat("glass"), (-1.8, 0.7, 1.4), (1.2, 0.7, 1.4), (1.2, 1.0, 2.3), (-1.8, 1.0, 2.3), (0, 0.95, -0.3))
+    # the dome on the roof, its slot, and a dish
+    cylinder(m, mat("metal"), (-0.6, 1.0, 0.4), (-0.6, 1.15, 0.4), 0.55, segs=14)
+    n = 4
+    for k in range(n):
+        b0 = (math.pi / 2) * k / n
+        b1 = (math.pi / 2) * (k + 1) / n
+        for s in range(14):
+            a0 = 2 * math.pi * s / 14
+            a1 = 2 * math.pi * (s + 1) / 14
+            slot = s in (10, 11) and k < 3
+            r0, y0 = 0.55 * math.cos(b0), 1.15 + 0.55 * math.sin(b0)
+            r1, y1 = 0.55 * math.cos(b1), 1.15 + 0.55 * math.sin(b1)
+            p = [(-0.6 + r0 * math.cos(a0), y0, 0.4 + r0 * math.sin(a0)), (-0.6 + r0 * math.cos(a1), y0, 0.4 + r0 * math.sin(a1)),
+                 (-0.6 + r1 * math.cos(a1), y1, 0.4 + r1 * math.sin(a1)), (-0.6 + r1 * math.cos(a0), y1, 0.4 + r1 * math.sin(a0))]
+            quad(m, mat("shadow" if slot else "ceramic"), p[0], p[3], p[2], p[1],
+                 (math.cos((a0 + a1) / 2) * math.cos(b0), math.sin(b0) + 0.1, math.sin((a0 + a1) / 2) * math.cos(b0)))
+    cylinder(m, mat("metal_dark"), (0.7, 1.0, 0.6), (0.7, 1.4, 0.6), 0.04, segs=5)
+    spike(m, mat("metal"), (0.7, 1.55, 0.45), (0.7, 1.4, 0.75), 0.28, segs=10)
+    # the instrument bench under an awning at the front
+    for x in (-1.6, 1.0):
+        cylinder(m, mat("metal_dark"), (x, 0.08, -2.25), (x, 0.9, -2.25), 0.04, segs=5)
+    quad(m, mat("research_accent"), (-1.75, 0.9, -2.4), (1.15, 0.9, -2.4), (1.15, 1.0, -1.0), (-1.75, 1.0, -1.0), (0, 1, -0.07))
+    box(m, mat("metal"), -1.5, 0.08, -2.05, -0.6, 0.45, -1.7, mat_top=mat("metal_dark"))
+    box(m, mat("screen"), -1.4, 0.45, -1.95, -0.95, 0.7, -1.9)
+    box(m, mat("metal"), 0.35, 0.08, -2.05, 0.95, 0.45, -1.7, mat_top=mat("metal_dark"))
+    cylinder(m, mat("glass"), (0.65, 0.45, -1.88), (0.65, 0.7, -1.88), 0.08, segs=8)
+    power_pole(m, mat, 1.65, 2.15, 1.6)
+    return m, mat.mats
+
+
 BUILDINGS = {"mine": mine, "lumber_camp": lumber_camp, "smelter": smelter, "refinery": refinery,
              "oil_well": oil_well, "hq": hq, "silo": silo, "stockyard": stockyard, "tank_farm": tank_farm,
              "warehouse": warehouse, "vault": vault, "small_hub": small_hub, "relay": relay,
@@ -1332,7 +1375,8 @@ BUILDINGS = {"mine": mine, "lumber_camp": lumber_camp, "smelter": smelter, "refi
              "cement_kiln": cement_kiln, "concrete_mixer": concrete_mixer, "brine_well": brine_well,
              "semiconductor_fab": semiconductor_fab, "air_separator": air_separator,
              "enrichment_plant": enrichment_plant, "solar_array": solar_array,
-             "battery_bank": battery_bank, "fission_reactor": fission_reactor}
+             "battery_bank": battery_bank, "fission_reactor": fission_reactor,
+             "research_lab": research_lab}
 
 
 def build_all():

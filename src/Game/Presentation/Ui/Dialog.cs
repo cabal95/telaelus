@@ -128,7 +128,7 @@ public abstract partial class Dialog : PanelContainer
     /// panel starts below <paramref name="panelTop"/> (the top bar) and runs to the bottom
     /// margin.
     /// </summary>
-    public void Place(Vector2 uiSize, float panelTop)
+    public virtual void Place(Vector2 uiSize, float panelTop)
     {
         float margin = UiTheme.Padding;
         if (Kind == DialogKind.Modal)

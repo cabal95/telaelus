@@ -37,7 +37,7 @@
     "biome": { "enum": ["Grassland", "Forest", "Highlands", "Desert", "Swamp", "Tundra", "Volcanic", "Ocean"] },
     "feature": { "enum": ["None", "Mountain", "River"] },
     "resource": { "enum": ["Wood", "Stone", "IronOre", "CopperOre", "Coal", "CrudeOil", "Bauxite", "Limestone", "Quartz", "TitaniumOre", "Sulfur", "RareEarths", "UraniumOre", "Crystals", "Sand", "Water", "Lithium", "Iron", "RocketFuel", "Copper", "Steel", "Glass", "Lumber", "Charcoal", "Cement", "Concrete", "Kerosene", "Plastic", "Hydrogen", "LiquidOxygen", "Aluminum", "Silicon", "SulfuricAcid", "Rubber", "Titanium", "CarbonFiber", "EnrichedUranium", "HullPlate", "SteelBeam", "CopperWire", "Circuit", "InsulatedCable", "MachineParts", "SiliconWafer", "Processor", "Magnet", "ElectricMotor", "Battery", "SolarCell", "CompositePanel", "CeramicTile", "AluminumFrame", "ArmorPlate", "ControlModule", "Computer", "ThrusterAssembly", "FuelTank", "HeatShield", "FuelRod", "LifeSupportUnit", "SensorArray", "HullSection", "Engine"] },
-    "building": { "enum": ["Mine", "LumberCamp", "Smelter", "Refinery", "OilWell", "Hq", "Silo", "Stockyard", "TankFarm", "Warehouse", "Vault", "SmallHub", "Relay", "WaterWheel", "BurnerGenerator", "LumberMill", "DrillRig", "WaterPump", "PumpingStation", "SandCollector", "SandDredge", "Glassworks", "Depot", "Forester", "Quarry", "CharcoalKiln", "RockCrusher", "DeepWell", "DeepMine", "SteelMill", "Electrolyzer", "FuelPlant", "ChemicalPlant", "AluminumSmelter", "ElectricFurnace", "Fabricator", "ElectronicsWorks", "TileKiln", "AssemblyPlant", "Shipyard", "Sawmill", "CementKiln", "ConcreteMixer", "BrineWell", "SemiconductorFab", "AirSeparator", "EnrichmentPlant", "SolarArray", "BatteryBank", "FissionReactor"] },
+    "building": { "enum": ["Mine", "LumberCamp", "Smelter", "Refinery", "OilWell", "Hq", "Silo", "Stockyard", "TankFarm", "Warehouse", "Vault", "SmallHub", "Relay", "WaterWheel", "BurnerGenerator", "LumberMill", "DrillRig", "WaterPump", "PumpingStation", "SandCollector", "SandDredge", "Glassworks", "Depot", "Forester", "Quarry", "CharcoalKiln", "RockCrusher", "DeepWell", "DeepMine", "SteelMill", "Electrolyzer", "FuelPlant", "ChemicalPlant", "AluminumSmelter", "ElectricFurnace", "Fabricator", "ElectronicsWorks", "TileKiln", "AssemblyPlant", "Shipyard", "Sawmill", "CementKiln", "ConcreteMixer", "BrineWell", "SemiconductorFab", "AirSeparator", "EnrichmentPlant", "SolarArray", "BatteryBank", "FissionReactor", "ResearchLab"] },
     "facing": { "enum": ["North", "East", "South", "West"] },
     "comment": { "type": "string", "description": "Ignored; documents the step." },
     "scenarioStep": {
@@ -56,6 +56,9 @@
         { "$ref": "#/definitions/placeMotherlode" },
         { "$ref": "#/definitions/setRecipe" },
         { "$ref": "#/definitions/setTimeOfDay" },
+        { "$ref": "#/definitions/startResearch" },
+        { "$ref": "#/definitions/pauseResearch" },
+        { "$ref": "#/definitions/setResearchProgress" },
         { "$ref": "#/definitions/setWorkedOut" },
         { "$ref": "#/definitions/cameraZoom" },
         { "$ref": "#/definitions/press" },
@@ -226,6 +229,45 @@
           "properties": {
             "x": { "type": "number" },
             "z": { "type": "number" }
+          }
+        },
+        "comment": { "$ref": "#/definitions/comment" }
+      }
+    },
+    "research": { "enum": ["MaterialTransfer", "AdvancedMaterialTransfer"] },
+    "startResearch": {
+      "description": "Start (or resume) a research project, paying its fee the first time; fails if it cannot start.",
+      "type": "object",
+      "required": ["startResearch"],
+      "additionalProperties": false,
+      "properties": {
+        "startResearch": { "$ref": "#/definitions/research" },
+        "comment": { "$ref": "#/definitions/comment" }
+      }
+    },
+    "pauseResearch": {
+      "description": "Pause the running research project (its progress and paid fee stay). The value is ignored.",
+      "type": "object",
+      "required": ["pauseResearch"],
+      "additionalProperties": false,
+      "properties": {
+        "pauseResearch": { "type": "object", "additionalProperties": false },
+        "comment": { "$ref": "#/definitions/comment" }
+      }
+    },
+    "setResearchProgress": {
+      "description": "Set a project's work done in game seconds; at its full work it completes (fee counted as paid).",
+      "type": "object",
+      "required": ["setResearchProgress"],
+      "additionalProperties": false,
+      "properties": {
+        "setResearchProgress": {
+          "type": "object",
+          "required": ["project", "seconds"],
+          "additionalProperties": false,
+          "properties": {
+            "project": { "$ref": "#/definitions/research" },
+            "seconds": { "type": "number", "minimum": 0 }
           }
         },
         "comment": { "$ref": "#/definitions/comment" }

@@ -47,6 +47,7 @@
       { "type": "Quarry", "state": "undiscovered", "label": "Undiscovered" },
       { "type": "Refinery", "state": "undiscovered", "label": "Undiscovered" },
       { "type": "Relay", "state": "undiscovered", "label": "Undiscovered" },
+      { "type": "ResearchLab", "state": "undiscovered", "label": "Undiscovered" },
       { "type": "RockCrusher", "state": "undiscovered", "label": "Undiscovered" },
       { "type": "SandDredge", "state": "undiscovered", "label": "Undiscovered" },
       { "type": "Sawmill", "state": "undiscovered", "label": "Undiscovered" },

@@ -783,10 +783,62 @@ def icon_power(_rnd):
     return m, mat.mats
 
 
+def _crate(m, mat, cu, cv, size):
+    """A front-on wooden crate: a square with a darker frame and a diagonal brace."""
+    h = size / 2
+    _slab(m, mat("plank"), mat("plank_dark"), [(cu - h, cv - h), (cu + h, cv - h), (cu + h, cv + h), (cu - h, cv + h)], 0.12)
+    t = size * 0.12
+    for poly in ([(cu - h, cv + h - t), (cu + h, cv + h - t), (cu + h, cv + h), (cu - h, cv + h)],
+                 [(cu - h, cv - h), (cu + h, cv - h), (cu + h, cv - h + t), (cu - h, cv - h + t)],
+                 [(cu - h + t * 0.4, cv - h + t), (cu - h + t * 1.6, cv - h + t), (cu + h - t * 0.4, cv + h - t), (cu + h - t * 1.6, cv + h - t)]):
+        _slab(m, mat("plank_dark"), mat("plank_dark"), poly, 0.16)
+
+
+def _arc_arrow(m, mat, band, cu, cv, r, width, a_from, a_to, segs=8):
+    """An arrow along a circular arc from a_from to a_to (radians), its head at a_to."""
+    for k in range(segs):
+        a0 = a_from + (a_to - a_from) * k / segs
+        a1 = a_from + (a_to - a_from) * (k + 1) / segs
+        ri, ro = r - width / 2, r + width / 2
+        poly = [(cu + ro * math.cos(a0), cv + ro * math.sin(a0)), (cu + ri * math.cos(a0), cv + ri * math.sin(a0)),
+                (cu + ri * math.cos(a1), cv + ri * math.sin(a1)), (cu + ro * math.cos(a1), cv + ro * math.sin(a1))]
+        if (a_to - a_from) > 0:
+            poly.reverse()
+        _slab(m, mat(band if band and k == segs // 2 else "hub_accent"), mat("hub_accent", 0.75), poly, 0.12)
+    # the head: a triangle at the end, pointing along the arc
+    tip = a_to + (0.35 if a_to > a_from else -0.35)
+    pts = [(cu + (r + width * 1.3) * math.cos(a_to), cv + (r + width * 1.3) * math.sin(a_to)),
+           (cu + (r - width * 1.3) * math.cos(a_to), cv + (r - width * 1.3) * math.sin(a_to)),
+           (cu + r * math.cos(tip), cv + r * math.sin(tip))]
+    if a_to < a_from:
+        pts.reverse()
+    _slab(m, mat("hub_accent"), mat("hub_accent", 0.75), pts, 0.12)
+
+
+def icon_material_transfer(_rnd):
+    """A crate with a green arrow arcing over it: the network carrying it."""
+    m, mat = Mesh(), Materials()
+    _crate(m, mat, 0.0, -0.22, 0.5)
+    _arc_arrow(m, mat, None, 0.0, -0.05, 0.5, 0.11, math.radians(15), math.radians(150))
+    return m, mat.mats
+
+
+def icon_advanced_material_transfer(_rnd):
+    """Two crates under a double green arrow with a yellow band: the network carrying more."""
+    m, mat = Mesh(), Materials()
+    _crate(m, mat, -0.25, -0.3, 0.38)
+    _crate(m, mat, 0.25, -0.3, 0.38)
+    _arc_arrow(m, mat, "power_accent", 0.0, -0.1, 0.48, 0.1, math.radians(15), math.radians(150))
+    _arc_arrow(m, mat, None, 0.0, -0.1, 0.66, 0.08, math.radians(30), math.radians(140))
+    return m, mat.mats
+
+
 ICONS = {
     "icon_sun": icon_sun,
     "icon_moon": icon_moon,
     "icon_power": icon_power,
+    "icon_material_transfer": icon_material_transfer,
+    "icon_advanced_material_transfer": icon_advanced_material_transfer,
 }
 
 

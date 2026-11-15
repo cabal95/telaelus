@@ -56,7 +56,29 @@ public static class StateSnapshot
             ["unlockedBuildings"] = Unlocked(sim),
             ["shipsLaunched"] = sim.ShipsLaunched,
             ["timeOfDay"] = Round(sim.TimeOfDay),
-            ["daylight"] = Round(sim.Daylight)
+            ["daylight"] = Round(sim.Daylight),
+            ["research"] = Research(sim)
+        };
+    }
+
+    /// <summary>The running project and each project's state, progress (game seconds), and whether its fee is paid.</summary>
+    private static JsonObject Research(Simulation sim)
+    {
+        var projects = new JsonObject();
+        foreach (ResearchProject project in ResearchDefs.All)
+        {
+            projects[Camel(project.ToString())] = new JsonObject
+            {
+                ["state"] = Camel(sim.StateOf(project).ToString()),
+                ["progress"] = Round(sim.ResearchProgress(project)),
+                ["paid"] = sim.ResearchFeePaid(project)
+            };
+        }
+        return new JsonObject
+        {
+            ["active"] = sim.ActiveResearch?.ToString(),
+            ["speed"] = Round(sim.ResearchSpeed),
+            ["projects"] = projects
         };
     }
 
@@ -163,6 +185,34 @@ public static class StateSnapshot
             }
             ui["inventory"] = rows;
             ui["cargo"] = root.Inventory.CargoText;
+        }
+        if (root.Dialogs.Current == root.ResearchTree)
+        {
+            var cards = new JsonArray();
+            foreach ((ResearchProject project, bool running, float progress, bool selected, bool locked) in root.ResearchTree.Cards)
+            {
+                cards.Add(new JsonObject
+                {
+                    ["project"] = project.ToString(),
+                    ["running"] = running,
+                    ["progress"] = Round(progress),
+                    ["selected"] = selected,
+                    ["locked"] = locked
+                });
+            }
+            (ResearchProject shown, string state, string button, bool enabled, string fee, string time, float done) = root.ResearchTree.DrawerShown;
+            ui["header"] = root.ResearchTree.HeaderText;
+            ui["cards"] = cards;
+            ui["drawer"] = new JsonObject
+            {
+                ["project"] = shown.ToString(),
+                ["state"] = state,
+                ["button"] = button,
+                ["enabled"] = enabled,
+                ["fee"] = fee,
+                ["time"] = time,
+                ["progress"] = Round(done)
+            };
         }
         if (root.Dialogs.Current == root.BuildMenu)
         {

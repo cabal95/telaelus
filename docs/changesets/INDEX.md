@@ -156,6 +156,11 @@ Newest last. One line each; open the file for the full spec.
   dusk, a dim moonlight at night, its angle fixed), the Solar Array (Power by daylight), the Battery Bank (stored Power that
   charges from a surplus and covers a shortage), and the Fission Reactor (Fuel Rods for 400 Power,
   cooled by Water); fuels by building; the top bar's clock, power bolt, and battery readout.
+- **2611151236-research** - Adds global research: one project at a time, progress in game time that
+  is never lost, one-time fees, prerequisites, and research speed from Research Labs (each less than
+  the last, down to a quarter); Material Transfer (Wood, Stone, Iron Ore, Copper Ore, Coal) and
+  Advanced Material Transfer (every other raw resource) drain online collectors into storage; the
+  research tree (T) and the Research Lab.
 
 ## Adding a changeset
 

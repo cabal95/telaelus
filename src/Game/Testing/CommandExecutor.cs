@@ -272,6 +272,27 @@ public sealed class CommandExecutor
         return StepOutcome.Ok;
     }
 
+    public StepOutcome StartResearch(ResearchProject project)
+    {
+        if (!_root.Sim.StartResearch(project))
+        {
+            throw new System.InvalidOperationException($"cannot start {project}: it is {_root.Sim.StateOf(project)} or its fee is short");
+        }
+        return StepOutcome.Ok;
+    }
+
+    public StepOutcome PauseResearch()
+    {
+        _root.Sim.PauseResearch();
+        return StepOutcome.Ok;
+    }
+
+    public StepOutcome SetResearchProgress(ResearchProject project, float seconds)
+    {
+        _root.Sim.Debug.SetResearchProgress(project, seconds);
+        return StepOutcome.Ok;
+    }
+
     public StepOutcome SetTimeOfDay(float timeOfDay)
     {
         _root.Sim.Debug.SetTimeOfDay(timeOfDay);

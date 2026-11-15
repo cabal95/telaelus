@@ -110,6 +110,9 @@ public sealed record BuildingDef(
     /// <summary>The most Power a Battery Bank takes in or gives out.</summary>
     public float StoreRate { get; init; }
 
+    /// <summary>A Research Lab: it adds to the research speed while it works.</summary>
+    public bool Researches { get; init; }
+
     public Placement Placement { get; init; } = Placement.Standard;
 
     /// <summary>How many trucks it holds (a Depot); its first comes with it.</summary>
@@ -856,6 +859,21 @@ public static class BuildingDefs
         }
     };
 
+    private static readonly BuildingDef ResearchLab = new("Research Lab", 4, 5, new ResourceAmount[]
+    {
+        new(ResourceType.Stone, 40f),
+        new(ResourceType.Wood, 30f),
+        new(ResourceType.Iron, 30f)
+    }, Array.Empty<ResourceType>(), 0f)
+    {
+        Tier = 1,
+        Researches = true,
+        Draws = new Dictionary<CapacityType, float>
+        {
+            [CapacityType.Power] = 10f
+        }
+    };
+
     public static BuildingDef For(BuildingType type)
     {
         return type switch
@@ -910,6 +928,7 @@ public static class BuildingDefs
             BuildingType.SolarArray => SolarArray,
             BuildingType.BatteryBank => BatteryBank,
             BuildingType.FissionReactor => FissionReactor,
+            BuildingType.ResearchLab => ResearchLab,
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, "no building definition")
         };
     }

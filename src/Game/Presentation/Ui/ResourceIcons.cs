@@ -21,7 +21,9 @@ public partial class ResourceIcons : Node
     private Dictionary<string, Texture2D> _uiIcons = new();
 
     /// <summary>The icon models that stand for no resource (<c>icons/&lt;name&gt;</c>, see the icons README).</summary>
-    public static readonly string[] UiIconNames = { "icon_sun", "icon_moon", "icon_power" };
+    public static readonly string[] UiIconNames = Ui.UiIcons.Fixed
+        .Concat(ResearchDefs.All.Select(ResearchTree.ResearchIconName))
+        .ToArray();
 
     /// <summary>Raised once the icons are ready.</summary>
     public event Action? IconsReady;

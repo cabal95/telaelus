@@ -35,6 +35,10 @@ public partial class BuildingDetail : Dialog
     private OptionButton _fuel = null!;
     private Label _fuelNote = null!;
     private Button _buyTruck = null!;
+    private Button _openResearch = null!;
+
+    /// <summary>Raised when the lab's button asks for the research tree.</summary>
+    public event System.Action? ResearchRequested;
     private Label _recipeLabel = null!;
     private OptionButton _recipe = null!;
     private string _recipeSignature = "";
@@ -106,7 +110,7 @@ public partial class BuildingDetail : Dialog
         _turntable = new TurntableView();
         center.AddChild(_turntable);
 
-        _rows = new StatusRows("Network", "Switch", "Power", "Water", "Sand", "Charge", "State", "Site", "Plot", "Eats", "In range", "Working on", "Recipe", "Buffer", "Truck", "Burning", "Links", "Reach",
+        _rows = new StatusRows("Network", "Switch", "Power", "Water", "Sand", "Charge", "Research", "State", "Site", "Plot", "Eats", "In range", "Working on", "Recipe", "Buffer", "Truck", "Burning", "Links", "Reach",
             "Trucks", "Truck 1", "Truck 2", "Truck 3", "Truck 4");
         Body.AddChild(_rows);
 
@@ -186,6 +190,15 @@ public partial class BuildingDetail : Dialog
         _buyTruck.Pressed += OnBuyTruck;
         Body.AddChild(_buyTruck);
         Host.Register(Id + "/buyTruck", _buyTruck);
+        _openResearch = new Button
+        {
+            Name = "OpenResearch",
+            Text = "Research tree [T]",
+            FocusMode = FocusModeEnum.None
+        };
+        _openResearch.Pressed += () => ResearchRequested?.Invoke();
+        Body.AddChild(_openResearch);
+        Host.Register(Id + "/openResearch", _openResearch);
         _buyNote = UiTheme.MakeLabel("", UiTheme.SmallSize, UiTheme.Short);
         Body.AddChild(_buyNote);
 
@@ -269,6 +282,8 @@ public partial class BuildingDetail : Dialog
         }
         _rows.Set("Burning", BurningText(building));
         _rows.Set("Charge", ChargeText(building));
+        _rows.Set("Research", def.Researches ? ResearchText() : null);
+        _openResearch.Visible = def.Researches;
         RefreshFuel(building);
         bool works = !storage && !def.IsHub;
         _rows.Set("State", works ? status.State == BuildingState.Working ? "Working" : "Idle: " + status.IdleReason : null);
@@ -644,6 +659,18 @@ public partial class BuildingDetail : Dialog
             return speed < 1f ? $"Supplies {supply * speed:0.#} of {supply:0}" : $"Supplies {supply:0}";
         }
         return null;
+    }
+
+    /// <summary>A Research Lab's Research row: the running project, how far along, and the research speed.</summary>
+    private string ResearchText()
+    {
+        if (_sim.ActiveResearch is not ResearchProject project)
+        {
+            return "No research running";
+        }
+        ResearchDef def = ResearchDefs.For(project);
+        float percent = 100f * _sim.ResearchProgress(project) / def.Work;
+        return $"{def.Name}, {Mathf.FloorToInt(percent)}%, speed {_sim.ResearchSpeed:0.##}x";
     }
 
     /// <summary>A Battery Bank's Charge row: what it holds and whether it is charging, discharging, full, or holding.</summary>

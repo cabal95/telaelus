@@ -55,6 +55,7 @@ public static class BuildingModels
             BuildingType.SolarArray => "solar_array",
             BuildingType.BatteryBank => "battery_bank",
             BuildingType.FissionReactor => "fission_reactor",
+            BuildingType.ResearchLab => "research_lab",
             _ => type.ToString().ToLowerInvariant()
         };
     }
