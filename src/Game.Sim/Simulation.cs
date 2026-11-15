@@ -84,14 +84,19 @@ public sealed partial class Simulation
         EnsureChunksAroundPlayer();
         MovePlayer(dt);
         RevealAroundPlayer();
-        UpdateHarvestTarget();
-        if (Intent.Harvest)
+        UpdateInteraction();
+        if (Intent.Harvest && InteractTarget is not null)
+        {
+            Interact(dt);
+        }
+        else if (Intent.Harvest)
         {
             Harvest(dt);
         }
         else
         {
             HarvestProgress = 0f;
+            InteractProgress = 0f;
         }
         StepBuildings(dt);
     }
@@ -247,6 +252,7 @@ public sealed partial class Simulation
             building.Progress = 0f;
         }
         building.Enabled = enabled;
+        RecomputeNetwork();
         return true;
     }
 
@@ -260,7 +266,8 @@ public sealed partial class Simulation
 
     /// <summary>
     /// What a building would refund if destroyed now: half of each cost
-    /// amount, rounded up, plus the inputs of a processor's running cycle in full.
+    /// amount, rounded up, plus the inputs of a processor's running cycle and everything in its
+    /// buffers, in full.
     /// </summary>
     public IReadOnlyList<ResourceAmount> DestroyRefund(Building building)
     {
@@ -272,6 +279,14 @@ public sealed partial class Simulation
         foreach (ResourceAmount input in RunningInputs(building))
         {
             Add(refund, input.Type, input.Amount);
+        }
+        foreach ((ResourceType type, float amount) in building.Output)
+        {
+            Add(refund, type, amount);
+        }
+        foreach ((ResourceType type, float amount) in building.Input)
+        {
+            Add(refund, type, amount);
         }
         var list = new List<ResourceAmount>();
         foreach ((ResourceType type, float amount) in refund)
@@ -310,6 +325,11 @@ public sealed partial class Simulation
     private void RemoveBuilding(Building building)
     {
         _buildings.Remove(building);
+        if (ReferenceEquals(InteractTarget, building))
+        {
+            InteractTarget = null;
+            InteractProgress = 0f;
+        }
         for (int x = building.AnchorX; x < building.AnchorX + building.Width; x++)
         {
             for (int z = building.AnchorZ; z < building.AnchorZ + building.Depth; z++)
@@ -317,6 +337,7 @@ public sealed partial class Simulation
                 _occupied.Remove((x, z));
             }
         }
+        RecomputeNetwork();
     }
 
     /// <summary>
@@ -337,17 +358,20 @@ public sealed partial class Simulation
             {
                 return new BuildingStatus(BuildingState.Idle, "No fields in range");
             }
-            return HasRoom(field.Type, Mathf.Min(field.Amount, 1f))
+            return BufferHasRoom(building, Mathf.Min(field.Amount, 1f))
                 ? new BuildingStatus(BuildingState.Working, null)
-                : new BuildingStatus(BuildingState.Idle, StorageFull(field.Type));
+                : new BuildingStatus(BuildingState.Idle, "Full: waiting for pickup");
         }
         if (building.Recipe is not Recipe recipe)
         {
             return new BuildingStatus(BuildingState.Working, null);
         }
-        if (FirstOutputWithoutRoom(recipe) is ResourceType full && (!building.Crafting || building.Progress >= recipe.CycleTime))
+        bool finished = building.Crafting && building.Progress >= recipe.CycleTime;
+        if ((finished || !building.Crafting) && !OutputsHaveRoom(building, recipe))
         {
-            return new BuildingStatus(BuildingState.Idle, StorageFull(full));
+            return new BuildingStatus(BuildingState.Idle, building.Online
+                ? StorageFull(FirstOutputWithoutRoom(recipe) ?? recipe.Outputs[0].Type)
+                : "Full: collect by hand");
         }
         if (building.Crafting)
         {
@@ -356,15 +380,19 @@ public sealed partial class Simulation
         var missing = new List<string>();
         foreach (ResourceAmount input in recipe.Inputs)
         {
-            _stockpile.TryGetValue(input.Type, out float have);
-            if (have < input.Amount)
+            _stockpile.TryGetValue(input.Type, out float stock);
+            float have = Held(building.Input, input.Type) + (building.Online ? stock : 0f);
+            if (have < input.Amount - RoomTolerance)
             {
                 missing.Add(ResourceDefs.For(input.Type).Name);
             }
         }
-        return missing.Count == 0
-            ? new BuildingStatus(BuildingState.Working, null)
-            : new BuildingStatus(BuildingState.Idle, "Waiting for " + string.Join(", ", missing));
+        if (missing.Count == 0)
+        {
+            return new BuildingStatus(BuildingState.Working, null);
+        }
+        return new BuildingStatus(BuildingState.Idle, "Waiting for " + string.Join(", ", missing)
+            + (building.Online ? "" : " (load by hand)"));
     }
 
     private Building AddBuilding(BuildingType type, int anchorX, int anchorZ, Facing facing)
@@ -378,6 +406,7 @@ public sealed partial class Simulation
                 _occupied.Add((x, z));
             }
         }
+        RecomputeNetwork();
         return building;
     }
 
@@ -566,14 +595,19 @@ public sealed partial class Simulation
     /// <summary>Moves one unit (or what is left) from a field to the stockpile, removing the field when it empties.</summary>
     private void TakeUnit(ResourceField field)
     {
+        AddToStockpile(field.Type, TakeFromField(field));
+    }
+
+    /// <summary>Takes one unit (or what is left) from a field, removing it when it empties; returns the amount.</summary>
+    private float TakeFromField(ResourceField field)
+    {
         float take = Mathf.Min(field.Amount, 1f);
         field.Amount -= take;
-        AddToStockpile(field.Type, take);
-
         if (field.Depleted)
         {
             RemoveField(field);
         }
+        return take;
     }
 
     // ---- Buildings -------------------------------------------------------
@@ -620,15 +654,16 @@ public sealed partial class Simulation
         {
             return;
         }
-        if (!HasRoom(field.Type, Mathf.Min(field.Amount, 1f)))
+        if (!BufferHasRoom(building, Mathf.Min(field.Amount, 1f)))
         {
-            // A whole unit waits at the field until storage has room for it.
+            // A whole unit waits at the field until the buffer has room for it.
             building.Progress = perUnit;
             return;
         }
 
         building.Progress -= perUnit;
-        TakeUnit(field);
+        ResourceType type = field.Type;
+        Put(building.Output, type, TakeFromField(field));
         if (field.Depleted)
         {
             building.CurrentField = null;
@@ -654,30 +689,97 @@ public sealed partial class Simulation
 
     private void StepProcessor(Building building, Recipe recipe, double dt)
     {
+        if (building.Online)
+        {
+            DrainOutput(building);
+        }
         if (!building.Crafting)
         {
-            if (!HasInputs(recipe) || !OutputsFit(recipe))
+            if (!InputsAvailable(building, recipe) || !OutputsHaveRoom(building, recipe))
             {
                 return;
             }
-            ConsumeInputs(recipe);
+            ConsumeInputs(building, recipe);
             building.Crafting = true;
             building.Progress = 0f;
         }
 
-        // A finished cycle's output waits in the building until it fits.
+        // A finished cycle's output waits in the building until it fits somewhere.
         building.Progress = Mathf.Min(building.Progress + (float)dt, recipe.CycleTime);
-        if (building.Progress >= recipe.CycleTime && OutputsFit(recipe))
+        if (building.Progress >= recipe.CycleTime && Deliver(building, recipe))
         {
-            ProduceOutputs(recipe);
             building.Crafting = false;
             building.Progress = 0f;
         }
     }
 
-    private bool HasInputs(Recipe recipe)
+    /// <summary>Whether the inputs are at hand: in the input buffer, plus storage when online.</summary>
+    private bool InputsAvailable(Building building, Recipe recipe)
     {
-        return HasAll(recipe.Inputs);
+        foreach (ResourceAmount input in recipe.Inputs)
+        {
+            _stockpile.TryGetValue(input.Type, out float stock);
+            float have = Held(building.Input, input.Type) + (building.Online ? stock : 0f);
+            if (have < input.Amount - RoomTolerance)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /// <summary>Takes a cycle's inputs, from the input buffer first and then (online) from storage.</summary>
+    private void ConsumeInputs(Building building, Recipe recipe)
+    {
+        foreach (ResourceAmount input in recipe.Inputs)
+        {
+            float fromBuffer = Mathf.Min(Held(building.Input, input.Type), input.Amount);
+            Put(building.Input, input.Type, -fromBuffer);
+            if (input.Amount - fromBuffer > RoomTolerance)
+            {
+                AddToStockpile(input.Type, -(input.Amount - fromBuffer));
+            }
+        }
+    }
+
+    private static float OutputTotal(Recipe recipe)
+    {
+        float total = 0f;
+        foreach (ResourceAmount output in recipe.Outputs)
+        {
+            total += output.Amount;
+        }
+        return total;
+    }
+
+    private static bool BufferHasRoom(Building building, float amount)
+    {
+        return building.OutputCount + amount <= building.Def.OutputBuffer + RoomTolerance;
+    }
+
+    /// <summary>Whether a cycle's outputs have somewhere to go: storage when online, else the output buffer.</summary>
+    private bool OutputsHaveRoom(Building building, Recipe recipe)
+    {
+        return (building.Online && OutputsFit(recipe)) || BufferHasRoom(building, OutputTotal(recipe));
+    }
+
+    /// <summary>Puts a finished cycle's outputs into storage when online and they fit, else into the output buffer.</summary>
+    private bool Deliver(Building building, Recipe recipe)
+    {
+        if (building.Online && OutputsFit(recipe))
+        {
+            ProduceOutputs(recipe);
+            return true;
+        }
+        if (!BufferHasRoom(building, OutputTotal(recipe)))
+        {
+            return false;
+        }
+        foreach (ResourceAmount output in recipe.Outputs)
+        {
+            Put(building.Output, output.Type, output.Amount);
+        }
+        return true;
     }
 
     private bool HasAll(IReadOnlyList<ResourceAmount> amounts)
@@ -693,13 +795,6 @@ public sealed partial class Simulation
         return true;
     }
 
-    private void ConsumeInputs(Recipe recipe)
-    {
-        foreach (ResourceAmount input in recipe.Inputs)
-        {
-            AddToStockpile(input.Type, -input.Amount);
-        }
-    }
 
     private void ProduceOutputs(Recipe recipe)
     {

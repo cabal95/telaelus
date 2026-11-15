@@ -13,5 +13,7 @@ public enum BuildingType
     Stockyard,
     TankFarm,
     Warehouse,
-    Vault
+    Vault,
+    SmallHub,
+    Relay
 }

@@ -1,0 +1,22 @@
+newmtl stone_dark
+Kd 0.360 0.340 0.330
+
+newmtl stone_90
+Kd 0.450 0.423 0.396
+
+newmtl metal_dark
+Kd 0.300 0.310 0.340
+
+newmtl metal
+Kd 0.580 0.600 0.630
+
+newmtl hub_accent
+Kd 0.300 0.950 0.700
+Ke 0.150 0.475 0.350
+
+newmtl hull
+Kd 0.800 0.820 0.840
+
+newmtl hull_dark
+Kd 0.580 0.600 0.640
+

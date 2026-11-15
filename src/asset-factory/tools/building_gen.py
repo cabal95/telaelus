@@ -247,9 +247,47 @@ def vault():
     return m, mat.mats
 
 
+def small_hub():
+    """A short mast on a square base, with a glowing ring near its top."""
+    m, mat = Mesh(), Materials()
+    hx, hz = half(1), half(1)
+    box(m, mat("stone_dark"), -hx, 0, -hz, hx, 0.08, hz, mat_top=mat("stone"))
+    box(m, mat("metal_dark"), -0.18, 0.08, -0.18, 0.18, 0.3, 0.18, mat_top=mat("metal"))
+    cylinder(m, mat("metal"), (0, 0.3, 0), (0, 1.35, 0), 0.05, segs=6)
+    cylinder(m, mat("hub_accent"), (0, 1.1, 0), (0, 1.18, 0), 0.2, segs=10)
+    cylinder(m, mat("metal_dark"), (0, 1.35, 0), (0, 1.4, 0), 0.09, segs=8)
+    spike(m, mat("hub_accent"), (0, 1.4, 0), (0, 1.55, 0), 0.05, segs=5)
+    return m, mat.mats
+
+
+def relay():
+    """A tall lattice tower with a dish facing out and the glowing hub ring."""
+    m, mat = Mesh(), Materials()
+    hx, hz = half(2), half(2)
+    box(m, mat("stone_dark"), -hx, 0, -hz, hx, 0.08, hz, mat_top=mat("stone", 0.9))
+    top = 2.6
+    legs = [(-0.5, -0.5), (0.5, -0.5), (0.5, 0.5), (-0.5, 0.5)]
+    for x, z in legs:
+        cylinder(m, mat("metal_dark"), (x, 0.08, z), (x * 0.25, top, z * 0.25), 0.04, segs=5)
+    for k in range(4):
+        y0 = 0.4 + k * 0.55
+        s0 = 0.5 - (y0 - 0.08) / (top - 0.08) * 0.375
+        y1 = y0 + 0.55
+        s1 = 0.5 - (y1 - 0.08) / (top - 0.08) * 0.375
+        for i in range(4):
+            (ax, az), (bx, bz) = legs[i], legs[(i + 1) % 4]
+            cylinder(m, mat("metal"), (ax * s0 * 2, y0, az * s0 * 2), (bx * s1 * 2, y1, bz * s1 * 2), 0.02, segs=4)
+    cylinder(m, mat("hub_accent"), (0, top - 0.3, 0), (0, top - 0.2, 0), 0.24, segs=10)
+    cylinder(m, mat("metal"), (0, top, 0), (0, top + 0.5, 0), 0.04, segs=5)
+    spike(m, mat("hub_accent"), (0, top + 0.5, 0), (0, top + 0.68, 0), 0.05, segs=5)
+    cylinder(m, mat("metal_dark"), (0, top - 0.7, -0.1), (0, top - 0.7, -0.25), 0.05, segs=5)
+    cylinder(m, mat("hull"), (0, top - 0.7, -0.25), (0, top - 0.7, -0.33), 0.32, segs=12, mat_cap=mat("hull_dark"))
+    return m, mat.mats
+
+
 BUILDINGS = {"mine": mine, "lumber_camp": lumber_camp, "smelter": smelter, "refinery": refinery,
              "oil_well": oil_well, "hq": hq, "silo": silo, "stockyard": stockyard, "tank_farm": tank_farm,
-             "warehouse": warehouse, "vault": vault}
+             "warehouse": warehouse, "vault": vault, "small_hub": small_hub, "relay": relay}
 
 
 def build_all():

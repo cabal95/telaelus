@@ -114,7 +114,8 @@ The two kinds place themselves:
 - **Hint overlay** (`HintOverlay`): centered, 8 units below the top bar, a small panel-style box
   shown only while a hint applies, never taking the mouse. Today the one hint is harvesting:
   "[E] Harvest" in `Accent`, the resource's icon and name, over a progress bar toward the next
-  unit, or "Storage full" (14 units, `Warning`, centered) in place of the bar. Later hints and notifications stack in the same place.
+  unit, or "Storage full" (14 units, `Warning`, centered) in place of the bar; the verb reads
+  "[E] Harvest", "[E] Collect", or "[E] Load" for the target. Later hints and notifications stack in the same place.
 - **Debug overlay** (`DebugOverlay`): F3 toggles it; it starts hidden. Two lines of outlined text
   (readable over bright ground) in the top-left corner below the top bar: the world line (the
   seed or the bounded map's name, the biome and terrain under the player, their chunk and map

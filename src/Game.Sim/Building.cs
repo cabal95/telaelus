@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Godot;
 
 namespace Game.Sim;
@@ -21,6 +22,29 @@ public sealed class Building
 
     /// <summary>Whether the building runs; a switched-off building does nothing (see Simulation.SetBuildingEnabled).</summary>
     public bool Enabled { get; set; } = true;
+
+    /// <summary>Whether it is on the HQ network (see Simulation.RecomputeNetwork).</summary>
+    public bool Online { get; set; }
+
+    /// <summary>Its output buffer: units waiting to be collected (or, online, to drain into storage).</summary>
+    public Dictionary<ResourceType, float> Output { get; } = new();
+
+    /// <summary>Its input buffer: recipe inputs loaded by hand for working offline.</summary>
+    public Dictionary<ResourceType, float> Input { get; } = new();
+
+    /// <summary>The units in the output buffer, of every type.</summary>
+    public float OutputCount
+    {
+        get
+        {
+            float count = 0f;
+            foreach (float amount in Output.Values)
+            {
+                count += amount;
+            }
+            return count;
+        }
+    }
 
     /// <summary>A Silo's chosen Bulk resource (see Simulation.SetSiloResource).</summary>
     public ResourceType SiloResource { get; set; } = ResourceType.Wood;

@@ -29,6 +29,7 @@ public partial class GameRoot : Node3D
     private FieldPictures _fieldPictures = null!;
     private BuildingPictures _buildingPictures = null!;
     private readonly ResourcePins _pins = new();
+    private NetworkView _network = null!;
     private DialogHost _dialogs = null!;
     private BuildMenu _buildMenu = null!;
     private BuildingDetail _buildingDetail = null!;
@@ -50,6 +51,7 @@ public partial class GameRoot : Node3D
     public BuildMenu BuildMenu => _buildMenu;
     public BuildingDetail BuildingDetail => _buildingDetail;
     public ResourceIcons Icons => _icons;
+    public NetworkView Network => _network;
 
     /// <summary>Whether the startup pictures (resource icons, field and building pictures) are drawn.</summary>
     public bool PicturesReady => _icons.IsReady && _fieldPictures.IsReady && _buildingPictures.IsReady;
@@ -218,6 +220,10 @@ public partial class GameRoot : Node3D
         else if (@event is InputEventKey i && i.Pressed && !i.Echo && i.PhysicalKeycode == Key.I)
         {
             ToggleInventory();
+        }
+        else if (@event is InputEventKey n && n.Pressed && !n.Echo && n.PhysicalKeycode == Key.N)
+        {
+            _network.OverlayShown = !_network.OverlayShown;
         }
     }
 
@@ -421,6 +427,13 @@ public partial class GameRoot : Node3D
         _buildingDetail.Initialize(_sim);
         _dialogs.Add(_buildingDetail, "");
         _buildController.BuildingClicked += _buildingDetail.ShowBuilding;
+
+        _network = new NetworkView
+        {
+            Name = "NetworkView"
+        };
+        _network.Initialize(_sim, _buildController, _buildingDetail);
+        AddChild(_network);
 
         _inventory = new InventoryPanel
         {

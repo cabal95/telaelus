@@ -17,14 +17,14 @@ public class BuildingControlTests
         Assert.Equal(0f, mine.Progress);
         SimTestHelpers.Seconds(sim, 10.0);
         Assert.Equal(0f, mine.Progress);
-        Assert.Equal(0f, SimTestHelpers.Stock(sim, ResourceType.IronOre));
+        Assert.Equal(0f, SimTestHelpers.Gathered(sim, ResourceType.IronOre));
 
         // The 6 s done before switching off are lost: a whole 8 s unit is needed again.
         sim.SetBuildingEnabled(mine.Id, true);
         SimTestHelpers.Seconds(sim, 7.9);
-        Assert.Equal(0f, SimTestHelpers.Stock(sim, ResourceType.IronOre));
+        Assert.Equal(0f, SimTestHelpers.Gathered(sim, ResourceType.IronOre));
         SimTestHelpers.Seconds(sim, 0.2);
-        Assert.Equal(1f, SimTestHelpers.Stock(sim, ResourceType.IronOre));
+        Assert.Equal(1f, SimTestHelpers.Gathered(sim, ResourceType.IronOre));
     }
 
     [Fact]
@@ -35,9 +35,9 @@ public class BuildingControlTests
         Building smelter = sim.Debug.PlaceBuilding(BuildingType.Smelter, SimTestHelpers.ClearX, SimTestHelpers.ClearZ, Facing.North);
 
         SimTestHelpers.Seconds(sim, 10.0);
-        Assert.Equal(0f, SimTestHelpers.Stock(sim, ResourceType.IronOre));
+        Assert.Equal(0f, SimTestHelpers.Gathered(sim, ResourceType.IronOre));
         sim.SetBuildingEnabled(smelter.Id, false);
-        Assert.Equal(1f, SimTestHelpers.Stock(sim, ResourceType.IronOre));
+        Assert.Equal(1f, SimTestHelpers.Gathered(sim, ResourceType.IronOre));
         Assert.False(smelter.Crafting);
         Assert.Equal(0f, smelter.Progress);
         SimTestHelpers.Seconds(sim, 20.0);
@@ -62,9 +62,6 @@ public class BuildingControlTests
 
         Assert.Equal(new BuildingStatus(BuildingState.Working, null), sim.BuildingStatusOf(mine));
         Assert.Equal(new BuildingStatus(BuildingState.Idle, "No fields in range"), sim.BuildingStatusOf(idleMine));
-        Assert.Equal(new BuildingStatus(BuildingState.Idle, "Storage full: Rocket Fuel"), sim.BuildingStatusOf(refinery));
-
-        sim.Debug.PlaceBuilding(BuildingType.TankFarm, 20, 32, Facing.North);
         Assert.Equal(new BuildingStatus(BuildingState.Idle, "Waiting for Crude Oil"), sim.BuildingStatusOf(refinery));
 
         sim.Debug.SeedStockpile(ResourceType.CrudeOil, 1f);
@@ -100,6 +97,7 @@ public class BuildingControlTests
         sim.Debug.ResetToEmptyMap();
         sim.Debug.SeedStockpile(ResourceType.IronOre, 1f);
         Building smelter = sim.Debug.PlaceBuilding(BuildingType.Smelter, SimTestHelpers.ClearX, SimTestHelpers.ClearZ, Facing.North);
+        SimTestHelpers.Connect(sim, SimTestHelpers.ClearX, SimTestHelpers.ClearZ);
         SimTestHelpers.Seconds(sim, 2.0);
         Assert.Equal(0f, SimTestHelpers.Stock(sim, ResourceType.IronOre));
 

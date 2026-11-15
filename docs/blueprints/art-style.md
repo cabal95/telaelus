@@ -131,6 +131,7 @@ or 1.05 for facet variation). A new material extends the table.
 | tank_farm_accent | 0.30, 0.78, 0.92 | Tank Farm identity color (cyan) |
 | warehouse_accent | 0.84, 0.36, 0.58 | Warehouse identity color (pink) |
 | vault_accent | 0.78, 0.62, 0.22 | Vault identity color (gold) |
+| hub_accent | 0.30, 0.95, 0.70 | The Small Hub's and Relay's glowing ring (emissive) |
 
 Crown greens are mid tones with no near-black shade: a crown's shaded side would otherwise read
 as black under the dark ambient light. Crowns shade light on upward faces and dark underneath.

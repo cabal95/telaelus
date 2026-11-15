@@ -63,6 +63,9 @@ public static class StateSnapshot
             ["position"] = Pair(sim.Player.Position.X, sim.Player.Position.Z),
             ["harvestTarget"] = sim.HarvestTarget?.Id,
             ["harvestProgress"] = Math.Round(sim.HarvestProgress, 3),
+            ["interactTarget"] = sim.InteractTarget?.Id,
+            ["interactAction"] = sim.InteractTarget is null ? null : Camel(sim.InteractAction.ToString()),
+            ["interactProgress"] = Math.Round(sim.InteractProgress, 3),
             ["terrain"] = sim.TerrainAt(x, z).ToString(),
             ["biome"] = sim.BiomeAt(x, z).ToString(),
             ["feature"] = sim.FeatureAt(x, z).ToString(),
@@ -110,6 +113,12 @@ public static class StateSnapshot
             ["open"] = root.Dialogs.Current?.Id,
             ["tooltip"] = Lines(root.Dialogs.HoverTip),
             ["debug"] = root.Debug.Shown,
+            ["network"] = new JsonObject
+            {
+                ["overlay"] = root.Network.OverlayShown,
+                ["shownHubs"] = new JsonArray(root.Network.ShownHubs.Select(id => (JsonNode?)id).ToArray()),
+                ["offlineMarkers"] = root.Network.OfflineMarkers
+            },
             ["topBar"] = TopBar(root.TopBar),
             ["hint"] = root.Hint.Text is string hint
                 ? new JsonObject
@@ -291,6 +300,9 @@ public static class StateSnapshot
                 ["depth"] = b.Depth,
                 ["currentField"] = b.CurrentField?.Id,
                 ["enabled"] = b.Enabled,
+                ["online"] = b.Online,
+                ["output"] = Amounts(b.Output),
+                ["input"] = Amounts(b.Input),
                 ["status"] = Camel(sim.BuildingStatusOf(b).State.ToString()),
                 ["idleReason"] = sim.BuildingStatusOf(b).IdleReason
             });
@@ -326,6 +338,16 @@ public static class StateSnapshot
             stock[type.ToString()] = Round(amount);
         }
         return stock;
+    }
+
+    private static JsonObject Amounts(System.Collections.Generic.Dictionary<ResourceType, float> buffer)
+    {
+        var amounts = new JsonObject();
+        foreach ((ResourceType type, float amount) in buffer.OrderBy(entry => entry.Key))
+        {
+            amounts[type.ToString()] = Round(amount);
+        }
+        return amounts;
     }
 
     private static JsonArray Discovered(Simulation sim)

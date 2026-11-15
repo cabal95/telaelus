@@ -10,16 +10,17 @@ loop.
 
 ### Building types and definitions
 
-- `BuildingType` has eleven values: **Mine**, **Lumber Camp**, **Smelter**, **Refinery**, **Oil
-  Well**, the **HQ**, and the storage buildings **Silo**, **Stockyard**, **Tank Farm**,
-  **Warehouse**, and **Vault**.
+- `BuildingType` has thirteen values: **Mine**, **Lumber Camp**, **Smelter**, **Refinery**, **Oil
+  Well**, the **HQ**, the storage buildings **Silo**, **Stockyard**, **Tank Farm**, **Warehouse**,
+  and **Vault**, and the hubs **Small Hub** and **Relay**.
 - Each type has a `BuildingDef` (in `BuildingDefs`): a display name, a footprint in fine cells
   (width along X, depth along Z when facing North), a cost, a speed, and for an extractor, the
   deposit types it works (`Works`; a building is an extractor when the list is not empty) and its
   work radius. It also has its `StorageRole` (None, Hq, Silo, ClassStore with the class it
   `StoresClass`, or Warehouse), the `CargoPool` it adds, whether it is `Permanent` (cannot be
-  switched off or destroyed), and whether it is `Buildable` (placed by the player; the world places
-  the HQ).
+  switched off or destroyed), whether it is `Buildable` (placed by the player; the world places
+  the HQ), a hub's `CoverageRadius` and `LinkRadius` (`IsHub` when either is set), and the sizes of
+  its buffers: `OutputBuffer` (units) and `InputCycles` (cycles' worth of each recipe input).
 
   | Type        | Footprint | Cost                       | Works                             | Work radius |
   |-------------|-----------|----------------------------|-----------------------------------|-------------|
@@ -96,6 +97,38 @@ loop.
   and whether or not unlocked. A building blocks player movement on its cells
   for as long as it stands.
 
+### Hubs and the HQ network
+
+- **Hubs** connect buildings to the HQ. Radii are in world units (one fine cell), from the hub's
+  footprint center:
+
+  | Hub | Footprint | Cost | Coverage radius | Link radius |
+  |---|---|---|---|---|
+  | HQ | 6 x 10 | placed by the world | 14 | 16 |
+  | Small Hub | 1 x 1 | 10 Wood, 5 Stone | 8 | 12 |
+  | Relay | 2 x 2 | 20 Iron, 10 Stone | 3 | 30 |
+
+- Two switched-on hubs **link** when the distance between their centers is at most the larger of
+  their link radii. The hubs linked to the HQ, directly or through others, are online; a cluster
+  that does not reach the HQ is offline, not a second network.
+- A building is **online** (`Building.Online`) when it is an online hub or an online hub
+  **covers** it: the nearest point of its footprint (`DistanceToFootprint`) is within the hub's
+  coverage radius, the same measure as an extractor's work radius. Everything else is offline.
+  A switched-off hub neither links nor covers, so switching one off cuts its branch.
+- `RecomputeNetwork` runs when a building is added (placing, the world's HQ), removed, or switched
+  on or off: a flood fill over the hubs from the HQ, then a coverage pass. Nothing is computed per
+  tick. `LinkedHubs(hub)` lists the online hubs a hub links to, and `WouldBeOnline(type, anchor,
+  facing)` whether a building placed there would be online (for the placement ghost).
+- Storage buildings count toward limits only while online (resources.md).
+
+### Buffers
+
+- Extractors (Mine, Lumber Camp, Oil Well) have a 20-unit output buffer (any mix of the types they
+  work). Processors (Smelter, Refinery) have a 10-unit output buffer and an input buffer of 5
+  cycles' worth of each recipe input. The HQ, hubs, and storage buildings have none.
+- `Building.Output` and `Building.Input` hold the amounts by type; a building keeps them when it
+  goes offline or online.
+
 ### The HQ and the Silo
 
 - **The HQ** is placed when the world is made (`ResetWorld`), facing South, so its front faces a
@@ -115,18 +148,21 @@ loop.
 - An extractor works one field at a time: its current field, or if that is gone, the nearest
   non-depleted field of any type it works within its work area (distance from its footprint center
   to the field's square, at most the work radius). It works toward one unit of that field's type
-  (`Progress`, in seconds, reset when it takes up a new field), adds the unit to the stockpile at
-  the gather time over its speed, and clears its current field when that field depletes. When
-  storage has no room for the unit, the unit waits at the field: progress holds at the gather time
-  and the unit is taken as soon as there is room. Several extractors may work the same field. With no
+  (`Progress`, in seconds, reset when it takes up a new field), puts the unit into its **output
+  buffer** at the gather time over its speed (online or not: collectors never deliver to storage
+  themselves; the player collects by hand, resources.md), and clears its current field when that
+  field depletes. When the buffer has no room for the unit, the unit waits at the field: progress
+  holds at the gather time and the unit is taken as soon as there is room. Several extractors may work the same field. With no
   field in range, it idles, and it picks up a field as soon as one is in range.
-- A processor, when idle, starts a cycle only when its recipe inputs are in the stockpile and its
-  outputs would fit (Cargo outputs together in the pool), consuming the inputs. When the cycle
-  completes it adds the outputs; if room ran out during the cycle, the finished output waits in
-  the building (progress holds at the cycle time) until it fits.
+- A processor, when idle, starts a cycle only when its inputs are at hand and its outputs have
+  somewhere to go. Inputs come from its input buffer first, then (online only) from storage.
+  Outputs go into storage when it is online and they fit (Cargo outputs together in the pool), else
+  into its output buffer; offline, only into the buffer. A finished cycle with nowhere to put its
+  output waits (progress holds at the cycle time). Each tick an online processor's output buffer
+  drains into storage as far as room allows.
 - Storage buildings do no work each tick; they only raise limits while they stand.
-- All buildings operate on the shared global stockpile. This is the abstract stand-in for logistics
-  until vehicles and belts are added.
+- Online buildings share the one storage. Moving raw resources from collectors to storage is the
+  player's hand work until Depot trucks and Material Transfer arrive.
 
 ### Switching off, status, and destroying
 
@@ -137,14 +173,17 @@ loop.
   over.
 - `BuildingStatusOf(building)` gives a `BuildingStatus`: a state (`Working`, `Idle`, `Off`) and,
   when not working, a reason. Off reads "Switched off". An extractor works while it has a field
-  or one in range to take up and room for its unit; with no field it is idle with "No fields in
-  range", and with no room "Storage full: Crude Oil". A processor whose output does not fit, before
-  a cycle or with a finished one waiting, is idle "Storage full: Iron"; otherwise it works during a
-  cycle, else is idle "Waiting for" its missing inputs ("Waiting for Crude Oil").
+  or one in range to take up and buffer room for its unit; with no field it is idle with "No fields
+  in range", and with a full buffer "Full: waiting for pickup". A processor whose outputs have
+  nowhere to go, before a cycle or with a finished one waiting, is idle "Storage full: Iron" online
+  or "Full: collect by hand" offline; otherwise it works during a cycle, else is idle "Waiting for"
+  its missing inputs ("Waiting for Crude Oil", and offline "Waiting for Iron Ore (load by hand)").
+  Storage buildings and hubs report Working (they do no work).
 - A permanent building (the HQ) cannot be switched off or destroyed: `SetBuildingEnabled` and
   `TryDestroyBuilding` return false for it.
 - `TryDestroyBuilding(id)` removes a building, frees its cells, and adds its refund
-  (`DestroyRefund`) to the stockpile, even past a storage limit: half of each cost amount, rounded up (a Mine's 25 Wood and
+  (`DestroyRefund`) to the stockpile, even past a storage limit, together with everything in its
+  buffers: half of each cost amount, rounded up (a Mine's 25 Wood and
   15 Stone return 13 Wood and 8 Stone), plus the inputs of a processor's running cycle in full.
   Fuel, once buildings burn it, will not be refunded. The refund follows the type, so a building
   placed for free through the debug tools refunds the same.
@@ -173,7 +212,9 @@ loop.
   ladder at the front, green), Stockyard (a fenced yard of stone, ore, and log heaps, open at the
   front, purple rails), Tank Farm (three banded tanks joined by pipes, a valve box at the front,
   cyan), Warehouse (a gabled shed with a roller door at the front and crates beside it, pink roof),
-  Vault (a squat armored bunker with a round door at the front and gold hazard bands). The front
+  Vault (a squat armored bunker with a round door at the front and gold hazard bands), Small Hub (a
+  short mast on a square base with a glowing hub-green ring), Relay (a tall lattice tower with a dish
+  and the same glowing ring). The front
   marks the facing, so a
   rotated building reads as rotated.
 - `BuildController` drives build mode: a building is selected from the build menu (B; see

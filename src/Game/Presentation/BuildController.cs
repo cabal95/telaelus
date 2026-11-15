@@ -84,7 +84,8 @@ public partial class BuildController : Node3D
         Vector3 Center,
         bool Placeable,
         bool Affordable,
-        int FieldsInRange);
+        int FieldsInRange,
+        bool Online);
 
     private static readonly Color ValidColor = new(0.3f, 0.9f, 0.4f, 0.45f);
     private static readonly Color InvalidColor = new(0.9f, 0.3f, 0.3f, 0.45f);
@@ -222,7 +223,8 @@ public partial class BuildController : Node3D
             center,
             _sim.CanPlace(Selected.Value, anchorX, anchorZ, Facing),
             _sim.CanAfford(Selected.Value),
-            fieldsInRange);
+            fieldsInRange,
+            _sim.WouldBeOnline(Selected.Value, anchorX, anchorZ, Facing));
     }
 
     public override void _UnhandledInput(InputEvent @event)
@@ -490,7 +492,8 @@ public partial class BuildController : Node3D
 
     /// <summary>
     /// The placement tooltip's lines while a building is selected: its name, its cost
-    /// (short amounts marked), fields in range for an extractor, and the key hint.
+    /// (short amounts marked), fields in range for an extractor, whether the spot is online,
+    /// and the key hint.
     /// </summary>
     public List<TipLine> PlacementLines()
     {
@@ -505,6 +508,10 @@ public partial class BuildController : Node3D
         if (def.IsExtractor)
         {
             lines.Add(new TipLine($"Fields in range: {FieldsInRange}"));
+        }
+        if (CurrentGhost() is GhostInfo ghost)
+        {
+            lines.Add(ghost.Online ? new TipLine("Online") : new TipLine("Offline (no hub in reach)", UiTheme.Warning));
         }
         lines.Add(new TipLine("R rotate   Esc cancel", UiTheme.TextDim));
         return lines;

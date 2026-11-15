@@ -112,6 +112,10 @@ Newest last. One line each; open the file for the full spec.
   secure resources and a shared Cargo pool for made goods; the HQ placed by every world, and the
   Silo, Stockyard, Tank Farm, Warehouse, and Vault; gathering and production stop at the limit
   ("Storage full"); top bar pins with amount over limit.
+- **2611142047-hq-network** - Adds the HQ network: the HQ, Small Hubs, and Relays link and cover
+  buildings, which are online or offline; collectors fill local buffers the player collects by
+  hand (E), online processors use storage, offline ones run from buffers loaded by hand; storage
+  counts only online; the network overlay (N), a selected hub's coverage, and offline markers.
 
 ## Adding a changeset
 

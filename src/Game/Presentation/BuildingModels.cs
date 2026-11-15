@@ -25,6 +25,7 @@ public static class BuildingModels
             BuildingType.LumberCamp => "lumber_camp",
             BuildingType.OilWell => "oil_well",
             BuildingType.TankFarm => "tank_farm",
+            BuildingType.SmallHub => "small_hub",
             _ => type.ToString().ToLowerInvariant()
         };
     }

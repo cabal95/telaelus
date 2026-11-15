@@ -27,7 +27,8 @@ on-screen character and camera.
 - `GameRoot` reads WASD and the arrow keys as screen-relative input and rotates it into world space
   using the camera's orientation, so "up" always moves away from the camera regardless of the fixed
   view angle. The result is written to `PlayerIntent.Move`.
-- Holding `E` sets `PlayerIntent.Harvest`, which drives hand-harvesting (see resources.md).
+- Holding `E` sets `PlayerIntent.Harvest`, which drives hand-harvesting a field, or collecting from
+  or loading a building when one is the interaction target (see resources.md).
 - Dragging the map with the right mouse button, or the left with Ctrl held, pans the camera
   without moving the character; Space brings it back (see the camera below). A Ctrl + left press
   never selects, clicks, or places.

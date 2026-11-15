@@ -73,7 +73,7 @@ public partial class BuildingDetail : Dialog
         _turntable = new TurntableView();
         center.AddChild(_turntable);
 
-        _rows = new StatusRows("Power", "State", "In range", "Working on", "Recipe");
+        _rows = new StatusRows("Network", "Power", "State", "In range", "Working on", "Recipe", "Buffer", "Links", "Reach");
         Body.AddChild(_rows);
 
         _progressLabel = UiTheme.MakeLabel("Progress", UiTheme.SmallSize, UiTheme.TextDim);
@@ -170,8 +170,13 @@ public partial class BuildingDetail : Dialog
         BuildingStatus status = _sim.BuildingStatusOf(building);
         bool storage = def.Storage != StorageRole.None;
         _rows.Set("Power", storage ? null : building.Enabled ? "On" : "Off");
-        _rows.Set("State", storage ? null : status.State == BuildingState.Working ? "Working" : "Idle: " + status.IdleReason);
+        bool works = !storage && !def.IsHub;
+        _rows.Set("State", works ? status.State == BuildingState.Working ? "Working" : "Idle: " + status.IdleReason : null);
         RefreshStorage(building);
+        _rows.Set("Network", building.Online ? "Online" : "Offline");
+        _rows.Set("Buffer", BufferText(building));
+        _rows.Set("Links", def.IsHub ? _sim.LinkedHubs(building).Count.ToString() : null);
+        _rows.Set("Reach", def.IsHub ? $"covers {def.CoverageRadius:0}, links {def.LinkRadius:0}" : null);
 
         float progress = 0f;
         if (def.IsExtractor)
@@ -210,8 +215,8 @@ public partial class BuildingDetail : Dialog
             }
         }
         _progress.Value = Mathf.Clamp(progress, 0f, 1f);
-        _progressLabel.Visible = !storage;
-        _progress.Visible = !storage;
+        _progressLabel.Visible = works;
+        _progress.Visible = works;
 
         _toggle.Visible = !storage;
         _destroy.Visible = !def.Permanent;
@@ -245,8 +250,9 @@ public partial class BuildingDetail : Dialog
         {
             lines.Add(("Cargo pool", $"+{building.Def.CargoPool:0}"));
         }
-        string signature = string.Join("|", lines);
+        string signature = string.Join("|", lines) + building.Online;
         _addsLabel.Visible = lines.Count > 0;
+        _addsLabel.Text = building.Online ? "Adds to storage" : "Offline: adds nothing until connected";
         if (signature == _addsSignature)
         {
             return;
@@ -262,6 +268,32 @@ public partial class BuildingDetail : Dialog
             _adds.AddChild(UiTheme.MakeLabel(name, UiTheme.SmallSize));
             _adds.AddChild(UiTheme.MakeLabel(amount, UiTheme.SmallSize));
         }
+    }
+
+    /// <summary>
+    /// The buffer row: an extractor's output ("Iron Ore 12, Coal 3 / 20"), a processor's output and
+    /// inputs ("Iron 4 / 10; in: Iron Ore 3 / 5"), or null for a building without one.
+    /// </summary>
+    private static string? BufferText(Building building)
+    {
+        BuildingDef def = building.Def;
+        if (def.OutputBuffer <= 0f)
+        {
+            return null;
+        }
+        string output = building.OutputCount <= 0f
+            ? "empty"
+            : string.Join(", ", building.Output.Select(e => $"{ResourceDefs.For(e.Key).Name} {Mathf.FloorToInt(e.Value)}"));
+        string text = $"{output} / {def.OutputBuffer:0}";
+        if (def.InputCycles > 0 && building.Recipe is Recipe recipe)
+        {
+            text += "; in: " + string.Join(", ", recipe.Inputs.Select(input =>
+            {
+                building.Input.TryGetValue(input.Type, out float held);
+                return $"{ResourceDefs.For(input.Type).Name} {Mathf.FloorToInt(held)} / {input.Amount * def.InputCycles:0}";
+            }));
+        }
+        return text;
     }
 
     private void OnSiloSelected(long index)

@@ -26,10 +26,10 @@ public class ExtractorTests
         // Iron Ore takes 6 s by hand, so 8 s at speed 0.75.
         SimTestHelpers.Seconds(sim, 7.9);
         Assert.Same(SimTestHelpers.FieldAtMapCell(sim, 10, 9), mine.CurrentField);
-        Assert.Equal(0f, SimTestHelpers.Stock(sim, ResourceType.IronOre));
+        Assert.Equal(0f, SimTestHelpers.Gathered(sim, ResourceType.IronOre));
 
         SimTestHelpers.Seconds(sim, 0.2);
-        Assert.Equal(1f, SimTestHelpers.Stock(sim, ResourceType.IronOre));
+        Assert.Equal(1f, SimTestHelpers.Gathered(sim, ResourceType.IronOre));
     }
 
     [Fact]
@@ -49,7 +49,7 @@ public class ExtractorTests
         Assert.DoesNotContain(first, sim.Fields);
         Assert.Same(second, mine.CurrentField);
         Assert.Equal(249f, second.Amount);
-        Assert.Equal(3f, SimTestHelpers.Stock(sim, ResourceType.IronOre));
+        Assert.Equal(3f, SimTestHelpers.Gathered(sim, ResourceType.IronOre));
     }
 
     [Fact]
@@ -62,7 +62,7 @@ public class ExtractorTests
         SimTestHelpers.Seconds(sim, 9.0);
 
         Assert.Null(mine.CurrentField);
-        Assert.Equal(0f, SimTestHelpers.Stock(sim, ResourceType.IronOre));
+        Assert.Equal(0f, SimTestHelpers.Gathered(sim, ResourceType.IronOre));
     }
 
     [Fact]
@@ -75,8 +75,8 @@ public class ExtractorTests
         SimTestHelpers.Seconds(sim, 9.0);
 
         Assert.Null(camp.CurrentField);
-        Assert.Equal(0f, SimTestHelpers.Stock(sim, ResourceType.IronOre));
-        Assert.Equal(0f, SimTestHelpers.Stock(sim, ResourceType.Wood));
+        Assert.Equal(0f, SimTestHelpers.Gathered(sim, ResourceType.IronOre));
+        Assert.Equal(0f, SimTestHelpers.Gathered(sim, ResourceType.Wood));
     }
 
     [Fact]
@@ -91,6 +91,6 @@ public class ExtractorTests
 
         // One unit each, together faster than the player.
         Assert.Equal(248f, field.Amount);
-        Assert.Equal(2f, SimTestHelpers.Stock(sim, ResourceType.IronOre));
+        Assert.Equal(2f, SimTestHelpers.Gathered(sim, ResourceType.IronOre));
     }
 }

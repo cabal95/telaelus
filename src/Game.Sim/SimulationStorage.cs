@@ -5,7 +5,7 @@ namespace Game.Sim;
 
 /// <summary>
 /// Storage limits. A Bulk, Fluid, or Secure resource has a limit of its own: the sum, over every
-/// standing building, of what it adds for that resource (the HQ's base, a Silo's step for its
+/// online building (see SimulationNetwork), of what it adds for that resource (the HQ's base, a Silo's step for its
 /// chosen resource, a class store's step for every resource in its class). Cargo resources share
 /// one pool, the sum of the HQ's and the Warehouses' Cargo, where each unit takes up its Cargo
 /// weight. Sand and Water have no limit. Gathering and production only add what fits; returns
@@ -43,7 +43,10 @@ public sealed partial class Simulation
         float limit = 0f;
         foreach (Building building in _buildings)
         {
-            limit += StorageAdded(building, type);
+            if (building.Online)
+            {
+                limit += StorageAdded(building, type);
+            }
         }
         return limit;
     }
@@ -56,7 +59,10 @@ public sealed partial class Simulation
             float pool = 0f;
             foreach (Building building in _buildings)
             {
-                pool += building.Def.CargoPool;
+                if (building.Online)
+                {
+                    pool += building.Def.CargoPool;
+                }
             }
             return pool;
         }

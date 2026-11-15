@@ -119,8 +119,9 @@ buildings.md). A single global stockpile holds all amounts, within storage limit
   | Cargo | one shared pool | every other tier 1 to 4 resource |
   | Unlimited | none | Sand, Water |
 
-- A per-type resource's limit (`StorageLimit`) is the sum, over every standing building, of what
-  it adds (`StorageAdded`): the HQ adds the resource's **HQ base**, a Silo set to it adds its
+- A per-type resource's limit (`StorageLimit`) is the sum, over every **online** building (see
+  buildings.md: a storage building out of a hub's reach adds nothing), of what it adds
+  (`StorageAdded`): the HQ adds the resource's **HQ base**, a Silo set to it adds its
   **Silo step**, and a class store of its class (Stockyard for Bulk, Tank Farm for Fluid, Vault for
   Secure) adds its **class step**. The amounts (placeholders for tuning):
 
@@ -137,7 +138,7 @@ buildings.md). A single global stockpile holds all amounts, within storage limit
   | Uranium Ore, Crystals | 0 | | 30 |
   | Enriched Uranium, Fuel Rod | 0 | | 20 |
 
-- The **Cargo pool** (`CargoPool`) is what the HQ (150) and the Warehouses (200 each) add. Each
+- The **Cargo pool** (`CargoPool`) is what the HQ (150) and the online Warehouses (200 each) add. Each
   Cargo resource takes up its **Cargo** weight per unit (`CargoUsed` sums them): 0.25 for Copper
   Wire, Circuit, Silicon Wafer, Processor; 0.5 for Plastic, Silicon, Rubber, Carbon Fiber, Insulated
   Cable, Magnet, Ceramic Tile; 1 for Iron, Copper, Steel, Glass, Lumber, Cement, Aluminum,
@@ -173,6 +174,23 @@ buildings.md). A single global stockpile holds all amounts, within storage limit
   depleted field is removed.
 - While the target's resource has no room for the unit (`HarvestBlocked`), progress does not
   advance; the hint shows "Storage full" (see presentation.md).
+
+### Collecting and loading by hand
+
+- The harvest intent also works on buildings. Each tick the **interaction target**
+  (`InteractTarget`) is the nearest building within `HarvestRange` of the player (distance to its
+  footprint) that has something to collect or load, unless a hand-harvestable field is nearer; a
+  building wins a tie. While a building is the target there is no harvest target.
+- **Collect** (`InteractAction.Collect`): a building with units in its output buffer. Each unit (the
+  first type in table order, at most 1) moves into storage after the resource's gather time over 10
+  (`HandMoveSpeedup`), or 0.3 s (`HandMoveSeconds`) for a resource with no gather time; Iron Ore
+  takes 0.6 s. With no room for the next unit (`InteractBlocked`) progress waits and the hint says
+  "Storage full".
+- **Load** (`InteractAction.Load`): an offline processor with an empty output buffer and a recipe
+  input short of its input buffer's 5 cycles' worth and held in storage. Each unit moves from
+  storage into the input buffer at the same pace.
+- `InteractProgress` runs 0 to 1 per unit and resets on release or a new target or action;
+  `InteractResource` and `InteractAmounts` give the hint its resource and counts.
 
 ### Rendering
 

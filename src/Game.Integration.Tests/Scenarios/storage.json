@@ -17,7 +17,10 @@
     { "screenshot": "storage-full" },
     { "keyUp": "E" },
 
-    { "comment": "A Silo holds Wood until changed: +300.", "placeBuilding": { "type": "Silo", "anchor": [40, 40] } },
+    { "comment": "A Silo holds Wood until changed: +300, once Small Hubs link it back to the HQ in the north-east corner.", "placeBuilding": { "type": "Silo", "anchor": [40, 40] } },
+    { "placeBuilding": { "type": "SmallHub", "anchor": [52, 18] } },
+    { "placeBuilding": { "type": "SmallHub", "anchor": [46, 27] } },
+    { "placeBuilding": { "type": "SmallHub", "anchor": [42, 35] } },
     { "wait": 2 },
     { "expect": "ui.topBar.items[0]", "equals": { "type": "Wood", "amount": 100, "limit": 400, "full": false } },
     { "expect": "ui.hint.storageFull", "equals": false },

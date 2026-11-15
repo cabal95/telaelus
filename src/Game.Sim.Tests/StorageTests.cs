@@ -62,7 +62,7 @@ public class StorageTests
     }
 
     [Fact]
-    public void Limits_SumTheHqAndEveryStorageBuilding()
+    public void Limits_SumTheHqAndEveryOnlineStorageBuilding()
     {
         Simulation sim = EmptyMap();
         sim.Debug.PlaceBuilding(BuildingType.Stockyard, 20, 20, Facing.North);
@@ -70,6 +70,9 @@ public class StorageTests
         sim.Debug.PlaceBuilding(BuildingType.TankFarm, 28, 20, Facing.North);
         sim.Debug.PlaceBuilding(BuildingType.Vault, 32, 20, Facing.North);
         sim.Debug.PlaceBuilding(BuildingType.Warehouse, 36, 20, Facing.North);
+        Assert.Equal(100f, sim.StorageLimit(ResourceType.Wood));
+
+        SimTestHelpers.Connect(sim, 28f, 21f);
 
         Assert.Equal(500f, sim.StorageLimit(ResourceType.Wood));
         Assert.Equal(160f, sim.StorageLimit(ResourceType.Bauxite));
@@ -83,6 +86,7 @@ public class StorageTests
     {
         Simulation sim = EmptyMap();
         Building silo = sim.Debug.PlaceBuilding(BuildingType.Silo, 20, 20, Facing.North);
+        SimTestHelpers.Connect(sim, 21f, 21f);
         Assert.Equal(400f, sim.StorageLimit(ResourceType.Wood));
 
         Assert.True(sim.SetSiloResource(silo.Id, ResourceType.Quartz));
@@ -122,6 +126,8 @@ public class StorageTests
         Assert.Equal(100f, SimTestHelpers.Stock(sim, ResourceType.Wood));
 
         sim.Debug.PlaceBuilding(BuildingType.Silo, 40, 40, Facing.North);
+        SimTestHelpers.Connect(sim, 41f, 41f);
+        SimTestHelpers.Teleport(sim, 33.5f, 33f);
         SimTestHelpers.Seconds(sim, 3.1);
 
         Assert.False(sim.HarvestBlocked);
@@ -129,63 +135,38 @@ public class StorageTests
     }
 
     [Fact]
-    public void AnExtractor_HoldsAWholeUnitAtTheField_UntilThereIsRoom()
-    {
-        Simulation sim = EmptyMap();
-        ResourceField oil = sim.Debug.PlaceField(ResourceType.CrudeOil, 3, 3, 50f);
-        Building well = sim.Debug.PlaceBuilding(BuildingType.OilWell, 12, 10, Facing.North);
-
-        // With no Tank Farm, Crude Oil's limit is 0: a unit is ready after 4 s but never taken.
-        SimTestHelpers.Seconds(sim, 10.0);
-
-        Assert.Equal(50f, oil.Amount);
-        Assert.Equal(new BuildingStatus(BuildingState.Idle, "Storage full: Crude Oil"), sim.BuildingStatusOf(well));
-
-        sim.Debug.PlaceBuilding(BuildingType.TankFarm, 40, 40, Facing.North);
-        SimTestHelpers.Ticks(sim, 1);
-
-        Assert.Equal(1f, SimTestHelpers.Stock(sim, ResourceType.CrudeOil));
-        Assert.Equal(BuildingState.Working, sim.BuildingStatusOf(well).State);
-    }
-
-    [Fact]
-    public void AProcessor_StartsOnlyWhenItsOutputFits()
+    public void AnOnlineProcessor_FillsItsBufferWhenStorageIsFull_ThenStops()
     {
         Simulation sim = EmptyMap();
         sim.Debug.SeedStockpile(ResourceType.Iron, 150f);
-        sim.Debug.SeedStockpile(ResourceType.IronOre, 5f);
+        sim.Debug.SeedStockpile(ResourceType.IronOre, 15f);
         Building smelter = sim.Debug.PlaceBuilding(BuildingType.Smelter, 20, 20, Facing.North);
+        SimTestHelpers.Connect(sim, 21f, 21f);
 
-        SimTestHelpers.Seconds(sim, 20.0);
+        // Ten 16 s cycles fill its 10-unit output buffer; then it stops.
+        SimTestHelpers.Seconds(sim, 200.0);
 
-        Assert.False(smelter.Crafting);
+        Assert.Equal(10f, smelter.Output[ResourceType.Iron]);
         Assert.Equal(5f, SimTestHelpers.Stock(sim, ResourceType.IronOre));
         Assert.Equal(new BuildingStatus(BuildingState.Idle, "Storage full: Iron"), sim.BuildingStatusOf(smelter));
     }
 
     [Fact]
-    public void AFinishedCycle_WaitsInTheBuilding_UntilItsOutputFits()
+    public void AnOnlineProcessorsBuffer_DrainsIntoStorage_WhenRoomAppears()
     {
         Simulation sim = EmptyMap();
-        sim.Debug.SeedStockpile(ResourceType.Iron, 149f);
+        sim.Debug.SeedStockpile(ResourceType.Iron, 150f);
         sim.Debug.SeedStockpile(ResourceType.IronOre, 1f);
         Building smelter = sim.Debug.PlaceBuilding(BuildingType.Smelter, 20, 20, Facing.North);
-        SimTestHelpers.Ticks(sim, 1);
-        Assert.True(smelter.Crafting);
-
-        // The pool fills while the 16 s cycle runs.
-        sim.Debug.SeedStockpile(ResourceType.Circuit, 4f);
+        SimTestHelpers.Connect(sim, 21f, 21f);
         SimTestHelpers.Seconds(sim, 20.0);
+        Assert.Equal(1f, smelter.Output[ResourceType.Iron]);
 
-        Assert.True(smelter.Crafting);
-        Assert.Equal(149f, SimTestHelpers.Stock(sim, ResourceType.Iron));
-        Assert.Equal(new BuildingStatus(BuildingState.Idle, "Storage full: Iron"), sim.BuildingStatusOf(smelter));
-
-        sim.Debug.PlaceBuilding(BuildingType.Warehouse, 30, 20, Facing.North);
+        sim.Debug.PlaceBuilding(BuildingType.Warehouse, 24, 20, Facing.North);
         SimTestHelpers.Ticks(sim, 1);
 
-        Assert.False(smelter.Crafting);
-        Assert.Equal(150f, SimTestHelpers.Stock(sim, ResourceType.Iron));
+        Assert.Empty(smelter.Output);
+        Assert.Equal(151f, SimTestHelpers.Stock(sim, ResourceType.Iron));
     }
 
     [Fact]

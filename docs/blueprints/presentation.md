@@ -70,9 +70,11 @@ ui-style.md. There is no text HUD; the screen holds:
   each as its icon and "amount / limit" (the amount alone for a Cargo or unlimited resource), in
   `Warning` when storage has no room for another unit, with name tooltips; and the launch
   progress with "[L] Launch ship" once it can launch. Pinning or unpinning rebuilds the entries.
-- **Hint overlay** (`HintOverlay`): below the top bar, "[E] Harvest" with the resource's icon,
-  name, and a progress bar toward the next unit, while a hand-harvestable field is in range; while
-  storage has no room for the resource, "Storage full" in `Warning` replaces the bar.
+- **Hint overlay** (`HintOverlay`): below the top bar, the E key's action with the resource's
+  icon and a progress bar toward the next unit: "[E] Harvest Wood" while a hand-harvestable field is
+  the target, "[E] Collect Iron Ore (12)" (units left in the output buffer) or "[E] Load Iron Ore
+  (3 / 5)" (input buffer held and capacity) while a building is; while storage has no room for the
+  resource, "Storage full" in `Warning` replaces the bar.
 - **Debug overlay** (`DebugOverlay`, F3, hidden at start): the world line for exploring (for
   example `seed 1234   Highlands / Rock   chunk (1, -2)   cell (87, -101)`) and the performance
   line (see Performance below), in the top-left corner below the top bar, behind everything else.
@@ -119,19 +121,31 @@ ui-style.md. There is no text HUD; the screen holds:
   (250)", or "none"), Working on (only for a building that works
   more than one type: the current field's type and amount left, as "Stone (212 left)"), Recipe
   (processors: "1 Iron Ore to 1 Iron, 16 s"), and a progress bar (toward the next unit, or
-  through the cycle). A storage building shows no Power, State, or progress; instead a Silo shows
+  through the cycle). Every building has a Network row ("Online" or "Offline"); an extractor or
+  processor a Buffer row ("Iron Ore 12 / 20", or "Iron 4 / 10; in: Iron Ore 3 / 5"); a hub Links
+  (how many hubs it links to) and Reach ("covers 8, links 12") and no State or progress. A storage
+  building shows no Power, State, or progress; instead a Silo shows
   "Holds" and a picker of the Bulk resources (choosing one calls `SetSiloResource`), and every
   storage building lists "Adds to storage": one line per resource it adds to, with the amount
-  ("Wood   +300"), and "Cargo pool" for the HQ and a Warehouse. Then its actions: Turn off / Turn
+  ("Wood   +300"), and "Cargo pool" for the HQ and a Warehouse, headed "Offline: adds nothing until
+  connected" while it is offline. Then its actions: Turn off / Turn
   on (not for a storage building), and Destroy (not for the HQ), which shows its refund
   ("Destroy (refund 13 Wood, 8 Stone)") and asks once: the first click changes it to "Confirm
   destroy" for 3 seconds, and a second click in that time destroys the building. The panel closes
   itself when its building is gone. While it is open, its building keeps the hover outline in
   the world.
+- **Network view** (`NetworkView`, in the world): each hub's coverage as a flat translucent disc
+  (accent for an online hub, gray for an offline or switched-off one) and the links between online
+  hubs as thin accent lines. It draws every hub while the network overlay is on (N toggles it; off at
+  start) or while a building is being placed, adding the ghost's own coverage (green) and lines to
+  the hubs it would link to when the ghost is a hub; with neither, it draws only the hub the detail
+  panel shows, if it shows one. Separately, every switched-on offline building carries a small
+  `Warning` ring floating 2.4 units above its center.
 - **Placement tooltip:** while a building is selected (and no modal is open), a tooltip
   follows the pointer 28 units below and to the right of it, clear of the ghost: the building's
   name in the accent color, its cost (short amounts marked), fields in range for an extractor,
-  and the dim hint "R rotate   Esc cancel". The ghost itself shows the facing (the model is
+  "Online" or "Offline (no hub in reach)" in `Warning` for the spot (`WouldBeOnline`), and the dim
+  hint "R rotate   Esc cancel". The ghost itself shows the facing (the model is
   turned) and whether the spot is open and affordable (green or red).
 
 ### Asset and model pipeline

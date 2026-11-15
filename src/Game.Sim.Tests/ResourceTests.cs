@@ -137,10 +137,10 @@ public class ResourceTests
 
         // 1 Copper Ore at 8 s per unit runs out at 8 s; then the Mine moves to the Coal, 6 s per unit.
         SimTestHelpers.Seconds(sim, 15.0);
-        Assert.Equal(1f, SimTestHelpers.Stock(sim, ResourceType.CopperOre));
+        Assert.Equal(1f, SimTestHelpers.Gathered(sim, ResourceType.CopperOre));
         Assert.Same(coal, mine.CurrentField);
-        Assert.Equal(1f, SimTestHelpers.Stock(sim, ResourceType.Coal));
-        Assert.Equal(0f, SimTestHelpers.Stock(sim, ResourceType.Wood));
+        Assert.Equal(1f, SimTestHelpers.Gathered(sim, ResourceType.Coal));
+        Assert.Equal(0f, SimTestHelpers.Gathered(sim, ResourceType.Wood));
     }
 
     [Fact]
@@ -158,7 +158,7 @@ public class ResourceTests
         SimTestHelpers.Seconds(sim, 4.1);
 
         Assert.Same(near, well.CurrentField);
-        Assert.Equal(1f, SimTestHelpers.Stock(sim, ResourceType.CrudeOil));
+        Assert.Equal(1f, SimTestHelpers.Gathered(sim, ResourceType.CrudeOil));
         Assert.Single(sim.FieldsInRange(well.Position, well.Def.WorkRadius, well.Def.Works));
     }
 

@@ -59,6 +59,21 @@ public sealed record BuildingDef(
     /// <summary>Whether the player can place it (it is in the build menu); the world places the HQ.</summary>
     public bool Buildable { get; init; } = true;
 
+    /// <summary>A hub's coverage radius: buildings whose footprint comes this close to its center join the network.</summary>
+    public float CoverageRadius { get; init; }
+
+    /// <summary>A hub's link radius: hubs whose centers are this close link (the larger of the two radii counts).</summary>
+    public float LinkRadius { get; init; }
+
+    /// <summary>Whether it is a hub (the HQ, a Small Hub, a Relay).</summary>
+    public bool IsHub => CoverageRadius > 0f || LinkRadius > 0f;
+
+    /// <summary>How many units its output buffer holds (extractors and processors; 0 for none).</summary>
+    public float OutputBuffer { get; init; }
+
+    /// <summary>How many cycles' worth of each recipe input its input buffer holds (processors).</summary>
+    public int InputCycles { get; init; }
+
     public bool IsExtractor => Works.Count > 0;
 
     /// <summary>The footprint size for a facing; East and West swap width and depth.</summary>
@@ -88,14 +103,20 @@ public static class BuildingDefs
         ResourceType.CopperOre,
         ResourceType.Coal,
         ResourceType.Stone
-    }, 6f);
+    }, 6f)
+    {
+        OutputBuffer = 20f
+    };
     private static readonly BuildingDef LumberCamp = new("Lumber Camp", 2, 2, new ResourceAmount[]
     {
         new(ResourceType.Wood, 15f)
     }, new[]
     {
         ResourceType.Wood
-    }, 6f);
+    }, 6f)
+    {
+        OutputBuffer = 20f
+    };
     private static readonly BuildingDef OilWell = new("Oil Well", 2, 2, new ResourceAmount[]
     {
         new(ResourceType.Iron, 25f),
@@ -104,25 +125,38 @@ public static class BuildingDefs
     }, new[]
     {
         ResourceType.CrudeOil
-    }, 3f);
+    }, 3f)
+    {
+        OutputBuffer = 20f
+    };
     private static readonly BuildingDef Smelter = new("Smelter", 3, 3, new ResourceAmount[]
     {
         new(ResourceType.Stone, 40f),
         new(ResourceType.Wood, 15f)
-    }, Array.Empty<ResourceType>(), 0f);
+    }, Array.Empty<ResourceType>(), 0f)
+    {
+        OutputBuffer = 10f,
+        InputCycles = 5
+    };
     private static readonly BuildingDef Refinery = new("Refinery", 2, 3, new ResourceAmount[]
     {
         new(ResourceType.Iron, 40f),
         new(ResourceType.Stone, 30f),
         new(ResourceType.Wood, 20f)
-    }, Array.Empty<ResourceType>(), 0f);
+    }, Array.Empty<ResourceType>(), 0f)
+    {
+        OutputBuffer = 10f,
+        InputCycles = 5
+    };
 
     private static readonly BuildingDef Hq = new("HQ", 6, 10, Array.Empty<ResourceAmount>(), Array.Empty<ResourceType>(), 0f)
     {
         Storage = StorageRole.Hq,
         CargoPool = 150f,
         Permanent = true,
-        Buildable = false
+        Buildable = false,
+        CoverageRadius = 14f,
+        LinkRadius = 16f
     };
     private static readonly BuildingDef Silo = new("Silo", 2, 2, new ResourceAmount[]
     {
@@ -168,6 +202,25 @@ public static class BuildingDefs
         StoresClass = StorageClass.Secure
     };
 
+    private static readonly BuildingDef SmallHub = new("Small Hub", 1, 1, new ResourceAmount[]
+    {
+        new(ResourceType.Wood, 10f),
+        new(ResourceType.Stone, 5f)
+    }, Array.Empty<ResourceType>(), 0f)
+    {
+        CoverageRadius = 8f,
+        LinkRadius = 12f
+    };
+    private static readonly BuildingDef Relay = new("Relay", 2, 2, new ResourceAmount[]
+    {
+        new(ResourceType.Iron, 20f),
+        new(ResourceType.Stone, 10f)
+    }, Array.Empty<ResourceType>(), 0f)
+    {
+        CoverageRadius = 3f,
+        LinkRadius = 30f
+    };
+
     public static BuildingDef For(BuildingType type)
     {
         return type switch
@@ -183,6 +236,8 @@ public static class BuildingDefs
             BuildingType.TankFarm => TankFarm,
             BuildingType.Warehouse => Warehouse,
             BuildingType.Vault => Vault,
+            BuildingType.SmallHub => SmallHub,
+            BuildingType.Relay => Relay,
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, "no building definition")
         };
     }

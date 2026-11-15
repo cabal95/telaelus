@@ -65,6 +65,13 @@ pausing it and stepping frame by frame.
 - `ResourceTests`: the resource definitions (63 by tier, raw resources at tier 0, the new
   deposits' gather times, an item model file for each), biome deposits, the Mine and Oil Well, and
   hand-harvest rules.
+- `NetworkTests`: hubs linking within the larger link radius; coverage reaching a footprint's
+  nearest point; switching off or destroying a hub cutting its branch; an extractor filling its
+  buffer and waiting for pickup; collecting by hand at a tenth of the gather time and stopping on
+  full storage; an offline processor loaded by hand and working from its buffers; destroying
+  returning buffers past the limit; storage counting only online; `WouldBeOnline`.
+  `SimTestHelpers.Connect` chains Small Hubs from the HQ to a spot, `Gathered` counts the stockpile
+  plus every output buffer, and `CollectByHand` empties a building by holding E on it.
 - `StorageTests`: every resource's storage class and amounts; the HQ's base; limits summing the
   HQ and storage buildings; a Silo's step following its resource; Cargo room as the free pool over
   the weight; hand-harvest, extractors, and processors stopping at the limit and resuming; a
@@ -151,11 +158,14 @@ pausing it and stepping frame by frame.
   `perf` (`headlineMs` (the larger of the CPU and GPU times), `workMs`, `scriptMs`, `renderCpuMs`, `gpuMs` or null, `simMs`, `frameMs` (wall time
   since the last frame), `worstMs`, `fps`, `draws`, `objects`, as of that frame; see
   presentation.md); `player` (`position`
-  [x, z], `harvestTarget` field id or null, `harvestProgress` (0 to 1), the `terrain`, `biome`, and `feature` under the player,
+  [x, z], `harvestTarget` field id or null, `harvestProgress` (0 to 1), `interactTarget` building
+  id or null, `interactAction` (`collect` or `load`, or null), `interactProgress`, the `terrain`, `biome`, and `feature` under the player,
   and their `chunk` [x, z]); `build` (null when not in build
   mode, else `selected`, `facing`, `fieldsInRange`, and `ghost`: `anchor`, `width`, `depth`,
   `placeable` (the spot), `affordable` (the cost), or null, and `tooltip`: the placement
   tooltip's lines, or null); `ui` (`open`: the open dialog's id or null, `debug`: whether the debug overlay shows,
+  `network`: `overlay` (whether N has it on), `shownHubs` (the ids of the hubs whose coverage is
+  drawn), and `offlineMarkers` (how many offline markers are drawn),
   `topBar`: its `items` (each pinned resource's `type`, `amount`, `limit` (null for a Cargo or
   unlimited resource), and `full`) and its `launch` text, `hint`: the hint's `text`, `progress`,
   and `storageFull` or null, `tooltip`: the hover
@@ -168,7 +178,8 @@ pausing it and stepping frame by frame.
   (`remaining`, `workedBy`); while the inventory is open, `inventory`: its rows in display order,
   each `type`, `amount`, `limit` (null for a Cargo or unlimited resource), `section` (`raw`,
   `tier1` to `tier4`), `discovered`, and `pinned`, and `cargo`, the Cargo row's text); `buildings` (`id`, `type`, `anchor`, `facing`, `width`, `depth`,
-  `currentField`, `enabled`, `status` (`working`, `idle`, or `off`), and `idleReason` or null);
+  `currentField`, `enabled`, `online`, `output` and `input` (buffer amounts by type), `status`
+  (`working`, `idle`, or `off`), and `idleReason` or null);
   `hoveredBuilding` (the id of the building under the pointer outside build mode, or null);
   `focusedBuilding` (the id of the building the detail panel shows and outlines, or null);
   `hoveredField` and `focusedField` (the same for resource fields);
@@ -281,6 +292,9 @@ pausing it and stepping frame by frame.
   resources with name tooltips and the launch progress; the hint overlay shows the harvest hint
   and its bar; I opens and closes the inventory, grouped by tier with discovered resources first;
   the inventory and a building's detail replace each other; a panel covers the debug overlay),
+  `network` (a Mine out of reach is offline with the warning marker and fills its buffer; E collects
+  from it; N shows the overlay; a chain of Small Hubs brings it online; the placement tooltip's
+  online line; a selected hub shows only its own coverage),
   `storage` (Wood at the HQ's 100 shows full on the top bar and the harvest hint says Storage
   full; a Silo raises the limit to 400 and harvesting resumes; the inventory's Cargo row, and
   pinning and unpinning from it, which reorders the top bar; the Silo's detail lists what it adds),
