@@ -63,11 +63,16 @@ public class BuildingControlTests
 
         Assert.Equal(new BuildingStatus(BuildingState.Working, null), sim.BuildingStatusOf(mine));
         Assert.Equal(new BuildingStatus(BuildingState.Idle, "No fields in range"), sim.BuildingStatusOf(idleMine));
-        Assert.Equal(new BuildingStatus(BuildingState.Idle, "Blackout"), sim.BuildingStatusOf(refinery));
+        Assert.Equal(new BuildingStatus(BuildingState.Idle, "Blackout: Power"), sim.BuildingStatusOf(refinery));
 
-        // A Burner Generator with Coal powers it; then it waits for its Crude Oil.
+        // A Burner Generator with Coal powers it, but it has no Water yet.
         sim.Debug.SeedStockpile(ResourceType.Coal, 5f);
         sim.Debug.PlaceBuilding(BuildingType.BurnerGenerator, 20, 32, Facing.North);
+        SimTestHelpers.Ticks(sim, 1);
+        Assert.Equal(new BuildingStatus(BuildingState.Idle, "Blackout: Water"), sim.BuildingStatusOf(refinery));
+
+        // A Water Pump by the pond cools it; then it waits for its Crude Oil.
+        sim.Debug.PlaceBuilding(BuildingType.WaterPump, SimTestHelpers.PondPumpX, SimTestHelpers.PondPumpZ, Facing.North);
         SimTestHelpers.Ticks(sim, 1);
         Assert.Equal(new BuildingStatus(BuildingState.Idle, "Waiting for Crude Oil"), sim.BuildingStatusOf(refinery));
 

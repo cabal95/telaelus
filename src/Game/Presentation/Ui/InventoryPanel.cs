@@ -177,7 +177,7 @@ public partial class InventoryPanel : Dialog
         {
             row.Icon.Modulate = Colors.White;
             row.Label.Text = $"{ResourceDefs.For(type).Name} ({HudOverlay.StorageText(_sim, type)})";
-            row.Label.AddThemeColorOverride("font_color", HudOverlay.IsFull(_sim, type) ? UiTheme.Warning : UiTheme.Text);
+            row.Label.AddThemeColorOverride("font_color", HudOverlay.AmountColor(_sim, type));
         }
         else
         {

@@ -65,6 +65,12 @@ pausing it and stepping frame by frame.
 - `ResourceTests`: the resource definitions (63 by tier, raw resources at tier 0, the new
   deposits' gather times, an item model file for each), biome deposits, the Mine and Oil Well, and
   hand-harvest rules.
+- `CapacityTests`: Water supply and demand over online, switched-on buildings only; the Refinery
+  stopping without Water; a consumer of two types running at the slower (Water at half speed with
+  Power plenty); a Pumping Station supplying at its power speed (12.8 at 80%) and nothing in a
+  power blackout; Water providers only beside water by an edge (a pond or a river channel) and
+  Sand providers only wholly on Sand; the Glassworks in a Sand blackout, waiting for fuel, then
+  making Glass every 12 s on Coal; Sand and Water never stored.
 - `PowerTests`: brownout speeds and a blackout past a quarter over, demand counting idle
   consumers; offline buildings neither drawing nor supplying; the Burner Generator burning whenever
   on, Best fuel first, stopping when switched off, its burning unit not refunded; a fuel choice
@@ -172,12 +178,13 @@ pausing it and stepping frame by frame.
   `network`: `overlay` (whether N has it on), `shownHubs` (the ids of the hubs whose coverage is
   drawn), and `offlineMarkers` (how many offline markers are drawn),
   `topBar`: its `items` (each pinned resource's `type`, `amount`, `limit` (null for a Cargo or
-  unlimited resource), and `full`), its `power` readout, and its `launch` text, `hint`: the hint's `text`, `progress`,
+  unlimited resource), `full`, the `text` shown, and its `tone`: `normal`, `warning`, or
+  `danger`), its `power` readout, and its `launch` text, `hint`: the hint's `text`, `progress`,
   and `storageFull` or null, `tooltip`: the hover
   tooltip's lines or null, and while the build menu is open, its `cells` in display order, each
   `type`, `state` (`affordable`, `unaffordable`, or `undiscovered`), and `label`; while the
   detail panel is open, `building` (its id), `rows` (each shown status row, keyed in camel case:
-  `network`, `switch`, `power`, `state`, `inRange`, `workingOn`, `recipe`, `buffer`, `burning`,
+  `network`, `switch`, `power`, `water`, `sand`, `state`, `inRange`, `workingOn`, `recipe`, `buffer`, `burning`,
   `links`, `reach`), `fuel` (the fuel picker's choice, or null), `adds` (what a storage building adds, by
   resource name, as "+300"), `destroy` (the Destroy button's text, or null when hidden), and
   `turnDegrees`; while the field detail panel is open, `field` (its id), `title`, and `rows`
@@ -193,8 +200,8 @@ pausing it and stepping frame by frame.
   `camera` (`zoom`: world units across 720 pixels, `target` [x, z]: the ground point at the view's
   center, `detached`: whether a drag has moved it off the player);
   `fields` (`id`, `type`, `mapCell`, `amount`, `stage`, `visibleModels`, `explored`);
-  `stockpile` (every resource); `power` (`supply`, `demand`, `speed`, and `state`: `normal`,
-  `brownout`, or `blackout`); `discovered` (the discovered resources' type names, in enum
+  `stockpile` (every resource); `capacity` (`power`, `water`, and `sand`, each with `supply`,
+  `demand`, `speed`, and `state`: `normal`, `brownout`, or `blackout`); `discovered` (the discovered resources' type names, in enum
   order); `unlockedBuildings` (type names, in enum order); and
   `shipsLaunched`. New checks are added as snapshot fields.
 - **Input injection:** keys and mouse buttons go through `Input.ParseInputEvent` followed by
@@ -303,6 +310,9 @@ pausing it and stepping frame by frame.
   `power` (a Drill Rig with no supply is in a blackout; a Burner Generator on Coal powers it; four
   then five Refineries push demand into a brownout at 80% and a blackout, on the top bar; the
   generator's panel shows its supply and Best fuel),
+  `capacity` (a Glassworks with no Sand is in a blackout, in `Danger` on the Sand pin; a Sand
+  Collector on Sand supplies it and Glass is made; five Glassworks on four Collectors are a Sand
+  brownout at half speed, in `Warning`, shown in the Glassworks panel's Sand row and its recipe),
   `network` (a Mine out of reach is offline with the warning marker and fills its buffer; E collects
   from it; N shows the overlay; a chain of Small Hubs brings it online; the placement tooltip's
   online line; a selected hub shows only its own coverage),

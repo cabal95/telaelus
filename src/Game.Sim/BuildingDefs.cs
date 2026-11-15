@@ -28,9 +28,7 @@ public enum StorageRole
 /// the stockpile when placed), its speed (an extractor's time per unit is the
 /// deposit's gather time divided by it; every building is base level today), and
 /// for an extractor, the deposit types it works and its work radius in world units.
-/// Placement rules belong here too; every type currently uses the standard rule
-/// (see Simulation.CanPlace), and an exception such as a water wheel would be a
-/// new rule on its own definition.
+/// Its placement rule and the capacity it draws and supplies belong here too.
 /// </summary>
 public sealed record BuildingDef(
     string Name,
@@ -77,17 +75,30 @@ public sealed record BuildingDef(
     /// <summary>Its tier: 0 for the unpowered start, 1 for the first powered buildings.</summary>
     public int Tier { get; init; }
 
-    /// <summary>The power it draws while switched on and online; above 0 makes it a powered consumer.</summary>
-    public float PowerDraw { get; init; }
+    private static readonly IReadOnlyDictionary<CapacityType, float> NoCapacity = new Dictionary<CapacityType, float>();
 
-    /// <summary>The power it supplies while it runs online (generators).</summary>
-    public float PowerSupply { get; init; }
+    /// <summary>The capacity it reserves while switched on and online, by type (a consumer).</summary>
+    public IReadOnlyDictionary<CapacityType, float> Draws { get; init; } = NoCapacity;
+
+    /// <summary>The capacity it supplies while it runs online, by type (a provider).</summary>
+    public IReadOnlyDictionary<CapacityType, float> Supplies { get; init; } = NoCapacity;
+
+    public bool IsProvider => Supplies.Count > 0;
+
+    public float Draw(CapacityType type)
+    {
+        return Draws.TryGetValue(type, out float amount) ? amount : 0f;
+    }
+
+    public float Supply(CapacityType type)
+    {
+        return Supplies.TryGetValue(type, out float amount) ? amount : 0f;
+    }
 
     /// <summary>Whether it has a fuel slot and burns fuel to work (the Smelter, the Burner Generator).</summary>
     public bool BurnsFuel { get; init; }
 
-    /// <summary>Whether it is placed across a Straight river map cell (the Water Wheel) instead of by the standard rule.</summary>
-    public bool OnStraightRiver { get; init; }
+    public Placement Placement { get; init; } = Placement.Standard;
 
     /// <summary>How many units of fuel a fuel slot holds.</summary>
     public const float FuelSlotSize = 5f;
@@ -167,7 +178,24 @@ public static class BuildingDefs
         OutputBuffer = 10f,
         InputCycles = 5,
         Tier = 1,
-        PowerDraw = 25f
+        Draws = new Dictionary<CapacityType, float>
+        {
+            [CapacityType.Power] = 25f,
+            [CapacityType.Water] = 2f
+        }
+    };
+    private static readonly BuildingDef Glassworks = new("Glassworks", 3, 6, new ResourceAmount[]
+    {
+        new(ResourceType.Stone, 40f),
+        new(ResourceType.Wood, 20f)
+    }, Array.Empty<ResourceType>(), 0f)
+    {
+        OutputBuffer = 10f,
+        BurnsFuel = true,
+        Draws = new Dictionary<CapacityType, float>
+        {
+            [CapacityType.Sand] = 2f
+        }
     };
 
     private static readonly BuildingDef Hq = new("HQ", 6, 10, Array.Empty<ResourceAmount>(), Array.Empty<ResourceType>(), 0f)
@@ -248,8 +276,11 @@ public static class BuildingDefs
         new(ResourceType.Stone, 20f)
     }, Array.Empty<ResourceType>(), 0f)
     {
-        PowerSupply = 20f,
-        OnStraightRiver = true
+        Supplies = new Dictionary<CapacityType, float>
+        {
+            [CapacityType.Power] = 20f
+        },
+        Placement = Placement.AcrossStraightRiver
     };
     private static readonly BuildingDef BurnerGenerator = new("Burner Generator", 2, 2, new ResourceAmount[]
     {
@@ -257,7 +288,10 @@ public static class BuildingDefs
         new(ResourceType.Iron, 40f)
     }, Array.Empty<ResourceType>(), 0f)
     {
-        PowerSupply = 100f,
+        Supplies = new Dictionary<CapacityType, float>
+        {
+            [CapacityType.Power] = 100f
+        },
         BurnsFuel = true
     };
     private static readonly BuildingDef LumberMill = new("Lumber Mill", 3, 3, new ResourceAmount[]
@@ -272,7 +306,10 @@ public static class BuildingDefs
         Speed = 2f,
         OutputBuffer = 40f,
         Tier = 1,
-        PowerDraw = 5f
+        Draws = new Dictionary<CapacityType, float>
+        {
+            [CapacityType.Power] = 5f
+        }
     };
     private static readonly BuildingDef DrillRig = new("Drill Rig", 3, 3, new ResourceAmount[]
     {
@@ -289,7 +326,69 @@ public static class BuildingDefs
         Speed = 2f,
         OutputBuffer = 40f,
         Tier = 1,
-        PowerDraw = 10f
+        Draws = new Dictionary<CapacityType, float>
+        {
+            [CapacityType.Power] = 10f
+        }
+    };
+
+    private static readonly BuildingDef WaterPump = new("Water Pump", 2, 2, new ResourceAmount[]
+    {
+        new(ResourceType.Wood, 20f),
+        new(ResourceType.Stone, 10f)
+    }, Array.Empty<ResourceType>(), 0f)
+    {
+        Supplies = new Dictionary<CapacityType, float>
+        {
+            [CapacityType.Water] = 4f
+        },
+        Placement = Placement.BesideWater
+    };
+    private static readonly BuildingDef PumpingStation = new("Pumping Station", 3, 3, new ResourceAmount[]
+    {
+        new(ResourceType.Iron, 40f),
+        new(ResourceType.Stone, 20f)
+    }, Array.Empty<ResourceType>(), 0f)
+    {
+        Tier = 1,
+        Supplies = new Dictionary<CapacityType, float>
+        {
+            [CapacityType.Water] = 16f
+        },
+        Draws = new Dictionary<CapacityType, float>
+        {
+            [CapacityType.Power] = 10f
+        },
+        Placement = Placement.BesideWater
+    };
+    private static readonly BuildingDef SandCollector = new("Sand Collector", 2, 2, new ResourceAmount[]
+    {
+        new(ResourceType.Wood, 20f),
+        new(ResourceType.Stone, 10f)
+    }, Array.Empty<ResourceType>(), 0f)
+    {
+        Supplies = new Dictionary<CapacityType, float>
+        {
+            [CapacityType.Sand] = 2f
+        },
+        Placement = Placement.OnSand
+    };
+    private static readonly BuildingDef SandDredge = new("Sand Dredge", 3, 3, new ResourceAmount[]
+    {
+        new(ResourceType.Iron, 40f),
+        new(ResourceType.Stone, 20f)
+    }, Array.Empty<ResourceType>(), 0f)
+    {
+        Tier = 1,
+        Supplies = new Dictionary<CapacityType, float>
+        {
+            [CapacityType.Sand] = 8f
+        },
+        Draws = new Dictionary<CapacityType, float>
+        {
+            [CapacityType.Power] = 10f
+        },
+        Placement = Placement.OnSand
     };
 
     public static BuildingDef For(BuildingType type)
@@ -313,6 +412,11 @@ public static class BuildingDefs
             BuildingType.BurnerGenerator => BurnerGenerator,
             BuildingType.LumberMill => LumberMill,
             BuildingType.DrillRig => DrillRig,
+            BuildingType.WaterPump => WaterPump,
+            BuildingType.PumpingStation => PumpingStation,
+            BuildingType.SandCollector => SandCollector,
+            BuildingType.SandDredge => SandDredge,
+            BuildingType.Glassworks => Glassworks,
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, "no building definition")
         };
     }

@@ -1,0 +1,37 @@
+newmtl stone_dark
+Kd 0.360 0.340 0.330
+
+newmtl stone_90
+Kd 0.450 0.423 0.396
+
+newmtl stone
+Kd 0.500 0.470 0.440
+
+newmtl glass_accent
+Kd 0.660 0.940 0.960
+
+newmtl furnace_glow
+Kd 1.000 0.550 0.180
+Ke 0.500 0.275 0.090
+
+newmtl shadow
+Kd 0.080 0.070 0.070
+
+newmtl metal_dark
+Kd 0.300 0.310 0.340
+
+newmtl metal
+Kd 0.580 0.600 0.630
+
+newmtl glass_edge
+Kd 0.800 0.920 0.960
+
+newmtl glass
+Kd 0.620 0.820 0.900
+
+newmtl wood_dark
+Kd 0.400 0.280 0.170
+
+newmtl wood
+Kd 0.580 0.410 0.240
+

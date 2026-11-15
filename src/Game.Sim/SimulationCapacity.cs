@@ -1,101 +1,116 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Game.Sim;
 
-/// <summary>Where the network's power stands.</summary>
-public enum PowerState
-{
-    /// <summary>Demand at or under supply: consumers run at full speed.</summary>
-    Normal,
-
-    /// <summary>Demand up to 25% over supply: consumers slow by twice the overload.</summary>
-    Brownout,
-
-    /// <summary>Demand more than 25% over supply, or demand with no supply: every consumer stops.</summary>
-    Blackout
-}
-
 /// <summary>
-/// Power on the HQ network. Each tick, before buildings work: switched-on fuel burners burn (a
-/// Burner Generator whenever it is on, online or not), then supply is the output of every online,
-/// switched-on generator that runs, and demand the draw of every online, switched-on consumer,
-/// working or not. Overload is demand over supply less 1; consumers run at 1 less twice the
-/// overload, and past 25% over everything powered stops. Offline consumers get no power. Fuel
-/// burns one unit at a time for its burn time, taken from the fuel slot first and then (online)
-/// from storage: the chosen fuel, or with Best the longest-burning one at hand.
+/// Capacity on the HQ network (Power, Water, Sand). Each tick, before buildings work: switched-on
+/// fuel-burning providers burn (a Burner Generator whenever it is on, online or not); then, for
+/// each capacity type in order, supply is what every online, switched-on provider that runs
+/// supplies (scaled by its own speed, so a Pumping Station in a power brownout supplies less), and
+/// demand what every online, switched-on consumer draws, working or not. Overload is demand over
+/// supply less 1; consumers run at 1 less twice the overload, and past 25% over every consumer of
+/// that type stops. A consumer of several types runs at the slowest. Offline consumers get
+/// nothing. Fuel burns one unit at a time for its burn time, taken from the fuel slot first and
+/// then (online) from storage: the chosen fuel, or with Best the longest-burning one at hand.
 /// </summary>
 public sealed partial class Simulation
 {
     /// <summary>The most overload a brownout allows before it is a blackout.</summary>
     public const float BrownoutLimit = 0.25f;
 
-    public float PowerSupply { get; private set; }
+    public static readonly CapacityType[] CapacityTypes = Enum.GetValues<CapacityType>();
 
-    public float PowerDemand { get; private set; }
+    private readonly CapacityReading[] _capacity = Enumerable.Repeat(CapacityReading.Idle, CapacityTypes.Length).ToArray();
 
-    /// <summary>The speed every online powered consumer runs at this tick (1 normal, less in a brownout, 0 in a blackout).</summary>
-    public float PowerSpeed { get; private set; } = 1f;
-
-    public PowerState PowerState { get; private set; }
-
-    /// <summary>Burns fuel and sums supply and demand for this tick.</summary>
-    private void StepPower(double dt)
+    /// <summary>A capacity type's supply, demand, speed, and state this tick.</summary>
+    public CapacityReading Capacity(CapacityType type)
     {
-        float supply = 0f;
-        float demand = 0f;
+        return _capacity[(int)type];
+    }
+
+    /// <summary>The state a type's demand and supply give (also for a placement preview).</summary>
+    public static CapacityState StateFor(float demand, float supply)
+    {
+        float overload = Overload(demand, supply);
+        return overload <= 0f ? CapacityState.Normal : overload <= BrownoutLimit ? CapacityState.Brownout : CapacityState.Blackout;
+    }
+
+    private static float Overload(float demand, float supply)
+    {
+        return supply > 0f ? demand / supply - 1f : demand > 0f ? float.PositiveInfinity : 0f;
+    }
+
+    /// <summary>Burns providers' fuel and sums each capacity type's supply and demand for this tick.</summary>
+    private void StepCapacity(double dt)
+    {
+        var unfueled = new HashSet<Building>();
         foreach (Building building in _buildings)
         {
-            if (!building.Enabled)
+            if (building.Enabled && building.Def.IsProvider && building.Def.BurnsFuel && !Burn(building, dt))
+            {
+                unfueled.Add(building);
+            }
+        }
+        foreach (CapacityType type in CapacityTypes)
+        {
+            float supply = 0f;
+            float demand = 0f;
+            foreach (Building building in _buildings)
+            {
+                if (!building.Enabled || !building.Online)
+                {
+                    continue;
+                }
+                demand += building.Def.Draw(type);
+                if (building.Def.Supply(type) > 0f && !unfueled.Contains(building))
+                {
+                    // Its draws come earlier in the order, so their speeds are this tick's.
+                    supply += building.Def.Supply(type) * WorkSpeed(building);
+                }
+            }
+            CapacityState state = StateFor(demand, supply);
+            float speed = state switch
+            {
+                CapacityState.Normal => 1f,
+                CapacityState.Brownout => 1f - 2f * Overload(demand, supply),
+                _ => 0f
+            };
+            _capacity[(int)type] = new CapacityReading(supply, demand, speed, state);
+        }
+    }
+
+    /// <summary>How fast a building works this tick: the slowest speed of the types it draws (1 for none), 0 offline.</summary>
+    public float WorkSpeed(Building building)
+    {
+        float speed = 1f;
+        foreach (CapacityType type in building.Def.Draws.Keys)
+        {
+            speed = Math.Min(speed, building.Online ? Capacity(type).Speed : 0f);
+        }
+        return speed;
+    }
+
+    /// <summary>Why a consumer cannot work ("No Water: offline", "Blackout: Sand"), or null when it can.</summary>
+    private string? CapacityBlock(Building building)
+    {
+        foreach (CapacityType type in CapacityTypes)
+        {
+            if (building.Def.Draw(type) <= 0f)
             {
                 continue;
             }
-            if (building.Def.PowerSupply > 0f)
+            if (!building.Online)
             {
-                bool running = !building.Def.BurnsFuel || Burn(building, dt);
-                if (running && building.Online)
-                {
-                    supply += building.Def.PowerSupply;
-                }
+                return $"No {type}: offline";
             }
-            if (building.Def.PowerDraw > 0f && building.Online)
+            if (Capacity(type).State == CapacityState.Blackout)
             {
-                demand += building.Def.PowerDraw;
+                return $"Blackout: {type}";
             }
         }
-        PowerSupply = supply;
-        PowerDemand = demand;
-        float overload = supply > 0f ? demand / supply - 1f : demand > 0f ? float.PositiveInfinity : 0f;
-        PowerState = overload <= 0f ? PowerState.Normal : overload <= BrownoutLimit ? PowerState.Brownout : PowerState.Blackout;
-        PowerSpeed = PowerState switch
-        {
-            PowerState.Normal => 1f,
-            PowerState.Brownout => 1f - 2f * overload,
-            _ => 0f
-        };
-    }
-
-    /// <summary>How fast a building works this tick: 1 when unpowered, the network's power speed when online, 0 offline.</summary>
-    private float WorkSpeed(Building building)
-    {
-        if (building.Def.PowerDraw <= 0f)
-        {
-            return 1f;
-        }
-        return building.Online ? PowerSpeed : 0f;
-    }
-
-    /// <summary>Why a powered building cannot work, or null when it can.</summary>
-    private string? PowerBlock(Building building)
-    {
-        if (building.Def.PowerDraw <= 0f)
-        {
-            return null;
-        }
-        if (!building.Online)
-        {
-            return "No power: offline";
-        }
-        return PowerState == PowerState.Blackout ? "Blackout" : null;
+        return null;
     }
 
     // ---- Fuel -------------------------------------------------------------

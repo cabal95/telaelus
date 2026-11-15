@@ -34,10 +34,10 @@ public partial class TopBar : HudOverlay
     private Label _power = null!;
     private Label _ships = null!;
 
-    /// <summary>The entries as shown (type, amount, its own limit or null, and whether storage is full), for the snapshot.</summary>
-    public IEnumerable<(ResourceType Type, int Amount, int? Limit, bool Full)> Entries => _sim is Simulation sim
-        ? _pins.Pinned.Select(type => (type, Whole(sim, type), WholeLimit(sim, type), IsFull(sim, type)))
-        : Enumerable.Empty<(ResourceType, int, int?, bool)>();
+    /// <summary>The entries as shown (type, amount, its own limit or null, whether storage is full, the text, and its tone), for the snapshot.</summary>
+    public IEnumerable<(ResourceType Type, int Amount, int? Limit, bool Full, string Text, string Tone)> Entries => _sim is Simulation sim
+        ? _pins.Pinned.Select(type => (type, Whole(sim, type), WholeLimit(sim, type), IsFull(sim, type), StorageText(sim, type), ToneOf(AmountColor(sim, type))))
+        : Enumerable.Empty<(ResourceType, int, int?, bool, string, string)>();
 
     /// <summary>The power readout as shown, for the snapshot.</summary>
     public string PowerText => _power.Text;
@@ -157,11 +157,12 @@ public partial class TopBar : HudOverlay
         {
             icon.Texture ??= _icons.For(type);
             amount.Text = StorageText(sim, type);
-            amount.AddThemeColorOverride("font_color", IsFull(sim, type) ? UiTheme.Warning : UiTheme.Text);
+            amount.AddThemeColorOverride("font_color", AmountColor(sim, type));
         }
 
-        _power.Text = HudOverlay.PowerText(sim);
-        _power.AddThemeColorOverride("font_color", PowerColor(sim.PowerDemand, sim.PowerSupply));
+        CapacityReading power = sim.Capacity(CapacityType.Power);
+        _power.Text = CapacityText(sim, CapacityType.Power);
+        _power.AddThemeColorOverride("font_color", CapacityColor(power.Demand, power.Supply));
         _fuelIcon.Texture ??= _icons.For(ResourceType.RocketFuel);
         _ironIcon.Texture ??= _icons.For(ResourceType.Iron);
         SetProgress(_fuel, Whole(sim, ResourceType.RocketFuel), (int)Simulation.LaunchRocketFuelCost);

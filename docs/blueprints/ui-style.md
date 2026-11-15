@@ -56,8 +56,8 @@ were not there, and they may cover it.
 | `TextDim` | 0.60, 0.64, 0.61 | Secondary text, hints, "Undiscovered" |
 | `Accent` | 0.98, 0.80, 0.35 | Hover outline, title rule, tooltip headings |
 | `Short` | 1.00, 0.42, 0.38 | A cost amount the player lacks |
-| `Danger` | 0.85, 0.30, 0.25 | Destructive buttons; a power blackout |
-| `Warning` | 0.98, 0.66, 0.18 | Storage full (top bar, inventory, the harvest hint); a power brownout |
+| `Danger` | 0.85, 0.30, 0.25 | Destructive buttons; a capacity blackout (Power, Water, Sand) |
+| `Warning` | 0.98, 0.66, 0.18 | Storage full (top bar, inventory, the harvest hint); a capacity brownout |
 | `Backdrop` | black at 35% | Behind a modal |
 | `Silhouette` | 0.06, 0.07, 0.06 | Undiscovered building pictures |
 

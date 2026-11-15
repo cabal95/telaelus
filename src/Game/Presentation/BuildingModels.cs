@@ -30,6 +30,10 @@ public static class BuildingModels
             BuildingType.BurnerGenerator => "burner_generator",
             BuildingType.LumberMill => "lumber_mill",
             BuildingType.DrillRig => "drill_rig",
+            BuildingType.WaterPump => "water_pump",
+            BuildingType.PumpingStation => "pumping_station",
+            BuildingType.SandCollector => "sand_collector",
+            BuildingType.SandDredge => "sand_dredge",
             _ => type.ToString().ToLowerInvariant()
         };
     }

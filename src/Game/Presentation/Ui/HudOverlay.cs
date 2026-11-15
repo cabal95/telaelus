@@ -39,24 +39,57 @@ public abstract partial class HudOverlay : Control
         return ResourceDefs.For(type).Storage.IsPerType ? Mathf.FloorToInt(sim.StorageLimit(type)) : null;
     }
 
-    /// <summary>"45 / 100" for a resource with a limit of its own, else the amount alone.</summary>
+    /// <summary>
+    /// "45 / 100" for a resource with a limit of its own, the amount alone for a Cargo or unlimited
+    /// resource, and demand over supply for a capacity resource ("2 / 4", "Blackout: 6 / 4").
+    /// </summary>
     public static string StorageText(Simulation sim, ResourceType type)
     {
+        if (CapacityResources.CapacityOf(type) is CapacityType capacity)
+        {
+            return CapacityText(sim, capacity, named: false);
+        }
         return WholeLimit(sim, type) is int limit ? $"{Whole(sim, type)} / {limit}" : Whole(sim, type).ToString();
     }
 
-    /// <summary>The network's power as demand over supply ("Power 45 / 100"; "Blackout: Power 140 / 100" in a blackout).</summary>
-    public static string PowerText(Simulation sim, float extraDemand = 0f, float extraSupply = 0f)
+    /// <summary>A resource's amount color: a capacity resource's state color, else the warning color when storage is full.</summary>
+    public static Color AmountColor(Simulation sim, ResourceType type)
     {
-        string text = $"Power {Mathf.CeilToInt(sim.PowerDemand + extraDemand)} / {Mathf.FloorToInt(sim.PowerSupply + extraSupply)}";
-        return sim.PowerState == PowerState.Blackout && extraDemand == 0f && extraSupply == 0f ? "Blackout: " + text : text;
+        if (CapacityResources.CapacityOf(type) is CapacityType capacity)
+        {
+            CapacityReading reading = sim.Capacity(capacity);
+            return CapacityColor(reading.Demand, reading.Supply);
+        }
+        return IsFull(sim, type) ? UiTheme.Warning : UiTheme.Text;
     }
 
-    /// <summary>The color for a power readout of demand over supply: normal, warning in a brownout, danger in a blackout.</summary>
-    public static Color PowerColor(float demand, float supply)
+    /// <summary>
+    /// A capacity type as demand over supply ("Water 2 / 4"; "Blackout: Water 6 / 4" in a blackout),
+    /// optionally with a building's draw or supply added (a placement preview, never marked blackout).
+    /// </summary>
+    public static string CapacityText(Simulation sim, CapacityType type, float extraDemand = 0f, float extraSupply = 0f, bool named = true)
     {
-        float overload = supply > 0f ? demand / supply - 1f : demand > 0f ? float.PositiveInfinity : 0f;
-        return overload <= 0f ? UiTheme.Text : overload <= Simulation.BrownoutLimit ? UiTheme.Warning : UiTheme.Danger;
+        CapacityReading reading = sim.Capacity(type);
+        string figures = $"{Mathf.CeilToInt(reading.Demand + extraDemand)} / {Mathf.FloorToInt(reading.Supply + extraSupply)}";
+        string text = named ? $"{type} {figures}" : figures;
+        return reading.State == CapacityState.Blackout && extraDemand == 0f && extraSupply == 0f ? "Blackout: " + text : text;
+    }
+
+    /// <summary>The color for a capacity readout of demand over supply: normal, warning in a brownout, danger in a blackout.</summary>
+    public static Color CapacityColor(float demand, float supply)
+    {
+        return Simulation.StateFor(demand, supply) switch
+        {
+            CapacityState.Normal => UiTheme.Text,
+            CapacityState.Brownout => UiTheme.Warning,
+            _ => UiTheme.Danger
+        };
+    }
+
+    /// <summary>The snapshot's name for a color: "normal", "warning", or "danger".</summary>
+    public static string ToneOf(Color color)
+    {
+        return color == UiTheme.Danger ? "danger" : color == UiTheme.Warning ? "warning" : "normal";
     }
 
     /// <summary>Whether storage has no room for another unit of a limited resource (shown in the warning color).</summary>

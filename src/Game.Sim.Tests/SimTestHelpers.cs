@@ -15,6 +15,11 @@ internal static class SimTestHelpers
     public const int ClearX = 28;
     public const int ClearZ = 28;
 
+    // A Water Pump spot on the west shore of the pond (which starts at fine x 36, z 20..27), in
+    // the HQ's coverage.
+    public const int PondPumpX = 34;
+    public const int PondPumpZ = 22;
+
     /// <summary>Steps the sim for a number of fixed ticks with the current intent.</summary>
     public static void Ticks(Simulation sim, int ticks)
     {

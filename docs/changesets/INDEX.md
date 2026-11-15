@@ -120,6 +120,10 @@ Newest last. One line each; open the file for the full spec.
   buildings draw, a brownout slows consumers by twice the overload and past 25% over a blackout
   stops them; fuel slots with burn times and a Best fuel picker (the Smelter now burns fuel); the
   Water Wheel, Burner Generator, Lumber Mill, and Drill Rig; the Refinery draws power.
+- **2611142141-terrain-capacity** - Makes Power, Water, and Sand one Capacity model on the HQ network:
+  the Water Pump and Pumping Station beside water, the Sand Collector and Sand Dredge on Sand; the
+  Glassworks makes Glass from fuel and 2 Sand; the Refinery draws 2 Water; Sand and Water readouts
+  on the top bar, inventory, panel, and placement tooltip.
 
 ## Adding a changeset
 

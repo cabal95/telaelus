@@ -41,25 +41,25 @@ public class PowerTests
         Assert.All(SimTestHelpers.Placed(sim), b => Assert.True(b.Online));
 
         // Demand counts the idle Refineries (no Crude Oil) as well: 145 / 100.
-        Assert.Equal(100f, sim.PowerSupply);
-        Assert.Equal(145f, sim.PowerDemand);
-        Assert.Equal(PowerState.Blackout, sim.PowerState);
-        Assert.Equal(0f, sim.PowerSpeed);
-        Assert.Equal(new BuildingStatus(BuildingState.Idle, "Blackout"), sim.BuildingStatusOf(rigs[0]));
+        Assert.Equal(100f, sim.Capacity(CapacityType.Power).Supply);
+        Assert.Equal(145f, sim.Capacity(CapacityType.Power).Demand);
+        Assert.Equal(CapacityState.Blackout, sim.Capacity(CapacityType.Power).State);
+        Assert.Equal(0f, sim.Capacity(CapacityType.Power).Speed);
+        Assert.Equal(new BuildingStatus(BuildingState.Idle, "Blackout: Power"), sim.BuildingStatusOf(rigs[0]));
 
         sim.SetBuildingEnabled(refineries[0].Id, false);
         SimTestHelpers.Ticks(sim, 1);
-        Assert.Equal(PowerState.Brownout, sim.PowerState);
-        Assert.Equal(0.6f, sim.PowerSpeed, 3);
+        Assert.Equal(CapacityState.Brownout, sim.Capacity(CapacityType.Power).State);
+        Assert.Equal(0.6f, sim.Capacity(CapacityType.Power).Speed, 3);
 
         sim.SetBuildingEnabled(rigs[0].Id, false);
         SimTestHelpers.Ticks(sim, 1);
-        Assert.Equal(0.8f, sim.PowerSpeed, 3);
+        Assert.Equal(0.8f, sim.Capacity(CapacityType.Power).Speed, 3);
 
         sim.SetBuildingEnabled(refineries[1].Id, false);
         SimTestHelpers.Ticks(sim, 1);
-        Assert.Equal(PowerState.Normal, sim.PowerState);
-        Assert.Equal(1f, sim.PowerSpeed);
+        Assert.Equal(CapacityState.Normal, sim.Capacity(CapacityType.Power).State);
+        Assert.Equal(1f, sim.Capacity(CapacityType.Power).Speed);
     }
 
     [Fact]
@@ -71,9 +71,9 @@ public class PowerTests
         Building burner = sim.Debug.PlaceBuilding(BuildingType.BurnerGenerator, 24, 40, Facing.North);
         SimTestHelpers.Ticks(sim, 1);
 
-        Assert.Equal(0f, sim.PowerSupply);
-        Assert.Equal(0f, sim.PowerDemand);
-        Assert.Equal(new BuildingStatus(BuildingState.Idle, "No power: offline"), sim.BuildingStatusOf(rig));
+        Assert.Equal(0f, sim.Capacity(CapacityType.Power).Supply);
+        Assert.Equal(0f, sim.Capacity(CapacityType.Power).Demand);
+        Assert.Equal(new BuildingStatus(BuildingState.Idle, "No Power: offline"), sim.BuildingStatusOf(rig));
         // Offline it cannot reach storage for fuel either.
         Assert.Equal(new BuildingStatus(BuildingState.Idle, "Waiting for fuel (load by hand)"), sim.BuildingStatusOf(burner));
     }
@@ -90,7 +90,7 @@ public class PowerTests
 
         // Nothing draws power, yet it burns: Best takes the Coal (40 s) before the Wood (10 s).
         Assert.Equal(ResourceType.Coal, burner.Burning);
-        Assert.Equal(100f, sim.PowerSupply);
+        Assert.Equal(100f, sim.Capacity(CapacityType.Power).Supply);
         SimTestHelpers.Seconds(sim, 40.5);
         Assert.Equal(ResourceType.Wood, burner.Burning);
         Assert.Equal(1f, SimTestHelpers.Stock(sim, ResourceType.Wood));
@@ -100,7 +100,7 @@ public class PowerTests
         float left = burner.BurnLeft;
         SimTestHelpers.Seconds(sim, 5.0);
         Assert.Equal(left, burner.BurnLeft);
-        Assert.Equal(0f, sim.PowerSupply);
+        Assert.Equal(0f, sim.Capacity(CapacityType.Power).Supply);
 
         // Destroyed, the half-burned unit is not returned.
         sim.TryDestroyBuilding(burner.Id);
@@ -190,6 +190,6 @@ public class PowerTests
         SimTestHelpers.Connect(sim, 18f, 21f);
         SimTestHelpers.Ticks(sim, 1);
         Assert.True(wheel.Online);
-        Assert.Equal(20f, sim.PowerSupply);
+        Assert.Equal(20f, sim.Capacity(CapacityType.Power).Supply);
     }
 }

@@ -512,14 +512,21 @@ public partial class BuildController : Node3D
         if (CurrentGhost() is GhostInfo ghost)
         {
             lines.Add(ghost.Online ? new TipLine("Online") : new TipLine("Offline (no hub in reach)", UiTheme.Warning));
-            if (def.PowerDraw > 0f || def.PowerSupply > 0f)
+            foreach (CapacityType capacity in Simulation.CapacityTypes)
             {
-                // The network's power with this building added, if it would be online.
-                float demand = ghost.Online ? def.PowerDraw : 0f;
-                float supply = ghost.Online ? def.PowerSupply : 0f;
-                string role = def.PowerDraw > 0f ? $"Draws {def.PowerDraw:0}" : $"Supplies {def.PowerSupply:0}";
-                lines.Add(new TipLine($"{role}: {HudOverlay.PowerText(_sim, demand, supply)}",
-                    HudOverlay.PowerColor(_sim.PowerDemand + demand, _sim.PowerSupply + supply)));
+                float draw = def.Draw(capacity);
+                float give = def.Supply(capacity);
+                if (draw <= 0f && give <= 0f)
+                {
+                    continue;
+                }
+                // The network's figure with this building added, if it would be online.
+                float demand = ghost.Online ? draw : 0f;
+                float supply = ghost.Online ? give : 0f;
+                CapacityReading reading = _sim.Capacity(capacity);
+                string role = draw > 0f ? $"Draws {draw:0} {capacity}" : $"Supplies {give:0} {capacity}";
+                lines.Add(new TipLine($"{role}: {HudOverlay.CapacityText(_sim, capacity, demand, supply)}",
+                    HudOverlay.CapacityColor(reading.Demand + demand, reading.Supply + supply)));
             }
         }
         lines.Add(new TipLine("R rotate   Esc cancel", UiTheme.TextDim));

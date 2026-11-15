@@ -29,8 +29,8 @@ buildings.md). A single global stockpile holds all amounts, within storage limit
   | Limestone, Sulfur | Deposit | yes | 4.5 s | no fields yet |
   | TitaniumOre | Deposit | yes | 7.5 s | no fields yet |
   | RareEarths, UraniumOre, Crystals | Deposit | no | 9 s | no fields yet |
-  | Sand | TerrainSourced | no | | a collector on Sand (not yet built) |
-  | Water | TerrainSourced | no | | a pump on ShallowWater (not yet built) |
+  | Sand | TerrainSourced | no | | capacity from a Sand Collector or Sand Dredge on Sand (buildings.md) |
+  | Water | TerrainSourced | no | | capacity from a Water Pump or Pumping Station beside water (buildings.md) |
   | Lithium | TerrainSourced | no | | a Brine Well (not yet built) |
 
   The refined resources, by tier (Iron from the Smelter and Rocket Fuel from the Refinery; nothing
@@ -152,6 +152,10 @@ buildings.md). A single global stockpile holds all amounts, within storage limit
 - `RoomFor(type)` is how much more fits: the limit less the amount for a per-type resource, the
   free pool over the weight for a Cargo resource, and infinite for Sand and Water. It is never
   below 0.
+- **Sand and Water are capacity, not stock** (`CapacityResources.CapacityOf`): their quantity never
+  matters, only how much the network supplies at once against what its consumers draw (buildings.md,
+  Capacity). Nothing adds them to storage, so their stock stays 0; they keep their storage class
+  (Unlimited), icon, and discovery.
 - **Gathering and production add only what fits** (hand-harvesting and extractors, see below and
   buildings.md; processors, see buildings.md). **Returns** (a destroy refund, the inputs a
   switched-off processor hands back) and `Debug.SeedStockpile` add in full, even past a limit.

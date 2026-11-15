@@ -49,13 +49,7 @@ public static class StateSnapshot
             ["buildings"] = Buildings(sim),
             ["fields"] = Fields(sim, root.FieldViews),
             ["stockpile"] = Stockpile(sim),
-            ["power"] = new JsonObject
-            {
-                ["supply"] = Round(sim.PowerSupply),
-                ["demand"] = Round(sim.PowerDemand),
-                ["speed"] = Round(sim.PowerSpeed),
-                ["state"] = Camel(sim.PowerState.ToString())
-            },
+            ["capacity"] = Capacity(sim),
             ["discovered"] = Discovered(sim),
             ["unlockedBuildings"] = Unlocked(sim),
             ["shipsLaunched"] = sim.ShipsLaunched
@@ -201,17 +195,37 @@ public static class StateSnapshot
         return ui;
     }
 
+    /// <summary>Each capacity type's supply, demand, speed, and state, keyed by camel-cased type.</summary>
+    private static JsonObject Capacity(Simulation sim)
+    {
+        var capacity = new JsonObject();
+        foreach (CapacityType type in Simulation.CapacityTypes)
+        {
+            CapacityReading reading = sim.Capacity(type);
+            capacity[Camel(type.ToString())] = new JsonObject
+            {
+                ["supply"] = Round(reading.Supply),
+                ["demand"] = Round(reading.Demand),
+                ["speed"] = Round(reading.Speed),
+                ["state"] = Camel(reading.State.ToString())
+            };
+        }
+        return capacity;
+    }
+
     private static JsonObject TopBar(TopBar bar)
     {
         var items = new JsonArray();
-        foreach ((ResourceType type, int amount, int? limit, bool full) in bar.Entries)
+        foreach ((ResourceType type, int amount, int? limit, bool full, string text, string tone) in bar.Entries)
         {
             items.Add(new JsonObject
             {
                 ["type"] = type.ToString(),
                 ["amount"] = amount,
                 ["limit"] = limit,
-                ["full"] = full
+                ["full"] = full,
+                ["text"] = text,
+                ["tone"] = tone
             });
         }
         return new JsonObject

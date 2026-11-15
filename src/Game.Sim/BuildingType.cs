@@ -19,5 +19,10 @@ public enum BuildingType
     WaterWheel,
     BurnerGenerator,
     LumberMill,
-    DrillRig
+    DrillRig,
+    WaterPump,
+    PumpingStation,
+    SandCollector,
+    SandDredge,
+    Glassworks
 }

@@ -40,7 +40,8 @@ public class LaunchTests
         // Mines beside the Iron Ore fields, one Oil Well between the two Crude Oil seeps, two each
         // of Smelters and Refineries, so the one Oil Well keeps both Refineries busy, and two Tank
         // Farms to hold the Crude Oil and the launch's 500 Rocket Fuel. A Mine beside the Coal field
-        // feeds the Smelters' fuel and a Burner Generator that powers the Refineries. Collectors
+        // feeds the Smelters' fuel and a Burner Generator that powers the Refineries, and a Water
+        // Pump by the pond cools them (4 Water for their 2 each). Collectors
         // never deliver on their own, so the player walks round and collects every 20 seconds.
         (BuildingType Type, int X, int Z)[] placements =
         {
@@ -56,7 +57,8 @@ public class LaunchTests
             (BuildingType.TankFarm, 36, 28),
             (BuildingType.TankFarm, 40, 28),
             (BuildingType.Mine, 8, 37),
-            (BuildingType.BurnerGenerator, 30, 24)
+            (BuildingType.BurnerGenerator, 30, 24),
+            (BuildingType.WaterPump, SimTestHelpers.PondPumpX, SimTestHelpers.PondPumpZ)
         };
         foreach ((BuildingType type, int x, int z) in placements)
         {

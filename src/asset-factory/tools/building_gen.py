@@ -385,11 +385,144 @@ def drill_rig():
     return m, mat.mats
 
 
+def water_pump():
+    """A small pump house at the back, its intake pipe reaching down toward the water at the front,
+    and a hand-wheel valve."""
+    m, mat = Mesh(), Materials()
+    hx, hz = half(2), half(2)
+    box(m, mat("stone_dark"), -hx, 0, -hz, hx, 0.06, hz, mat_top=mat("stone"))
+    # plank pump house with a blue roof
+    box(m, mat("wood"), -0.65, 0.06, -0.05, 0.65, 0.7, 0.8)
+    box(m, mat("shadow"), -0.18, 0.06, -0.06, 0.18, 0.5, -0.05)
+    prism_roof(m, mat("water_accent"), -0.75, 0.75, -0.15, 0.9, 0.7, 1.05, mat_gable=mat("wood"))
+    # intake pipe out of the front, bending down over the edge
+    cylinder(m, mat("metal_dark"), (0.45, 0.35, -0.05), (0.45, 0.35, -0.75), 0.08, segs=8)
+    cylinder(m, mat("metal_dark"), (0.45, 0.35, -0.75), (0.45, 0.02, -0.85), 0.08, segs=8)
+    cylinder(m, mat("water_accent"), (0.45, 0.35, -0.42), (0.45, 0.35, -0.32), 0.1, segs=8)
+    # hand-wheel valve on a post
+    cylinder(m, mat("metal_dark"), (-0.35, 0.06, -0.55), (-0.35, 0.45, -0.55), 0.05, segs=6)
+    cylinder(m, mat("water_accent"), (-0.35, 0.47, -0.62), (-0.35, 0.47, -0.55), 0.17, segs=10)
+    cylinder(m, mat("metal_dark"), (-0.35, 0.47, -0.64), (-0.35, 0.47, -0.62), 0.05, segs=6)
+    return m, mat.mats
+
+
+def pumping_station():
+    """A pump hall with two intake pipes out of the front, a water tank at the back, and a power pole."""
+    m, mat = Mesh(), Materials()
+    hx, hz = half(3), half(3)
+    box(m, mat("stone_dark"), -hx, 0, -hz, hx, 0.08, hz, mat_top=mat("stone"))
+    # the hall, with a blue band and a flat metal roof
+    box(m, mat("stone"), -1.2, 0.08, -0.7, 0.55, 0.95, 0.6, mat_top=mat("metal"))
+    box(m, mat("water_accent"), -1.22, 0.7, -0.72, 0.57, 0.8, 0.62)
+    box(m, mat("shadow"), -0.5, 0.08, -0.71, -0.1, 0.55, -0.7)
+    # two intake pipes out of the front, bending down
+    for x in (-0.95, 0.25):
+        cylinder(m, mat("metal_dark"), (x, 0.4, -0.7), (x, 0.4, -1.25), 0.1, segs=8)
+        cylinder(m, mat("metal_dark"), (x, 0.4, -1.25), (x, 0.02, -1.33), 0.1, segs=8)
+        cylinder(m, mat("water_accent"), (x, 0.4, -1.0), (x, 0.4, -0.9), 0.12, segs=8)
+    # water tank at the back right, piped from the hall
+    cylinder(m, mat("metal"), (0.85, 0.08, 0.75), (0.85, 1.55, 0.75), 0.45, segs=12)
+    cylinder(m, mat("water_accent"), (0.85, 1.0, 0.75), (0.85, 1.2, 0.75), 0.46, segs=12)
+    spike(m, mat("metal", 1.1), (0.85, 1.55, 0.75), (0.85, 1.72, 0.75), 0.45, segs=12)
+    cylinder(m, mat("metal_dark"), (0.55, 0.6, 0.3), (0.85, 0.6, 0.3), 0.06, segs=6)
+    box(m, mat("power_accent"), 0.6, 0.08, -0.6, 0.95, 0.4, -0.3, mat_top=mat("metal_dark"))
+    power_pole(m, mat, 1.15, -1.15)
+    return m, mat.mats
+
+
+def sand_collector():
+    """A hopper on four legs over a sand pile, with a short chute at the front."""
+    m, mat = Mesh(), Materials()
+    hx, hz = half(2), half(2)
+    box(m, mat("sand", 0.9), -hx, 0, -hz, hx, 0.04, hz, mat_top=mat("sand"))
+    spike(m, mat("sand"), (0.1, 0.04, 0.15), (0.1, 0.42, 0.15), 0.62, segs=8)
+    for x, z in ((-0.55, -0.35), (0.55, -0.35), (0.55, 0.6), (-0.55, 0.6)):
+        cylinder(m, mat("wood_dark"), (x, 0.04, z), (x * 0.8, 0.95, z * 0.8 + 0.03), 0.04, segs=5)
+    # the hopper: a box over a funnel, with a tan band
+    box(m, mat("wood"), -0.5, 0.95, -0.35, 0.5, 1.3, 0.55, mat_top=mat("sand", 1.05))
+    box(m, mat("sand_accent"), -0.52, 1.18, -0.37, 0.52, 1.28, 0.57)
+    spike(m, mat("wood_dark"), (0, 0.95, 0.1), (0, 0.65, 0.1), 0.42, segs=4)
+    # chute to the front
+    box(m, mat("sand_accent"), -0.12, 0.62, -0.75, 0.12, 0.7, 0.05)
+    box(m, mat("sand"), -0.1, 0.04, -0.85, 0.1, 0.16, -0.65)
+    return m, mat.mats
+
+
+def sand_dredge():
+    """A scoop wheel over a sand pit at the front, a conveyor up to a hopper, a motor house, and a power pole."""
+    m, mat = Mesh(), Materials()
+    hx, hz = half(3), half(3)
+    box(m, mat("sand", 0.9), -hx, 0, -hz, hx, 0.04, hz, mat_top=mat("sand"))
+    # the pit: a darker patch at the front
+    box(m, mat("sand", 0.7), -1.0, 0.04, -1.3, 0.6, 0.045, -0.3)
+    # scoop wheel over the pit, turning about X
+    cx, cy, cz, r = -0.2, 0.75, -0.8, 0.6
+    segs = 10
+    pts = [(cx, cy + r * math.cos(2 * math.pi * k / segs), cz + r * math.sin(2 * math.pi * k / segs)) for k in range(segs)]
+    for k in range(segs):
+        cylinder(m, mat("metal_dark"), pts[k], pts[(k + 1) % segs], 0.04, segs=4)
+        cylinder(m, mat("metal"), (cx, cy, cz), pts[k], 0.025, segs=4)
+        if k % 2 == 0:
+            x, y, z = pts[k]
+            box(m, mat("sand_accent"), x - 0.15, y - 0.07, z - 0.07, x + 0.15, y + 0.07, z + 0.07)
+    cylinder(m, mat("metal_dark"), (cx - 0.3, cy, cz), (cx + 0.3, cy, cz), 0.06, segs=6)
+    for x in (cx - 0.3, cx + 0.3):
+        cylinder(m, mat("metal_dark"), (x, 0.04, cz - 0.2), (x, cy, cz), 0.04, segs=5)
+        cylinder(m, mat("metal_dark"), (x, 0.04, cz + 0.2), (x, cy, cz), 0.04, segs=5)
+    # conveyor from the wheel up to the hopper at the back
+    cylinder(m, mat("metal_dark"), (cx, 0.9, -0.3), (cx, 1.35, 0.55), 0.09, segs=4)
+    box(m, mat("metal"), -0.75, 0.04, 0.45, 0.35, 1.45, 1.3, mat_top=mat("sand", 1.05))
+    box(m, mat("sand_accent"), -0.77, 1.15, 0.43, 0.37, 1.27, 1.32)
+    # motor house on the right with a yellow band
+    box(m, mat("metal_dark"), 0.6, 0.04, -0.2, 1.25, 0.7, 0.6, mat_top=mat("metal"))
+    box(m, mat("power_accent"), 0.58, 0.5, -0.22, 1.27, 0.58, 0.62)
+    power_pole(m, mat, 1.15, -1.15)
+    return m, mat.mats
+
+
+def glassworks():
+    """A long works, 3 by 6: a stone furnace with a glowing kiln mouth at the back, a cooling line
+    of panes down its length under an open roof frame, and a rack of finished panes at the front."""
+    m, mat = Mesh(), Materials()
+    hx, hz = half(3), half(6)
+    box(m, mat("stone_dark"), -hx, 0, -hz, hx, 0.08, hz, mat_top=mat("stone", 0.9))
+    # the furnace at the back, its kiln mouth facing down the line
+    box(m, mat("stone"), -1.25, 0.08, 1.3, 1.25, 1.35, 2.85, mat_top=mat("stone", 0.9))
+    box(m, mat("glass_accent"), -1.27, 1.05, 1.28, 1.27, 1.17, 2.87)
+    box(m, mat("stone_dark"), -0.55, 0.08, 1.2, 0.55, 0.8, 1.3)
+    quad(m, mat("furnace_glow"), (-0.4, 0.12, 1.199), (0.4, 0.12, 1.199), (0.4, 0.65, 1.199),
+         (-0.4, 0.65, 1.199), (0, 0, -1))
+    cylinder(m, mat("stone_dark"), (0.75, 1.35, 2.3), (0.75, 2.5, 2.3), 0.25, segs=8)
+    cylinder(m, mat("glass_accent"), (0.75, 2.2, 2.3), (0.75, 2.3, 2.3), 0.28, segs=8)
+    cylinder(m, mat("shadow"), (0.75, 2.5, 2.3), (0.75, 2.501, 2.3), 0.17, segs=8)
+    # the cooling line: a long bench with upright panes, the first still glowing
+    box(m, mat("metal_dark"), -0.45, 0.08, -2.0, 0.45, 0.35, 1.2, mat_top=mat("metal"))
+    for k in range(6):
+        z = 0.95 - k * 0.5
+        box(m, mat("furnace_glow" if k == 0 else "glass"), -0.35, 0.35, z - 0.03, 0.35, 0.85, z + 0.03,
+            mat_top=mat("glass_edge"))
+    # an open roof frame over the line
+    for x in (-1.1, 1.1):
+        for z in (-1.9, -0.6, 0.7):
+            cylinder(m, mat("wood_dark"), (x, 0.08, z), (x, 1.2, z), 0.05, segs=5)
+        cylinder(m, mat("wood_dark"), (x, 1.2, -1.95), (x, 1.2, 1.25), 0.05, segs=5)
+    for z in (-1.9, -0.6, 0.7):
+        cylinder(m, mat("glass_accent"), (-1.1, 1.2, z), (1.1, 1.2, z), 0.045, segs=5)
+    # the rack of finished panes at the front
+    box(m, mat("wood"), -1.1, 0.08, -2.75, 1.1, 0.16, -2.25)
+    for k in range(5):
+        x = -0.85 + k * 0.42
+        box(m, mat("glass"), x - 0.17, 0.16, -2.6, x + 0.17, 0.7, -2.53, mat_top=mat("glass_edge"))
+    box(m, mat("glass_accent"), -1.1, 0.7, -2.7, 1.1, 0.76, -2.3)
+    return m, mat.mats
+
+
 BUILDINGS = {"mine": mine, "lumber_camp": lumber_camp, "smelter": smelter, "refinery": refinery,
              "oil_well": oil_well, "hq": hq, "silo": silo, "stockyard": stockyard, "tank_farm": tank_farm,
              "warehouse": warehouse, "vault": vault, "small_hub": small_hub, "relay": relay,
              "water_wheel": water_wheel, "burner_generator": burner_generator, "lumber_mill": lumber_mill,
-             "drill_rig": drill_rig}
+             "drill_rig": drill_rig, "water_pump": water_pump, "pumping_station": pumping_station,
+             "sand_collector": sand_collector, "sand_dredge": sand_dredge, "glassworks": glassworks}
 
 
 def build_all():

@@ -68,10 +68,11 @@ ui-style.md. There is no text HUD; the screen holds:
 - **Top bar** (`TopBar`, always shown): the pinned resources (`ResourcePins`, presentation state
   for the session; the six starting deposits and Sand and Water at start, kept in table order),
   each as its icon and "amount / limit" (the amount alone for a Cargo or unlimited resource), in
-  `Warning` when storage has no room for another unit, with name tooltips; and the launch
-  progress with "[L] Launch ship" once it can launch, preceded by the network's power ("Power 45
-  / 100", or "Blackout: Power 140 / 100", in normal text, `Warning` in a brownout, or `Danger` in a
-  blackout). Pinning or unpinning rebuilds the entries.
+  `Warning` when storage has no room for another unit, with name tooltips; a capacity resource
+  (Sand, Water) shows demand over supply instead ("2 / 4", or "Blackout: 6 / 4"), in normal text,
+  `Warning` in a brownout, or `Danger` in a blackout (`HudOverlay.StorageText` and `AmountColor`).
+  Then the launch progress with "[L] Launch ship" once it can launch, preceded by the network's
+  power ("Power 45 / 100", or "Blackout: Power 140 / 100", colored the same way). Pinning or unpinning rebuilds the entries.
 - **Hint overlay** (`HintOverlay`): below the top bar, the E key's action with the resource's
   icon and a progress bar toward the next unit: "[E] Harvest Wood" while a hand-harvestable field is
   the target, "[E] Collect Iron Ore (12)" (units left in the output buffer) or "[E] Load Iron Ore
@@ -95,8 +96,9 @@ ui-style.md. There is no text HUD; the screen holds:
   in `TextDim` (Raw, then Tier 1 to Tier 4), each over a thin rule. Within a heading the
   discovered resources come first, then the undiscovered, each group in table order; rows move as
   resources are discovered. A discovered row is its icon, "Wood (45 / 100)" (the amount alone for
-  a Cargo or unlimited resource, as "Iron (23)"), including those at 0, in `Warning` when storage
-  has no room for another unit, and a Pin toggle at the right ("Pin", or "Pinned" when on the top
+  a Cargo or unlimited resource, as "Iron (23)"; demand over supply for Sand and Water, as "Water
+  (2 / 4)", colored by its state), including those at 0, in `Warning` when storage has no room for
+  another unit, and a Pin toggle at the right ("Pin", or "Pinned" when on the top
   bar) that pins or unpins it; an undiscovered row is darkened like an undiscovered building in the build
   menu: its icon tinted `Silhouette` and "Undiscovered" in `TextDim`, with no name, amount, or
   pin. The
@@ -124,9 +126,11 @@ ui-style.md. There is no text HUD; the screen holds:
   more than one type: the current field's type and amount left, as "Stone (212 left)"), Recipe
   (processors: "1 Iron Ore to 1 Iron, 16 s"), and a progress bar (toward the next unit, or
   through the cycle). The first row is Network ("Online" or "Offline"), then Switch ("On" or "Off",
-  as Power was before it meant electricity), then Power: "Draws 10", "Draws 10 (running at 80%)", or
-  "Draws 10: blackout" for a powered building, "No power: offline" offline, "Supplies 100" or
-  "Offline: supplies nothing" for a generator. A building with a fuel slot has a Burning row ("Coal,
+  as Power was before it meant electricity), then one row per capacity type the building draws or
+  supplies (Power, Water, Sand): "Draws 10", "Draws 10 (running at 80%)", or "Draws 10: blackout"
+  for a consumer, "No Water: offline" offline; "Supplies 16", "Supplies 12.8 of 16" for a provider
+  slowed by its own draws, or "Offline: supplies nothing". A recipe with no inputs reads "1 Glass,
+  12 s". A building with a fuel slot has a Burning row ("Coal,
   22 s left; 4 in slot") and, below the rows, a Fuel picker (Best, then each fuel longest-burning
   first; choosing calls `SetFuelChoice`) with a dim note naming what it burns ("Best: burns Coal
   (40 s per unit)"). The progress bar shows only for extractors and processors. An extractor or
@@ -152,10 +156,10 @@ ui-style.md. There is no text HUD; the screen holds:
 - **Placement tooltip:** while a building is selected (and no modal is open), a tooltip
   follows the pointer 28 units below and to the right of it, clear of the ghost: the building's
   name in the accent color, its cost (short amounts marked), fields in range for an extractor,
-  "Online" or "Offline (no hub in reach)" in `Warning` for the spot (`WouldBeOnline`), for a
-  powered building or generator its draw or supply and the network's power with it added when the
-  spot is online ("Draws 10: Power 55 / 100", colored by the state that would give), and the dim
-  hint "R rotate   Esc cancel". The ghost itself shows the facing (the model is
+  "Online" or "Offline (no hub in reach)" in `Warning` for the spot (`WouldBeOnline`), for each
+  capacity type the building draws or supplies, that and the network's figure with it added when
+  the spot is online ("Draws 2 Sand: Sand 4 / 2", "Supplies 16 Water: Water 2 / 20", colored by the
+  state that would give), and the dim hint "R rotate   Esc cancel". The ghost itself shows the facing (the model is
   turned) and whether the spot is open and affordable (green or red).
 
 ### Asset and model pipeline

@@ -1,0 +1,63 @@
+namespace Game.Sim;
+
+/// <summary>
+/// A Capacity resource on the HQ network: providers supply it, consumers reserve it while switched
+/// on, and nothing stores it. Ordered so a provider's draws come before what it supplies (a
+/// Pumping Station draws Power and supplies Water), which is the order each tick computes them in.
+/// </summary>
+public enum CapacityType
+{
+    Power,
+    Water,
+    Sand
+}
+
+/// <summary>The resources that are capacity rather than stock.</summary>
+public static class CapacityResources
+{
+    /// <summary>The capacity type a resource is (Water, Sand), or null for a stored resource.</summary>
+    public static CapacityType? CapacityOf(ResourceType type)
+    {
+        return type switch
+        {
+            ResourceType.Water => CapacityType.Water,
+            ResourceType.Sand => CapacityType.Sand,
+            _ => null
+        };
+    }
+}
+
+/// <summary>Where a capacity type stands on the network.</summary>
+public enum CapacityState
+{
+    /// <summary>Demand at or under supply: consumers run at full speed.</summary>
+    Normal,
+
+    /// <summary>Demand up to 25% over supply: consumers slow by twice the overload.</summary>
+    Brownout,
+
+    /// <summary>Demand more than 25% over supply, or demand with no supply: every consumer stops.</summary>
+    Blackout
+}
+
+/// <summary>One capacity type's figures for this tick.</summary>
+public readonly record struct CapacityReading(float Supply, float Demand, float Speed, CapacityState State)
+{
+    public static readonly CapacityReading Idle = new(0f, 0f, 1f, CapacityState.Normal);
+}
+
+/// <summary>How a building's footprint is checked against the ground.</summary>
+public enum Placement
+{
+    /// <summary>Every cell buildable, free, explored, and clear of fields.</summary>
+    Standard,
+
+    /// <summary>Across a Straight river map cell (the Water Wheel).</summary>
+    AcrossStraightRiver,
+
+    /// <summary>The standard rule, with at least one cell edge-adjacent to ShallowWater, DeepWater, or river channel.</summary>
+    BesideWater,
+
+    /// <summary>The standard rule, with every cell on Sand terrain.</summary>
+    OnSand
+}

@@ -151,7 +151,8 @@ public sealed partial class Simulation
     /// </summary>
     public bool CanPlace(BuildingType type, int anchorX, int anchorZ, Facing facing)
     {
-        if (BuildingDefs.For(type).OnStraightRiver)
+        BuildingDef def = BuildingDefs.For(type);
+        if (def.Placement == Placement.AcrossStraightRiver)
         {
             return CanPlaceAcrossRiver(type, anchorX, anchorZ, facing);
         }
@@ -159,7 +160,8 @@ public sealed partial class Simulation
         // The player's cell, by the same point test movement collision uses.
         (int playerX, int playerZ) = CellAt(Player.Position.X, Player.Position.Z);
 
-        (int width, int depth) = BuildingDefs.For(type).Footprint(facing);
+        (int width, int depth) = def.Footprint(facing);
+        bool besideWater = false;
         for (int x = anchorX; x < anchorX + width; x++)
         {
             for (int z = anchorZ; z < anchorZ + depth; z++)
@@ -172,9 +174,29 @@ public sealed partial class Simulation
                 {
                     return false;
                 }
+                if (def.Placement == Placement.OnSand && TerrainAt(x, z) != TerrainType.Sand)
+                {
+                    return false;
+                }
+                besideWater |= def.Placement == Placement.BesideWater && BesideWater(x, z);
             }
         }
-        return true;
+        return def.Placement != Placement.BesideWater || besideWater;
+    }
+
+    /// <summary>Whether a fine cell is edge-adjacent to ShallowWater, DeepWater, or river channel.</summary>
+    private bool BesideWater(int x, int z)
+    {
+        foreach ((int dx, int dz) in new[] { (1, 0), (-1, 0), (0, 1), (0, -1) })
+        {
+            int nx = x + dx;
+            int nz = z + dz;
+            if (InBounds(nx, nz) && (TerrainDefs.IsWater(TerrainAt(nx, nz)) || IsRiverChannel(nx, nz)))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     /// <summary>
@@ -396,11 +418,11 @@ public sealed partial class Simulation
         {
             return new BuildingStatus(BuildingState.Off, "Switched off");
         }
-        if (PowerBlock(building) is string noPower)
+        if (CapacityBlock(building) is string blocked)
         {
-            return new BuildingStatus(BuildingState.Idle, noPower);
+            return new BuildingStatus(BuildingState.Idle, blocked);
         }
-        if (building.Def.PowerSupply > 0f)
+        if (building.Def.IsProvider)
         {
             if (building.Def.BurnsFuel && !HasFuel(building))
             {
@@ -680,7 +702,7 @@ public sealed partial class Simulation
 
     private void StepBuildings(double dt)
     {
-        StepPower(dt);
+        StepCapacity(dt);
         foreach (Building building in _buildings)
         {
             if (!building.Enabled)

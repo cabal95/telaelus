@@ -10,10 +10,12 @@ loop.
 
 ### Building types and definitions
 
-- `BuildingType` has seventeen values: **Mine**, **Lumber Camp**, **Smelter**, **Refinery**, **Oil
-  Well**, the **HQ**, the storage buildings **Silo**, **Stockyard**, **Tank Farm**, **Warehouse**,
-  and **Vault**, the hubs **Small Hub** and **Relay**, the generators **Water Wheel** and **Burner
-  Generator**, and the powered extractors **Lumber Mill** and **Drill Rig**.
+- `BuildingType` has twenty-two values: **Mine**, **Lumber Camp**, **Smelter**, **Refinery**,
+  **Oil Well**, the **HQ**, the storage buildings **Silo**, **Stockyard**, **Tank Farm**,
+  **Warehouse**, and **Vault**, the hubs **Small Hub** and **Relay**, the generators **Water
+  Wheel** and **Burner Generator**, the powered extractors **Lumber Mill** and **Drill Rig**, the
+  Water and Sand providers **Water Pump**, **Pumping Station**, **Sand Collector**, and **Sand
+  Dredge**, and the **Glassworks**.
 - Each type has a `BuildingDef` (in `BuildingDefs`): a display name, a footprint in fine cells
   (width along X, depth along Z when facing North), a cost, a speed, and for an extractor, the
   deposit types it works (`Works`; a building is an extractor when the list is not empty) and its
@@ -21,10 +23,11 @@ loop.
   `StoresClass`, or Warehouse), the `CargoPool` it adds, whether it is `Permanent` (cannot be
   switched off or destroyed), whether it is `Buildable` (placed by the player; the world places
   the HQ), a hub's `CoverageRadius` and `LinkRadius` (`IsHub` when either is set), and the sizes of
-  its buffers: `OutputBuffer` (units) and `InputCycles` (cycles' worth of each recipe input). For
-  power it has a `Tier` (0 unpowered, 1 the first powered tier), a `PowerDraw` (a consumer when
-  above 0), a `PowerSupply` (a generator), `BurnsFuel` (a fuel slot, `FuelSlotSize` 5 units), and
-  `OnStraightRiver` (the Water Wheel's placement rule).
+  its buffers: `OutputBuffer` (units) and `InputCycles` (cycles' worth of each recipe input). It
+  has a `Tier` (0 unpowered, 1 the first powered tier), the capacity it `Draws` and `Supplies`
+  (maps from `CapacityType` to amount; `Draw(type)` and `Supply(type)` read 0 for a type not
+  listed, and `IsProvider` when it supplies any), `BurnsFuel` (a fuel slot, `FuelSlotSize` 5
+  units), and its `Placement` rule (Standard, AcrossStraightRiver, BesideWater, or OnSand).
 
   | Type        | Footprint | Cost                       | Works                             | Work radius |
   |-------------|-----------|----------------------------|-----------------------------------|-------------|
@@ -62,10 +65,11 @@ loop.
     Ore and Copper Ore 8 s, Crude Oil 4 s).
   - Smelter: 1 Iron Ore to 1 Iron, cycle 16 s.
   - Refinery: 1 Crude Oil to 1 Rocket Fuel, cycle 8 s.
+  - Glassworks: no inputs to 1 Glass, cycle 12 s (its Sand is capacity, below).
   Processors run at half the pace of one base extractor, so one Mine keeps two Smelters busy and
   one Oil Well two Refineries.
-  These are placeholders until the production chain toward a ship (Steel Mill, Water into the
-  Refinery, ship parts; see docs/game-plan.md) is built.
+  These are placeholders until the production chain toward a ship (Steel Mill, ship parts; see
+  docs/game-plan.md) is built.
 
 ### Placement state: anchor and facing
 
@@ -86,8 +90,10 @@ loop.
   footprint. Today the only unit is the player, whose cell is the fine cell their position floors
   to (`CellAt`), the same point test movement collision uses, so a building can go exactly where
   the player could not walk into. A building may be placed right next to the player. No building
-  may sit on a resource. Placement rules belong to the definition, so a future exception (a water wheel that
-  overhangs water) is a new rule on that one definition.
+  may sit on a resource. The rule is the definition's `Placement`: Standard is the rule above;
+  BesideWater adds that at least one footprint cell is edge-adjacent (not corner) to ShallowWater,
+  DeepWater, or river channel; OnSand adds that every footprint cell is Sand terrain; and
+  AcrossStraightRiver is the Water Wheel's own rule (Capacity, below).
 - An extractor may be placed with no matching field in its work area; it idles until one is in
   range. This allows planning ahead and later lets resources be created around a building.
 - **Unlocking**: a building is unlocked (`IsUnlocked`) once the stockpile has held its whole cost
@@ -125,32 +131,49 @@ loop.
   facing)` whether a building placed there would be online (for the placement ghost).
 - Storage buildings count toward limits only while online (resources.md).
 
-### Power
+### Capacity
 
-- Each tick, before buildings work (`StepPower`): every switched-on fuel burner that is a
-  generator burns (a Burner Generator burns whenever it is on, with or without demand, online or
-  not; switching it off is how fuel is saved); **supply** (`PowerSupply`) is the output of every
-  online, switched-on generator that runs (a Water Wheel always, a Burner Generator while a unit
-  burns); **demand** (`PowerDemand`) is the draw of every online, switched-on consumer, working or
-  not, so a blackout cannot flap.
-- **Overload** is demand over supply less 1. The state (`PowerState`) is Normal at or under supply,
-  Brownout up to `BrownoutLimit` (25%) over, and Blackout past it or with demand and no supply.
-  Every online consumer runs at `PowerSpeed`: 1 when Normal, 1 less twice the overload in a
-  Brownout (0.8 at 10% over, 0.5 at 25%), 0 in a Blackout. An offline consumer gets no power.
-  Unpowered buildings (tier 0, storage, hubs, generators) are unaffected.
-- A powered extractor's progress and a powered processor's cycle advance at their speed times
-  `PowerSpeed`; at 0 they do not start or advance.
+- **Capacity** (`CapacityType`: Power, Water, Sand, in that order) is supplied by providers and
+  reserved by consumers while they are switched on; it is never stored. Each tick, before
+  buildings work (`StepCapacity`): every switched-on fuel-burning provider burns (a Burner
+  Generator burns whenever it is on, with or without demand, online or not; switching it off is how
+  fuel is saved); then for each type in order, **supply** is what every online, switched-on
+  provider that runs supplies (a Burner Generator only while a unit burns), times that provider's
+  own speed (below), and **demand** is what every online, switched-on consumer draws, working or
+  not, so a blackout cannot flap. `Capacity(type)` reads a type's `CapacityReading` (supply,
+  demand, speed, state).
+- **Overload** is demand over supply less 1. The state (`CapacityState`, from `StateFor`) is
+  Normal at or under supply, Brownout up to `BrownoutLimit` (25%) over, and Blackout past it or
+  with demand and no supply. The type's speed is 1 when Normal, 1 less twice the overload in a
+  Brownout (0.8 at 10% over, 0.5 at 25%), 0 in a Blackout.
+- A building's speed (`WorkSpeed`) is the slowest speed of the types it draws (1 when it draws
+  none), and 0 offline. A consumer's extractor progress and processor cycle advance at their speed
+  times it; at 0 they do not start or advance. A provider that draws capacity supplies times its
+  speed: a Pumping Station in a power brownout at 80% supplies 12.8 Water, and none in a power
+  blackout, so a power shortage cascades into a water shortage. The order (a provider's draws come
+  before what it supplies) makes that speed this tick's.
 
-| Generator | Footprint | Cost | Supplies | Notes |
-|---|---|---|---|---|
-| Water Wheel | 4 x 2 | 40 Wood, 20 Stone | 20 | Across a Straight river map cell (below); runs whenever it stands. |
-| Burner Generator | 2 x 2 | 60 Stone, 40 Iron | 100 | Burns fuel whenever switched on. |
+| Provider | Footprint | Cost | Supplies | Draws | Placement |
+|---|---|---|---|---|---|
+| Water Wheel | 4 x 2 | 40 Wood, 20 Stone | 20 Power | | Across a Straight river map cell (below); runs whenever it stands |
+| Burner Generator | 2 x 2 | 60 Stone, 40 Iron | 100 Power | | Standard; burns fuel whenever switched on |
+| Water Pump | 2 x 2 | 20 Wood, 10 Stone | 4 Water | | BesideWater |
+| Pumping Station | 3 x 3 | 40 Iron, 20 Stone | 16 Water | 10 Power | BesideWater |
+| Sand Collector | 2 x 2 | 20 Wood, 10 Stone | 2 Sand | | OnSand |
+| Sand Dredge | 3 x 3 | 40 Iron, 20 Stone | 8 Sand | 10 Power | OnSand |
 
-| Powered building | Footprint | Cost | Draw | Speed | Works | Buffer |
+| Consumer | Footprint | Cost | Draws | Speed | Works | Buffer |
 |---|---|---|---|---|---|---|
-| Lumber Mill | 3 x 3 | 30 Wood, 20 Iron | 5 | 2.0 | Wood, radius 8 | 40 |
-| Drill Rig | 3 x 3 | 30 Iron, 20 Stone | 10 | 2.0 | Iron Ore, Copper Ore, Coal, Stone, radius 8 | 40 |
-| Refinery | 2 x 3 | as above | 25 | | | 10, inputs 5 cycles |
+| Lumber Mill | 3 x 3 | 30 Wood, 20 Iron | 5 Power | 2.0 | Wood, radius 8 | 40 |
+| Drill Rig | 3 x 3 | 30 Iron, 20 Stone | 10 Power | 2.0 | Iron Ore, Copper Ore, Coal, Stone, radius 8 | 40 |
+| Refinery | 2 x 3 | as above | 25 Power, 2 Water (its cooling) | | | 10, inputs 5 cycles |
+| Glassworks | 3 x 6 | 40 Stone, 20 Wood | 2 Sand | | | 10 |
+
+- The small providers and the Glassworks are tier 0; the Pumping Station, Sand Dredge, Lumber
+  Mill, Drill Rig, and Refinery tier 1. A Pumping Station is four Pumps' worth for some Power, and
+  a Sand Dredge four Collectors'.
+- **The Glassworks** is a furnace: it burns fuel like the Smelter (Coal, Charcoal, or Wood, Best by
+  default) and needs no power. Its Glass goes to the Cargo pool.
 
 - **The Water Wheel's placement** (`CanPlaceAcrossRiver`): its whole footprint lies within one map
   cell whose river is Straight, its 4-unit side across the flow (facing North or South on a
@@ -159,7 +182,7 @@ loop.
 
 ### Fuel
 
-- A fuel burner (the Burner Generator, the Smelter) has a **fuel slot** (`FuelSlot`, unburned units
+- A fuel burner (the Burner Generator, the Smelter, the Glassworks) has a **fuel slot** (`FuelSlot`, unburned units
   by type) and a fire: the unit burning (`Burning`) and its seconds left (`BurnLeft`). When the fire
   is out it takes the next unit, from the slot first and then, online, from storage, and burns it
   for its burn time (resources.md). A unit taken is spent: switching off or destroying the building
@@ -228,9 +251,10 @@ loop.
   nowhere to go, before a cycle or with a finished one waiting, is idle "Storage full: Iron" online
   or "Full: collect by hand" offline; otherwise it works during a cycle, else is idle "Waiting for"
   its missing inputs ("Waiting for Crude Oil", and offline "Waiting for Iron Ore (load by hand)").
-  A powered building that is offline is idle "No power: offline", and in a blackout "Blackout"
-  (checked first). A fuel burner with no fuel at hand is idle "Waiting for fuel" (offline "Waiting
-  for fuel (load by hand)"); an offline generator is idle "Offline: supplies nothing". Storage
+  A consumer that is offline is idle "No Power: offline" (naming the first type it draws, in
+  `CapacityType` order), and in a blackout of a type it draws "Blackout: Water" (checked first). A
+  fuel burner with no fuel at hand is idle "Waiting for fuel" (offline "Waiting for fuel (load by
+  hand)"); an offline provider is idle "Offline: supplies nothing". Storage
   buildings and hubs report Working (they do no work).
 - A permanent building (the HQ) cannot be switched off or destroyed: `SetBuildingEnabled` and
   `TryDestroyBuilding` return false for it.
@@ -271,8 +295,15 @@ loop.
   banks, a generator housing on one, blue), Burner Generator (a banded boiler with a chimney, a
   coal hopper at the front, and a yellow junction box, orange-red), Lumber Mill (a saw hall with a
   yellow powered stripe, logs feeding in at the front, and a plank stack), Drill Rig (a steel
-  derrick over a drill head, an orange motor house at the front with a yellow band, an ore pile);
-  every powered building also has a wooden power pole with a yellow band. The front
+  derrick over a drill head, an orange motor house at the front with a yellow band, an ore pile),
+  Water Pump (a plank pump house with a light-blue roof, an intake pipe bending down off the front,
+  and a hand-wheel valve), Pumping Station (a pump hall with two intake pipes off the front, a
+  banded water tank, light blue), Sand Collector (a hopper on four legs over a sand pile with a
+  chute to the front, tan), Sand Dredge (a scoop wheel over a sand pit at the front, a conveyor up
+  to a hopper, a motor house, tan), Glassworks (a long works: a stone furnace with a glowing kiln
+  mouth at the back, a cooling line of panes down its length under an open roof frame, and a rack
+  of finished panes at the front, pale cyan); every powered building also has a wooden power pole
+  with a yellow band. The front
   marks the facing, so a
   rotated building reads as rotated.
 - `BuildController` drives build mode: a building is selected from the build menu (B; see

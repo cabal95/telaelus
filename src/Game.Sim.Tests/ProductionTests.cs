@@ -30,6 +30,7 @@ public class ProductionTests
         sim.Debug.PlaceBuilding(BuildingType.TankFarm, SimTestHelpers.ClearX + 4, SimTestHelpers.ClearZ, Facing.North);
         sim.Debug.SeedStockpile(ResourceType.Coal, 5f);
         sim.Debug.PlaceBuilding(BuildingType.BurnerGenerator, SimTestHelpers.ClearX - 3, SimTestHelpers.ClearZ, Facing.North);
+        sim.Debug.PlaceBuilding(BuildingType.WaterPump, SimTestHelpers.PondPumpX, SimTestHelpers.PondPumpZ, Facing.North);
 
         SimTestHelpers.Ticks(sim, JustOver33Seconds);
 

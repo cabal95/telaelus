@@ -79,7 +79,7 @@ public partial class BuildingDetail : Dialog
         _turntable = new TurntableView();
         center.AddChild(_turntable);
 
-        _rows = new StatusRows("Network", "Switch", "Power", "State", "In range", "Working on", "Recipe", "Buffer", "Burning", "Links", "Reach");
+        _rows = new StatusRows("Network", "Switch", "Power", "Water", "Sand", "State", "In range", "Working on", "Recipe", "Buffer", "Burning", "Links", "Reach");
         Body.AddChild(_rows);
 
         _progressLabel = UiTheme.MakeLabel("Progress", UiTheme.SmallSize, UiTheme.TextDim);
@@ -194,7 +194,10 @@ public partial class BuildingDetail : Dialog
         BuildingStatus status = _sim.BuildingStatusOf(building);
         bool storage = def.Storage != StorageRole.None;
         _rows.Set("Switch", storage ? null : building.Enabled ? "On" : "Off");
-        _rows.Set("Power", PowerRowText(building));
+        foreach (CapacityType capacity in Simulation.CapacityTypes)
+        {
+            _rows.Set(capacity.ToString(), CapacityRowText(building, capacity));
+        }
         _rows.Set("Burning", BurningText(building));
         RefreshFuel(building);
         bool works = !storage && !def.IsHub;
@@ -324,26 +327,37 @@ public partial class BuildingDetail : Dialog
         return text;
     }
 
-    /// <summary>The Power row: what a powered building draws and how fast it runs, or what a generator supplies.</summary>
-    private string? PowerRowText(Building building)
+    /// <summary>
+    /// A capacity row (Power, Water, Sand): what a consumer draws and how fast that type runs, or
+    /// what a provider supplies (less when its own draws slow it), or null when it neither.
+    /// </summary>
+    private string? CapacityRowText(Building building, CapacityType capacity)
     {
         BuildingDef def = building.Def;
-        if (def.PowerDraw > 0f)
+        float draw = def.Draw(capacity);
+        if (draw > 0f)
         {
             if (!building.Online)
             {
-                return "No power: offline";
+                return $"No {capacity}: offline";
             }
-            return _sim.PowerState switch
+            CapacityReading reading = _sim.Capacity(capacity);
+            return reading.State switch
             {
-                PowerState.Blackout => $"Draws {def.PowerDraw:0}: blackout",
-                PowerState.Brownout => $"Draws {def.PowerDraw:0} (running at {_sim.PowerSpeed * 100f:0}%)",
-                _ => $"Draws {def.PowerDraw:0}"
+                CapacityState.Blackout => $"Draws {draw:0}: blackout",
+                CapacityState.Brownout => $"Draws {draw:0} (running at {reading.Speed * 100f:0}%)",
+                _ => $"Draws {draw:0}"
             };
         }
-        if (def.PowerSupply > 0f)
+        float supply = def.Supply(capacity);
+        if (supply > 0f)
         {
-            return building.Online ? $"Supplies {def.PowerSupply:0}" : "Offline: supplies nothing";
+            if (!building.Online)
+            {
+                return "Offline: supplies nothing";
+            }
+            float speed = _sim.WorkSpeed(building);
+            return speed < 1f ? $"Supplies {supply * speed:0.#} of {supply:0}" : $"Supplies {supply:0}";
         }
         return null;
     }
@@ -401,7 +415,8 @@ public partial class BuildingDetail : Dialog
     {
         static string Amounts(IEnumerable<ResourceAmount> amounts) =>
             string.Join(" + ", amounts.Select(a => $"{(int)a.Amount} {ResourceDefs.For(a.Type).Name}"));
-        return $"{Amounts(recipe.Inputs)} to {Amounts(recipe.Outputs)}, {recipe.CycleTime:0.#} s";
+        string makes = recipe.Inputs.Count == 0 ? Amounts(recipe.Outputs) : $"{Amounts(recipe.Inputs)} to {Amounts(recipe.Outputs)}";
+        return $"{makes}, {recipe.CycleTime:0.#} s";
     }
 
     private string RefundText(Building building)
