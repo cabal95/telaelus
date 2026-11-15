@@ -57,6 +57,70 @@ public static class NodeModels
                 "nature/crude_oil_c"
             },
             0.05f),
+        [ResourceType.Bauxite] = new ModelSpec(
+            new[]
+            {
+                "nature/bauxite_a",
+                "nature/bauxite_b",
+                "nature/bauxite_c"
+            },
+            0.7f),
+        [ResourceType.Quartz] = new ModelSpec(
+            new[]
+            {
+                "nature/quartz_a",
+                "nature/quartz_b",
+                "nature/quartz_c"
+            },
+            0.9f),
+        [ResourceType.Limestone] = new ModelSpec(
+            new[]
+            {
+                "nature/limestone_a",
+                "nature/limestone_b",
+                "nature/limestone_c"
+            },
+            0.8f),
+        [ResourceType.Sulfur] = new ModelSpec(
+            new[]
+            {
+                "nature/sulfur_a",
+                "nature/sulfur_b",
+                "nature/sulfur_c"
+            },
+            0.5f),
+        [ResourceType.TitaniumOre] = new ModelSpec(
+            new[]
+            {
+                "nature/titanium_ore_a",
+                "nature/titanium_ore_b",
+                "nature/titanium_ore_c"
+            },
+            0.8f),
+        [ResourceType.RareEarths] = new ModelSpec(
+            new[]
+            {
+                "nature/rare_earths_a",
+                "nature/rare_earths_b",
+                "nature/rare_earths_c"
+            },
+            0.7f),
+        [ResourceType.UraniumOre] = new ModelSpec(
+            new[]
+            {
+                "nature/uranium_ore_a",
+                "nature/uranium_ore_b",
+                "nature/uranium_ore_c"
+            },
+            0.7f),
+        [ResourceType.Crystals] = new ModelSpec(
+            new[]
+            {
+                "nature/crystals_a",
+                "nature/crystals_b",
+                "nature/crystals_c"
+            },
+            1.1f),
         [ResourceType.Wood] = TreeFamily("broadleaf")
     };
 
@@ -152,10 +216,10 @@ public static class NodeModels
         return (path, transform);
     }
 
-    /// <summary>Tree height for a Wood field: 2.5 units at 250 or less, rising to 3.5 at 500 or more.</summary>
+    /// <summary>Tree height for a Wood field: 2.5 units at 1000 or less (a Grassland or Swamp field), rising to 3.5 at 2000 or more (a Forest field).</summary>
     public static float WoodHeight(float initialAmount)
     {
-        return 2.5f + Mathf.Clamp((initialAmount - 250f) / 250f, 0f, 1f);
+        return 2.5f + Mathf.Clamp((initialAmount - 1000f) / 1000f, 0f, 1f);
     }
 
     private static float DeterministicYaw(int seedId)

@@ -49,7 +49,7 @@ public class ExtractorTests
         Assert.True(first.Depleted);
         Assert.DoesNotContain(first, sim.Fields);
         Assert.Same(second, mine.CurrentField);
-        Assert.Equal(249f, second.Amount);
+        Assert.Equal(999f, second.Amount);
         Assert.Equal(3f, SimTestHelpers.Gathered(sim, ResourceType.IronOre));
     }
 
@@ -91,7 +91,23 @@ public class ExtractorTests
         SimTestHelpers.Seconds(sim, 8.1);
 
         // One unit each, together faster than the player.
-        Assert.Equal(248f, field.Amount);
+        Assert.Equal(998f, field.Amount);
         Assert.Equal(2f, SimTestHelpers.Gathered(sim, ResourceType.IronOre));
+    }
+
+    [Fact]
+    public void AMine_WorksTheCommonNewDeposits_AndADrillRigThePreciousOnes()
+    {
+        var sim = new Simulation();
+        sim.Debug.ResetToEmptyMap();
+        sim.Debug.PlaceField(ResourceType.Limestone, 5, 5);
+        sim.Debug.PlaceField(ResourceType.Crystals, 10, 5);
+        Building mine = sim.Debug.PlaceBuilding(BuildingType.Mine, 22, 24, Facing.North);
+        Building rig = sim.Debug.PlaceBuilding(BuildingType.DrillRig, 41, 24, Facing.North);
+        SimTestHelpers.Ticks(sim, 1);
+
+        Assert.Equal(ResourceType.Limestone, mine.CurrentField?.Type);
+        Assert.Equal(ResourceType.Crystals, rig.CurrentField?.Type);
+        Assert.DoesNotContain(ResourceType.Crystals, BuildingDefs.For(BuildingType.Mine).Works);
     }
 }

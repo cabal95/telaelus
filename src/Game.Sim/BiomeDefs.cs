@@ -16,7 +16,7 @@ public sealed record BiomeDef(
     IReadOnlyDictionary<ResourceType, int> FieldWeights)
 {
     /// <summary>The amount a field gets when placed without one and the biome does not list its type.</summary>
-    public const float DefaultFieldAmount = 250f;
+    public const float DefaultFieldAmount = 1000f;
 
     /// <summary>The biome's amount for a field type, or the global default when it does not list the type.</summary>
     public float FieldAmount(ResourceType type)
@@ -57,25 +57,27 @@ public static class BiomeDefs
         TerrainType.Grass,
         new Dictionary<ResourceType, float>
         {
-            [ResourceType.Wood] = 250f,
-            [ResourceType.Stone] = 250f,
-            [ResourceType.IronOre] = 250f
+            [ResourceType.Wood] = 1000f,
+            [ResourceType.Stone] = 1000f,
+            [ResourceType.IronOre] = 1000f,
+            [ResourceType.Limestone] = 1000f
         },
-        0.04f,
+        0.013f,
         new Dictionary<ResourceType, int>
         {
             [ResourceType.Wood] = 2,
             [ResourceType.Stone] = 1,
-            [ResourceType.IronOre] = 1
+            [ResourceType.IronOre] = 1,
+            [ResourceType.Limestone] = 1
         });
 
     private static readonly BiomeDef Forest = new(
         TerrainType.Grass,
         new Dictionary<ResourceType, float>
         {
-            [ResourceType.Wood] = 500f
+            [ResourceType.Wood] = 2000f
         },
-        0.30f,
+        0.15f,
         new Dictionary<ResourceType, int>
         {
             [ResourceType.Wood] = 1
@@ -85,70 +87,94 @@ public static class BiomeDefs
         TerrainType.Rock,
         new Dictionary<ResourceType, float>
         {
-            [ResourceType.IronOre] = 400f,
-            [ResourceType.CopperOre] = 300f,
-            [ResourceType.Coal] = 400f,
-            [ResourceType.Stone] = 400f
+            [ResourceType.IronOre] = 1600f,
+            [ResourceType.CopperOre] = 1200f,
+            [ResourceType.Coal] = 1600f,
+            [ResourceType.Stone] = 1600f,
+            [ResourceType.Bauxite] = 1600f,
+            [ResourceType.Limestone] = 1600f,
+            [ResourceType.Quartz] = 1600f
         },
-        0.07f,
+        0.023f,
         new Dictionary<ResourceType, int>
         {
             [ResourceType.IronOre] = 3,
             [ResourceType.CopperOre] = 2,
             [ResourceType.Coal] = 2,
-            [ResourceType.Stone] = 2
+            [ResourceType.Stone] = 2,
+            [ResourceType.Bauxite] = 1,
+            [ResourceType.Limestone] = 1,
+            [ResourceType.Quartz] = 1
         });
 
     private static readonly BiomeDef Desert = new(
         TerrainType.Sand,
         new Dictionary<ResourceType, float>
         {
-            [ResourceType.CopperOre] = 250f,
-            [ResourceType.CrudeOil] = 500f
+            [ResourceType.CopperOre] = 1000f,
+            [ResourceType.CrudeOil] = 2000f,
+            [ResourceType.Bauxite] = 1000f,
+            [ResourceType.TitaniumOre] = 1000f
         },
-        0.04f,
+        0.013f,
         new Dictionary<ResourceType, int>
         {
             [ResourceType.CopperOre] = 1,
-            [ResourceType.CrudeOil] = 2
+            [ResourceType.CrudeOil] = 2,
+            [ResourceType.Bauxite] = 1,
+            [ResourceType.TitaniumOre] = 1
         });
 
     private static readonly BiomeDef Swamp = new(
         TerrainType.Mud,
         new Dictionary<ResourceType, float>
         {
-            [ResourceType.Wood] = 250f
+            [ResourceType.Wood] = 1000f,
+            [ResourceType.Sulfur] = 1000f
         },
-        0.06f,
+        0.02f,
         new Dictionary<ResourceType, int>
         {
-            [ResourceType.Wood] = 1
+            [ResourceType.Wood] = 2,
+            [ResourceType.Sulfur] = 1
         });
 
     private static readonly BiomeDef Tundra = new(
         TerrainType.Snow,
         new Dictionary<ResourceType, float>
         {
-            [ResourceType.IronOre] = 250f
+            [ResourceType.IronOre] = 1000f,
+            [ResourceType.Quartz] = 1000f,
+            [ResourceType.TitaniumOre] = 1000f,
+            [ResourceType.RareEarths] = 600f,
+            [ResourceType.UraniumOre] = 600f
         },
-        0.03f,
+        0.01f,
         new Dictionary<ResourceType, int>
         {
-            [ResourceType.IronOre] = 1
+            [ResourceType.IronOre] = 2,
+            [ResourceType.Quartz] = 1,
+            [ResourceType.TitaniumOre] = 1,
+            [ResourceType.RareEarths] = 1,
+            [ResourceType.UraniumOre] = 1
         });
 
     private static readonly BiomeDef Volcanic = new(
         TerrainType.Rock,
         new Dictionary<ResourceType, float>
         {
-            [ResourceType.IronOre] = 400f,
-            [ResourceType.Stone] = 400f
+            [ResourceType.IronOre] = 1600f,
+            [ResourceType.Stone] = 1600f,
+            [ResourceType.Sulfur] = 1600f,
+            [ResourceType.Crystals] = 400f
         },
-        0.04f,
+        0.013f,
         new Dictionary<ResourceType, int>
         {
-            [ResourceType.IronOre] = 1,
-            [ResourceType.Stone] = 1
+            [ResourceType.IronOre] = 2,
+            [ResourceType.Stone] = 2,
+            [ResourceType.Sulfur] = 2,
+            [ResourceType.Crystals] = 1
         });
 
     private static readonly BiomeDef Ocean = new(

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Godot;
 
 namespace Game.Sim.Tests;
@@ -151,6 +152,65 @@ public class WorldGenTests
                 }
             }
         }
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(3)]
+    [InlineData(4)]
+    [InlineData(5)]
+    [InlineData(6)]
+    [InlineData(7)]
+    [InlineData(8)]
+    [InlineData(9)]
+    [InlineData(10)]
+    public void TheStarterSet_LiesInTheRing_OnOpenCells_TouchingNoOtherField(int seed)
+    {
+        Simulation sim = Generated(seed);
+        WorldGenerator generator = sim.Generator!;
+        (int sx, int sz) = generator.SpawnCell;
+
+        Assert.Equal(new[] { ResourceType.Wood, ResourceType.Wood, ResourceType.Stone }, generator.StarterFields.Select(f => f.Type));
+        foreach ((ResourceType type, int x, int z) in generator.StarterFields)
+        {
+            ResourceField? field = sim.FieldAt(x * Simulation.FineCellsPerMapCell, z * Simulation.FineCellsPerMapCell);
+            Assert.NotNull(field);
+            Assert.Equal(type, field.Type);
+            Assert.Equal(WorldGenerator.StarterFieldAmount, field.InitialAmount);
+            float distance = MathF.Sqrt((x - sx) * (x - sx) + (z - sz) * (z - sz));
+            Assert.InRange(distance, WorldGenerator.StarterRingMin, WorldGenerator.StarterRingMax);
+            Assert.Equal(MapFeature.None, sim.MapFeatureAt(x, z));
+            Assert.True(TerrainDefs.For(sim.MapTerrainAt(x, z)).Walkable);
+            Assert.DoesNotContain(sim.Fields, other => other != field && Math.Abs(other.MapX - x) <= 1 && Math.Abs(other.MapZ - z) <= 1);
+        }
+    }
+
+    [Fact]
+    public void TheNewDeposits_GenerateInTheirBiomes()
+    {
+        var found = new HashSet<ResourceType>();
+        for (int seed = 1; seed <= 6 && found.Count < 8; seed++)
+        {
+            Simulation sim = Generated(seed);
+            for (int cx = -2; cx <= 2; cx++)
+            {
+                for (int cz = -2; cz <= 2; cz++)
+                {
+                    sim.MapTerrainAt(Chunk.Origin(cx), Chunk.Origin(cz));
+                }
+            }
+            foreach (ResourceField field in sim.Fields)
+            {
+                found.Add(field.Type);
+            }
+        }
+        ResourceType[] newer =
+        {
+            ResourceType.Bauxite, ResourceType.Quartz, ResourceType.Limestone, ResourceType.Sulfur,
+            ResourceType.TitaniumOre, ResourceType.RareEarths, ResourceType.UraniumOre, ResourceType.Crystals
+        };
+        Assert.All(newer, type => Assert.Contains(type, found));
     }
 
     [Fact]

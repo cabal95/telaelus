@@ -149,6 +149,12 @@ Emissive materials glow at half their base color. Mountains keep their own stone
 ### Scale
 
 - 1 fine cell = 1 unit; 1 map cell = 4 x 4 units.
+- The newer deposits' field models (resource_gen.py) match their item icons: Bauxite reddish-brown
+  clay lumps with pale streaks; Quartz a grey rock with milky six-sided points; Limestone stacked
+  cream slabs; Sulfur a yellow crust with bright knobs over grey rock; Titanium Ore dark rock with
+  metallic blue-grey veins; Rare Earths pale rock flecked pink and violet; Uranium Ore dark rock
+  with faintly glowing yellow-green veins (`uranium_glow`); Crystals tall violet shards with
+  glowing tips (`crystal_light`).
 - Size targets: the player about 1.4 tall, deposits (Iron Ore and Copper Ore about 0.8, Coal 0.6,
   Stone 0.9; Crude Oil is a flat pool about 0.05 high), trees 2.5 to 3.5 (by field size),
   mountains 3.2 to 3.5, buildings 1.2 to 2.2 (see buildings.md), a truck 1.6 long, 0.8 wide, and

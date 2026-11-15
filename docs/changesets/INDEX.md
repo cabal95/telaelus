@@ -128,6 +128,10 @@ Newest last. One line each; open the file for the full spec.
   buys up to four; trucks dispatch themselves to the fullest collector buffer (10 or more), load one
   resource, drive it to the HQ, unload into storage, and park; A* paths in the sim over walkable
   cells; truck models with their cargo, the Depot panel, and a collector's Truck row.
+- **2611142231-field-rebalance** - Makes fields fewer and larger (four times the amount, a third the
+  density, the Forest half); a starter set of two Wood and one Stone in sight of the spawn; fields
+  and field models for Bauxite, Quartz, Limestone, Sulfur, Titanium Ore, Rare Earths, Uranium Ore,
+  and Crystals, worked by the Mine and Drill Rig.
 
 ## Adding a changeset
 

@@ -123,14 +123,19 @@ and `FieldWeights`):
 
 | Biome | Density | Deposits (weight) |
 |---|---|---|
-| Grassland | 0.04 | Wood (2), Stone (1), Iron Ore (1) |
-| Forest | 0.30 | Wood (1) |
-| Highlands | 0.07 | Iron Ore (3), Copper Ore (2), Coal (2), Stone (2) |
-| Desert | 0.04 | Copper Ore (1), Crude Oil (2) |
-| Swamp | 0.06 | Wood (1) |
-| Tundra | 0.03 | Iron Ore (1) |
-| Volcanic | 0.04 | Iron Ore (1), Stone (1) |
+| Grassland | 0.013 | Wood (2), Stone (1), Iron Ore (1), Limestone (1) |
+| Forest | 0.15 | Wood (1) |
+| Highlands | 0.023 | Iron Ore (3), Copper Ore (2), Coal (2), Stone (2), Bauxite (1), Limestone (1), Quartz (1) |
+| Desert | 0.013 | Copper Ore (1), Crude Oil (2), Bauxite (1), Titanium Ore (1) |
+| Swamp | 0.02 | Wood (2), Sulfur (1) |
+| Tundra | 0.01 | Iron Ore (2), Quartz (1), Titanium Ore (1), Rare Earths (1), Uranium Ore (1) |
+| Volcanic | 0.013 | Iron Ore (2), Stone (2), Sulfur (2), Crystals (1) |
 | Ocean | 0 | none |
+
+Amounts (resources.md has the full table) are 1000 for most Grassland, Desert, Swamp, and Tundra
+fields, 1600 in Highlands and Volcanic, 2000 for Forest Wood and Crude Oil, and 600 or 400 for the
+precious Rare Earths, Uranium Ore, and Crystals: fewer and larger fields than at first (four times
+the amount, a third of the density, the Forest half), so a found field lasts most of the mid game.
 
 A cell is a candidate when a hash falls below its biome's density, its terrain is walkable, it has
 no feature, and it is not within 2 cells of the spawn; a candidate becomes a field only if none of
@@ -155,8 +160,15 @@ second hash picks the type by weight, and the field takes the biome's amount for
   field lies within `SpawnFieldGap` (2) cells of it.
 - The HQ stands just north of the spawn (`HqAnchor`, see buildings.md): no field is placed on a
   map cell under its footprint, the same way none is placed near the spawn.
-- Resources are not placed for the player: the deposits around the spawn come from ordinary
-  generation, so finding them is part of exploring.
+- **The starter set** (`StarterSet`: Wood, Wood, Stone; `StarterFields` lists where they went) is
+  the one thing placed for the player: building materials only, so ores, Coal, and Crude Oil are
+  found by exploring. With the spawn chosen, its already generated chunks are searched for open
+  cells (walkable, no feature, not near the spawn or under the HQ, no rolled field) between
+  `StarterRingMin` (4) and `StarterRingMax` (6) map cells of the spawn, inside the starting sight;
+  the ring widens a cell at a time up to `StarterRingLimit` (16) if too few are open. Cells are
+  taken in an order hashed from the seed (`SaltStarter`), none touching another starter field;
+  each holds `StarterFieldAmount` (1000) whatever its biome. Rolled fields touching a starter field
+  are dropped, so fields still never touch. The bounded maps have no starter set.
 
 ## Related
 

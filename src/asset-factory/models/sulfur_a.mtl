@@ -1,0 +1,15 @@
+newmtl sulfur_85
+Kd 0.782 0.714 0.170
+
+newmtl ore_rock_dark
+Kd 0.400 0.400 0.410
+
+newmtl sulfur_95
+Kd 0.874 0.798 0.190
+
+newmtl sulfur_108
+Kd 0.994 0.907 0.216
+
+newmtl sulfur
+Kd 0.920 0.840 0.200
+

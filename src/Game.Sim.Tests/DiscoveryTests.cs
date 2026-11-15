@@ -129,7 +129,10 @@ public class DiscoveryTests
             ResourceType.Water
         };
         Assert.All(starting, type => Assert.True(sim.IsDiscovered(type), $"{type} should be discovered"));
-        Assert.False(sim.IsDiscovered(ResourceType.Bauxite));
+        // The test map places one field of each newer deposit too.
+        Assert.True(sim.IsDiscovered(ResourceType.Bauxite));
+        Assert.True(sim.IsDiscovered(ResourceType.Crystals));
+        Assert.False(sim.IsDiscovered(ResourceType.Lithium));
         Assert.False(sim.IsDiscovered(ResourceType.Iron));
     }
 }

@@ -16,7 +16,7 @@
     { "wait": 2 },
     { "expect": "ui.open", "equals": "fieldDetail" },
     { "expect": "ui.title", "equals": "Iron Ore" },
-    { "expect": "ui.rows.remaining", "equals": "250 / 250" },
+    { "expect": "ui.rows.remaining", "equals": "1000 / 1000" },
     { "expect": "ui.rows.workedBy", "equals": "nothing" },
     { "comment": "The biome and gather speeds are not shown.", "expect": "ui.rows.biome", "exists": false },
 
@@ -28,7 +28,7 @@
     { "expect": "focusedField", "notEquals": null },
     { "expect": "ui.rows.workedBy", "equals": "2 Mines" },
     { "comment": "Each Mine takes a unit of Iron Ore every 8 s.", "wait": 250 },
-    { "expect": "ui.rows.remaining", "equals": "248 / 250" },
+    { "expect": "ui.rows.remaining", "equals": "998 / 1000" },
     { "screenshot": "ore-field" },
 
     { "comment": "Clicking a building switches to its panel.", "aimAt": { "world": [45, 35] } },
@@ -44,7 +44,7 @@
     { "wait": 2 },
     { "expect": "ui.open", "equals": "fieldDetail" },
     { "expect": "ui.title", "equals": "Wood" },
-    { "expect": "ui.rows.remaining", "equals": "500 / 500" },
+    { "expect": "ui.rows.remaining", "equals": "2000 / 2000" },
     { "screenshot": "forest-field" },
 
     { "comment": "Empty ground closes the panel.", "aimAt": { "world": [34, 30] } },

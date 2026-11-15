@@ -141,6 +141,10 @@ public sealed partial class Simulation
         {
             AddField(type, mapX, mapZ);
         }
+        foreach ((ResourceType type, int mapX, int mapZ) in generated.StarterFields)
+        {
+            AddField(type, mapX, mapZ, WorldGenerator.StarterFieldAmount);
+        }
         DiscoverChunkWithoutFog(generated.Chunk);
         ChunkGenerated?.Invoke(chunkX, chunkZ);
         return generated.Chunk;

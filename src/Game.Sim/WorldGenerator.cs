@@ -1,11 +1,16 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Godot;
 
 namespace Game.Sim;
 
 /// <summary>A freshly generated chunk and the deposit fields to add for it.</summary>
-public sealed record GeneratedChunk(Chunk Chunk, IReadOnlyList<(ResourceType Type, int MapX, int MapZ)> Fields);
+public sealed record GeneratedChunk(Chunk Chunk, IReadOnlyList<(ResourceType Type, int MapX, int MapZ)> Fields)
+{
+    /// <summary>The starter set's fields in this chunk, each holding <see cref="WorldGenerator.StarterFieldAmount"/>.</summary>
+    public IReadOnlyList<(ResourceType Type, int MapX, int MapZ)> StarterFields { get; init; } = Array.Empty<(ResourceType, int, int)>();
+}
 
 /// <summary>
 /// Generates a world chunk by chunk from a seed and a planet. Everything is a pure
@@ -58,6 +63,26 @@ public sealed class WorldGenerator
     private const int SaltDeposit = 17000;
     private const int SaltDepositType = 18000;
     private const int SaltSpawn = 19000;
+    private const int SaltStarter = 20000;
+
+    /// <summary>The fields every generated world gets near its spawn: building materials only.</summary>
+    public static readonly IReadOnlyList<ResourceType> StarterSet = new[]
+    {
+        ResourceType.Wood,
+        ResourceType.Wood,
+        ResourceType.Stone
+    };
+
+    /// <summary>What each starter field holds, whatever biome it lands in.</summary>
+    public const float StarterFieldAmount = 1000f;
+
+    /// <summary>Starter fields lie this many map cells from the spawn cell or more...</summary>
+    public const int StarterRingMin = 4;
+
+    /// <summary>...and this many or fewer (inside the starting sight of 6 map cells), widening a cell at a time up to <see cref="StarterRingLimit"/> when the ring has too few open cells.</summary>
+    public const int StarterRingMax = 6;
+
+    public const int StarterRingLimit = 16;
 
     private readonly record struct Climate(float Continental, float Temperature, float Moisture, float Rugged, float Hotspot);
 
@@ -114,6 +139,90 @@ public sealed class WorldGenerator
         SetSpawn(cell);
         _ready = checkedChunks;
         SpawnAttemptsUsed = attempts;
+        PlaceStarterSet();
+    }
+
+    /// <summary>The starter set's cells, chosen with the spawn.</summary>
+    public IReadOnlyList<(ResourceType Type, int MapX, int MapZ)> StarterFields { get; private set; } = Array.Empty<(ResourceType, int, int)>();
+
+    /// <summary>
+    /// Chooses the starter set's cells among the spawn's chunks (already generated for the spawn
+    /// check): open cells (walkable, no feature, not near the spawn or under the HQ, no rolled
+    /// field) in the ring around the spawn, in an order hashed from the seed, none touching another
+    /// starter field. Rolled fields touching a starter field are dropped, so fields never touch.
+    /// </summary>
+    private void PlaceStarterSet()
+    {
+        var rolled = new HashSet<(int, int)>();
+        foreach (GeneratedChunk generated in _ready.Values)
+        {
+            foreach ((ResourceType _, int x, int z) in generated.Fields)
+            {
+                rolled.Add((x, z));
+            }
+        }
+
+        var chosen = new List<(ResourceType Type, int MapX, int MapZ)>();
+        for (int ring = StarterRingMax; ring <= StarterRingLimit && chosen.Count < StarterSet.Count; ring++)
+        {
+            chosen.Clear();
+            var candidates = new List<(int X, int Z)>();
+            for (int x = SpawnCell.X - ring; x <= SpawnCell.X + ring; x++)
+            {
+                for (int z = SpawnCell.Z - ring; z <= SpawnCell.Z + ring; z++)
+                {
+                    int dx = x - SpawnCell.X;
+                    int dz = z - SpawnCell.Z;
+                    int squared = dx * dx + dz * dz;
+                    if (squared >= StarterRingMin * StarterRingMin && squared <= ring * ring && IsStarterOpen(x, z, rolled))
+                    {
+                        candidates.Add((x, z));
+                    }
+                }
+            }
+            candidates.Sort((a, b) => Noise.Hash01(Seed, SaltStarter, a.X, a.Z).CompareTo(Noise.Hash01(Seed, SaltStarter, b.X, b.Z)));
+            foreach (ResourceType type in StarterSet)
+            {
+                foreach ((int x, int z) in candidates)
+                {
+                    if (!chosen.Exists(c => Math.Abs(c.MapX - x) <= 1 && Math.Abs(c.MapZ - z) <= 1))
+                    {
+                        chosen.Add((type, x, z));
+                        break;
+                    }
+                }
+            }
+        }
+        StarterFields = chosen;
+
+        foreach ((int, int) key in new List<(int, int)>(_ready.Keys))
+        {
+            GeneratedChunk generated = _ready[key];
+            var kept = generated.Fields
+                .Where(f => !chosen.Exists(c => Math.Abs(c.MapX - f.MapX) <= 1 && Math.Abs(c.MapZ - f.MapZ) <= 1))
+                .ToList();
+            var starters = chosen
+                .Where(c => Chunk.Of(c.MapX) == generated.Chunk.ChunkX && Chunk.Of(c.MapZ) == generated.Chunk.ChunkZ)
+                .ToList();
+            _ready[key] = generated with
+            {
+                Fields = kept,
+                StarterFields = starters
+            };
+        }
+    }
+
+    private bool IsStarterOpen(int x, int z, HashSet<(int, int)> rolled)
+    {
+        if (NearSpawn(x, z) || rolled.Contains((x, z))
+            || !_ready.TryGetValue((Chunk.Of(x), Chunk.Of(z)), out GeneratedChunk? generated))
+        {
+            return false;
+        }
+        Chunk chunk = generated.Chunk;
+        int lx = x - Chunk.Origin(chunk.ChunkX);
+        int lz = z - Chunk.Origin(chunk.ChunkZ);
+        return TerrainDefs.For(chunk.TerrainAt(lx, lz)).Walkable && chunk.FeatureAt(lx, lz) == MapFeature.None;
     }
 
     // Chunks generated while checking the chosen spawn, handed out once by Generate.

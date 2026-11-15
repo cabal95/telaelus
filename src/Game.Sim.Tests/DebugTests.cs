@@ -63,7 +63,7 @@ public class DebugTests
         sim.Debug.ResetToEmptyMap();
         ResourceField field = sim.Debug.PlaceField(ResourceType.IronOre, 10, 10);
 
-        sim.Debug.SetFieldAmount(10, 10, 120f);
+        sim.Debug.SetFieldAmount(10, 10, 520f);
         Assert.Equal(3, field.Stage);
 
         sim.Debug.SetFieldAmount(10, 10, 0f);
@@ -78,7 +78,7 @@ public class DebugTests
         sim.Debug.RemoveField(10, 9);
 
         Assert.Null(sim.FieldAt(40, 36));
-        Assert.Equal(13, sim.Fields.Count);
+        Assert.Equal(21, sim.Fields.Count);
         Assert.Throws<InvalidOperationException>(() => sim.Debug.RemoveField(10, 9));
     }
 

@@ -304,8 +304,9 @@ public sealed partial class Simulation
     }
 
     /// <summary>
-    /// The test map's fields; each takes its biome's amount. In all: 1150 Iron Ore, 300 Copper Ore,
-    /// 400 Coal, 650 Stone, 1750 Wood, and 1000 Crude Oil.
+    /// The test map's fields; each takes its biome's amount. In all: 4600 Iron Ore, 1200 Copper Ore,
+    /// 1600 Coal, 2600 Stone, 7000 Wood, and 4000 Crude Oil, and one field of each deposit no early
+    /// building uses (Crystals on the Highlands, as the map has no Volcanic biome).
     /// </summary>
     private void SpawnInitialFields()
     {
@@ -324,7 +325,15 @@ public sealed partial class Simulation
             (ResourceType.Wood, 12, 3),
             (ResourceType.Stone, 7, 10),
             (ResourceType.CrudeOil, 14, 6),
-            (ResourceType.CrudeOil, 15, 7)
+            (ResourceType.CrudeOil, 15, 7),
+            (ResourceType.Limestone, 12, 14),
+            (ResourceType.Sulfur, 6, 1),
+            (ResourceType.Crystals, 0, 11),
+            (ResourceType.Quartz, 13, 0),
+            (ResourceType.RareEarths, 13, 2),
+            (ResourceType.UraniumOre, 15, 3),
+            (ResourceType.Bauxite, 15, 12),
+            (ResourceType.TitaniumOre, 13, 12)
         };
 
         foreach ((ResourceType type, int mapX, int mapZ) in placements)

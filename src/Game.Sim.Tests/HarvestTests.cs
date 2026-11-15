@@ -44,7 +44,7 @@ public class HarvestTests
 
         SimTestHelpers.Seconds(sim, 0.2);
         Assert.Equal(1f, SimTestHelpers.Stock(sim, ResourceType.IronOre));
-        Assert.Equal(249f, field.Amount);
+        Assert.Equal(999f, field.Amount);
         Assert.InRange(sim.HarvestProgress, 0f, 0.05f);
     }
 

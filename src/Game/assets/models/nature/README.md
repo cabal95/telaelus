@@ -13,6 +13,14 @@ Every file is required: the game throws if one is missing.
 | Coal | `coal_a.glb` to `coal_c.glb` | about 0.6 | generated |
 | Stone | `stone_a.glb` to `stone_c.glb` | about 0.9 | generated |
 | Crude Oil | `crude_oil_a.glb` to `crude_oil_c.glb` | flat (about 0.05), sized by its slot | generated |
+| Bauxite | `bauxite_a.glb` to `bauxite_c.glb` | about 0.7 | generated |
+| Quartz | `quartz_a.glb` to `quartz_c.glb` | about 0.9 | generated |
+| Limestone | `limestone_a.glb` to `limestone_c.glb` | about 0.8 | generated |
+| Sulfur | `sulfur_a.glb` to `sulfur_c.glb` | about 0.5 | generated |
+| Titanium Ore | `titanium_ore_a.glb` to `titanium_ore_c.glb` | about 0.8 | generated |
+| Rare Earths | `rare_earths_a.glb` to `rare_earths_c.glb` | about 0.7 | generated |
+| Uranium Ore | `uranium_ore_a.glb` to `uranium_ore_c.glb` | about 0.7 | generated |
+| Crystals | `crystals_a.glb` to `crystals_c.glb` | about 1.1 | generated |
 | Wood in Forest | `tree_conifer_a.glb` to `tree_conifer_c.glb` | 2.5 to 3.5 (by field size) | generated |
 | Wood in Grassland (and anywhere else) | `tree_broadleaf_a.glb` to `tree_broadleaf_c.glb` | 2.5 to 3.5 (by field size) | generated |
 | Wood in Swamp | `tree_swamp_a.glb` to `tree_swamp_c.glb` | 2.5 to 3.5 (by field size) | generated |

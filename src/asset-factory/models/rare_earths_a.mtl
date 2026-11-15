@@ -1,0 +1,12 @@
+newmtl rare_rock
+Kd 0.660 0.600 0.580
+
+newmtl ore_rock_dark
+Kd 0.400 0.400 0.410
+
+newmtl rare_pink
+Kd 0.860 0.440 0.620
+
+newmtl rare_violet
+Kd 0.580 0.360 0.720
+

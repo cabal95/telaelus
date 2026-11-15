@@ -134,7 +134,12 @@ public static class BuildingDefs
         ResourceType.IronOre,
         ResourceType.CopperOre,
         ResourceType.Coal,
-        ResourceType.Stone
+        ResourceType.Stone,
+        ResourceType.Bauxite,
+        ResourceType.Quartz,
+        ResourceType.Limestone,
+        ResourceType.Sulfur,
+        ResourceType.TitaniumOre
     }, 6f)
     {
         OutputBuffer = 20f
@@ -323,7 +328,15 @@ public static class BuildingDefs
         ResourceType.IronOre,
         ResourceType.CopperOre,
         ResourceType.Coal,
-        ResourceType.Stone
+        ResourceType.Stone,
+        ResourceType.Bauxite,
+        ResourceType.Quartz,
+        ResourceType.Limestone,
+        ResourceType.Sulfur,
+        ResourceType.TitaniumOre,
+        ResourceType.RareEarths,
+        ResourceType.UraniumOre,
+        ResourceType.Crystals
     }, 8f)
     {
         Speed = 2f,

@@ -1,0 +1,9 @@
+newmtl bauxite_rock
+Kd 0.620 0.380 0.260
+
+newmtl bauxite_pale
+Kd 0.840 0.660 0.480
+
+newmtl bauxite_dark
+Kd 0.460 0.270 0.190
+

@@ -82,13 +82,13 @@ public class FieldTests
             totals[field.Type] = sum + field.Amount;
         }
 
-        Assert.Equal(14, sim.Fields.Count);
-        Assert.Equal(1150f, totals[ResourceType.IronOre]);
-        Assert.Equal(300f, totals[ResourceType.CopperOre]);
-        Assert.Equal(400f, totals[ResourceType.Coal]);
-        Assert.Equal(650f, totals[ResourceType.Stone]);
-        Assert.Equal(1750f, totals[ResourceType.Wood]);
-        Assert.Equal(1000f, totals[ResourceType.CrudeOil]);
+        Assert.Equal(22, sim.Fields.Count);
+        Assert.Equal(4600f, totals[ResourceType.IronOre]);
+        Assert.Equal(1200f, totals[ResourceType.CopperOre]);
+        Assert.Equal(1600f, totals[ResourceType.Coal]);
+        Assert.Equal(2600f, totals[ResourceType.Stone]);
+        Assert.Equal(7000f, totals[ResourceType.Wood]);
+        Assert.Equal(4000f, totals[ResourceType.CrudeOil]);
 
         // A launch needs 100 Iron (from Iron Ore) and 500 Rocket Fuel (from Crude Oil).
         Assert.True(totals[ResourceType.IronOre] >= Simulation.LaunchIronCost);

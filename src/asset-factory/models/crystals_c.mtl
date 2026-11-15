@@ -1,0 +1,10 @@
+newmtl ore_rock_dark
+Kd 0.400 0.400 0.410
+
+newmtl crystal
+Kd 0.620 0.360 0.920
+
+newmtl crystal_light
+Kd 0.820 0.620 1.000
+Ke 0.410 0.310 0.500
+

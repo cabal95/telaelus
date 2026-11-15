@@ -32,7 +32,7 @@ loop.
   | Type        | Footprint | Cost                       | Works                             | Work radius |
   |-------------|-----------|----------------------------|-----------------------------------|-------------|
   | Lumber Camp | 2 x 2     | 15 Wood                    | Wood                              | 6 units     |
-  | Mine        | 2 x 2     | 25 Wood, 15 Stone          | Iron Ore, Copper Ore, Coal, Stone | 6 units     |
+  | Mine        | 2 x 2     | 25 Wood, 15 Stone          | Iron Ore, Copper Ore, Coal, Stone, Bauxite, Quartz, Limestone, Sulfur, Titanium Ore | 6 units     |
   | Smelter     | 3 x 3     | 40 Stone, 15 Wood          |                                   |             |
   | Oil Well    | 2 x 2     | 25 Iron, 20 Stone, 10 Wood | Crude Oil                         | 3 units     |
   | Refinery    | 2 x 3     | 40 Iron, 30 Stone, 20 Wood |                                   |             |
@@ -165,7 +165,7 @@ loop.
 | Consumer | Footprint | Cost | Draws | Speed | Works | Buffer |
 |---|---|---|---|---|---|---|
 | Lumber Mill | 3 x 3 | 30 Wood, 20 Iron | 5 Power | 2.0 | Wood, radius 8 | 40 |
-| Drill Rig | 3 x 3 | 30 Iron, 20 Stone | 10 Power | 2.0 | Iron Ore, Copper Ore, Coal, Stone, radius 8 | 40 |
+| Drill Rig | 3 x 3 | 30 Iron, 20 Stone | 10 Power | 2.0 | the Mine's deposits and Rare Earths, Uranium Ore, Crystals, radius 8 | 40 |
 | Refinery | 2 x 3 | as above | 25 Power, 2 Water (its cooling) | | | 10, inputs 5 cycles |
 | Glassworks | 3 x 6 | 40 Stone, 20 Wood | 2 Sand | | | 10 |
 

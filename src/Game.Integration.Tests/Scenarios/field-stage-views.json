@@ -9,7 +9,7 @@
     { "screenshot": "full" },
     { "expect": "fields[0].stage", "equals": 5 },
     { "expect": "fields[0].visibleModels", "equals": 5 },
-    { "setResourceAmount": { "mapCell": [9, 9], "amount": 120 } },
+    { "setResourceAmount": { "mapCell": [9, 9], "amount": 520 } },
     { "wait": 1 },
     { "screenshot": "amount-120" },
     { "expect": "fields[0].visibleModels", "equals": 3 },

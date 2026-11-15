@@ -65,6 +65,10 @@ pausing it and stepping frame by frame.
 - `ResourceTests`: the resource definitions (63 by tier, raw resources at tier 0, the new
   deposits' gather times, an item model file for each), biome deposits, the Mine and Oil Well, and
   hand-harvest rules.
+- `WorldGenTests` (added for the field rebalance): the starter set on ten seeds (two Wood and one
+  Stone in the ring, on open cells, touching no other field, 1000 each); every newer deposit
+  generating on some seed. `ExtractorTests`: a Mine working Limestone and a Drill Rig Crystals.
+  `ResourceTests`: the new amounts and densities, and every deposit offered by some biome.
 - `PathTests`: a straight path on open ground; a path round a building ending beside its target;
   no path to a collector on an island; a path round slow ground when that is cheaper.
 - `TruckTests`: a new Depot's one truck and buying up to four; a truck hauling an offline Mine's

@@ -112,12 +112,25 @@ public class ResourceTests
         }
 
         BiomeDef highlands = BiomeDefs.For(BiomeType.Highlands);
-        Assert.Equal(400f, highlands.FieldAmount(ResourceType.IronOre));
-        Assert.Equal(300f, highlands.FieldAmount(ResourceType.CopperOre));
-        Assert.Equal(400f, highlands.FieldAmount(ResourceType.Coal));
-        Assert.Equal(400f, highlands.FieldAmount(ResourceType.Stone));
-        Assert.Equal(500f, BiomeDefs.For(BiomeType.Desert).FieldAmount(ResourceType.CrudeOil));
-        Assert.Equal(250f, BiomeDefs.For(BiomeType.Grassland).FieldAmount(ResourceType.Stone));
+        Assert.Equal(1600f, highlands.FieldAmount(ResourceType.IronOre));
+        Assert.Equal(1200f, highlands.FieldAmount(ResourceType.CopperOre));
+        Assert.Equal(1600f, highlands.FieldAmount(ResourceType.Coal));
+        Assert.Equal(1600f, highlands.FieldAmount(ResourceType.Stone));
+        Assert.Equal(1600f, highlands.FieldAmount(ResourceType.Quartz));
+        Assert.Equal(2000f, BiomeDefs.For(BiomeType.Desert).FieldAmount(ResourceType.CrudeOil));
+        Assert.Equal(1000f, BiomeDefs.For(BiomeType.Grassland).FieldAmount(ResourceType.Stone));
+        Assert.Equal(400f, BiomeDefs.For(BiomeType.Volcanic).FieldAmount(ResourceType.Crystals));
+        Assert.Equal(0.013f, BiomeDefs.For(BiomeType.Grassland).FieldDensity);
+        Assert.Equal(0.15f, BiomeDefs.For(BiomeType.Forest).FieldDensity);
+
+        // Every deposit has fields in some biome now.
+        foreach (ResourceType type in System.Enum.GetValues<ResourceType>())
+        {
+            if (ResourceDefs.For(type).HasFields)
+            {
+                Assert.Contains(System.Enum.GetValues<BiomeType>(), biome => BiomeDefs.For(biome).Fields.ContainsKey(type));
+            }
+        }
     }
 
     [Fact]
