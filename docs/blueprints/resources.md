@@ -10,10 +10,12 @@ buildings.md). A single global stockpile holds all amounts.
 
 ### Resource types
 
-- `ResourceType` has ten values. `ResourceDefs.For(type)` gives each a display name, a `Kind`,
-  whether the player can harvest it by hand, and for a deposit, its gather time (`GatherSeconds`:
-  the seconds to gather one unit by hand, which reads as how hard the material is to work; an
-  extractor divides it by its speed, see buildings.md); rules read this table, not the enum:
+- `ResourceType` has 63 values, the catalog planned in 2611141757-resource-tree, ordered by tier
+  and then catalog order. `ResourceDefs.For(type)` gives each a display name, a `Kind`, a **tier**
+  (0 for raw, 1 to 4 for made goods; `ResourceDefs.MaxTier` is 4), whether the player can harvest
+  it by hand, and for a deposit, its gather time (`GatherSeconds`: the seconds to gather one unit
+  by hand, which reads as how hard the material is to work; an extractor divides it by its speed,
+  see buildings.md); rules read this table, not the enum:
 
   | Type | Kind | Hand-harvest | Gather time | Source |
   |---|---|---|---|---|
@@ -23,16 +25,40 @@ buildings.md). A single global stockpile holds all amounts.
   | CopperOre | Deposit | yes | 6 s | Copper Ore fields |
   | Coal | Deposit | yes | 4.5 s | Coal fields |
   | CrudeOil | Deposit | no | 3 s | Crude Oil fields (oil seeps), by an Oil Well only |
+  | Bauxite, Quartz | Deposit | yes | 6 s | no fields yet |
+  | Limestone, Sulfur | Deposit | yes | 4.5 s | no fields yet |
+  | TitaniumOre | Deposit | yes | 7.5 s | no fields yet |
+  | RareEarths, UraniumOre, Crystals | Deposit | no | 9 s | no fields yet |
   | Sand | TerrainSourced | no | | a collector on Sand (not yet built) |
   | Water | TerrainSourced | no | | a pump on ShallowWater (not yet built) |
-  | Iron | Refined | | | Smelter |
-  | RocketFuel | Refined | | | Refinery |
+  | Lithium | TerrainSourced | no | | a Brine Well (not yet built) |
+
+  The refined resources, by tier (Iron from the Smelter and Rocket Fuel from the Refinery; nothing
+  makes the others yet):
+
+  | Tier | Refined resources |
+  |---|---|
+  | 1 | Iron, RocketFuel, Copper, Steel, Glass, Lumber, Charcoal, Cement, Concrete, Kerosene, Plastic, Hydrogen, LiquidOxygen, Aluminum, Silicon, SulfuricAcid, Rubber, Titanium, CarbonFiber, EnrichedUranium |
+  | 2 | HullPlate, SteelBeam, CopperWire, Circuit, InsulatedCable, MachineParts, SiliconWafer, Processor, Magnet, ElectricMotor, Battery, SolarCell, CompositePanel, CeramicTile, AluminumFrame, ArmorPlate |
+  | 3 | ControlModule, Computer, ThrusterAssembly, FuelTank, HeatShield, FuelRod, LifeSupportUnit, SensorArray |
+  | 4 | HullSection, Engine |
 
 - Deposits are finite resource fields. Terrain-sourced resources never run out but need a building
-  on or beside the right terrain; Sand and Water are defined so the production plan (see
-  docs/game-plan.md) and the UI are settled (the top bar shows them), and nothing produces them
-  yet. Refined resources come
-  from processing buildings (see buildings.md).
+  on or beside the right terrain. Every resource is defined so the production plan (see
+  docs/game-plan.md) and the UI are settled; most have no source yet (no fields, no building, no
+  recipe). Refined resources come from processing buildings (see buildings.md).
+
+### Discovery
+
+- The simulation records each resource the first time it is **discovered** (`IsDiscovered`); like
+  unlocking, it never clears during play and resets with the world.
+- A deposit is discovered when a field of it first lies in an explored map cell: when the cell is
+  revealed, when a field is placed in an already explored cell, and for every cell at once in a
+  world without fog. Sand is discovered when a Sand cell is explored, and Water when a ShallowWater
+  or DeepWater cell or a river is; a debug edit to an explored cell's terrain or feature counts.
+- Anything else (Lithium and every refined resource) is discovered when the stockpile first holds
+  some of it, and holding a resource always discovers it (`Debug.SeedStockpile` included).
+- The new deposits have no fields yet, so they stay undiscovered.
 
 ### Resource fields
 
@@ -110,10 +136,13 @@ buildings.md). A single global stockpile holds all amounts.
   Copper Ore ~0.8 units, Coal ~0.6, Stone ~0.9; Crude Oil is a flat pool, so its slot width sets
   its size; Wood 2.5 units for a field of 250
   or less, rising to 3.5 at 500 or more, so larger fields look larger) but capping the footprint to the slot size
-  (1.2 units); it seats the model on the ground with a deterministic yaw and variant per slot. The
+  (1.2 units); it seats the model on the ground with a deterministic yaw and variant per slot. A
+  deposit with no field models yet (the new deposits, which no world places) draws its item model
+  in every slot at ~0.6 units, so a field placed through the debug tools still shows. The
   models are required: a missing file throws (see presentation.md). Assets and conventions live in
   `src/Game/assets/models/nature/README.md`.
-- The top bar shows every raw resource's amount, and the inventory panel (I) every resource's;
+- The top bar shows the starting raw resources' amounts, and the inventory panel (I) every
+  resource by tier, discovered or not;
   the hint overlay shows "[E] Harvest" with the resource's icon, name, and a progress bar toward
   the next unit when a hand-harvestable field is in range (see presentation.md).
 

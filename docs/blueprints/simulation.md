@@ -86,7 +86,10 @@ and mirrors it onto nodes.
   `ExploredCount` counts the explored cells, `ExploredBounds` is the smallest rectangle of map
   cells holding them all (display only; the free camera stays inside it), and `CellsRevealed`
   reports each batch of newly explored cells. Explored is world state, shared by everyone. The one rule it changes is
-  placement: a building's footprint must lie on explored cells (buildings.md).
+  placement: a building's footprint must lie on explored cells (buildings.md). Exploring a cell
+  also discovers the resources it shows (resources.md).
+- **Discovery** (`IsDiscovered`) records which resources the player has found. Like explored
+  cells it is world state, never clears during play, and resets with the world (resources.md).
 - The walk and build rules (`IsWalkable`, `IsBuildable`) are defined in terrain.md.
 
 ### Architecture posture (single-player now, multiplayer-ready)

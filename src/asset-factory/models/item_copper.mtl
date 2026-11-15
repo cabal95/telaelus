@@ -1,0 +1,6 @@
+newmtl copper_light
+Kd 0.960 0.660 0.420
+
+newmtl copper
+Kd 0.860 0.500 0.280
+

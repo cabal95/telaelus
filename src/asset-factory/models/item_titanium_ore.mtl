@@ -1,0 +1,12 @@
+newmtl titanium_rock
+Kd 0.300 0.310 0.330
+
+newmtl ore_rock_dark
+Kd 0.400 0.400 0.410
+
+newmtl titanium_vein
+Kd 0.700 0.720 0.780
+
+newmtl metal
+Kd 0.580 0.600 0.630
+

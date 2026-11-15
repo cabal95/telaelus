@@ -62,8 +62,14 @@ pausing it and stepping frame by frame.
   deposits sit on free walkable cells, apart, from their biome; the biome mix follows the
   planet's weights on average; chunks generate around the player and on demand; a generated world
   has no edge while bounded worlds keep theirs; resets switch the world kind.
-- `ResourceTests`: the resource definitions, biome deposits, the Mine and Oil Well, and
+- `ResourceTests`: the resource definitions (63 by tier, raw resources at tier 0, the new
+  deposits' gather times, an item model file for each), biome deposits, the Mine and Oil Well, and
   hand-harvest rules.
+- `DiscoveryTests`: nothing discovered on an all-grass map; a field discovers its deposit when
+  placed in an explored cell or when its cell is revealed; Sand, Water, and rivers discover from
+  terrain; a debug edit to an explored cell discovers; holding a resource discovers it; discovery
+  outlasts the field and resets with the world; the test map discovers its deposits and Water but
+  no new deposit.
 - `HarvestTests`: edge-based harvest range, one whole unit at the gather time, partial progress
   dropped on release or a new target, and field removal reopening cells.
 - `ExtractorTests`: base speed, one unit per gather time over speed, nearest field, moving on
@@ -148,8 +154,8 @@ pausing it and stepping frame by frame.
   detail panel is open, `building` (its id), `rows` (each shown status row, keyed in camel case:
   `power`, `state`, `inRange`, `workingOn`, `recipe`), `destroy` (the Destroy button's text), and
   `turnDegrees`; while the field detail panel is open, `field` (its id), `title`, and `rows`
-  (`remaining`, `workedBy`); while the inventory is open, `inventory`: its rows in order, each `type`,
-  `amount`, and `section` (`raw` or `other`)); `buildings` (`id`, `type`, `anchor`, `facing`, `width`, `depth`,
+  (`remaining`, `workedBy`); while the inventory is open, `inventory`: its rows in display order,
+  each `type`, `amount`, `section` (`raw`, `tier1` to `tier4`), and `discovered`); `buildings` (`id`, `type`, `anchor`, `facing`, `width`, `depth`,
   `currentField`, `enabled`, `status` (`working`, `idle`, or `off`), and `idleReason` or null);
   `hoveredBuilding` (the id of the building under the pointer outside build mode, or null);
   `focusedBuilding` (the id of the building the detail panel shows and outlines, or null);
@@ -157,7 +163,8 @@ pausing it and stepping frame by frame.
   `camera` (`zoom`: world units across 720 pixels, `target` [x, z]: the ground point at the view's
   center, `detached`: whether a drag has moved it off the player);
   `fields` (`id`, `type`, `mapCell`, `amount`, `stage`, `visibleModels`, `explored`);
-  `stockpile` (every resource); `unlockedBuildings` (type names, in enum order); and
+  `stockpile` (every resource); `discovered` (the discovered resources' type names, in enum
+  order); `unlockedBuildings` (type names, in enum order); and
   `shipsLaunched`. New checks are added as snapshot fields.
 - **Input injection:** keys and mouse buttons go through `Input.ParseInputEvent` followed by
   `Input.FlushBufferedEvents()`, so they are delivered in the current frame (Godot otherwise
@@ -191,6 +198,9 @@ pausing it and stepping frame by frame.
   `screenshot` into a `snapshot`. A headless window is 64 x 64 and ignores `--resolution`, so
   the scenario runner sizes it to 1280 x 720, and the UI lays out and UI clicks land as they do
   windowed.
+- A windowed run holds its first command until the startup pictures (resource icons, field and
+  building pictures, `GameRoot.PicturesReady`) are drawn, so screenshots show them; they draw in
+  batches over several frames.
 - Relative `--scenario` and `--output` paths resolve against the repo root, because Godot changes
   its working directory to the project folder when given `--path`.
 - `--fixed-fps 30` matches the sim's 30 Hz tick, so every frame advances exactly one sim tick:
@@ -256,8 +266,10 @@ pausing it and stepping frame by frame.
   coming into sight reveals it, and it stays revealed after the player leaves),
   `hud` (the debug overlay starts hidden and F3 toggles it; the top bar shows all eight raw
   resources with name tooltips and the launch progress; the hint overlay shows the harvest hint
-  and its bar; I opens and closes the inventory with raw resources first; the inventory and a
-  building's detail replace each other; a panel covers the debug overlay),
+  and its bar; I opens and closes the inventory, grouped by tier with discovered resources first;
+  the inventory and a building's detail replace each other; a panel covers the debug overlay),
+  `inventory` (on the empty map nothing is discovered and every row is darkened, through the last
+  tier; a field in sight and a held resource are discovered and move to the top of their tier),
   `building-detail` (clicking a building opens its panel with the right status rows; the
   player walks with it open; it turns the building off and on; clicking another building
   switches it; empty ground, B, and Escape close it; Destroy asks once, then refunds half the

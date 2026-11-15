@@ -1,0 +1,6 @@
+newmtl wafer
+Kd 0.460 0.440 0.620
+
+newmtl solar_line
+Kd 0.560 0.620 0.740
+

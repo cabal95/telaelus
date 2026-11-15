@@ -1,0 +1,9 @@
+newmtl sack_white
+Kd 0.920 0.920 0.900
+
+newmtl band_blue
+Kd 0.240 0.460 0.820
+
+newmtl sack_white_85
+Kd 0.782 0.782 0.765
+

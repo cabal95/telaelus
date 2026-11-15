@@ -1,0 +1,6 @@
+newmtl titanium_light
+Kd 0.580 0.600 0.700
+
+newmtl titanium
+Kd 0.420 0.440 0.520
+

@@ -1,0 +1,9 @@
+newmtl frost
+Kd 0.780 0.900 0.980
+
+newmtl band_blue
+Kd 0.240 0.460 0.820
+
+newmtl metal
+Kd 0.580 0.600 0.630
+

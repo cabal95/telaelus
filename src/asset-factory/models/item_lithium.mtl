@@ -1,0 +1,12 @@
+newmtl lithium
+Kd 0.920 0.880 0.900
+
+newmtl lithium_93
+Kd 0.856 0.818 0.837
+
+newmtl lithium_106
+Kd 0.975 0.933 0.954
+
+newmtl rare_pink
+Kd 0.860 0.440 0.620
+

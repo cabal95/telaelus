@@ -70,6 +70,7 @@ public sealed partial class Simulation
                 throw new InvalidOperationException($"map cell ({mapX}, {mapZ}) has a {feature}, which cannot sit on {type}");
             }
             chunk.Terrain[x, z] = type;
+            _sim.DiscoverIfExplored(mapX, mapZ);
             _sim.MapChanged?.Invoke();
         }
 
@@ -114,6 +115,7 @@ public sealed partial class Simulation
 
             chunk.Features[x, z] = feature;
             chunk.RiverFlow[x, z] = flow;
+            _sim.DiscoverIfExplored(mapX, mapZ);
             _sim.MapChanged?.Invoke();
         }
 

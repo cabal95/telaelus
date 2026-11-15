@@ -1,7 +1,7 @@
 {
   "$schema": "../scenario.schema.json",
   "name": "hud",
-  "description": "The screen UI: the debug overlay starts hidden and F3 toggles it; the top bar shows all eight raw resources with name tooltips and the launch progress; the hint overlay shows the harvest hint and its bar; I opens and closes the inventory with raw resources first; the inventory and a building's detail panel replace each other; a panel covers the debug overlay.",
+  "description": "The screen UI: the debug overlay starts hidden and F3 toggles it; the top bar shows all eight raw resources with name tooltips and the launch progress; the hint overlay shows the harvest hint and its bar; I opens and closes the inventory, grouped by tier with discovered resources first; the inventory and a building's detail panel replace each other; a panel covers the debug overlay.",
   "steps": [
     { "initMap": {} },
     { "wait": 2 },
@@ -41,10 +41,10 @@
     { "press": "I" },
     { "wait": 2 },
     { "expect": "ui.open", "equals": "inventory" },
-    { "expect": "ui.inventory[0]", "equals": { "type": "Wood", "amount": 30, "section": "raw" } },
-    { "expect": "ui.inventory[7]", "equals": { "type": "Water", "amount": 0, "section": "raw" } },
-    { "expect": "ui.inventory[8]", "equals": { "type": "Iron", "amount": 12, "section": "other" } },
-    { "expect": "ui.inventory[9].type", "equals": "RocketFuel" },
+    { "expect": "ui.inventory[0]", "equals": { "type": "Wood", "amount": 30, "section": "raw", "discovered": true } },
+    { "comment": "Undiscovered raw resources follow the discovered ones; Lithium is the last raw row.", "expect": "ui.inventory[16]", "equals": { "type": "Lithium", "amount": 0, "section": "raw", "discovered": false } },
+    { "expect": "ui.inventory[17]", "equals": { "type": "Iron", "amount": 12, "section": "tier1", "discovered": true } },
+    { "expect": "ui.inventory[18]", "equals": { "type": "RocketFuel", "amount": 0, "section": "tier1", "discovered": false } },
     { "comment": "A panel leaves the world its input.", "keyDown": "D" },
     { "wait": 5 },
     { "keyUp": "D" },

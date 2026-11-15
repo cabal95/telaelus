@@ -1,0 +1,6 @@
+newmtl plank_dark
+Kd 0.660 0.500 0.320
+
+newmtl plank
+Kd 0.800 0.620 0.400
+

@@ -1,0 +1,9 @@
+newmtl armor_80
+Kd 0.304 0.336 0.272
+
+newmtl armor
+Kd 0.380 0.420 0.340
+
+newmtl metal
+Kd 0.580 0.600 0.630
+

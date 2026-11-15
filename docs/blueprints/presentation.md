@@ -65,7 +65,8 @@ planned multiplayer feasible.
 The kinds of UI (modals, panels, overlays), their look, layers, and input rules are in
 ui-style.md. There is no text HUD; the screen holds:
 
-- **Top bar** (`TopBar`, always shown): every raw resource's icon and amount, with name tooltips,
+- **Top bar** (`TopBar`, always shown): the starting raw resources' icons and amounts (the six
+  starting deposits, then Sand and Water), with name tooltips,
   and the launch progress with "[L] Launch ship" once it can launch.
 - **Hint overlay** (`HintOverlay`): below the top bar, "[E] Harvest" with the resource's icon,
   name, and a progress bar toward the next unit, while a hand-harvestable field is in range.
@@ -83,9 +84,13 @@ ui-style.md. There is no text HUD; the screen holds:
   "2 Mines", or "nothing"). The UI shows no biome and no gather speeds. The panel closes itself
   when its field depletes. Its field keeps the hover outline while it is open.
 - **Inventory** (`InventoryPanel`, a panel titled "Inventory"): I opens and closes it. Every
-  resource, including those at 0, as its icon and "Iron (23)": raw resources first (deposits, then
-  terrain-sourced) in table order, a thin rule, then the refined ones. Like every panel, opening it
-  closes a building's detail panel and the other way round.
+  resource, under tier headings in `TextDim` (Raw, then Tier 1 to Tier 4), each over a thin rule.
+  Within a heading the discovered resources come first, then the undiscovered, each group in table
+  order; rows move as resources are discovered. A discovered row is its icon and "Iron (23)",
+  including those at 0; an undiscovered row is darkened like an undiscovered building in the build
+  menu: its icon tinted `Silhouette` and "Undiscovered" in `TextDim`, with no name or amount. The
+  body scrolls. Like every panel, opening it closes a building's detail panel and the other way
+  round.
 - **Build menu** (`BuildMenu`, a modal titled "Buildings"): B opens it (leaving build
   mode) and B, Escape, the Close button, or a click on the backdrop closes it. Its body is a grid
   of 112-unit square cells, as many columns as fit, scrolling when taller than the panel allows.

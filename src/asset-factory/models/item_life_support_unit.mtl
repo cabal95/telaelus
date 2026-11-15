@@ -1,0 +1,15 @@
+newmtl hull_dark
+Kd 0.580 0.600 0.640
+
+newmtl hull
+Kd 0.800 0.820 0.840
+
+newmtl metal_dark
+Kd 0.300 0.310 0.340
+
+newmtl band_green
+Kd 0.400 0.720 0.280
+
+newmtl metal
+Kd 0.580 0.600 0.630
+

@@ -1,0 +1,9 @@
+newmtl sack
+Kd 0.740 0.700 0.620
+
+newmtl concrete_dark
+Kd 0.540 0.540 0.520
+
+newmtl sack_85
+Kd 0.629 0.595 0.527
+

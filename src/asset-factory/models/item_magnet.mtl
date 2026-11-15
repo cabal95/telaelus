@@ -1,0 +1,6 @@
+newmtl magnet_red
+Kd 0.840 0.200 0.180
+
+newmtl metal
+Kd 0.580 0.600 0.630
+

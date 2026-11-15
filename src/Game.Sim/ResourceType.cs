@@ -1,8 +1,9 @@
 namespace Game.Sim;
 
 /// <summary>
-/// Every kind of resource. What each one is (a deposit, a terrain-sourced resource,
-/// or a refined good) and how it is gathered live in <see cref="ResourceDefs"/>.
+/// Every kind of resource, ordered by tier and then catalog order. What each one is (a
+/// deposit, a terrain-sourced resource, or a refined good), its tier, and how it is
+/// gathered live in <see cref="ResourceDefs"/>.
 /// </summary>
 public enum ResourceType
 {
@@ -12,8 +13,61 @@ public enum ResourceType
     CopperOre,
     Coal,
     CrudeOil,
+    Bauxite,
+    Limestone,
+    Quartz,
+    TitaniumOre,
+    Sulfur,
+    RareEarths,
+    UraniumOre,
+    Crystals,
     Sand,
     Water,
+    Lithium,
     Iron,
-    RocketFuel
+    RocketFuel,
+    Copper,
+    Steel,
+    Glass,
+    Lumber,
+    Charcoal,
+    Cement,
+    Concrete,
+    Kerosene,
+    Plastic,
+    Hydrogen,
+    LiquidOxygen,
+    Aluminum,
+    Silicon,
+    SulfuricAcid,
+    Rubber,
+    Titanium,
+    CarbonFiber,
+    EnrichedUranium,
+    HullPlate,
+    SteelBeam,
+    CopperWire,
+    Circuit,
+    InsulatedCable,
+    MachineParts,
+    SiliconWafer,
+    Processor,
+    Magnet,
+    ElectricMotor,
+    Battery,
+    SolarCell,
+    CompositePanel,
+    CeramicTile,
+    AluminumFrame,
+    ArmorPlate,
+    ControlModule,
+    Computer,
+    ThrusterAssembly,
+    FuelTank,
+    HeatShield,
+    FuelRod,
+    LifeSupportUnit,
+    SensorArray,
+    HullSection,
+    Engine
 }

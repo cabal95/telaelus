@@ -84,6 +84,42 @@ or 1.05 for facet variation). A new material extends the table.
 | water, water_light | 0.26, 0.52, 0.86 / 0.45, 0.70, 0.95 | Water item |
 | ingot, ingot_light | 0.62, 0.64, 0.68 / 0.78, 0.80, 0.84 | Iron item: ingot sides and tops |
 | canister, fuel_orange | 0.88, 0.88, 0.86 / 0.95, 0.50, 0.15 | Rocket Fuel item |
+| bauxite_rock, bauxite_dark, bauxite_pale | 0.62, 0.38, 0.26 / 0.46, 0.27, 0.19 / 0.84, 0.66, 0.48 | Bauxite item |
+| titanium_rock, titanium_vein | 0.30, 0.31, 0.33 / 0.70, 0.72, 0.78 | Titanium Ore item |
+| rare_rock, rare_pink, rare_violet | 0.66, 0.60, 0.58 / 0.86, 0.44, 0.62 / 0.58, 0.36, 0.72 | Rare Earths item (pink also flecks Lithium) |
+| uranium_rock, uranium_glow | 0.28, 0.29, 0.26 / 0.62, 0.92, 0.22 | Uranium Ore item; the glow also lights Enriched Uranium and Fuel Rods (uranium_glow emissive) |
+| quartz, quartz_shade | 0.90, 0.90, 0.94 / 0.72, 0.74, 0.82 | Quartz item |
+| crystal, crystal_light | 0.62, 0.36, 0.92 / 0.82, 0.62, 1.00 | Crystals item (crystal_light emissive) |
+| limestone, limestone_dark | 0.86, 0.82, 0.70 / 0.72, 0.68, 0.57 | Limestone item |
+| sulfur | 0.92, 0.84, 0.20 | Sulfur item |
+| lithium | 0.92, 0.88, 0.90 | Lithium item |
+| charcoal, charcoal_end | 0.26, 0.24, 0.23 / 0.52, 0.45, 0.38 | Charcoal item |
+| copper, copper_light | 0.86, 0.50, 0.28 / 0.96, 0.66, 0.42 | Copper item; copper wire and pipes on parts |
+| steel, steel_light | 0.46, 0.52, 0.60 / 0.62, 0.68, 0.76 | Steel item, Hull Plate, Steel Beam |
+| aluminum, aluminum_light | 0.80, 0.82, 0.86 / 0.92, 0.94, 0.96 | Aluminum item, Aluminum Frame |
+| titanium, titanium_light | 0.42, 0.44, 0.52 / 0.58, 0.60, 0.70 | Titanium item |
+| silicon, silicon_light | 0.38, 0.40, 0.50 / 0.56, 0.58, 0.72 | Silicon item |
+| lead | 0.36, 0.37, 0.40 | Enriched Uranium pot, Fuel Rod bands |
+| plank, plank_dark | 0.80, 0.62, 0.40 / 0.66, 0.50, 0.32 | Lumber item |
+| concrete, concrete_dark | 0.66, 0.66, 0.64 / 0.54, 0.54, 0.52 | Concrete item, Cement sack band |
+| glass, glass_edge | 0.62, 0.82, 0.90 / 0.80, 0.92, 0.96 | Glass item |
+| sack, sack_white | 0.74, 0.70, 0.62 / 0.92, 0.92, 0.90 | Cement and Plastic sacks |
+| band_blue, band_red, band_yellow, band_green | 0.24, 0.46, 0.82 / 0.82, 0.24, 0.20 / 0.94, 0.80, 0.18 / 0.40, 0.72, 0.28 | Colored bands and bodies on canisters, cells, and parts |
+| frost | 0.78, 0.90, 0.98 | Liquid Oxygen bottle |
+| rubber, rubber_light | 0.30, 0.30, 0.32 / 0.48, 0.48, 0.52 | Rubber item (tires) |
+| carbon, carbon_weave | 0.30, 0.31, 0.36 / 0.50, 0.52, 0.60 | Carbon Fiber, Composite Panel, Heat Shield |
+| board | 0.18, 0.50, 0.30 | Circuit board |
+| chip | 0.12, 0.12, 0.13 | Chips on the Circuit and Processor |
+| gold | 0.92, 0.74, 0.24 | Contacts and pins |
+| wafer | 0.46, 0.44, 0.62 | Silicon Wafer |
+| solar, solar_line | 0.16, 0.26, 0.56 / 0.56, 0.62, 0.74 | Solar Cell; the lines also rule the wafer |
+| magnet_red | 0.84, 0.20, 0.18 | Magnet item |
+| ceramic | 0.90, 0.88, 0.84 | Ceramic Tile item |
+| armor | 0.38, 0.42, 0.34 | Armor Plate item |
+| panel_dark | 0.24, 0.26, 0.30 | Control Module and Computer cases |
+| screen, led | 0.30, 0.78, 0.86 / 0.40, 0.95, 0.50 | Screens and status lights (screen, led emissive) |
+| nozzle, nozzle_hot | 0.34, 0.34, 0.38 / 0.90, 0.48, 0.20 | Thruster and Engine bells and their hot throats (nozzle_hot emissive) |
+| hull, hull_dark | 0.80, 0.82, 0.84 / 0.58, 0.60, 0.64 | Hull Section, Sensor Array, Life Support Unit |
 | mine_accent | 0.85, 0.55, 0.20 | Mine identity color (orange) |
 | lumber_accent | 0.62, 0.40, 0.20 | Lumber Camp identity color (brown) |
 | smelter_accent | 0.78, 0.26, 0.20 | Smelter identity color (red) |
@@ -130,8 +166,16 @@ Emissive materials glow at half their base color. Mountains keep their own stone
   chunky object about 1 unit across, resting on y = 0, drawn only into the UI's resource icons.
 - Items are built to read as silhouettes at about 22 pixels, on the dark UI panel: few large
   facets, one clear shape each (a log stack, a lump, a barrel, a droplet, ingots, a canister).
-  Very dark materials (coal, crude oil) get lighter upper facets or parts so they do not vanish
-  into the panel. The two ores reuse their fields' rock and vein colors so they match the map.
+  Very dark materials (coal, crude oil, charcoal, rubber, carbon fiber) get lighter upper facets,
+  parts, or mid-gray colors so they do not vanish into the panel. The two ores reuse their
+  fields' rock and vein colors so they match the map.
+- Related items share a shape family and differ by color, so the catalog reads as a set: ore
+  lumps (the ores, with glowing veins for Uranium Ore), six-sided crystal clusters (Quartz,
+  Crystals), heaps and blocks (Sulfur, Lithium, Limestone), canisters and tall gas bottles (the
+  fluids), crossed ingots (the metals), stacks of plates (Hull Plate, Composite Panel, Ceramic
+  Tile), spools (Copper Wire, Insulated Cable), rolls (Carbon Fiber), and sacks (Cement,
+  Plastic). Components and parts each get a shape of their own (a gear, a motor, a chip, a dish,
+  a bell nozzle).
 - An item whose identity is its side profile may lean away from the game camera so the icon,
   drawn from that camera's angle, shows the profile: the water drop leans its tip back 25
   degrees.

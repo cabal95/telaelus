@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Text.Json.Nodes;
 using Game.Presentation;
 using Game.Presentation.Ui;
@@ -48,6 +49,7 @@ public static class StateSnapshot
             ["buildings"] = Buildings(sim),
             ["fields"] = Fields(sim, root.FieldViews),
             ["stockpile"] = Stockpile(sim),
+            ["discovered"] = Discovered(sim),
             ["unlockedBuildings"] = Unlocked(sim),
             ["shipsLaunched"] = sim.ShipsLaunched
         };
@@ -131,13 +133,14 @@ public static class StateSnapshot
         if (root.Dialogs.Current == root.Inventory)
         {
             var rows = new JsonArray();
-            foreach ((ResourceType type, int amount, string section) in root.Inventory.Rows)
+            foreach ((ResourceType type, int amount, string section, bool discovered) in root.Inventory.Rows)
             {
                 rows.Add(new JsonObject
                 {
                     ["type"] = type.ToString(),
                     ["amount"] = amount,
-                    ["section"] = section
+                    ["section"] = section,
+                    ["discovered"] = discovered
                 });
             }
             ui["inventory"] = rows;
@@ -311,6 +314,16 @@ public static class StateSnapshot
             stock[type.ToString()] = Round(amount);
         }
         return stock;
+    }
+
+    private static JsonArray Discovered(Simulation sim)
+    {
+        var list = new JsonArray();
+        foreach (ResourceType type in Enum.GetValues<ResourceType>().Where(sim.IsDiscovered))
+        {
+            list.Add(type.ToString());
+        }
+        return list;
     }
 
     private static JsonArray Pair(float x, float z)

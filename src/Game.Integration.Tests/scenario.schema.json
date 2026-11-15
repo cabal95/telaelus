@@ -36,7 +36,7 @@
     "terrain": { "enum": ["Grass", "Sand", "Snow", "Rock", "Mud", "ShallowWater", "DeepWater", "Lava"] },
     "biome": { "enum": ["Grassland", "Forest", "Highlands", "Desert", "Swamp", "Tundra", "Volcanic", "Ocean"] },
     "feature": { "enum": ["None", "Mountain", "River"] },
-    "resource": { "enum": ["Wood", "Stone", "IronOre", "CopperOre", "Coal", "CrudeOil", "Sand", "Water", "Iron", "RocketFuel"] },
+    "resource": { "enum": ["Wood", "Stone", "IronOre", "CopperOre", "Coal", "CrudeOil", "Bauxite", "Limestone", "Quartz", "TitaniumOre", "Sulfur", "RareEarths", "UraniumOre", "Crystals", "Sand", "Water", "Lithium", "Iron", "RocketFuel", "Copper", "Steel", "Glass", "Lumber", "Charcoal", "Cement", "Concrete", "Kerosene", "Plastic", "Hydrogen", "LiquidOxygen", "Aluminum", "Silicon", "SulfuricAcid", "Rubber", "Titanium", "CarbonFiber", "EnrichedUranium", "HullPlate", "SteelBeam", "CopperWire", "Circuit", "InsulatedCable", "MachineParts", "SiliconWafer", "Processor", "Magnet", "ElectricMotor", "Battery", "SolarCell", "CompositePanel", "CeramicTile", "AluminumFrame", "ArmorPlate", "ControlModule", "Computer", "ThrusterAssembly", "FuelTank", "HeatShield", "FuelRod", "LifeSupportUnit", "SensorArray", "HullSection", "Engine"] },
     "building": { "enum": ["Mine", "LumberCamp", "Smelter", "Refinery", "OilWell"] },
     "facing": { "enum": ["North", "East", "South", "West"] },
     "comment": { "type": "string", "description": "Ignored; documents the step." },

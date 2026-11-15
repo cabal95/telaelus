@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 
 namespace Game.Sim.Tests;
 
@@ -27,6 +28,65 @@ public class ResourceTests
         Assert.Equal(ResourceKind.TerrainSourced, ResourceDefs.For(ResourceType.Sand).Kind);
         Assert.Equal(ResourceKind.TerrainSourced, ResourceDefs.For(ResourceType.Water).Kind);
         Assert.False(ResourceDefs.For(ResourceType.CrudeOil).HandHarvestable);
+    }
+
+    [Fact]
+    public void TheCatalog_Has63Resources_ByTier()
+    {
+        ILookup<int, ResourceType> byTier = Enum.GetValues<ResourceType>().ToLookup(type => ResourceDefs.For(type).Tier);
+
+        Assert.Equal(63, Enum.GetValues<ResourceType>().Length);
+        Assert.Equal(17, byTier[0].Count());
+        Assert.Equal(20, byTier[1].Count());
+        Assert.Equal(16, byTier[2].Count());
+        Assert.Equal(8, byTier[3].Count());
+        Assert.Equal(new[] { ResourceType.HullSection, ResourceType.Engine }, byTier[4]);
+        Assert.Equal(Enum.GetValues<ResourceType>().OrderBy(type => ResourceDefs.For(type).Tier), Enum.GetValues<ResourceType>());
+    }
+
+    [Fact]
+    public void RawResources_AreTierZero_AndMadeOnesAreNot()
+    {
+        foreach (ResourceType type in Enum.GetValues<ResourceType>())
+        {
+            ResourceDef def = ResourceDefs.For(type);
+            Assert.Equal(def.Kind != ResourceKind.Refined, def.Tier == 0);
+            Assert.Equal(def.Kind == ResourceKind.Deposit, def.GatherSeconds is not null);
+        }
+    }
+
+    [Theory]
+    [InlineData(ResourceType.Limestone, 4.5f, true)]
+    [InlineData(ResourceType.Sulfur, 4.5f, true)]
+    [InlineData(ResourceType.Bauxite, 6f, true)]
+    [InlineData(ResourceType.Quartz, 6f, true)]
+    [InlineData(ResourceType.TitaniumOre, 7.5f, true)]
+    [InlineData(ResourceType.RareEarths, 9f, false)]
+    [InlineData(ResourceType.UraniumOre, 9f, false)]
+    [InlineData(ResourceType.Crystals, 9f, false)]
+    public void NewDeposits_HaveTheirGatherTimes(ResourceType type, float seconds, bool byHand)
+    {
+        ResourceDef def = ResourceDefs.For(type);
+        Assert.Equal(ResourceKind.Deposit, def.Kind);
+        Assert.Equal(seconds, def.GatherSeconds);
+        Assert.Equal(byHand, def.HandHarvestable);
+    }
+
+    [Fact]
+    public void EveryResource_HasAnItemModel()
+    {
+        var dir = new System.IO.DirectoryInfo(AppContext.BaseDirectory);
+        while (dir is not null && !System.IO.File.Exists(System.IO.Path.Combine(dir.FullName, "game.slnx")))
+        {
+            dir = dir.Parent;
+        }
+        Assert.NotNull(dir);
+        string items = System.IO.Path.Combine(dir.FullName, "src", "Game", "assets", "models", "items");
+        foreach (ResourceType type in Enum.GetValues<ResourceType>())
+        {
+            string snake = string.Concat(type.ToString().Select((c, i) => i > 0 && char.IsUpper(c) ? "_" + char.ToLowerInvariant(c) : char.ToLowerInvariant(c).ToString()));
+            Assert.True(System.IO.File.Exists(System.IO.Path.Combine(items, $"item_{snake}.glb")), $"no item model for {type}");
+        }
     }
 
     [Theory]

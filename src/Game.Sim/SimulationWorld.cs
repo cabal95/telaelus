@@ -48,7 +48,7 @@ public sealed partial class Simulation
 
     /// <summary>
     /// Replaces the whole world: clears every chunk, field, building, the stockpile,
-    /// and launches, then builds the new world and puts the player at its spawn.
+    /// launches, and discoveries, then builds the new world and puts the player at its spawn.
     /// </summary>
     private void ResetWorld(WorldSettings settings)
     {
@@ -60,6 +60,7 @@ public sealed partial class Simulation
         _occupied.Clear();
         _stockpile.Clear();
         _unlocked.Clear();
+        _discovered.Clear();
         HarvestTarget = null;
         HarvestProgress = 0f;
         ShipsLaunched = 0;
@@ -76,6 +77,7 @@ public sealed partial class Simulation
                 GenerateTerrain();
                 SpawnInitialFields();
             }
+            DiscoverChunkWithoutFog(_chunks[(0, 0)]);
         }
 
         Player.Position = SpawnPoint;
@@ -117,6 +119,7 @@ public sealed partial class Simulation
         {
             AddField(type, mapX, mapZ);
         }
+        DiscoverChunkWithoutFog(generated.Chunk);
         ChunkGenerated?.Invoke(chunkX, chunkZ);
         return generated.Chunk;
     }

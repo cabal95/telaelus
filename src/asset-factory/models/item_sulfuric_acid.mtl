@@ -1,0 +1,9 @@
+newmtl band_yellow
+Kd 0.940 0.800 0.180
+
+newmtl chip
+Kd 0.120 0.120 0.130
+
+newmtl metal_dark
+Kd 0.300 0.310 0.340
+

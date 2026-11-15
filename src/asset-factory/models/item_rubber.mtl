@@ -1,0 +1,9 @@
+newmtl rubber_light
+Kd 0.480 0.480 0.520
+
+newmtl rubber
+Kd 0.300 0.300 0.320
+
+newmtl metal
+Kd 0.580 0.600 0.630
+

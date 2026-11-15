@@ -43,7 +43,8 @@ terrain.md; the deposits it places are in resources.md.
 - `new Simulation()` builds the test map; `new Simulation(WorldSettings.Generated(seed))` a
   generated world on the starter planet. `Debug.ResetToEmptyMap(fog)` and
   `Debug.ResetToGeneratedWorld(seed)` replace the whole world (clearing fields, buildings, the
-  stockpile, launches, and what is explored) and put the player at the new spawn.
+  stockpile, launches, what is explored, and which resources are discovered) and put the player
+  at the new spawn.
   `Debug.RevealAll()` explores every cell of every existing chunk.
 - A world with fog starts with only the cells in sight of the spawn explored (simulation.md).
 - The game runs a generated world from `--seed=<n>` (after the `--` separator), or a random seed.

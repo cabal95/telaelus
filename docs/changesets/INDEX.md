@@ -105,6 +105,9 @@ Newest last. One line each; open the file for the full spec.
   chart) and the economy around it: Stored and Capacity supply, fuel and input pickers, storage
   limits, brownout, the HQ hub network, Depot trucks, motherlodes, and renewable sources; a
   planning changeset that updates game-plan.md and orders the follow-on changesets.
+- **2611141930-resource-catalog** - Adds every resource in the catalog (63, by tier) with item models
+  and icons, discovery (a deposit when first revealed on the map, anything when first held), and an
+  inventory grouped by tier with undiscovered resources darkened; startup pictures draw in batches.
 
 ## Adding a changeset
 

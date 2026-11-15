@@ -8,7 +8,7 @@ namespace Game.Presentation.Ui;
 
 /// <summary>
 /// The top bar: a full-width strip across the top of the window in the panel style.
-/// Left, every raw resource (deposits, then terrain-sourced) as an icon and its amount,
+/// Left, the starting raw resources (deposits, then Sand and Water) as an icon and its amount,
 /// each with a name tooltip. Right, the launch progress (Rocket Fuel and Iron against
 /// the launch cost, short amounts in the short color), "[L] Launch ship" once both are
 /// met, and the ships launched once there is one. It takes the mouse but no keys.
@@ -28,10 +28,18 @@ public partial class TopBar : HudOverlay
     private Label _launch = null!;
     private Label _ships = null!;
 
-    /// <summary>The raw resources the bar shows, in table order.</summary>
-    public static IReadOnlyList<ResourceType> Raw { get; } = Enum.GetValues<ResourceType>()
-        .Where(type => ResourceDefs.For(type).Kind != ResourceKind.Refined)
-        .ToList();
+    /// <summary>The raw resources the bar shows: the starting deposits, then Sand and Water.</summary>
+    public static IReadOnlyList<ResourceType> Raw { get; } = new[]
+    {
+        ResourceType.Wood,
+        ResourceType.Stone,
+        ResourceType.IronOre,
+        ResourceType.CopperOre,
+        ResourceType.Coal,
+        ResourceType.CrudeOil,
+        ResourceType.Sand,
+        ResourceType.Water
+    };
 
     /// <summary>The entries as shown (type and amount), for the snapshot.</summary>
     public IEnumerable<(ResourceType Type, string Amount)> Entries =>

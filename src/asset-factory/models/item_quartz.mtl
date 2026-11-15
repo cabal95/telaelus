@@ -1,0 +1,6 @@
+newmtl quartz_shade
+Kd 0.720 0.740 0.820
+
+newmtl quartz
+Kd 0.900 0.900 0.940
+

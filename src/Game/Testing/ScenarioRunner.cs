@@ -35,6 +35,9 @@ public partial class ScenarioRunner : Node
     private CommandExecutor _executor = null!;
     private int _next;
     private bool _finished;
+
+    // Windowed runs hold the first command until the startup pictures are drawn, so screenshots show icons.
+    private bool _waitForPictures;
     private readonly List<PerfMonitor.Sample> _perfSamples = new();
 
     /// <summary>Attaches a runner to the game root if the command line asks for a scenario.</summary>
@@ -86,6 +89,7 @@ public partial class ScenarioRunner : Node
         _outputDir = ResolveOutputDir();
         bool screenshots = !_args.NoScreenshots && !TestArgs.IsHeadless;
         _executor = new CommandExecutor(_root, _outputDir, screenshots);
+        _waitForPictures = screenshots;
         _root.Perf.Sampled += _perfSamples.Add;
         GD.Print($"SCENARIO {_name}: {_commands.Count} commands, output {_outputDir}");
     }
@@ -96,6 +100,12 @@ public partial class ScenarioRunner : Node
         {
             return;
         }
+
+        if (_waitForPictures && !_root.PicturesReady)
+        {
+            return;
+        }
+        _waitForPictures = false;
 
         _executor.BeginFrame();
         while (!_executor.Busy && _next < _commands.Count)

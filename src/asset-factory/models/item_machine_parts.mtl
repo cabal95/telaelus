@@ -1,0 +1,9 @@
+newmtl metal
+Kd 0.580 0.600 0.630
+
+newmtl ingot_light
+Kd 0.780 0.800 0.840
+
+newmtl metal_dark
+Kd 0.300 0.310 0.340
+

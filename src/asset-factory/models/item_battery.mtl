@@ -1,0 +1,6 @@
+newmtl metal
+Kd 0.580 0.600 0.630
+
+newmtl band_green
+Kd 0.400 0.720 0.280
+

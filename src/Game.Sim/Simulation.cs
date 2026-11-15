@@ -433,6 +433,10 @@ public sealed partial class Simulation
         var field = new ResourceField(_nextFieldId++, type, mapX, mapZ, initial);
         _fields.Add(field);
         _fieldsByMapCell[(mapX, mapZ)] = field;
+        if (IsExplored(mapX, mapZ))
+        {
+            Discover(type);
+        }
         return field;
     }
 
@@ -688,6 +692,7 @@ public sealed partial class Simulation
         _stockpile[type] = current + amount;
         if (amount > 0f)
         {
+            Discover(type);
             UnlockAffordable();
         }
     }

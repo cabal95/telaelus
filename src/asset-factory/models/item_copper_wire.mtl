@@ -1,0 +1,9 @@
+newmtl wood
+Kd 0.580 0.410 0.240
+
+newmtl copper
+Kd 0.860 0.500 0.280
+
+newmtl copper_light
+Kd 0.960 0.660 0.420
+

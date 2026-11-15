@@ -1,0 +1,6 @@
+newmtl concrete_dark
+Kd 0.540 0.540 0.520
+
+newmtl concrete
+Kd 0.660 0.660 0.640
+

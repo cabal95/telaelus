@@ -27,6 +27,7 @@ public partial class GameRoot : Node3D
     private InventoryPanel _inventory = null!;
     private FieldDetail _fieldDetail = null!;
     private FieldPictures _fieldPictures = null!;
+    private BuildingPictures _buildingPictures = null!;
     private DialogHost _dialogs = null!;
     private BuildMenu _buildMenu = null!;
     private BuildingDetail _buildingDetail = null!;
@@ -48,6 +49,9 @@ public partial class GameRoot : Node3D
     public BuildMenu BuildMenu => _buildMenu;
     public BuildingDetail BuildingDetail => _buildingDetail;
     public ResourceIcons Icons => _icons;
+
+    /// <summary>Whether the startup pictures (resource icons, field and building pictures) are drawn.</summary>
+    public bool PicturesReady => _icons.IsReady && _fieldPictures.IsReady && _buildingPictures.IsReady;
     public DebugOverlay Debug => _debug;
     public TopBar TopBar => _topBar;
     public HintOverlay Hint => _hint;
@@ -368,11 +372,11 @@ public partial class GameRoot : Node3D
         };
         AddChild(_debug);
 
-        var pictures = new BuildingPictures
+        _buildingPictures = new BuildingPictures
         {
             Name = "BuildingPictures"
         };
-        AddChild(pictures);
+        AddChild(_buildingPictures);
         _icons = new ResourceIcons
         {
             Name = "ResourceIcons"
@@ -406,7 +410,7 @@ public partial class GameRoot : Node3D
         {
             Name = "BuildMenu"
         };
-        _buildMenu.Initialize(_sim, _buildController, pictures);
+        _buildMenu.Initialize(_sim, _buildController, _buildingPictures);
         _dialogs.Add(_buildMenu, "Buildings");
 
         _buildingDetail = new BuildingDetail

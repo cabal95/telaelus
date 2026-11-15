@@ -1,0 +1,9 @@
+newmtl canister
+Kd 0.880 0.880 0.860
+
+newmtl band_red
+Kd 0.820 0.240 0.200
+
+newmtl metal_dark
+Kd 0.300 0.310 0.340
+

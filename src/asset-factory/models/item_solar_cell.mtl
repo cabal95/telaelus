@@ -1,0 +1,9 @@
+newmtl metal
+Kd 0.580 0.600 0.630
+
+newmtl solar
+Kd 0.160 0.260 0.560
+
+newmtl solar_line
+Kd 0.560 0.620 0.740
+

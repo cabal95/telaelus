@@ -1,0 +1,6 @@
+newmtl silicon
+Kd 0.380 0.400 0.500
+
+newmtl silicon_light
+Kd 0.560 0.580 0.720
+

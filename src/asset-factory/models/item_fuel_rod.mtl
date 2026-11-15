@@ -1,0 +1,10 @@
+newmtl metal
+Kd 0.580 0.600 0.630
+
+newmtl uranium_glow
+Kd 0.620 0.920 0.220
+Ke 0.310 0.460 0.110
+
+newmtl lead
+Kd 0.360 0.370 0.400
+

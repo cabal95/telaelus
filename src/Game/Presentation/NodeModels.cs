@@ -82,6 +82,20 @@ public static class NodeModels
         };
     }
 
+    /// <summary>
+    /// A deposit without field models of its own (one no world places yet) draws its item model
+    /// in every slot, so a field placed through the debug tools still shows.
+    /// </summary>
+    private static ModelSpec ItemStandIn(ResourceType type)
+    {
+        return new ModelSpec(
+            new[]
+            {
+                Ui.ResourceIcons.ModelPath(type)
+            },
+            0.6f);
+    }
+
     private static ModelSpec TreeFamily(string family)
     {
         return new ModelSpec(
@@ -111,11 +125,7 @@ public static class NodeModels
         {
             return Place(TreeFamilies[TreeFamilyOf(biome)], type, seedId, maxFootprint, initialAmount, slotPosition);
         }
-        if (!Specs.TryGetValue(type, out ModelSpec? spec))
-        {
-            throw new System.InvalidOperationException($"No resource models for {type}.");
-        }
-        return Place(spec, type, seedId, maxFootprint, initialAmount, slotPosition);
+        return Place(Specs.GetValueOrDefault(type) ?? ItemStandIn(type), type, seedId, maxFootprint, initialAmount, slotPosition);
     }
 
     private static (string Path, Transform3D Transform) Place(

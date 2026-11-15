@@ -103,8 +103,8 @@ The two kinds place themselves:
 ### Overlays
 
 - **Top bar** (`TopBar`): a full-width strip across the top of the window, 36 UI units tall, in
-  the panel color with a 1 px `PanelEdge` bottom border and no rounded corners. Left: every raw
-  resource (deposits, then terrain-sourced, in table order) as a 22-unit icon and its whole
+  the panel color with a 1 px `PanelEdge` bottom border and no rounded corners. Left: every
+  starting raw resource (the six starting deposits, then Sand and Water) as a 22-unit icon and its whole
   amount, 16 units apart, each with a tooltip naming it (opening below the entry, so it never
   covers its neighbors). Right: the launch progress, the Rocket Fuel and Iron icons with "have /
   need" in `Short` until met, then "[L] Launch ship" in `Accent` once both are, and "Ships: n"
@@ -149,7 +149,9 @@ The two kinds place themselves:
   tightly for icons, where the camera centers on and fills the square with the model's outline
   as it sees it (every vertex projected onto the view), so a leaning model such as the water drop
   sits centered like the rest. `RenderOnce` draws a set of stages once into cached
-  textures. Headless runs draw nothing, so there are no pictures or icons there.
+  textures, in batches of at most 16 stages drawing at once across every caller (each batch over
+  two frames), because Direct3D 12 runs out of sampler descriptors when every icon and picture
+  draws in one frame. Headless runs draw nothing, so there are no pictures or icons there.
 - **Building pictures** (`BuildingPictures`): each building is rendered once at startup into a
   256 px texture, in color and as a `Silhouette`, with its front toward the viewer. Grayscale (at
   70% brightness, for "not now") is a canvas shader on the color picture.

@@ -1,0 +1,27 @@
+{
+  "$schema": "../scenario.schema.json",
+  "name": "inventory",
+  "description": "The inventory lists every resource under tier headings: on an empty map nothing is discovered and every row is darkened; a field in sight discovers its deposit, holding a resource discovers it, and discovered rows move to the top of their tier.",
+  "steps": [
+    { "initMap": {} },
+    { "wait": 2 },
+    { "press": "I" },
+    { "wait": 2 },
+    { "expect": "ui.open", "equals": "inventory" },
+    { "expect": "discovered", "equals": [] },
+    { "expect": "ui.inventory[0]", "equals": { "type": "Wood", "amount": 0, "section": "raw", "discovered": false } },
+    { "expect": "ui.inventory[17].section", "equals": "tier1" },
+    { "expect": "ui.inventory[62]", "equals": { "type": "Engine", "amount": 0, "section": "tier4", "discovered": false } },
+    { "screenshot": "nothing-discovered" },
+
+    { "comment": "A Quartz field in an explored cell discovers Quartz, which moves to the top of the raw rows.", "placeResource": { "type": "Quartz", "mapCell": [6, 6] } },
+    { "seedStockpile": { "type": "Steel", "amount": 3 } },
+    { "wait": 2 },
+    { "expect": "discovered", "equals": ["Quartz", "Steel"] },
+    { "expect": "ui.inventory[0]", "equals": { "type": "Quartz", "amount": 0, "section": "raw", "discovered": true } },
+    { "expect": "ui.inventory[1]", "equals": { "type": "Wood", "amount": 0, "section": "raw", "discovered": false } },
+    { "expect": "ui.inventory[17]", "equals": { "type": "Steel", "amount": 3, "section": "tier1", "discovered": true } },
+    { "expect": "ui.inventory[18]", "equals": { "type": "Iron", "amount": 0, "section": "tier1", "discovered": false } },
+    { "screenshot": "some-discovered" }
+  ]
+}

@@ -1,0 +1,9 @@
+newmtl chip
+Kd 0.120 0.120 0.130
+
+newmtl metal
+Kd 0.580 0.600 0.630
+
+newmtl gold
+Kd 0.920 0.740 0.240
+

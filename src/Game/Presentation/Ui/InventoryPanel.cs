@@ -7,32 +7,48 @@ using Godot;
 namespace Game.Presentation.Ui;
 
 /// <summary>
-/// The inventory (I): a panel listing every resource, including those at 0, as its icon
-/// and "Iron (23)". Raw resources (deposits, then terrain-sourced) come first in table
-/// order, then a thin rule, then the refined ones. Hovering a row highlights it. The
-/// rows refresh every frame while it is open.
+/// The inventory (I): a panel listing every resource under tier headings (Raw, then Tier 1
+/// to Tier 4). Within a heading the discovered resources come first, then the undiscovered,
+/// each group in table order. A discovered row shows its icon and "Iron (23)"; an
+/// undiscovered row shows its icon as a silhouette and "Undiscovered" in the dim text color,
+/// so the player sees how much is left to find but not what it is. Hovering a row highlights
+/// it. The rows refresh and reorder every frame while it is open; the body scrolls.
 /// </summary>
 public partial class InventoryPanel : Dialog
 {
     public const float IconSize = 22f;
+    public const string UndiscoveredLabel = "Undiscovered";
 
     private Simulation _sim = null!;
     private ResourceIcons _icons = null!;
-    private readonly Dictionary<ResourceType, (TextureRect Icon, Label Label)> _rows = new();
+    private readonly Dictionary<ResourceType, Row> _rows = new();
+    private readonly Dictionary<int, VBoxContainer> _sections = new();
+
+    private sealed record Row(PanelContainer Panel, TextureRect Icon, Label Label);
 
     public override DialogKind Kind => DialogKind.Panel;
 
     public override string Id => "inventory";
 
-    /// <summary>The rows in order, each with its amount and section, for the snapshot.</summary>
-    public IEnumerable<(ResourceType Type, int Amount, string Section)> Rows =>
-        Order.Select(type => (type, HudOverlay.Whole(_sim, type), IsRaw(type) ? "raw" : "other"));
+    /// <summary>The rows in display order, each with its amount, section, and whether it is discovered, for the snapshot.</summary>
+    public IEnumerable<(ResourceType Type, int Amount, string Section, bool Discovered)> Rows =>
+        Enumerable.Range(0, ResourceDefs.MaxTier + 1)
+            .SelectMany(Ordered)
+            .Select(type => (type, HudOverlay.Whole(_sim, type), SectionId(Tier(type)), _sim.IsDiscovered(type)));
 
-    private static readonly List<ResourceType> Order = Enum.GetValues<ResourceType>()
-        .OrderBy(type => IsRaw(type) ? 0 : 1)
-        .ToList();
+    private static int Tier(ResourceType type) => ResourceDefs.For(type).Tier;
 
-    private static bool IsRaw(ResourceType type) => ResourceDefs.For(type).Kind != ResourceKind.Refined;
+    private static string SectionId(int tier) => tier == 0 ? "raw" : "tier" + tier;
+
+    private static string Heading(int tier) => tier == 0 ? "Raw" : "Tier " + tier;
+
+    /// <summary>A tier's resources: discovered first, then undiscovered, each in table order.</summary>
+    private IEnumerable<ResourceType> Ordered(int tier)
+    {
+        return Enum.GetValues<ResourceType>()
+            .Where(type => Tier(type) == tier)
+            .OrderBy(type => _sim.IsDiscovered(type) ? 0 : 1);
+    }
 
     public void Initialize(Simulation sim, ResourceIcons icons)
     {
@@ -42,20 +58,30 @@ public partial class InventoryPanel : Dialog
 
     protected override void Build()
     {
-        bool ruled = false;
-        foreach (ResourceType type in Order)
+        for (int tier = 0; tier <= ResourceDefs.MaxTier; tier++)
         {
-            if (!IsRaw(type) && !ruled)
+            Label heading = UiTheme.MakeLabel(Heading(tier), UiTheme.SmallSize);
+            heading.AddThemeColorOverride("font_color", UiTheme.TextDim);
+            heading.MouseFilter = MouseFilterEnum.Ignore;
+            Body.AddChild(heading);
+            Body.AddChild(new ColorRect
             {
-                Body.AddChild(new ColorRect
-                {
-                    Color = UiTheme.PanelEdge,
-                    CustomMinimumSize = new Vector2(0f, 1f),
-                    MouseFilter = MouseFilterEnum.Ignore
-                });
-                ruled = true;
+                Color = UiTheme.PanelEdge,
+                CustomMinimumSize = new Vector2(0f, 1f),
+                MouseFilter = MouseFilterEnum.Ignore
+            });
+            var section = new VBoxContainer
+            {
+                Name = SectionId(tier),
+                MouseFilter = MouseFilterEnum.Ignore
+            };
+            section.AddThemeConstantOverride("separation", UiTheme.Gap);
+            Body.AddChild(section);
+            _sections[tier] = section;
+            foreach (ResourceType type in Enum.GetValues<ResourceType>().Where(type => Tier(type) == tier))
+            {
+                section.AddChild(MakeRow(type));
             }
-            Body.AddChild(MakeRow(type));
         }
     }
 
@@ -85,17 +111,44 @@ public partial class InventoryPanel : Dialog
         Label label = UiTheme.MakeLabel("", UiTheme.BodySize);
         label.MouseFilter = MouseFilterEnum.Ignore;
         line.AddChild(label);
-        _rows[type] = (icon, label);
+        _rows[type] = new Row(row, icon, label);
         Host.Register(Id + "/" + type, row);
         return row;
     }
 
     public override void Refresh()
     {
-        foreach ((ResourceType type, (TextureRect icon, Label label)) in _rows)
+        for (int tier = 0; tier <= ResourceDefs.MaxTier; tier++)
         {
-            icon.Texture ??= _icons.For(type);
-            label.Text = $"{ResourceDefs.For(type).Name} ({HudOverlay.Whole(_sim, type)})";
+            VBoxContainer section = _sections[tier];
+            int index = 0;
+            foreach (ResourceType type in Ordered(tier))
+            {
+                Row row = _rows[type];
+                if (row.Panel.GetIndex() != index)
+                {
+                    section.MoveChild(row.Panel, index);
+                }
+                index++;
+                RefreshRow(type, row);
+            }
+        }
+    }
+
+    private void RefreshRow(ResourceType type, Row row)
+    {
+        row.Icon.Texture ??= _icons.For(type);
+        if (_sim.IsDiscovered(type))
+        {
+            row.Icon.Modulate = Colors.White;
+            row.Label.Text = $"{ResourceDefs.For(type).Name} ({HudOverlay.Whole(_sim, type)})";
+            row.Label.RemoveThemeColorOverride("font_color");
+        }
+        else
+        {
+            row.Icon.Modulate = UiTheme.Silhouette;
+            row.Label.Text = UndiscoveredLabel;
+            row.Label.AddThemeColorOverride("font_color", UiTheme.TextDim);
         }
     }
 }

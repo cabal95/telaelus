@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Game.Sim;
 using Godot;
@@ -166,16 +167,50 @@ public static class PictureStage
     }
 
     /// <summary>
+    /// The most stages drawing at once, across every caller. Each is its own SubViewport and
+    /// World3D, and Direct3D 12 ran out of sampler descriptors when every resource icon and the
+    /// startup field and building pictures drew in the same frame.
+    /// </summary>
+    private const int MaxInFlight = 16;
+
+    private static int _inFlight;
+
+    /// <summary>
     /// Draws each stage once into a square texture of the given size and returns the
-    /// textures by key, after two frames (one to draw, one so the read-back is
+    /// textures by key. Stages draw in batches of at most <see cref="MaxInFlight"/> (shared
+    /// by every caller), each batch over two frames (one to draw, one so the read-back is
     /// complete). Stages that draw nothing (no renderer) are left out.
     /// </summary>
     public static async Task<Dictionary<TKey, Texture2D>> RenderOnce<TKey>(
         Node owner, IEnumerable<(TKey Key, Action<Node> Fill)> stages, int size)
         where TKey : notnull
     {
+        var textures = new Dictionary<TKey, Texture2D>();
+        foreach ((TKey Key, Action<Node> Fill)[] batch in stages.Chunk(MaxInFlight))
+        {
+            while (_inFlight > 0 && _inFlight + batch.Length > MaxInFlight)
+            {
+                await owner.ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
+            }
+            _inFlight += batch.Length;
+            try
+            {
+                await RenderBatch(owner, batch, size, textures);
+            }
+            finally
+            {
+                _inFlight -= batch.Length;
+            }
+        }
+        return textures;
+    }
+
+    private static async Task RenderBatch<TKey>(
+        Node owner, (TKey Key, Action<Node> Fill)[] batch, int size, Dictionary<TKey, Texture2D> textures)
+        where TKey : notnull
+    {
         var views = new List<(TKey Key, SubViewport View)>();
-        foreach ((TKey key, Action<Node> fill) in stages)
+        foreach ((TKey key, Action<Node> fill) in batch)
         {
             var view = new SubViewport
             {
@@ -193,7 +228,6 @@ public static class PictureStage
         await owner.ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
         await owner.ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
 
-        var textures = new Dictionary<TKey, Texture2D>();
         foreach ((TKey key, SubViewport view) in views)
         {
             Image? image = view.GetTexture()?.GetImage();
@@ -203,7 +237,6 @@ public static class PictureStage
             }
             view.QueueFree();
         }
-        return textures;
     }
 
     private static void Paint(Node node, Material material)

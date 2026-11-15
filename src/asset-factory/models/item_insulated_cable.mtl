@@ -1,0 +1,9 @@
+newmtl wood
+Kd 0.580 0.410 0.240
+
+newmtl band_red
+Kd 0.820 0.240 0.200
+
+newmtl magnet_red
+Kd 0.840 0.200 0.180
+

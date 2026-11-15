@@ -38,6 +38,7 @@ public sealed partial class Simulation
         _exploredBounds = _exploredBounds is (int minX, int minZ, int maxX, int maxZ)
             ? (Math.Min(minX, mapX), Math.Min(minZ, mapZ), Math.Max(maxX, mapX), Math.Max(maxZ, mapZ))
             : (mapX, mapZ, mapX, mapZ);
+        DiscoverCell(mapX, mapZ);
     }
 
     /// <summary>Raised with the map cells that just became explored, so views redraw only those.</summary>

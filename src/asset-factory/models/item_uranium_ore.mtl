@@ -1,0 +1,10 @@
+newmtl ore_rock_dark
+Kd 0.400 0.400 0.410
+
+newmtl uranium_rock
+Kd 0.280 0.290 0.260
+
+newmtl uranium_glow
+Kd 0.620 0.920 0.220
+Ke 0.310 0.460 0.110
+
