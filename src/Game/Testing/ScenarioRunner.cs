@@ -87,6 +87,11 @@ public partial class ScenarioRunner : Node
         }
 
         _outputDir = ResolveOutputDir();
+        ShutdownTrace.Start(_outputDir);
+        _root.AddChild(new ShutdownTrace.Watcher
+        {
+            Name = "ShutdownWatcher"
+        });
         bool screenshots = !_args.NoScreenshots && !TestArgs.IsHeadless;
         _executor = new CommandExecutor(_root, _outputDir, screenshots);
         _waitForPictures = screenshots;
@@ -246,7 +251,31 @@ public partial class ScenarioRunner : Node
 
         GD.Print($"SCENARIO {result.ToUpperInvariant()}: {_name}{(message is null ? "" : $" - {message}")}");
         GD.Print($"SCENARIO REPORT: {reportPath}");
+        ShutdownTrace.Mark($"report written ({result}, exit {exitCode}); quit requested");
+        MakeExitGarbage(_args.ExitGarbage);
         GetTree().Quit(exitCode);
+    }
+
+    /// <summary>
+    /// The --exit-garbage stress knob: drops this many C# input events and starts a collection
+    /// without waiting, so the finalizer thread is still at work as the engine shuts down.
+    /// </summary>
+    private static void MakeExitGarbage(int count)
+    {
+        if (count <= 0)
+        {
+            return;
+        }
+        for (int i = 0; i < count; i++)
+        {
+            _ = new InputEventKey
+            {
+                Keycode = Key.Escape,
+                Pressed = true
+            };
+        }
+        System.GC.Collect();
+        ShutdownTrace.Mark($"exit garbage: {count} events dropped, collection started");
     }
 
     /// <summary>

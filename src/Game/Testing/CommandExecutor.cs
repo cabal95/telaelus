@@ -120,8 +120,9 @@ public sealed class CommandExecutor
             {
                 Input.ParseInputEvent(release);
             }
-            _pendingReleases.Clear();
             Input.FlushBufferedEvents();
+            DisposeAll(_pendingReleases);
+            _pendingReleases.Clear();
         }
         if (_dragFrames.Count > 0)
         {
@@ -635,6 +636,20 @@ public sealed class CommandExecutor
             Input.ParseInputEvent(inputEvent);
         }
         Input.FlushBufferedEvents();
+        DisposeAll(events);
+    }
+
+    /// <summary>
+    /// Lets go of delivered events' C# wrappers at once. Godot holds its own reference while it still
+    /// needs an event; a wrapper left for the garbage collector can instead be finalized while the
+    /// engine shuts down, racing its own cleanup of the same object and crashing the process.
+    /// </summary>
+    private static void DisposeAll(List<InputEvent> events)
+    {
+        foreach (InputEvent inputEvent in events)
+        {
+            inputEvent.Dispose();
+        }
     }
 
     private static InputEventKey KeyEvent(Key key, bool pressed)
@@ -654,6 +669,8 @@ public sealed class CommandExecutor
     private void PushUi(InputEvent inputEvent)
     {
         _root.GetViewport().PushInput(inputEvent);
+        // Delivered at once; see DisposeAll.
+        inputEvent.Dispose();
     }
 
     private static InputEventMouseMotion MotionEvent(Vector2 screen)

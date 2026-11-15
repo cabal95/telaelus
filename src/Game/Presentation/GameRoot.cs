@@ -74,6 +74,22 @@ public partial class GameRoot : Node3D
         ControlChannel.AttachIfRequested(this);
     }
 
+    /// <summary>
+    /// On the way out, finishes .NET's pending finalizers while the engine is still whole: a C# wrapper
+    /// finalized during Godot's own C# cleanup races it over the same object and crashes the process.
+    /// Twice, for objects that the first round's finalizers let go.
+    /// </summary>
+    public override void _ExitTree()
+    {
+        Game.Testing.ShutdownTrace.Mark("GameRoot: exit tree");
+        for (int round = 0; round < 2; round++)
+        {
+            System.GC.Collect();
+            System.GC.WaitForPendingFinalizers();
+        }
+        Game.Testing.ShutdownTrace.Mark("GameRoot: finalizers done");
+    }
+
     public override void _Process(double delta)
     {
         // A modal takes all input, so the world reads none.

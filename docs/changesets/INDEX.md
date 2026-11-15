@@ -161,6 +161,10 @@ Newest last. One line each; open the file for the full spec.
   the last, down to a quarter); Material Transfer (Wood, Stone, Iron Ore, Copper Ore, Coal) and
   Advanced Material Transfer (every other raw resource) drain online collectors into storage; the
   research tree (T) and the Research Lab.
+- **2611151313-shutdown-crash** - Fixes the intermittent crash on quit (C# wrappers of injected input
+  events finalized while Godot freed them): injected events are disposed once delivered, and the
+  game root finishes .NET's finalizers on exit; adds the scenario stress script with crash dumps,
+  shutdown breadcrumbs, and a forced-race knob.
 
 ## Adding a changeset
 

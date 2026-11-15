@@ -317,7 +317,11 @@ ui-style.md. There is no text HUD; the screen holds:
   shadows on) that never moves, so the hard shadows hold still. Each frame `DayLight.Apply` sets
   only its color and energy by the time of day: white at midday and warm (1, 0.74, 0.52) when the
   sun is low, energy 1, by day; a blue moonlight (0.56, 0.64, 0.88) at energy 0.76 by night;
-  blended by the daylight through dawn and dusk. A `WorldEnvironment` with a clear-color background, ambient light off,
+  blended by the daylight through dawn and dusk.
+- **On the way out** `GameRoot._ExitTree` runs .NET's garbage collection and waits for pending
+  finalizers, twice, so every leftover C# wrapper of a Godot object is finalized while the engine
+  is whole. A wrapper finalized during Godot's own C# cleanup races it over the same object and
+  crashes the process (0xC0000005 or 0xC000001D on quit). A `WorldEnvironment` with a clear-color background, ambient light off,
   and linear tone mapping; without one, the Mobile renderer would add ambient fill. Directional
   shadows use the hard filter (`soft_shadow_filter_quality` 0), so they stay crisp and dark. The
   first launch on a new machine compiles shaders once (one frame of about a second); Godot caches

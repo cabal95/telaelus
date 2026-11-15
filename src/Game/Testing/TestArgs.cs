@@ -5,7 +5,8 @@ namespace Game.Testing;
 /// <summary>
 /// Testing options from the user arguments after "--" on the Godot command line:
 /// --scenario=&lt;file&gt;, --output=&lt;dir&gt;, --no-screenshots, --control-port=&lt;n&gt;,
-/// and --start-paused.
+/// --start-paused, and --exit-garbage=&lt;n&gt; (a stress knob: n dropped C# input events and a garbage
+/// collection just before a scenario quits, so finalizers are still running as the engine shuts down).
 /// </summary>
 public sealed class TestArgs
 {
@@ -14,6 +15,7 @@ public sealed class TestArgs
     public bool NoScreenshots { get; private init; }
     public int? ControlPort { get; private init; }
     public bool StartPaused { get; private init; }
+    public int ExitGarbage { get; private init; }
 
     public static TestArgs Parse()
     {
@@ -22,6 +24,7 @@ public sealed class TestArgs
         bool noScreenshots = false;
         int? controlPort = null;
         bool startPaused = false;
+        int exitGarbage = 0;
         foreach (string arg in OS.GetCmdlineUserArgs())
         {
             if (arg.StartsWith("--scenario="))
@@ -51,6 +54,14 @@ public sealed class TestArgs
             {
                 startPaused = true;
             }
+            else if (arg.StartsWith("--exit-garbage="))
+            {
+                if (!int.TryParse(arg["--exit-garbage=".Length..], out exitGarbage) || exitGarbage < 0)
+                {
+                    GD.PushError($"Invalid {arg}; expected a count.");
+                    exitGarbage = 0;
+                }
+            }
         }
 
         return new TestArgs
@@ -59,7 +70,8 @@ public sealed class TestArgs
             OutputDir = output,
             NoScreenshots = noScreenshots,
             ControlPort = controlPort,
-            StartPaused = startPaused
+            StartPaused = startPaused,
+            ExitGarbage = exitGarbage
         };
     }
 

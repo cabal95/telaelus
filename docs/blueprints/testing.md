@@ -285,7 +285,10 @@ pausing it and stepping frame by frame.
   `shipsLaunched`. New checks are added as snapshot fields.
 - **Input injection:** keys and mouse buttons go through `Input.ParseInputEvent` followed by
   `Input.FlushBufferedEvents()`, so they are delivered in the current frame (Godot otherwise
-  buffers them until its next flush). Aiming uses `BuildController.PointerOverride`, a world
+  buffers them until its next flush). Every injected event's C# wrapper is disposed once it is
+  delivered (UI pushes too): Godot holds its own reference while it needs one, and a wrapper left
+  to the garbage collector could be finalized while the engine shuts down, racing Godot's own
+  cleanup of the same object and crashing the process. Aiming uses `BuildController.PointerOverride`, a world
   point projected to the screen each frame; injected mouse motion is not used because a windowed
   game reports the real OS cursor instead.
 
@@ -347,6 +350,35 @@ pausing it and stepping frame by frame.
   bad JSON, unknown command, bad arguments) or a step threw. A run stops at its first failure and
   still writes its report. The last lines of stdout are `SCENARIO PASSED|FAILED|ERROR: ...` and
   `SCENARIO REPORT: <path>`.
+- **Shutdown trace:** a run also writes `shutdown.log` in its output folder (`ShutdownTrace`),
+  flushed line by line, each line the milliseconds since the trace started and a step: the trace
+  started, the report written and quit requested, the game root leaving the tree and finishing
+  .NET's finalizers, and the last node's deletion. A run that dies while quitting shows how far it
+  got.
+- **`--exit-garbage=<n>`** (a stress knob, after `--`): just before quitting, the runner drops n C#
+  input events and starts a garbage collection without waiting, so finalizers are still running as
+  the engine shuts down. With the shutdown handling in place such runs still exit cleanly; it
+  exists to prove that.
+
+### Stress runs
+
+- **`src/Game.Integration.Tests/tools/stress_scenarios.py`** runs scenarios many times to catch
+  intermittent failures: `python src/Game.Integration.Tests/tools/stress_scenarios.py <names...>
+  [--all] [--runs N] [--jobs J] [--timeout S] [--dumps] [--dump-type 1-4] [--exit-garbage N]
+  [--keep-ok]` (Godot from `tools.json`). Each run is the headless launch the integration tests
+  use, in its own folder under `test-output/stress/<yyMMdd-HHmmss>/`.
+- **Classes:** ok (exit 0, report passed), failed (the scenario failed: its report's exit code),
+  shutdown (the report passed, then the process died), crash (died before its report), timeout.
+  Problem runs keep stdout, stderr, the report, and `shutdown.log`; ok runs are deleted unless
+  `--keep-ok`.
+- **Output:** a progress line (a dot per ok run, a letter per problem run, with its exit as a
+  named Windows code and its crash signature: the .NET fatal or unhandled-exception lines and top
+  stack frames from stderr), a table of classes per scenario, how many runs left C# references to
+  Godot objects at exit ("Leaked unsafe reference" in stderr, the shutdown crash's precondition),
+  the distinct crash signatures, and `summary.json`.
+- **Dumps:** `--dumps` sets `DOTNET_DbgEnableMiniDump` and its settings on the Godot process, so
+  the .NET runtime writes `crash-<pid>.dmp` in the run's folder when it dies (type 2, with heap,
+  by default: enough for managed stacks in `dotnet-dump`). No system setting changes.
 
 ### Integration tests
 
