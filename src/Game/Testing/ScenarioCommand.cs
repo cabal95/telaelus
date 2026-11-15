@@ -151,6 +151,12 @@ public sealed class ScenarioCommand
                     float z = Number(Required(arg, "z"), "z");
                     return e => e.TeleportPlayer(x, z);
                 }
+            case "setRecipe":
+                {
+                    (int x, int z) = Pair(Required(arg, "anchor"), "anchor");
+                    int index = (int)Number(Required(arg, "index"), "index");
+                    return e => e.SetRecipe(x, z, index);
+                }
             case "placeMotherlode":
                 {
                     MotherlodeType kind = ParseEnum<MotherlodeType>(Required(arg, "kind"));

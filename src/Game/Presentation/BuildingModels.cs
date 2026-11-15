@@ -43,6 +43,9 @@ public static class BuildingModels
             BuildingType.ChemicalPlant => "chemical_plant",
             BuildingType.AluminumSmelter => "aluminum_smelter",
             BuildingType.ElectricFurnace => "electric_furnace",
+            BuildingType.ElectronicsWorks => "electronics_works",
+            BuildingType.TileKiln => "tile_kiln",
+            BuildingType.AssemblyPlant => "assembly_plant",
             _ => type.ToString().ToLowerInvariant()
         };
     }

@@ -22,7 +22,7 @@
     { "expect": "buildings[6].recipe", "equals": "Steel" },
     { "expect": "buildings[6].idleReason", "equals": "Waiting for Iron, Limestone" },
     { "expect": "buildings[7].recipe", "equals": "Hydrogen" },
-    { "expect": "ui.topBar.launch", "equals": "0 / 500   0 / 200   0 / 100" },
+    { "expect": "ui.topBar.launch", "equals": "0 / 4   0 / 1   0 / 1   0 / 500   0 / 200" },
 
     { "aimAt": { "world": [50, 7] } },
     { "wait": 1 },

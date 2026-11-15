@@ -1,0 +1,33 @@
+newmtl stone_dark
+Kd 0.360 0.340 0.330
+
+newmtl stone_85
+Kd 0.425 0.399 0.374
+
+newmtl metal
+Kd 0.580 0.600 0.630
+
+newmtl metal_dark
+Kd 0.300 0.310 0.340
+
+newmtl fabricator_accent
+Kd 0.960 0.560 0.160
+
+newmtl shadow
+Kd 0.080 0.070 0.070
+
+newmtl steel
+Kd 0.460 0.520 0.600
+
+newmtl steel_light
+Kd 0.620 0.680 0.760
+
+newmtl wood
+Kd 0.580 0.410 0.240
+
+newmtl wood_dark
+Kd 0.400 0.280 0.170
+
+newmtl power_accent
+Kd 1.000 0.860 0.120
+

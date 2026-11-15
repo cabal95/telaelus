@@ -65,9 +65,15 @@ public sealed partial class Simulation
 
     private const float HarvestRange = 1.5f;
 
-    public const float LaunchRocketFuelCost = 500f;
-    public const float LaunchIronCost = 100f;
-    public const float LaunchLiquidOxygenCost = 200f;
+    /// <summary>The ship bill: what a launch takes from storage.</summary>
+    public static readonly IReadOnlyList<ResourceAmount> LaunchCost = new ResourceAmount[]
+    {
+        new(ResourceType.HullSection, 4f),
+        new(ResourceType.Engine, 1f),
+        new(ResourceType.ControlModule, 1f),
+        new(ResourceType.RocketFuel, 500f),
+        new(ResourceType.LiquidOxygen, 200f)
+    };
 
     /// <summary>A simulation of the fixed test map.</summary>
     public Simulation() : this(WorldSettings.TestMap)
@@ -528,12 +534,16 @@ public sealed partial class Simulation
 
     // ---- Ship launch (initial win condition) -----------------------------
 
+    /// <summary>Whether storage holds the whole ship bill.</summary>
+    public bool LaunchBillMet => HasAll(LaunchCost);
+
+    /// <summary>The Shipyard a ship launches from: the first switched-on, online one, or null.</summary>
+    public Building? LaunchShipyard => _buildings.Find(b => b.Type == BuildingType.Shipyard && b.Enabled && b.Online);
+
+    /// <summary>A launch needs the whole ship bill in storage and a Shipyard to launch from.</summary>
     public bool CanLaunchShip()
     {
-        _stockpile.TryGetValue(ResourceType.RocketFuel, out float fuel);
-        _stockpile.TryGetValue(ResourceType.Iron, out float iron);
-        _stockpile.TryGetValue(ResourceType.LiquidOxygen, out float oxygen);
-        return fuel >= LaunchRocketFuelCost && iron >= LaunchIronCost && oxygen >= LaunchLiquidOxygenCost;
+        return LaunchBillMet && LaunchShipyard is not null;
     }
 
     /// <summary>Consume the launch cost and record a launched ship. The initial win.</summary>
@@ -544,9 +554,10 @@ public sealed partial class Simulation
             return false;
         }
 
-        AddToStockpile(ResourceType.RocketFuel, -LaunchRocketFuelCost);
-        AddToStockpile(ResourceType.Iron, -LaunchIronCost);
-        AddToStockpile(ResourceType.LiquidOxygen, -LaunchLiquidOxygenCost);
+        foreach (ResourceAmount cost in LaunchCost)
+        {
+            AddToStockpile(cost.Type, -cost.Amount);
+        }
         ShipsLaunched++;
         return true;
     }

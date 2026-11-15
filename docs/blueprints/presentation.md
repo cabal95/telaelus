@@ -58,7 +58,15 @@ planned multiplayer feasible.
   carried resource's item model on its bed, at 0.7 scale, while loaded), `SiteViews` (a marker on
   each explored worked-out cell with no field or building on it, `worked_out_oil` for Crude Oil and
   `worked_out_pit` otherwise; and each explored motherlode as `motherlode_base` with twelve of its
-  yields' field models round its ring, shared out by its shares, at 1.3 scale), `PlayerView` (the character), `CameraRig` (the orthographic follow camera, with
+  yields' field models round its ring, shared out by its shares, at 1.3 scale),
+  `DisplayStandViews` (a `display_stand` at the middle of the front edge, 0.4 inside the footprint
+  and turned with the building, on every building with a choice of output: a processor with more
+  than one recipe, a Quarry, or a building on a motherlode; it carries the item model of what the
+  building makes (`DisplayedOutput`: the running recipe's output, the waiting one's once a change
+  is chosen, or the collector's output; nothing while switched off) at 0.7 scale, turning slowly;
+  and on every Shipyard's pad the ship as storage holds its parts: `ship_engine` once there is an
+  Engine, a `ship_hull_ring` per Hull Section up to four stacked on it, and `ship_nose` once there
+  is a Control Module), `PlayerView` (the character), `CameraRig` (the orthographic follow camera, with
   `ZoomTo` for a direct size; attached it follows the player, a drag detaches it, and
   `ReturnToPlayer` slides or jumps it back; see player.md),
   `BuildController` (build-mode selection and rotation, the footprint ghost, the extractor
@@ -76,8 +84,10 @@ ui-style.md. There is no text HUD; the screen holds:
   `Warning` when storage has no room for another unit, with name tooltips; a capacity resource
   (Sand, Water) shows demand over supply instead ("2 / 4", or "Blackout: 6 / 4"), in normal text,
   `Warning` in a brownout, or `Danger` in a blackout (`HudOverlay.StorageText` and `AmountColor`).
-  Then the launch progress (Rocket Fuel, Liquid Oxygen, and Iron, each "have / need") with "[L]
-  Launch ship" once it can launch, preceded by the network's
+  Then the launch progress: each entry of the ship bill (`Simulation.LaunchCost`: Hull Section,
+  Engine, Control Module, Rocket Fuel, Liquid Oxygen) as "have / need" until the bill is met, then
+  "[L] Launch ship" once it can launch, or "Build a Shipyard to launch" with the bill met and no
+  online Shipyard, and "Ships: n" once one has launched; all preceded by the network's
   power ("Power 45 / 100", or "Blackout: Power 140 / 100", colored the same way). Pinning or unpinning rebuilds the entries.
 - **Hint overlay** (`HintOverlay`): below the top bar, the E key's action with the resource's
   icon and a progress bar toward the next unit: "[E] Harvest Wood" while a hand-harvestable field is

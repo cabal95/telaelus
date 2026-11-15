@@ -22,6 +22,7 @@ public partial class GameRoot : Node3D
     private BuildingViews _buildingViews = null!;
     private TruckViews _truckViews = null!;
     private SiteViews _siteViews = null!;
+    private DisplayStandViews _standViews = null!;
     private BuildController _buildController = null!;
     private DebugOverlay _debug = null!;
     private TopBar _topBar = null!;
@@ -105,6 +106,7 @@ public partial class GameRoot : Node3D
         _buildingViews.Sync(ExploredBuildings());
         _truckViews.Sync(_sim, delta);
         _siteViews.Sync(_sim);
+        _standViews.Sync(_sim, delta);
         _topBar.Refresh(_sim, _dialogs.UiSize);
         _hint.Refresh(_sim, _dialogs.UiSize);
         _debug.Refresh(_sim, _perf);
@@ -407,6 +409,12 @@ public partial class GameRoot : Node3D
             Name = "Sites"
         };
         AddChild(_siteViews);
+
+        _standViews = new DisplayStandViews
+        {
+            Name = "DisplayStands"
+        };
+        AddChild(_standViews);
 
         _playerView = new PlayerView
         {

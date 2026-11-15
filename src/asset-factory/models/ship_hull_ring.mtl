@@ -1,0 +1,9 @@
+newmtl shipyard_accent
+Kd 0.940 0.950 0.960
+
+newmtl hull_dark
+Kd 0.580 0.600 0.640
+
+newmtl assembly_accent
+Kd 0.200 0.320 0.700
+

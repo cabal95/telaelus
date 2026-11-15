@@ -234,6 +234,10 @@ PALETTE = {
     "aluminum_accent": (0.74, 0.80, 0.90),
     "furnace_accent": (0.30, 0.60, 1.00),
     "brick": (0.58, 0.30, 0.24),
+    "fabricator_accent": (0.96, 0.56, 0.16),
+    "electronics_accent": (0.24, 0.72, 0.38),
+    "assembly_accent": (0.20, 0.32, 0.70),
+    "shipyard_accent": (0.94, 0.95, 0.96),
 }
 GLOW = {"lava", "furnace_glow", "uranium_glow", "crystal_light", "screen", "led", "nozzle_hot", "hub_accent"}  # palette entries that are emissive
 GLOW_STRENGTH = 0.5  # emission as a fraction of the base color

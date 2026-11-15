@@ -1,0 +1,9 @@
+newmtl metal_dark
+Kd 0.300 0.310 0.340
+
+newmtl metal
+Kd 0.580 0.600 0.630
+
+newmtl power_accent
+Kd 1.000 0.860 0.120
+

@@ -1,0 +1,30 @@
+newmtl stone_dark
+Kd 0.360 0.340 0.330
+
+newmtl stone_85
+Kd 0.425 0.399 0.374
+
+newmtl metal
+Kd 0.580 0.600 0.630
+
+newmtl metal_dark
+Kd 0.300 0.310 0.340
+
+newmtl assembly_accent
+Kd 0.200 0.320 0.700
+
+newmtl assembly_accent_70
+Kd 0.140 0.224 0.490
+
+newmtl nozzle
+Kd 0.340 0.340 0.380
+
+newmtl steel_light
+Kd 0.620 0.680 0.760
+
+newmtl wood_dark
+Kd 0.400 0.280 0.170
+
+newmtl power_accent
+Kd 1.000 0.860 0.120
+

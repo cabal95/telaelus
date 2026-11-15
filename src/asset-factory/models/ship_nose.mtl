@@ -1,0 +1,7 @@
+newmtl shipyard_accent
+Kd 0.940 0.950 0.960
+
+newmtl screen
+Kd 0.300 0.780 0.860
+Ke 0.150 0.390 0.430
+

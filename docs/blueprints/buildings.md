@@ -3,14 +3,14 @@
 ## Overview
 
 Buildings are placed on the fine grid and run the production chain that turns raw resources into
-fuel. Accumulating enough refined output lets the player launch a ship, which closes the on-planet
-loop.
+fuel and then into ship parts. Building the ship's parts and its fuel lets the player launch a
+ship from a Shipyard, which closes the on-planet loop.
 
 ## Current state
 
 ### Building types and definitions
 
-- `BuildingType` has thirty-five values: **Mine**, **Lumber Camp**, **Smelter**, **Refinery**,
+- `BuildingType` has forty values: **Mine**, **Lumber Camp**, **Smelter**, **Refinery**,
   **Oil Well**, the **HQ**, the storage buildings **Silo**, **Stockyard**, **Tank Farm**,
   **Warehouse**, and **Vault**, the hubs **Small Hub** and **Relay**, the generators **Water
   Wheel** and **Burner Generator**, the powered extractors **Lumber Mill** and **Drill Rig**, the
@@ -18,7 +18,8 @@ loop.
   Dredge**, the **Glassworks**, the **Depot**, and the renewables **Forester**, **Quarry**,
   **Charcoal Kiln**, **Rock Crusher**, **Deep Well**, and **Deep Mine**, and the tier-1 refining
   **Steel Mill**, **Electrolyzer**, **Fuel Plant**, **Chemical Plant**, **Aluminum Smelter**, and
-  **Electric Furnace**.
+  **Electric Furnace**, and the parts buildings **Fabricator**, **Electronics Works**, **Tile
+  Kiln**, **Assembly Plant**, and **Shipyard**.
 - Each type has a `BuildingDef` (in `BuildingDefs`): a display name, a footprint in fine cells
   (width along X, depth along Z when facing North), a cost, a speed, and for an extractor, the
   deposit types it works (`Works`; a building is an extractor when the list is not empty) and its
@@ -266,6 +267,23 @@ loop.
   the Steel Mill is built from Stone and Iron, the rest of the tier from Steel (the Electrolyzer
   from Iron and Copper).
 
+**Parts.** The buildings that make the ship's parts are grouped by process, not by part: the
+Fabricator forms and machines metal and composites, the Electronics Works makes wire and circuits,
+the Tile Kiln fires ceramics, the Assembly Plant assembles tier-3 parts, and the Shipyard builds
+the tier-4 Hull Section and Engine. A recipe may make more than one unit (`Recipes.MakeMany`).
+
+| Building | Footprint | Cost | Tier | Draws | Recipes (inputs to output, cycle) |
+|---|---|---|---|---|---|
+| Fabricator | 4 x 6 | 40 Steel, 20 Copper | 2 | 30 Power | Hull Plate: 2 Steel, 12 s; Steel Beam: 3 Steel, 15 s; Aluminum Frame: 2 Aluminum, 12 s; Machine Parts: 2 Steel, 1 Rubber, 15 s; Composite Panel: 2 Carbon Fiber, 1 Aluminum, 20 s |
+| Electronics Works | 4 x 5 | 30 Steel, 30 Copper, 10 Glass | 2 | 20 Power, 2 Water | 2 Copper Wire: 1 Copper, 6 s; Circuit: 2 Copper Wire, 1 Plastic, 10 s |
+| Tile Kiln | 3 x 7 | 40 Stone, 20 Steel | 2 | 30 Power | 2 Ceramic Tile: 1 Silicon, 1 Aluminum, 15 s |
+| Assembly Plant | 6 x 8 | 20 Steel Beam, 20 Hull Plate, 10 Circuit | 3 | 40 Power | Control Module: 4 Circuit, 2 Hull Plate, 2 Glass, 40 s; Thruster Assembly: 4 Titanium, 2 Machine Parts, 6 Ceramic Tile, 45 s; Fuel Tank: 4 Aluminum Frame, 4 Composite Panel, 40 s |
+| Shipyard | 8 x 12 | 40 Steel Beam, 20 Hull Plate, 10 Circuit | 4 | 50 Power | Hull Section: 4 Hull Plate, 2 Steel Beam, 60 s; Engine: 2 Thruster Assembly, 2 Fuel Tank, 4 Machine Parts, 90 s |
+
+- Each tier is built from the one before: tier-2 buildings from Steel and Copper (and Stone, Glass),
+  the Assembly Plant and Shipyard from tier-2 parts. All have an output buffer of 10 (the
+  Shipyard's 2) and 5 cycles of each input.
+
 ### Renewables
 
 | Building | Footprint | Cost | Tier, draws | Placement | Does |
@@ -392,10 +410,11 @@ loop.
 
 ### Ship launch (win condition)
 
-- When the stockpile holds at least `LaunchRocketFuelCost` (500 Rocket Fuel),
-  `LaunchLiquidOxygenCost` (200 Liquid Oxygen), and `LaunchIronCost` (100 Iron),
-  `CanLaunchShip` is true. `TryLaunchShip` consumes that cost and increments `ShipsLaunched`. This
-  is the current win that closes the initial loop.
+- The ship bill, `Simulation.LaunchCost`, is 4 Hull Sections, 1 Engine, 1 Control Module, 500
+  Rocket Fuel, and 200 Liquid Oxygen. `LaunchBillMet` is true when storage holds all of it.
+- A ship launches from a Shipyard: `LaunchShipyard` is the first switched-on, online Shipyard, or
+  null. `CanLaunchShip` is true when the bill is met and there is one. `TryLaunchShip` consumes the
+  bill and increments `ShipsLaunched`. This is the current win that closes the initial loop.
 
 ### Rendering and interaction
 
@@ -427,7 +446,8 @@ loop.
   mouth at the back, a cooling line of panes down its length under an open roof frame, and a rack
   of finished panes at the front, pale cyan), Depot (a garage across the back half with two roller
   doors and a fuel pump between them, tyres behind, and an apron painted with four bays at the
-  front, red trim); every powered building also has a wooden power pole with a yellow band. The
+  front, red trim); the refining, renewable, and parts buildings are described in art-style.md;
+  every powered building also has a wooden power pole with a yellow band. The
   truck (a unit, not a building) is a small flatbed, 1.6 long and 0.8 wide, with a red cab and an
   empty bed the presentation sets the cargo on. The front
   marks the facing, so a

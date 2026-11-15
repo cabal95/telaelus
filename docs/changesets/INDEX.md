@@ -142,6 +142,11 @@ Newest last. One line each; open the file for the full spec.
   Kerosene, and the Steel Mill, Electrolyzer, Fuel Plant, Chemical Plant, Aluminum Smelter, and
   Electric Furnace with their models; Rocket Fuel from Kerosene and Hydrogen; the launch adds 200
   Liquid Oxygen.
+- **2611151033-first-ship-parts** - Adds the first ship's parts: the Fabricator, Electronics Works,
+  and Tile Kiln (tier 2), the Assembly Plant (tier 3), and the Shipyard (tier 4) with 13 recipes; the
+  launch needs 4 Hull Sections, an Engine, a Control Module, 500 Rocket Fuel, and 200 Liquid Oxygen
+  and an online Shipyard; display stands show what a building makes, and the ship grows on the
+  Shipyard's pad as its parts arrive.
 
 ## Adding a changeset
 

@@ -839,6 +839,178 @@ def electric_furnace():
     return m, mat.mats
 
 
+def fabricator():
+    """4 x 6: a high hall with a hydraulic press frame at the back, a roller line and a gantry crane
+    over an open bay down one side, and plates, beams, and crates at the front, a power pole."""
+    m, mat = Mesh(), Materials()
+    hx, hz = half(4), half(6)
+    box(m, mat("stone_dark"), -hx, 0, -hz, hx, 0.08, hz, mat_top=mat("stone", 0.85))
+    box(m, mat("metal"), -1.8, 0.08, -1.0, 0.4, 1.9, 2.8, mat_top=mat("metal_dark"))
+    box(m, mat("fabricator_accent"), -1.82, 1.5, -1.02, 0.42, 1.62, 2.82)
+    box(m, mat("shadow"), -1.2, 0.08, -1.01, -0.2, 1.3, -1.0)
+    # the press frame rising through the roof at the back
+    for x in (-1.3, -0.3):
+        box(m, mat("fabricator_accent"), x - 0.12, 1.9, 1.6, x + 0.12, 2.9, 2.0)
+    box(m, mat("fabricator_accent"), -1.45, 2.7, 1.55, -0.15, 3.0, 2.05)
+    # the open bay on the right with a gantry crane and a roller line
+    for z in (-1.0, 2.7):
+        for x in (0.6, 1.8):
+            cylinder(m, mat("metal_dark"), (x, 0.08, z), (x, 1.6, z), 0.05, segs=5)
+        cylinder(m, mat("fabricator_accent"), (0.6, 1.6, z), (1.8, 1.6, z), 0.06, segs=5)
+    cylinder(m, mat("fabricator_accent"), (1.2, 1.6, -1.0), (1.2, 1.6, 2.7), 0.06, segs=5)
+    for k in range(9):
+        z = -0.8 + k * 0.42
+        cylinder(m, mat("metal_dark"), (0.75, 0.3, z), (1.65, 0.3, z), 0.06, segs=6)
+    # plates, beams, and crates at the front
+    for k in range(3):
+        y = 0.08 + k * 0.08
+        box(m, mat("steel"), -1.7, y, -2.75, -0.7, y + 0.07, -1.6, mat_top=mat("steel_light"))
+    for k in range(2):
+        box(m, mat("steel"), -0.4, 0.08 + k * 0.16, -2.7 + k * 0.05, 0.6, 0.22 + k * 0.16, -2.55 + k * 0.05)
+    box(m, mat("wood"), 0.9, 0.08, -2.7, 1.4, 0.45, -2.2)
+    power_pole(m, mat, 1.65, 2.65, 1.6)
+    return m, mat.mats
+
+
+def electronics_works():
+    """4 x 5: a clean low building with a saw-tooth glass roof, a clean-room annex, and wire spools
+    at the front, a power pole."""
+    m, mat = Mesh(), Materials()
+    hx, hz = half(4), half(5)
+    box(m, mat("stone_dark"), -hx, 0, -hz, hx, 0.08, hz, mat_top=mat("stone", 0.9))
+    box(m, mat("ceramic"), -1.8, 0.08, -0.9, 1.0, 0.9, 2.3, mat_top=mat("metal"))
+    box(m, mat("electronics_accent"), -1.82, 0.7, -0.92, 1.02, 0.78, 2.32)
+    for k in range(4):
+        z0 = -0.9 + k * 0.8
+        quad(m, mat("glass"), (-1.8, 0.9, z0), (1.0, 0.9, z0), (1.0, 1.35, z0 + 0.5), (-1.8, 1.35, z0 + 0.5), (0, 0.7, -0.7))
+        quad(m, mat("electronics_accent"), (-1.8, 1.35, z0 + 0.5), (1.0, 1.35, z0 + 0.5), (1.0, 0.9, z0 + 0.8), (-1.8, 0.9, z0 + 0.8), (0, 0.6, 0.8))
+    # the clean-room annex to the right, white with a green door
+    box(m, mat("ceramic"), 1.1, 0.08, 0.3, 1.85, 0.75, 1.6, mat_top=mat("ceramic", 0.9))
+    box(m, mat("electronics_accent"), 1.3, 0.08, 0.29, 1.6, 0.55, 0.3)
+    # copper wire spools at the front
+    for k, x in enumerate((-1.4, -0.85, -0.3)):
+        cylinder(m, mat("wood"), (x, 0.3, -1.75), (x + 0.3, 0.3, -1.75), 0.24, segs=10)
+        cylinder(m, mat("copper"), (x + 0.04, 0.3, -1.75), (x + 0.26, 0.3, -1.75), 0.2, segs=10, caps=False)
+    power_pole(m, mat, 1.65, -2.15, 1.6)
+    return m, mat.mats
+
+
+def tile_kiln():
+    """3 x 7: a long brick tunnel kiln with a chimney at the back end, a car track running its
+    length, and stacks of white tiles at the front, a power pole."""
+    m, mat = Mesh(), Materials()
+    hx, hz = half(3), half(7)
+    box(m, mat("stone_dark"), -hx, 0, -hz, hx, 0.06, hz, mat_top=mat("stone", 0.85))
+    # the tunnel: a long brick vault
+    n = 8
+    for k in range(n):
+        a0 = math.pi * k / n
+        a1 = math.pi * (k + 1) / n
+        p0 = (math.cos(a0) * 0.85 - 0.35, 0.06 + math.sin(a0) * 0.85)
+        p1 = (math.cos(a1) * 0.85 - 0.35, 0.06 + math.sin(a1) * 0.85)
+        quad(m, mat("kiln_accent", 1.0 if k % 2 else 0.9), (p0[0], p0[1], -2.2), (p1[0], p1[1], -2.2),
+             (p1[0], p1[1], 3.0), (p0[0], p0[1], 3.0), (math.cos((a0 + a1) / 2), math.sin((a0 + a1) / 2), 0))
+    for z, glow in ((-2.2, False), (3.0, True)):
+        sgn = -1 if z < 0 else 1
+        pts = [(math.cos(math.pi * k / n) * 0.85 - 0.35, 0.06 + math.sin(math.pi * k / n) * 0.85, z) for k in range(n + 1)]
+        for k in range(n):
+            m.tri(mat("brick", 0.8), (-0.35, 0.06, z), pts[k], pts[k + 1], outward=(0, 0, sgn))
+    box(m, mat("furnace_glow"), -0.6, 0.06, -2.21, -0.1, 0.45, -2.2)
+    cylinder(m, mat("brick", 0.85), (0.9, 0.06, 2.8), (0.9, 2.2, 2.8), 0.2, segs=8)
+    cylinder(m, mat("shadow"), (0.9, 2.2, 2.8), (0.9, 2.201, 2.8), 0.13, segs=8)
+    # the car track out of the mouth, a kiln car with tiles on it
+    for x in (-0.55, -0.15):
+        box(m, mat("metal_dark"), x - 0.02, 0.06, -3.4, x + 0.02, 0.09, -2.2)
+    box(m, mat("metal_dark"), -0.7, 0.1, -3.1, 0.0, 0.25, -2.5, mat_top=mat("ceramic"))
+    for k in range(3):
+        box(m, mat("ceramic"), 0.35, 0.06 + k * 0.08, -3.3 + k * 0.03, 1.2, 0.13 + k * 0.08, -2.6 + k * 0.03, mat_top=mat("ceramic", 1.05))
+    power_pole(m, mat, 1.15, 0.5, 1.6)
+    return m, mat.mats
+
+
+def assembly_plant():
+    """6 x 8: a large assembly hall with a tall bay door at the front, an overhead crane rail on the
+    roof, and a finished thruster on a stand outside, a power pole."""
+    m, mat = Mesh(), Materials()
+    hx, hz = half(6), half(8)
+    box(m, mat("stone_dark"), -hx, 0, -hz, hx, 0.08, hz, mat_top=mat("stone", 0.85))
+    box(m, mat("metal"), -2.7, 0.08, -2.0, 2.7, 2.4, 3.8, mat_top=mat("metal_dark"))
+    box(m, mat("assembly_accent"), -2.72, 2.0, -2.02, 2.72, 2.15, 3.82)
+    box(m, mat("assembly_accent", 0.7), -1.2, 0.08, -2.01, 1.2, 2.0, -2.0)
+    for x in (-1.0, -0.5, 0.0, 0.5, 1.0):
+        box(m, mat("metal_dark"), x - 0.02, 0.1, -2.02, x + 0.02, 1.95, -2.01)
+    # the crane rail along the roof
+    for x in (-2.0, 2.0):
+        box(m, mat("assembly_accent"), x - 0.1, 2.4, -2.0, x + 0.1, 2.6, 3.8)
+    box(m, mat("metal_dark"), -2.1, 2.6, 0.8, 2.1, 2.75, 1.1)
+    # a thruster on its stand outside the door
+    box(m, mat("metal_dark"), 1.6, 0.08, -3.6, 2.6, 0.3, -2.6)
+    spike(m, mat("nozzle"), (2.1, 0.3, -3.1), (2.1, 1.2, -3.1), 0.42, segs=12)
+    cylinder(m, mat("steel_light"), (2.1, 1.2, -3.1), (2.1, 1.5, -3.1), 0.25, segs=10)
+    power_pole(m, mat, -2.65, -3.6, 1.6)
+    return m, mat.mats
+
+
+def shipyard():
+    """8 x 12: a fabrication hall along the back half and a launch pad on the front half with a
+    service gantry beside it. The ship is not in the model: the game stands its parts on the pad."""
+    m, mat = Mesh(), Materials()
+    hx, hz = half(8), half(12)
+    box(m, mat("stone_dark"), -hx, 0, -hz, hx, 0.08, hz, mat_top=mat("stone", 0.8))
+    box(m, mat("shipyard_accent"), -3.7, 0.08, 0.4, 3.7, 3.2, 5.7, mat_top=mat("metal"))
+    box(m, mat("assembly_accent"), -3.72, 2.7, 0.38, 3.72, 2.85, 5.72)
+    box(m, mat("shadow"), -1.5, 0.08, 0.39, 1.5, 2.6, 0.4)
+    # the pad: a raised round deck with a flame trench
+    cylinder(m, mat("stone"), (0, 0.08, -3.0), (0, 0.3, -3.0), 2.3, segs=20, mat_cap=mat("stone", 1.1))
+    box(m, mat("shadow"), -0.4, 0.3, -3.6, 0.4, 0.31, -2.4)
+    # the service gantry beside the pad
+    for x in (2.5, 3.3):
+        for z in (-3.6, -2.4):
+            cylinder(m, mat("metal_dark"), (x, 0.08, z), (x, 6.0, z), 0.07, segs=5)
+    for y in (1.5, 3.0, 4.5, 6.0):
+        box(m, mat("power_accent"), 2.4, y - 0.08, -3.7, 3.4, y, -2.3)
+        box(m, mat("metal_dark"), 1.0, y - 0.05, -3.1, 2.5, y + 0.02, -2.9)
+    power_pole(m, mat, -3.65, -5.6, 1.8)
+    return m, mat.mats
+
+
+def display_stand():
+    """A short post with a round plinth, about 0.6 high; the game sets the output's item on it."""
+    m, mat = Mesh(), Materials()
+    cylinder(m, mat("metal_dark"), (0, 0, 0), (0, 0.06, 0), 0.22, segs=10)
+    cylinder(m, mat("metal_dark"), (0, 0.06, 0), (0, 0.5, 0), 0.05, segs=6)
+    cylinder(m, mat("metal_dark"), (0, 0.5, 0), (0, 0.58, 0), 0.28, segs=12, mat_cap=mat("metal"))
+    cylinder(m, mat("power_accent"), (0, 0.52, 0), (0, 0.56, 0), 0.29, segs=12, caps=False)
+    return m, mat.mats
+
+
+def ship_engine():
+    """The ship's engine as it stands on the pad: a thrust frame over two bells, about 1.0 high."""
+    m, mat = Mesh(), Materials()
+    for x in (-0.35, 0.35):
+        spike(m, mat("nozzle"), (x, 0.0, 0), (x, 0.55, 0), 0.3, segs=12)
+        cylinder(m, mat("nozzle_hot"), (x, 0.0, 0), (x, 0.03, 0), 0.3, segs=12, caps=False)
+    cylinder(m, mat("metal_dark"), (0, 0.5, 0), (0, 1.0, 0), 0.82, segs=16, mat_cap=mat("metal"))
+    return m, mat.mats
+
+
+def ship_hull_ring():
+    """One hull section of the ship: a ring 1.0 high, white with a dark band."""
+    m, mat = Mesh(), Materials()
+    cylinder(m, mat("shipyard_accent"), (0, 0, 0), (0, 1.0, 0), 0.82, segs=16, mat_cap=mat("hull_dark"))
+    cylinder(m, mat("assembly_accent"), (0, 0.42, 0), (0, 0.58, 0), 0.83, segs=16, caps=False)
+    return m, mat.mats
+
+
+def ship_nose():
+    """The ship's nose with its control module: a white cone with a window band, about 1.6 high."""
+    m, mat = Mesh(), Materials()
+    cylinder(m, mat("shipyard_accent"), (0, 0, 0), (0, 0.4, 0), 0.82, segs=16)
+    cylinder(m, mat("screen"), (0, 0.22, 0), (0, 0.32, 0), 0.83, segs=16, caps=False)
+    spike(m, mat("shipyard_accent"), (0, 0.4, 0), (0, 1.6, 0), 0.82, segs=16)
+    return m, mat.mats
+
+
 BUILDINGS = {"mine": mine, "lumber_camp": lumber_camp, "smelter": smelter, "refinery": refinery,
              "oil_well": oil_well, "hq": hq, "silo": silo, "stockyard": stockyard, "tank_farm": tank_farm,
              "warehouse": warehouse, "vault": vault, "small_hub": small_hub, "relay": relay,
@@ -849,7 +1021,10 @@ BUILDINGS = {"mine": mine, "lumber_camp": lumber_camp, "smelter": smelter, "refi
              "rock_crusher": rock_crusher, "deep_well": deep_well, "deep_mine": deep_mine,
              "steel_mill": steel_mill, "electrolyzer": electrolyzer, "fuel_plant": fuel_plant,
              "chemical_plant": chemical_plant, "aluminum_smelter": aluminum_smelter,
-             "electric_furnace": electric_furnace}
+             "electric_furnace": electric_furnace, "fabricator": fabricator,
+             "electronics_works": electronics_works, "tile_kiln": tile_kiln, "assembly_plant": assembly_plant,
+             "shipyard": shipyard, "display_stand": display_stand, "ship_engine": ship_engine,
+             "ship_hull_ring": ship_hull_ring, "ship_nose": ship_nose}
 
 
 def build_all():

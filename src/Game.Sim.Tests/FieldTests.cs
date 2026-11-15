@@ -91,9 +91,9 @@ public class FieldTests
         Assert.Equal(7000f, totals[ResourceType.Wood]);
         Assert.Equal(4000f, totals[ResourceType.CrudeOil]);
 
-        // A launch needs 100 Iron (from Iron Ore) and 500 Rocket Fuel (from Crude Oil).
-        Assert.True(totals[ResourceType.IronOre] >= Simulation.LaunchIronCost);
-        Assert.True(totals[ResourceType.CrudeOil] >= Simulation.LaunchRocketFuelCost);
+        // A ship takes about 150 Iron Ore (as Steel) and 500 Rocket Fuel's worth of Crude Oil.
+        Assert.True(totals[ResourceType.IronOre] >= 150f);
+        Assert.True(totals[ResourceType.CrudeOil] >= 600f);
     }
 
     [Fact]

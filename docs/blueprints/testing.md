@@ -132,9 +132,14 @@ pausing it and stepping frame by frame.
   when the stock runs out), placement
   deducting the cost, refusal with nothing deducted when locked, unaffordable, or blocked, free
   debug placement, and every building having a cost and every deposit a gather time.
-- `LaunchTests`: launch cost (Rocket Fuel, Liquid Oxygen, and Iron) and an end-to-end run on the
-  empty map from placed fields through the refining chain (Refineries, Electrolyzers on each gas,
-  Fuel Plants) to a launch, hauling by hand.
+- `LaunchTests`: the launch needing the whole ship bill and an online Shipyard, consuming the bill
+  and counting the ship, and an end-to-end run on the empty map from placed fields through the
+  refining chain (Refineries, Electrolyzers on each gas, Fuel Plants) to the launch's Rocket Fuel
+  and Liquid Oxygen, hauling by hand.
+- `PartsTests`: each parts building's recipes, the recipes making two units, a Copper Wire cycle
+  putting two wires in storage, and an end-to-end run from seeded tier-1 materials through five
+  Fabricators, two Electronics Works, a Tile Kiln, three Assembly Plants, and two Shipyards (on
+  Burner Generators, with Warehouses for the parts) to a launch.
 - `RefiningTests`: each building's recipes; the Steel Mill on Auto taking Coal, on Charcoal only
   Charcoal, waiting for it, and back on Auto; a recipe change waiting for the running cycle and
   unused inputs going back to storage; the Electrolyzer's two gases and the Fuel Plant's Rocket
@@ -160,7 +165,9 @@ pausing it and stepping frame by frame.
     `{ anchor }`.
   - Other setup: `placeBuilding` `{ type, anchor, facing? }` (the spatial placement rule, free
     and whether or not unlocked), `teleportPlayer` `{ x, z }`, `seedStockpile` `{ type, amount }`, `fillBuffer` `{ anchor, type, amount }` (sets one
-    resource in the output buffer of the building at that anchor; 0 removes it), `placeMotherlode`
+    resource in the output buffer of the building at that anchor; 0 removes it), `setRecipe`
+    `{ anchor, index }` (chooses the recipe of the building at that anchor, as its picker does),
+    `placeMotherlode`
     `{ kind, mapCell }`, `setWorkedOut` `{ mapCell, deposit }`
     (unlocks any building whose whole cost is then held; scenarios that place through the menu and a click seed first), `cameraZoom` `{ size }` (the camera's zoom: world units across 720 pixels
     of window height, so at the 1280 x 720 scenario resolution it is the visible world height).
@@ -232,8 +239,8 @@ pausing it and stepping frame by frame.
   `trucks` (`id`, `depot`, `bay`, `state` (`parked`, `toCollector`, `loading`, `toHq`, `unloading`,
   `waitingForRoom`, `toDepot`), `position` [x, z], `cargo` or null, `amount`, and `target` or null);
   `workedOut` (each worked-out map cell's `mapCell` and `deposit`); each building also has
-  `producing` (a collector without a field's output, or null) and `recipe` (the name of the
-  recipe a processor runs, or null);
+  `producing` (a collector without a field's output, or null), `recipe` (the name of the
+  recipe a processor runs, or null), and `display` (the item its display stand shows, or null);
   `hoveredBuilding` (the id of the building under the pointer outside build mode, or null);
   `focusedBuilding` (the id of the building the detail panel shows and outlines, or null);
   `hoveredField` and `focusedField` (the same for resource fields);
@@ -353,6 +360,10 @@ pausing it and stepping frame by frame.
   generator's panel shows its supply and Best fuel),
   `refining` (a Steel Mill's Auto input picker and its note and recipe text; an Electrolyzer on
   Hydrogen feeding a Fuel Plant to Rocket Fuel; the launch progress with Liquid Oxygen),
+  `first-ship` (a Fabricator making Hull Plate, its display stand showing the part and changing
+  at once when Steel Beam is chosen; with the ship bill seeded, the top bar asking for a Shipyard;
+  a Shipyard placed, the ship on its pad and "[L] Launch ship"; L launching it and the bill
+  resetting with "Ships: 1"),
   `renewables` (a Forester on Water and Power growing its trees, a Lumber Camp idle until they are
   grown and then cutting; a Quarry beside a mountain; a Deep Mine on a Laterite producing Iron Ore,
   its panel's Site row and Output picker; a worked-out Crude Oil marker named on hover; a Rock

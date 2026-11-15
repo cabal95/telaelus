@@ -37,7 +37,10 @@ buildings.md). A single global stockpile holds all amounts, within storage limit
   Refinery Kerosene; the Fuel Plant Rocket Fuel (Kerosene and Hydrogen); the Electrolyzer Hydrogen
   and Liquid Oxygen; the Steel Mill Steel; the Chemical Plant Plastic, Rubber, and Carbon Fiber;
   the Aluminum Smelter Aluminum; the Electric Furnace Silicon and Titanium; the Glassworks Glass;
-  the Charcoal Kiln Charcoal (buildings.md has the recipes). Nothing makes the others yet:
+  the Charcoal Kiln Charcoal; the Fabricator Hull Plate, Steel Beam, Aluminum Frame, Machine Parts,
+  and Composite Panel; the Electronics Works Copper Wire and Circuit; the Tile Kiln Ceramic Tile;
+  the Assembly Plant Control Module, Thruster Assembly, and Fuel Tank; the Shipyard Hull Section
+  and Engine (buildings.md has the recipes). Nothing makes the others yet:
 
   | Tier | Refined resources |
   |---|---|
@@ -107,8 +110,12 @@ buildings.md). A single global stockpile holds all amounts, within storage limit
   It also has a Laterite motherlode on map cells (11..12, 13..14), so it holds twenty-three fields
   in all.
 
-  That holds what a ship launch needs from fields: 100 Iron from Iron Ore and 500 Rocket Fuel's
-  Kerosene from Crude Oil (its Hydrogen and the launch's Liquid Oxygen come from Water and Power).
+  That holds the launch's fuel from fields: 500 Rocket Fuel's Kerosene from Crude Oil (its
+  Hydrogen and the launch's Liquid Oxygen come from Water and Power).
+- **The ship bill** (buildings.md) is 4 Hull Sections, 1 Engine, 1 Control Module, 500 Rocket Fuel,
+  and 200 Liquid Oxygen: in raw terms roughly 150 Iron Ore, 75 Coal or Charcoal, 75 Limestone, 60
+  Bauxite, 16 Titanium Ore, 6 Quartz, 8 Sulfur, and about 600 Crude Oil with the fuel. The parts
+  are Cargo, so a ship's parts need Warehouses beside the HQ's pool.
 - A field blocks movement and placement on all its fine cells until it depletes and is removed,
   which reopens them.
 - **Worked-out records:** when a field of any deposit but Wood depletes (and is not a Forester's),

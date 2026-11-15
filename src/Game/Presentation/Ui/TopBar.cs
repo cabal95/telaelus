@@ -26,12 +26,9 @@ public partial class TopBar : HudOverlay
     private Simulation? _sim;
     private HBoxContainer _pinRow = null!;
     private readonly Dictionary<ResourceType, (TextureRect Icon, Label Amount)> _entries = new();
-    private TextureRect _fuelIcon = null!;
-    private TextureRect _ironIcon = null!;
-    private TextureRect _oxygenIcon = null!;
-    private Label _oxygen = null!;
-    private Label _fuel = null!;
-    private Label _iron = null!;
+    // The ship bill's entries, in bill order.
+    private readonly List<(ResourceType Type, float Need, TextureRect Icon, Label Amount)> _bill = new();
+    private Label _shipyardNote = null!;
     private Label _launch = null!;
     private Label _power = null!;
     private Label _ships = null!;
@@ -45,7 +42,8 @@ public partial class TopBar : HudOverlay
     public string PowerText => _power.Text;
 
     /// <summary>The launch progress as shown, for the snapshot.</summary>
-    public string LaunchText => string.Join("   ", new[] { _fuel.Text, _oxygen.Text, _iron.Text, _launch.Visible ? _launch.Text : "", _ships.Visible ? _ships.Text : "" }
+    public string LaunchText => string.Join("   ", _bill.Where(e => e.Amount.IsVisibleInTree()).Select(e => e.Amount.Text)
+        .Concat(new[] { _launch.Visible ? _launch.Text : "", _shipyardNote.Visible ? _shipyardNote.Text : "", _ships.Visible ? _ships.Text : "" })
         .Where(text => text.Length > 0));
 
     public void Initialize(DialogHost host, ResourceIcons icons, ResourcePins pins)
@@ -86,7 +84,7 @@ public partial class TopBar : HudOverlay
         {
             MouseFilter = MouseFilterEnum.Ignore
         };
-        _pinRow.AddThemeConstantOverride("separation", UiTheme.Padding);
+        _pinRow.AddThemeConstantOverride("separation", UiTheme.Gap);
         row.AddChild(_pinRow);
         RebuildPins();
 
@@ -98,14 +96,23 @@ public partial class TopBar : HudOverlay
 
         _power = UiTheme.MakeLabel("", UiTheme.BodySize);
         row.AddChild(_power);
-        (HBoxContainer fuelEntry, _fuelIcon, _fuel) = MakeEntry(ResourceType.RocketFuel, "Rocket Fuel for a launch");
-        row.AddChild(fuelEntry);
-        (HBoxContainer oxygenEntry, _oxygenIcon, _oxygen) = MakeEntry(ResourceType.LiquidOxygen, "Liquid Oxygen for a launch");
-        row.AddChild(oxygenEntry);
-        (HBoxContainer ironEntry, _ironIcon, _iron) = MakeEntry(ResourceType.Iron, "Iron for a launch");
-        row.AddChild(ironEntry);
+        // The ship bill sits closer together than the gaps between sections, so the bar fits it.
+        var billRow = new HBoxContainer
+        {
+            MouseFilter = MouseFilterEnum.Ignore
+        };
+        billRow.AddThemeConstantOverride("separation", UiTheme.Gap);
+        row.AddChild(billRow);
+        foreach (ResourceAmount cost in Simulation.LaunchCost)
+        {
+            (HBoxContainer entry, TextureRect icon, Label amount) = MakeEntry(cost.Type, ResourceDefs.For(cost.Type).Name + " for a launch");
+            billRow.AddChild(entry);
+            _bill.Add((cost.Type, cost.Amount, icon, amount));
+        }
         _launch = UiTheme.MakeLabel("[L] Launch ship", UiTheme.BodySize, UiTheme.Accent);
         row.AddChild(_launch);
+        _shipyardNote = UiTheme.MakeLabel("Build a Shipyard to launch", UiTheme.BodySize, UiTheme.Warning);
+        row.AddChild(_shipyardNote);
         _ships = UiTheme.MakeLabel("", UiTheme.BodySize);
         row.AddChild(_ships);
     }
@@ -167,13 +174,17 @@ public partial class TopBar : HudOverlay
         CapacityReading power = sim.Capacity(CapacityType.Power);
         _power.Text = CapacityText(sim, CapacityType.Power);
         _power.AddThemeColorOverride("font_color", CapacityColor(power.Demand, power.Supply));
-        _fuelIcon.Texture ??= _icons.For(ResourceType.RocketFuel);
-        _ironIcon.Texture ??= _icons.For(ResourceType.Iron);
-        _oxygenIcon.Texture ??= _icons.For(ResourceType.LiquidOxygen);
-        SetProgress(_oxygen, Whole(sim, ResourceType.LiquidOxygen), (int)Simulation.LaunchLiquidOxygenCost);
-        SetProgress(_fuel, Whole(sim, ResourceType.RocketFuel), (int)Simulation.LaunchRocketFuelCost);
-        SetProgress(_iron, Whole(sim, ResourceType.Iron), (int)Simulation.LaunchIronCost);
+        // Once the whole bill is met its entries give way to the launch (or the Shipyard note), so
+        // the bar never has to fit both.
+        bool met = sim.LaunchBillMet;
+        foreach ((ResourceType type, float need, TextureRect icon, Label amount) in _bill)
+        {
+            icon.Texture ??= _icons.For(type);
+            SetProgress(amount, Whole(sim, type), (int)need);
+            ((Control)amount.GetParent()).Visible = !met;
+        }
         _launch.Visible = sim.CanLaunchShip();
+        _shipyardNote.Visible = sim.LaunchBillMet && sim.LaunchShipyard is null;
         _ships.Visible = sim.ShipsLaunched > 0;
         _ships.Text = "Ships: " + sim.ShipsLaunched;
     }

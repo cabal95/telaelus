@@ -5,41 +5,58 @@ namespace Game.Sim.Tests;
 
 public class LaunchTests
 {
+    private static void SeedBill(Simulation sim, float less = 0f)
+    {
+        foreach (ResourceAmount cost in Simulation.LaunchCost)
+        {
+            sim.Debug.SeedStockpile(cost.Type, cost.Amount);
+        }
+        sim.Debug.SeedStockpile(ResourceType.HullSection, -less);
+    }
+
     [Fact]
-    public void Launch_RequiresTheFullCost()
+    public void Launch_NeedsTheWholeBill_AndAShipyard()
     {
         var sim = new Simulation();
-        sim.Debug.SeedStockpile(ResourceType.RocketFuel, Simulation.LaunchRocketFuelCost);
-        sim.Debug.SeedStockpile(ResourceType.LiquidOxygen, Simulation.LaunchLiquidOxygenCost);
-        sim.Debug.SeedStockpile(ResourceType.Iron, Simulation.LaunchIronCost - 1f);
+        sim.Debug.ResetToEmptyMap();
+        SeedBill(sim, less: 1f);
+        Building shipyard = sim.Debug.PlaceBuilding(BuildingType.Shipyard, 44, 12, Facing.North);
+        Assert.True(shipyard.Online);
+        Assert.False(sim.LaunchBillMet);
         Assert.False(sim.CanLaunchShip());
 
-        sim.Debug.SeedStockpile(ResourceType.Iron, 1f);
-        sim.Debug.SeedStockpile(ResourceType.LiquidOxygen, -1f);
-        Assert.False(sim.CanLaunchShip());
+        sim.Debug.SeedStockpile(ResourceType.HullSection, 1f);
+        Assert.True(sim.CanLaunchShip());
+
+        // Switched off, or with no Shipyard, there is nowhere to launch from.
+        sim.SetBuildingEnabled(shipyard.Id, false);
+        Assert.True(sim.LaunchBillMet);
+        Assert.Null(sim.LaunchShipyard);
         Assert.False(sim.TryLaunchShip());
         Assert.Equal(0, sim.ShipsLaunched);
     }
 
     [Fact]
-    public void Launch_ConsumesTheCostAndCountsTheShip()
+    public void Launch_ConsumesTheBillAndCountsTheShip()
     {
         var sim = new Simulation();
-        sim.Debug.SeedStockpile(ResourceType.RocketFuel, 600f);
-        sim.Debug.SeedStockpile(ResourceType.LiquidOxygen, 250f);
-        sim.Debug.SeedStockpile(ResourceType.Iron, 150f);
+        sim.Debug.ResetToEmptyMap();
+        SeedBill(sim);
+        sim.Debug.SeedStockpile(ResourceType.RocketFuel, 100f);
+        sim.Debug.PlaceBuilding(BuildingType.Shipyard, 44, 12, Facing.North);
 
-        Assert.True(sim.CanLaunchShip());
         Assert.True(sim.TryLaunchShip());
 
         Assert.Equal(1, sim.ShipsLaunched);
         Assert.Equal(100f, SimTestHelpers.Stock(sim, ResourceType.RocketFuel));
-        Assert.Equal(50f, SimTestHelpers.Stock(sim, ResourceType.LiquidOxygen));
-        Assert.Equal(50f, SimTestHelpers.Stock(sim, ResourceType.Iron));
+        Assert.Equal(0f, SimTestHelpers.Stock(sim, ResourceType.HullSection));
+        Assert.Equal(0f, SimTestHelpers.Stock(sim, ResourceType.Engine));
+        Assert.Equal(0f, SimTestHelpers.Stock(sim, ResourceType.ControlModule));
+        Assert.Equal(0f, SimTestHelpers.Stock(sim, ResourceType.LiquidOxygen));
     }
 
     [Fact]
-    public void EndToEnd_FieldsReachALaunch_ThroughTheRefiningChain_HaulingByHand()
+    public void EndToEnd_FieldsReachTheLaunchFuel_ThroughTheRefiningChain_HaulingByHand()
     {
         var sim = new Simulation();
         sim.Debug.ResetToEmptyMap();
@@ -99,7 +116,8 @@ public class LaunchTests
         List<Building> collectors = SimTestHelpers.Placed(sim).Where(b => b.Def.IsExtractor).ToList();
         const double MaxSeconds = 4000;
         double seconds = 0;
-        while (!sim.CanLaunchShip() && seconds < MaxSeconds)
+        bool Fuelled() => SimTestHelpers.Stock(sim, ResourceType.RocketFuel) >= 500f && SimTestHelpers.Stock(sim, ResourceType.LiquidOxygen) >= 200f;
+        while (!Fuelled() && seconds < MaxSeconds)
         {
             SimTestHelpers.Seconds(sim, 20.0);
             seconds += 20.0;
@@ -109,8 +127,7 @@ public class LaunchTests
             }
         }
 
-        Assert.True(sim.TryLaunchShip(), $"no launch after {seconds} seconds of play: fuel {SimTestHelpers.Stock(sim, ResourceType.RocketFuel)}, oxygen {SimTestHelpers.Stock(sim, ResourceType.LiquidOxygen)}, iron {SimTestHelpers.Stock(sim, ResourceType.Iron)}, kerosene {SimTestHelpers.Stock(sim, ResourceType.Kerosene)}, hydrogen {SimTestHelpers.Stock(sim, ResourceType.Hydrogen)}, crude {SimTestHelpers.Stock(sim, ResourceType.CrudeOil)}, coal {SimTestHelpers.Stock(sim, ResourceType.Coal)}; "
+        Assert.True(Fuelled(), $"no launch fuel after {seconds} seconds of play: fuel {SimTestHelpers.Stock(sim, ResourceType.RocketFuel)}, oxygen {SimTestHelpers.Stock(sim, ResourceType.LiquidOxygen)}, iron {SimTestHelpers.Stock(sim, ResourceType.Iron)}, kerosene {SimTestHelpers.Stock(sim, ResourceType.Kerosene)}, hydrogen {SimTestHelpers.Stock(sim, ResourceType.Hydrogen)}, crude {SimTestHelpers.Stock(sim, ResourceType.CrudeOil)}, coal {SimTestHelpers.Stock(sim, ResourceType.Coal)}; "
             + string.Join("; ", SimTestHelpers.Placed(sim).Select(b => $"{b.Type} {b.Online} {sim.BuildingStatusOf(b).IdleReason} out {b.OutputCount}")));
-        Assert.Equal(1, sim.ShipsLaunched);
     }
 }

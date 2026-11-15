@@ -37,5 +37,10 @@ public enum BuildingType
     FuelPlant,
     ChemicalPlant,
     AluminumSmelter,
-    ElectricFurnace
+    ElectricFurnace,
+    Fabricator,
+    ElectronicsWorks,
+    TileKiln,
+    AssemblyPlant,
+    Shipyard
 }

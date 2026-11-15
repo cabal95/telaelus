@@ -217,6 +217,16 @@ public sealed partial class Simulation
             }
         }
 
+        /// <summary>Chooses the recipe of the building anchored at a fine cell, as its picker does.</summary>
+        public void SetRecipe(int anchorX, int anchorZ, int index)
+        {
+            Building? building = _sim._buildings.Find(b => b.AnchorX == anchorX && b.AnchorZ == anchorZ);
+            if (building is null || !_sim.SetRecipe(building.Id, index))
+            {
+                throw new InvalidOperationException($"no building at ({anchorX}, {anchorZ}) with recipe {index}");
+            }
+        }
+
         /// <summary>Marks a map cell worked out, as if a field of the deposit had depleted there.</summary>
         public void SetWorkedOut(int mapX, int mapZ, ResourceType deposit)
         {

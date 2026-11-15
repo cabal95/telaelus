@@ -151,6 +151,10 @@ or 1.05 for facet variation). A new material extends the table.
 | kiln_accent | 0.68, 0.34, 0.22 | Charcoal Kiln's brick domes |
 | tilled | 0.42, 0.30, 0.20 | The Forester's tilled plot |
 | motherlode_rock | 0.30, 0.28, 0.27 | A motherlode's dark rock mound |
+| fabricator_accent | 0.96, 0.56, 0.16 | Fabricator press, gantry, and band (a machine orange) |
+| electronics_accent | 0.24, 0.72, 0.38 | Electronics Works band, annex, and spools (a circuit green) |
+| assembly_accent | 0.20, 0.32, 0.70 | Assembly Plant band, crane rail, and bay door frame (a deep blue) |
+| shipyard_accent | 0.94, 0.95, 0.96 | Shipyard hall, gantry, and the ship's hull (a launch white) |
 
 Crown greens are mid tones with no near-black shade: a crown's shaded side would otherwise read
 as black under the dark ambient light. Crowns shade light on upward faces and dark underneath.
@@ -187,6 +191,18 @@ Emissive materials glow at half their base color. Mountains keep their own stone
   with a winding wheel over a shaft, a winding house, an ore skip to a tipple). Sites:
   `worked_out_oil` (a flat dry brown stain), `worked_out_pit` (a shallow pit with a spoil rim),
   `motherlode_base` (a ring of dark boulders round a flatter middle, 8 x 8).
+- The parts buildings: Fabricator (4 x 6, a high hall with a press frame at the back, a roller line
+  under a gantry crane down one side, plates, beams, and crates at the front), Electronics Works
+  (4 x 5, a low building under a saw-tooth glass roof, a clean-room annex, wire spools at the
+  front), Tile Kiln (3 x 7, a long brick tunnel kiln with a chimney at the back end, a car track
+  down its length, white tile stacks at the front; `kiln_accent`), Assembly Plant (6 x 8, a large
+  hall with a tall bay door at the front, a crane rail on the roof, a finished thruster on a stand
+  outside), Shipyard (8 x 12, a fabrication hall across the back half and a launch pad on the front
+  half with a service gantry beside it). Props: `display_stand` (a short post on a round plinth,
+  about 0.6 high, `metal_dark` with a `power_accent` rim), and the ship in parts for the Shipyard's
+  pad, stacking 1 unit apart: `ship_engine` (a thrust frame over two bells, about 1.0 high),
+  `ship_hull_ring` (a white ring 1.0 high with a dark band), `ship_nose` (a white cone with a
+  window band, about 1.6 high).
 
 ### Ground levels
 

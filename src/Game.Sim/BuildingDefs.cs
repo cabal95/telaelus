@@ -618,6 +618,81 @@ public static class BuildingDefs
         }
     };
 
+    private static readonly BuildingDef Fabricator = new("Fabricator", 4, 6, new ResourceAmount[]
+    {
+        new(ResourceType.Steel, 40f),
+        new(ResourceType.Copper, 20f)
+    }, Array.Empty<ResourceType>(), 0f)
+    {
+        Tier = 2,
+        OutputBuffer = 10f,
+        InputCycles = 5,
+        Draws = new Dictionary<CapacityType, float>
+        {
+            [CapacityType.Power] = 30f
+        }
+    };
+    private static readonly BuildingDef ElectronicsWorks = new("Electronics Works", 4, 5, new ResourceAmount[]
+    {
+        new(ResourceType.Steel, 30f),
+        new(ResourceType.Copper, 30f),
+        new(ResourceType.Glass, 10f)
+    }, Array.Empty<ResourceType>(), 0f)
+    {
+        Tier = 2,
+        OutputBuffer = 10f,
+        InputCycles = 5,
+        Draws = new Dictionary<CapacityType, float>
+        {
+            [CapacityType.Power] = 20f,
+            [CapacityType.Water] = 2f
+        }
+    };
+    private static readonly BuildingDef TileKiln = new("Tile Kiln", 3, 7, new ResourceAmount[]
+    {
+        new(ResourceType.Stone, 40f),
+        new(ResourceType.Steel, 20f)
+    }, Array.Empty<ResourceType>(), 0f)
+    {
+        Tier = 2,
+        OutputBuffer = 10f,
+        InputCycles = 5,
+        Draws = new Dictionary<CapacityType, float>
+        {
+            [CapacityType.Power] = 30f
+        }
+    };
+    private static readonly BuildingDef AssemblyPlant = new("Assembly Plant", 6, 8, new ResourceAmount[]
+    {
+        new(ResourceType.SteelBeam, 20f),
+        new(ResourceType.HullPlate, 20f),
+        new(ResourceType.Circuit, 10f)
+    }, Array.Empty<ResourceType>(), 0f)
+    {
+        Tier = 3,
+        OutputBuffer = 10f,
+        InputCycles = 5,
+        Draws = new Dictionary<CapacityType, float>
+        {
+            [CapacityType.Power] = 40f
+        }
+    };
+    private static readonly BuildingDef Shipyard = new("Shipyard", 8, 12, new ResourceAmount[]
+    {
+        new(ResourceType.SteelBeam, 40f),
+        new(ResourceType.HullPlate, 20f),
+        new(ResourceType.Circuit, 10f)
+    }, Array.Empty<ResourceType>(), 0f)
+    {
+        Tier = 4,
+        OutputBuffer = 2f,
+        InputCycles = 5,
+        Draws = new Dictionary<CapacityType, float>
+        {
+            [CapacityType.Power] = 50f
+        }
+    };
+
     public static BuildingDef For(BuildingType type)
     {
         return type switch
@@ -657,6 +732,11 @@ public static class BuildingDefs
             BuildingType.ChemicalPlant => ChemicalPlant,
             BuildingType.AluminumSmelter => AluminumSmelter,
             BuildingType.ElectricFurnace => ElectricFurnace,
+            BuildingType.Fabricator => Fabricator,
+            BuildingType.ElectronicsWorks => ElectronicsWorks,
+            BuildingType.TileKiln => TileKiln,
+            BuildingType.AssemblyPlant => AssemblyPlant,
+            BuildingType.Shipyard => Shipyard,
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, "no building definition")
         };
     }

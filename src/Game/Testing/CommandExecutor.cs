@@ -272,6 +272,12 @@ public sealed class CommandExecutor
         return StepOutcome.Ok;
     }
 
+    public StepOutcome SetRecipe(int anchorX, int anchorZ, int index)
+    {
+        _root.Sim.Debug.SetRecipe(anchorX, anchorZ, index);
+        return StepOutcome.Ok;
+    }
+
     public StepOutcome PlaceMotherlode(MotherlodeType kind, int mapX, int mapZ)
     {
         _root.Sim.Debug.PlaceMotherlode(kind, mapX, mapZ);

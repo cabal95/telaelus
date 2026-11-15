@@ -108,9 +108,11 @@ The two kinds place themselves:
   pinned resource as a 22-unit icon and "amount / limit" in whole numbers (the amount alone for a
   Cargo or unlimited resource), in `Warning` when full, 16 units apart, each with a tooltip naming it (opening below the entry, so it never
   covers its neighbors). Right: the power readout (demand over supply, in normal text, `Warning`,
-  or `Danger` by state), then the launch progress, the Rocket Fuel, Liquid Oxygen, and Iron icons with "have /
-  need" in `Short` until met, then "[L] Launch ship" in `Accent` once both are, and "Ships: n"
-  once a ship has launched. It takes the mouse (so hovering it shows no building outline and
+  or `Danger` by state), then the launch progress, an icon and "have / need" for each entry of
+  the ship bill (in `Short` until met, `Gap` apart), hidden once the whole bill is met, then "[L]
+  Launch ship" in `Accent` once it can launch, or "Build a Shipyard to launch" in `Warning` with
+  the bill met and no online Shipyard, and "Ships: n" once a ship has launched. The right-hand
+  entries sit `Gap` apart so the five bill entries fit at 1280 wide. It takes the mouse (so hovering it shows no building outline and
   clicks on it never reach the world) but no keys.
 - **Hint overlay** (`HintOverlay`): centered, 8 units below the top bar, a small panel-style box
   shown only while a hint applies, never taking the mouse. Today the one hint is harvesting:

@@ -384,6 +384,7 @@ public static class StateSnapshot
                 ["burning"] = b.BurnLeft > 0f ? b.Burning?.ToString() : null,
                 ["producing"] = b.Def.ProduceSeconds > 0f ? sim.OutputOf(b)?.ToString() : null,
                 ["recipe"] = b.Recipe?.Name,
+                ["display"] = DisplayStandViews.DisplayedOutput(sim, b)?.ToString(),
                 ["status"] = Camel(sim.BuildingStatusOf(b).State.ToString()),
                 ["idleReason"] = sim.BuildingStatusOf(b).IdleReason
             });

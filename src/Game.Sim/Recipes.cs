@@ -17,12 +17,18 @@ public static class Recipes
 
     private static Recipe Make(float cycle, ResourceType output, params (ResourceType Type, float Amount)[] inputs)
     {
+        return MakeMany(cycle, output, 1f, inputs);
+    }
+
+    /// <summary>A recipe making more than one unit of its output a cycle.</summary>
+    private static Recipe MakeMany(float cycle, ResourceType output, float makes, params (ResourceType Type, float Amount)[] inputs)
+    {
         var list = new ResourceAmount[inputs.Length];
         for (int i = 0; i < inputs.Length; i++)
         {
             list[i] = new ResourceAmount(inputs[i].Type, inputs[i].Amount);
         }
-        return new Recipe(list, new[] { new ResourceAmount(output, 1f) }, cycle);
+        return new Recipe(list, new[] { new ResourceAmount(output, makes) }, cycle);
     }
 
     private static readonly Recipe Iron = Make(16f, ResourceType.Iron, (ResourceType.IronOre, 1f));
@@ -44,6 +50,29 @@ public static class Recipes
     private static readonly Recipe Silicon = Make(15f, ResourceType.Silicon, (ResourceType.Quartz, 1f), (ResourceType.Coal, 1f));
     private static readonly Recipe Titanium = Make(20f, ResourceType.Titanium, (ResourceType.TitaniumOre, 2f));
 
+    // Tier 2: components.
+    private static readonly Recipe HullPlate = Make(12f, ResourceType.HullPlate, (ResourceType.Steel, 2f));
+    private static readonly Recipe SteelBeam = Make(15f, ResourceType.SteelBeam, (ResourceType.Steel, 3f));
+    private static readonly Recipe AluminumFrame = Make(12f, ResourceType.AluminumFrame, (ResourceType.Aluminum, 2f));
+    private static readonly Recipe MachineParts = Make(15f, ResourceType.MachineParts, (ResourceType.Steel, 2f), (ResourceType.Rubber, 1f));
+    private static readonly Recipe CompositePanel = Make(20f, ResourceType.CompositePanel, (ResourceType.CarbonFiber, 2f), (ResourceType.Aluminum, 1f));
+    private static readonly Recipe CopperWire = MakeMany(6f, ResourceType.CopperWire, 2f, (ResourceType.Copper, 1f));
+    private static readonly Recipe Circuit = Make(10f, ResourceType.Circuit, (ResourceType.CopperWire, 2f), (ResourceType.Plastic, 1f));
+    private static readonly Recipe CeramicTile = MakeMany(15f, ResourceType.CeramicTile, 2f, (ResourceType.Silicon, 1f), (ResourceType.Aluminum, 1f));
+
+    // Tier 3: assemblies.
+    private static readonly Recipe ControlModule = Make(40f, ResourceType.ControlModule,
+        (ResourceType.Circuit, 4f), (ResourceType.HullPlate, 2f), (ResourceType.Glass, 2f));
+    private static readonly Recipe ThrusterAssembly = Make(45f, ResourceType.ThrusterAssembly,
+        (ResourceType.Titanium, 4f), (ResourceType.MachineParts, 2f), (ResourceType.CeramicTile, 6f));
+    private static readonly Recipe FuelTank = Make(40f, ResourceType.FuelTank,
+        (ResourceType.AluminumFrame, 4f), (ResourceType.CompositePanel, 4f));
+
+    // Tier 4: the ship.
+    private static readonly Recipe HullSection = Make(60f, ResourceType.HullSection, (ResourceType.HullPlate, 4f), (ResourceType.SteelBeam, 2f));
+    private static readonly Recipe Engine = Make(90f, ResourceType.Engine,
+        (ResourceType.ThrusterAssembly, 2f), (ResourceType.FuelTank, 2f), (ResourceType.MachineParts, 4f));
+
     /// <summary>The recipes a building type runs, default first; empty for one that is not a processor.</summary>
     public static IReadOnlyList<Recipe> For(BuildingType type)
     {
@@ -59,6 +88,11 @@ public static class Recipes
             BuildingType.ChemicalPlant => new[] { Plastic, Rubber, CarbonFiber },
             BuildingType.AluminumSmelter => new[] { Aluminum },
             BuildingType.ElectricFurnace => new[] { SiliconWithFuel, Titanium },
+            BuildingType.Fabricator => new[] { HullPlate, SteelBeam, AluminumFrame, MachineParts, CompositePanel },
+            BuildingType.ElectronicsWorks => new[] { CopperWire, Circuit },
+            BuildingType.TileKiln => new[] { CeramicTile },
+            BuildingType.AssemblyPlant => new[] { ControlModule, ThrusterAssembly, FuelTank },
+            BuildingType.Shipyard => new[] { HullSection, Engine },
             _ => Array.Empty<Recipe>()
         };
     }
