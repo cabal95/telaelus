@@ -10,7 +10,7 @@ ship from a Shipyard, which closes the on-planet loop.
 
 ### Building types and definitions
 
-- `BuildingType` has forty-seven values: **Mine**, **Lumber Camp**, **Smelter**, **Refinery**,
+- `BuildingType` has fifty values: **Mine**, **Lumber Camp**, **Smelter**, **Refinery**,
   **Oil Well**, the **HQ**, the storage buildings **Silo**, **Stockyard**, **Tank Farm**,
   **Warehouse**, and **Vault**, the hubs **Small Hub** and **Relay**, the generators **Water
   Wheel** and **Burner Generator**, the powered extractors **Lumber Mill** and **Drill Rig**, the
@@ -21,7 +21,8 @@ ship from a Shipyard, which closes the on-planet loop.
   **Electric Furnace**, and the parts buildings **Fabricator**, **Electronics Works**, **Tile
   Kiln**, **Assembly Plant**, and **Shipyard**, and the later tiers' **Sawmill**, **Cement
   Kiln**, **Concrete Mixer**, **Brine Well**, **Semiconductor Fab**, **Air Separator**, and
-  **Enrichment Plant**.
+  **Enrichment Plant**, and the power buildings **Solar Array**, **Battery Bank**, and **Fission
+  Reactor**.
 - Each type has a `BuildingDef` (in `BuildingDefs`): a display name, a footprint in fine cells
   (width along X, depth along Z when facing North), a cost, a speed, and for an extractor, the
   deposit types it works (`Works`; a building is an extractor when the list is not empty) and its
@@ -318,8 +319,33 @@ And seven buildings, all processors (output buffer 10, 5 cycles of each input):
   (OnDesertSand) and the Air Separator anywhere; both make their output from nothing, as the
   Electrolyzer does, which keeps its Liquid Oxygen recipe beside the Air Separator.
 - The new buildings' costs use the new materials: Lumber, Concrete, Electric Motors, Armor Plate,
-  and Computers. Batteries, Solar Cells, Heat Shields, Life Support Units, Sensor Arrays, and
-  Fuel Rods have no consumer yet.
+  and Computers. The power buildings (below) take Batteries, Solar Cells, Heat Shields, Sensor
+  Arrays, and Fuel Rods; Life Support Units have no consumer yet (they wait for Part B's crewed
+  ships).
+
+### Power buildings
+
+| Building | Footprint | Cost | Tier | Supplies | Draws | Notes |
+|---|---|---|---|---|---|---|
+| Solar Array | 6 x 6 | 20 Solar Cell, 10 Aluminum Frame, 10 Concrete | 2 | 60 Power times the daylight | | `Solar`; no fuel |
+| Battery Bank | 3 x 4 | 20 Battery, 20 Steel, 10 Concrete | 2 | stored Power (below) | | `StoreCapacity` 6000, `StoreRate` 50 |
+| Fission Reactor | 6 x 8 | 40 Concrete, 20 Armor Plate, 10 Heat Shield, 6 Sensor Array, 10 Computer | 3 | 400 Power | 8 Water | Burns Fuel Rods (`Fuels`), whenever switched on |
+
+- **The Solar Array** supplies 60 Power times `Simulation.Daylight` (simulation.md): 60 at midday,
+  none at night (its State reads "Idle: Night: supplies nothing"), about 37 over a day.
+- **Stored Power:** a Battery Bank holds `Charge` (Power-seconds, up to `StoreCapacity`) and moves at
+  most `StoreRate` Power in or out. Each tick, once Power's supply and demand are summed
+  (`StepStore`), a surplus charges the switched-on, online banks, emptiest first, and a shortage
+  draws on them, fullest first, each up to its rate and charge; what they give counts as supply
+  before the state and speed are worked out, so a bank holds a shortage at Normal until it runs dry
+  or the shortage outruns the banks' rates. A bank off or offline keeps its charge. The Power
+  reading carries `Stored`, `StoreCapacity` (every bank, on or not), and `StoreFlow` (positive
+  charging, negative discharging). A bank reports Working online, "Offline: stores nothing"
+  offline. Burner Generators still burn whenever switched on, so their surplus is what banks store.
+- **The Fission Reactor** is a fuel-burning provider like the Burner Generator that burns only Fuel
+  Rods (300 s each) and draws Water for its cooling; it stands anywhere. Water comes after Power in
+  the order, so its Power follows last tick's Water speed: in a Water brownout at half speed it
+  supplies 200.
 
 ### Renewables
 
@@ -358,7 +384,12 @@ And seven buildings, all processors (output buffer 10, 5 cycles of each input):
 
 ### Fuel
 
-- A fuel burner (the Burner Generator, the Smelter, the Glassworks) has a **fuel slot** (`FuelSlot`, unburned units
+- **Fuels by building:** a definition lists the fuels it takes (`BuildingDef.Fuels`): Coal,
+  Charcoal, and Wood (`ResourceDefs.Combustibles`) for every fire, Fuel Rods alone for the Fission
+  Reactor. A burner takes, and its picker and Best offer, only its own; `SetFuelChoice` refuses any
+  other.
+- A fuel burner (the Burner Generator, the Smelter, the Glassworks, the Cement Kiln, the Fission
+  Reactor) has a **fuel slot** (`FuelSlot`, unburned units
   by type) and a fire: the unit burning (`Burning`) and its seconds left (`BurnLeft`). When the fire
   is out it takes the next unit, from the slot first and then, online, from storage, and burns it
   for its burn time (resources.md). A unit taken is spent: switching off or destroying the building

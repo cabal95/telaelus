@@ -54,7 +54,9 @@ public static class StateSnapshot
             ["capacity"] = Capacity(sim),
             ["discovered"] = Discovered(sim),
             ["unlockedBuildings"] = Unlocked(sim),
-            ["shipsLaunched"] = sim.ShipsLaunched
+            ["shipsLaunched"] = sim.ShipsLaunched,
+            ["timeOfDay"] = Round(sim.TimeOfDay),
+            ["daylight"] = Round(sim.Daylight)
         };
     }
 
@@ -221,13 +223,21 @@ public static class StateSnapshot
         foreach (CapacityType type in Simulation.CapacityTypes)
         {
             CapacityReading reading = sim.Capacity(type);
-            capacity[Camel(type.ToString())] = new JsonObject
+            var entry = new JsonObject
             {
                 ["supply"] = Round(reading.Supply),
                 ["demand"] = Round(reading.Demand),
                 ["speed"] = Round(reading.Speed),
                 ["state"] = Camel(reading.State.ToString())
             };
+            // What Battery Banks hold, only once there is one, so readings without stay as they were.
+            if (reading.StoreCapacity > 0f)
+            {
+                entry["stored"] = Round(reading.Stored);
+                entry["storeCapacity"] = Round(reading.StoreCapacity);
+                entry["storeFlow"] = Round(reading.StoreFlow);
+            }
+            capacity[Camel(type.ToString())] = entry;
         }
         return capacity;
     }
@@ -251,6 +261,8 @@ public static class StateSnapshot
         {
             ["items"] = items,
             ["power"] = bar.PowerText,
+            ["clock"] = bar.ClockText,
+            ["store"] = bar.StoreText,
             ["launch"] = bar.LaunchText
         };
     }
@@ -385,6 +397,7 @@ public static class StateSnapshot
                 ["producing"] = b.Def.ProduceSeconds > 0f ? sim.OutputOf(b)?.ToString() : null,
                 ["recipe"] = b.Recipe?.Name,
                 ["display"] = DisplayStandViews.DisplayedOutput(sim, b)?.ToString(),
+                ["charge"] = b.Def.StoreCapacity > 0f ? Round(b.Charge) : null,
                 ["status"] = Camel(sim.BuildingStatusOf(b).State.ToString()),
                 ["idleReason"] = sim.BuildingStatusOf(b).IdleReason
             });

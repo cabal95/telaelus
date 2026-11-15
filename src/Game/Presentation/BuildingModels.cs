@@ -52,6 +52,9 @@ public static class BuildingModels
             BuildingType.SemiconductorFab => "semiconductor_fab",
             BuildingType.AirSeparator => "air_separator",
             BuildingType.EnrichmentPlant => "enrichment_plant",
+            BuildingType.SolarArray => "solar_array",
+            BuildingType.BatteryBank => "battery_bank",
+            BuildingType.FissionReactor => "fission_reactor",
             _ => type.ToString().ToLowerInvariant()
         };
     }

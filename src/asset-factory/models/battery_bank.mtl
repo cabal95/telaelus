@@ -1,0 +1,25 @@
+newmtl concrete_dark
+Kd 0.540 0.540 0.520
+
+newmtl concrete
+Kd 0.660 0.660 0.640
+
+newmtl ceramic
+Kd 0.900 0.880 0.840
+
+newmtl metal
+Kd 0.580 0.600 0.630
+
+newmtl battery_accent
+Kd 0.300 0.820 0.400
+
+newmtl led
+Kd 0.400 0.950 0.500
+Ke 0.200 0.475 0.250
+
+newmtl metal_dark
+Kd 0.300 0.310 0.340
+
+newmtl power_accent
+Kd 1.000 0.860 0.120
+

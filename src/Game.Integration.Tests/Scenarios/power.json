@@ -9,13 +9,13 @@
     { "wait": 2 },
     { "expect": "buildings[1].online", "equals": true },
     { "expect": "buildings[1].idleReason", "equals": "Blackout: Power" },
-    { "expect": "ui.topBar.power", "equals": "Blackout: Power 10 / 0" },
+    { "expect": "ui.topBar.power", "equals": "Blackout: 10 / 0" },
 
     { "placeBuilding": { "type": "BurnerGenerator", "anchor": [53, 13] } },
     { "wait": 2 },
     { "expect": "capacity.power", "equals": { "supply": 100, "demand": 10, "speed": 1, "state": "normal" } },
     { "expect": "buildings[2].burning", "equals": "Coal" },
-    { "expect": "ui.topBar.power", "equals": "Power 10 / 100" },
+    { "expect": "ui.topBar.power", "equals": "10 / 100" },
 
     { "comment": "Four Refineries (25 each): 110 against 100 is a brownout at 80%.", "placeBuilding": { "type": "Refinery", "anchor": [46, 4] } },
     { "placeBuilding": { "type": "Refinery", "anchor": [48, 4] } },
@@ -25,13 +25,13 @@
     { "wait": 2 },
     { "expect": "capacity.power.state", "equals": "brownout" },
     { "expect": "capacity.power.speed", "approx": 0.8 },
-    { "expect": "ui.topBar.power", "equals": "Power 110 / 100" },
+    { "expect": "ui.topBar.power", "equals": "110 / 100" },
     { "screenshot": "brownout" },
 
     { "comment": "A fifth: 135 against 100 is past a quarter over, a blackout.", "placeBuilding": { "type": "Refinery", "anchor": [46, 8] } },
     { "wait": 2 },
     { "expect": "capacity.power.state", "equals": "blackout" },
-    { "expect": "ui.topBar.power", "equals": "Blackout: Power 135 / 100" },
+    { "expect": "ui.topBar.power", "equals": "Blackout: 135 / 100" },
     { "screenshot": "blackout" },
 
     { "aimAt": { "world": [54, 14] } },

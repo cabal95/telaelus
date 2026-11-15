@@ -217,6 +217,16 @@ public sealed partial class Simulation
             }
         }
 
+        /// <summary>Sets the time of day (0 to 1; 0.5 is midday).</summary>
+        public void SetTimeOfDay(float timeOfDay)
+        {
+            if (timeOfDay < 0f || timeOfDay >= 1f)
+            {
+                throw new ArgumentOutOfRangeException(nameof(timeOfDay), timeOfDay, "the time of day is from 0 up to 1");
+            }
+            _sim.TimeOfDay = timeOfDay;
+        }
+
         /// <summary>Chooses the recipe of the building anchored at a fine cell, as its picker does.</summary>
         public void SetRecipe(int anchorX, int anchorZ, int index)
         {

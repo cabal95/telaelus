@@ -10,10 +10,12 @@ namespace Game.Presentation.Ui;
 /// The top bar: a full-width strip across the top of the window in the panel style.
 /// Left, the pinned resources (see <see cref="ResourcePins"/>) in table order, each as an icon and
 /// "amount / limit" (the amount alone for a Cargo or unlimited resource), in the warning color
-/// when storage is full, each with a tooltip naming it. Right, the network's power ("Power 45 /
-/// 100", colored by its state), then the launch progress (Rocket Fuel and Iron against
-/// the launch cost, short amounts in the short color), "[L] Launch ship" once both are
-/// met, and the ships launched once there is one. It takes the mouse but no keys.
+/// when storage is full, each with a tooltip naming it. Right, the clock (a sun icon by day, a
+/// moon icon by night, and "14:00"), the network's power (a lightning-bolt icon and "45 / 100", colored by its state,
+/// "Blackout:" before it in a blackout), what Battery Banks hold (the Battery icon and "3200 / 6000",
+/// in the warning color while discharging) once there is one, then the launch progress (the ship
+/// bill, short amounts in the short color), "[L] Launch ship" once it can launch, and the ships
+/// launched once there is one. It takes the mouse but no keys.
 /// </summary>
 public partial class TopBar : HudOverlay
 {
@@ -31,6 +33,13 @@ public partial class TopBar : HudOverlay
     private Label _shipyardNote = null!;
     private Label _launch = null!;
     private Label _power = null!;
+    private Label _powerState = null!;
+    private TextureRect _powerIcon = null!;
+    private TextureRect _clockIcon = null!;
+    private Label _clock = null!;
+    private HBoxContainer _storeEntry = null!;
+    private TextureRect _storeIcon = null!;
+    private Label _store = null!;
     private Label _ships = null!;
 
     /// <summary>The entries as shown (type, amount, its own limit or null, whether storage is full, the text, and its tone), for the snapshot.</summary>
@@ -38,8 +47,21 @@ public partial class TopBar : HudOverlay
         ? _pins.Pinned.Select(type => (type, Whole(sim, type), WholeLimit(sim, type), IsFull(sim, type), StorageText(sim, type), ToneOf(AmountColor(sim, type))))
         : Enumerable.Empty<(ResourceType, int, int?, bool, string, string)>();
 
-    /// <summary>The power readout as shown, for the snapshot.</summary>
-    public string PowerText => _power.Text;
+    /// <summary>The power readout as shown ("45 / 100", "Blackout: 140 / 100"), for the snapshot.</summary>
+    public string PowerText => (_powerState.Visible ? _powerState.Text + " " : "") + _power.Text;
+
+    /// <summary>The clock as shown ("14:00"), for the snapshot.</summary>
+    public string ClockText => _clock.Text;
+
+    /// <summary>What Battery Banks hold as shown ("3200 / 6000"), or null with no bank, for the snapshot.</summary>
+    public string? StoreText => _storeEntry.Visible ? _store.Text : null;
+
+    /// <summary>The clock's text for a time of day: the hour of a 24-hour day ("14:00"); its sun or moon icon says day or night.</summary>
+    public static string ClockFor(float timeOfDay)
+    {
+        int minutes = (int)(timeOfDay * 24f * 60f) % (24 * 60);
+        return $"{minutes / 60:00}:{minutes % 60:00}";
+    }
 
     /// <summary>The launch progress as shown, for the snapshot.</summary>
     public string LaunchText => string.Join("   ", _bill.Where(e => e.Amount.IsVisibleInTree()).Select(e => e.Amount.Text)
@@ -77,7 +99,8 @@ public partial class TopBar : HudOverlay
         {
             MouseFilter = MouseFilterEnum.Ignore
         };
-        row.AddThemeConstantOverride("separation", UiTheme.Padding);
+        // Sections sit a Gap apart so the pins, clock, power, store, and ship bill fit at 1280 wide.
+        row.AddThemeConstantOverride("separation", UiTheme.Gap);
         bar.AddChild(row);
 
         _pinRow = new HBoxContainer
@@ -94,8 +117,46 @@ public partial class TopBar : HudOverlay
             MouseFilter = MouseFilterEnum.Ignore
         });
 
+        var clockEntry = new HBoxContainer
+        {
+            Name = "Clock",
+            MouseFilter = MouseFilterEnum.Ignore
+        };
+        clockEntry.AddThemeConstantOverride("separation", 3);
+        _clockIcon = MakeIcon(IconSize);
+        _clockIcon.SizeFlagsVertical = SizeFlags.ShrinkCenter;
+        clockEntry.AddChild(_clockIcon);
+        _clock = UiTheme.MakeLabel("", UiTheme.BodySize);
+        clockEntry.AddChild(_clock);
+        row.AddChild(clockEntry);
+
+        var powerEntry = new HBoxContainer
+        {
+            Name = "Power",
+            MouseFilter = MouseFilterEnum.Ignore
+        };
+        powerEntry.AddThemeConstantOverride("separation", 3);
+        _powerState = UiTheme.MakeLabel("Blackout:", UiTheme.BodySize, UiTheme.Danger);
+        powerEntry.AddChild(_powerState);
+        _powerIcon = MakeIcon(IconSize);
+        _powerIcon.SizeFlagsVertical = SizeFlags.ShrinkCenter;
+        powerEntry.AddChild(_powerIcon);
         _power = UiTheme.MakeLabel("", UiTheme.BodySize);
-        row.AddChild(_power);
+        powerEntry.AddChild(_power);
+        row.AddChild(powerEntry);
+
+        _storeEntry = new HBoxContainer
+        {
+            Name = "Store",
+            MouseFilter = MouseFilterEnum.Ignore
+        };
+        _storeEntry.AddThemeConstantOverride("separation", 3);
+        _storeIcon = MakeIcon(IconSize);
+        _storeIcon.SizeFlagsVertical = SizeFlags.ShrinkCenter;
+        _storeEntry.AddChild(_storeIcon);
+        _store = UiTheme.MakeLabel("", UiTheme.BodySize);
+        _storeEntry.AddChild(_store);
+        row.AddChild(_storeEntry);
         // The ship bill sits closer together than the gaps between sections, so the bar fits it.
         var billRow = new HBoxContainer
         {
@@ -145,7 +206,7 @@ public partial class TopBar : HudOverlay
             Name = type.ToString(),
             MouseFilter = MouseFilterEnum.Stop
         };
-        entry.AddThemeConstantOverride("separation", 4);
+        entry.AddThemeConstantOverride("separation", 3);
         TextureRect icon = MakeIcon(IconSize);
         icon.SizeFlagsVertical = SizeFlags.ShrinkCenter;
         entry.AddChild(icon);
@@ -171,9 +232,20 @@ public partial class TopBar : HudOverlay
             amount.AddThemeColorOverride("font_color", AmountColor(sim, type));
         }
 
+        bool day = sim.Daylight > 0f;
+        _clockIcon.Texture = _icons.Icon(day ? "icon_sun" : "icon_moon");
+        _clock.Text = ClockFor(sim.TimeOfDay);
+
         CapacityReading power = sim.Capacity(CapacityType.Power);
-        _power.Text = CapacityText(sim, CapacityType.Power);
+        _powerIcon.Texture ??= _icons.Icon("icon_power");
+        _powerState.Visible = power.State == CapacityState.Blackout;
+        _power.Text = $"{Mathf.CeilToInt(power.Demand)} / {Mathf.FloorToInt(power.Supply)}";
         _power.AddThemeColorOverride("font_color", CapacityColor(power.Demand, power.Supply));
+
+        _storeEntry.Visible = power.StoreCapacity > 0f;
+        _storeIcon.Texture ??= _icons.For(ResourceType.Battery);
+        _store.Text = $"{Mathf.FloorToInt(power.Stored)} / {Mathf.FloorToInt(power.StoreCapacity)}";
+        _store.AddThemeColorOverride("font_color", power.StoreFlow < 0f ? UiTheme.Warning : UiTheme.Text);
         // Once the whole bill is met its entries give way to the launch (or the Shipyard note), so
         // the bar never has to fit both.
         bool met = sim.LaunchBillMet;

@@ -68,6 +68,7 @@ public sealed partial class Simulation
         HarvestTarget = null;
         HarvestProgress = 0f;
         ShipsLaunched = 0;
+        TimeOfDay = StartTimeOfDay;
         _revealedFrom = null;
         ExploredCount = 0;
         _exploredBounds = null;

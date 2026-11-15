@@ -106,7 +106,10 @@ public static class ResourceDefs
         [ResourceType.ThrusterAssembly] = Refined("Thruster Assembly", 3, ResourceStorage.Pooled(8f)),
         [ResourceType.FuelTank] = Refined("Fuel Tank", 3, ResourceStorage.Pooled(10f)),
         [ResourceType.HeatShield] = Refined("Heat Shield", 3, ResourceStorage.Pooled(6f)),
-        [ResourceType.FuelRod] = Refined("Fuel Rod", 3, ResourceStorage.Secure(20f)),
+        [ResourceType.FuelRod] = Refined("Fuel Rod", 3, ResourceStorage.Secure(20f)) with
+        {
+            BurnSeconds = 300f
+        },
         [ResourceType.LifeSupportUnit] = Refined("Life Support Unit", 3, ResourceStorage.Pooled(6f)),
         [ResourceType.SensorArray] = Refined("Sensor Array", 3, ResourceStorage.Pooled(4f)),
         [ResourceType.HullSection] = Refined("Hull Section", 4, ResourceStorage.Pooled(20f)),
@@ -117,6 +120,11 @@ public static class ResourceDefs
     public static readonly IReadOnlyList<ResourceType> Fuels = Enum.GetValues<ResourceType>()
         .Where(type => For(type).BurnSeconds is not null)
         .OrderByDescending(type => For(type).BurnSeconds)
+        .ToList();
+
+    /// <summary>The fuels a fire burns (every fuel but the Fuel Rod, which only a Fission Reactor takes), longest-burning first.</summary>
+    public static readonly IReadOnlyList<ResourceType> Combustibles = Fuels
+        .Where(type => type != ResourceType.FuelRod)
         .ToList();
 
     public static ResourceDef For(ResourceType type)

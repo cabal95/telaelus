@@ -140,6 +140,12 @@ pausing it and stepping frame by frame.
   putting two wires in storage, and an end-to-end run from seeded tier-1 materials through five
   Fabricators, two Electronics Works, a Tile Kiln, three Assembly Plants, and two Shipyards (on
   Burner Generators, with Warehouses for the parts) to a launch.
+- `PowerStoreTests`: the clock starting mid-morning, advancing, and wrapping; daylight through the
+  day; the Solar Array's supply by daylight and its night status; a Battery Bank charging at its
+  rate up to its capacity, covering a shortage at Normal until it runs dry, giving at most its rate
+  (a brownout past it), and off neither charging nor discharging; the Fission Reactor burning a
+  Fuel Rod every 300 s for 400 Power and half that in a Water brownout; Fuel Rods only in the
+  reactor and nothing else in it.
 - `LaterTiersTests`: each building's recipe list (the new buildings and the added recipes), every
   refined resource having a maker, a Silicon Wafer cycle making two, the Brine Well's placement (on
   Desert Sand, refused on Sand elsewhere and off the Sand) and its Lithium into a Stockyard, the Air
@@ -174,6 +180,7 @@ pausing it and stepping frame by frame.
     and whether or not unlocked), `teleportPlayer` `{ x, z }`, `seedStockpile` `{ type, amount }`, `fillBuffer` `{ anchor, type, amount }` (sets one
     resource in the output buffer of the building at that anchor; 0 removes it), `setRecipe`
     `{ anchor, index }` (chooses the recipe of the building at that anchor, as its picker does),
+    `setTimeOfDay` (a number from 0 up to 1, 0.5 midday),
     `placeMotherlode`
     `{ kind, mapCell }`, `setWorkedOut` `{ mapCell, deposit }`
     (unlocks any building whose whole cost is then held; scenarios that place through the menu and a click seed first), `cameraZoom` `{ size }` (the camera's zoom: world units across 720 pixels
@@ -225,7 +232,8 @@ pausing it and stepping frame by frame.
   drawn), and `offlineMarkers` (how many offline markers are drawn),
   `topBar`: its `items` (each pinned resource's `type`, `amount`, `limit` (null for a Cargo or
   unlimited resource), `full`, the `text` shown, and its `tone`: `normal`, `warning`, or
-  `danger`), its `power` readout, and its `launch` text, `hint`: the hint's `text`, `progress`,
+  `danger`), its `power` readout ("45 / 100", "Blackout: 140 / 100"), its `clock` ("14:00"), its
+  `store` (the Battery Banks' readout, or null with none), and its `launch` text, `hint`: the hint's `text`, `progress`,
   and `storageFull` or null, `tooltip`: the hover
   tooltip's lines or null, `worldTip`: the truck tooltip's lines outside build mode, or null, and while the build menu is open, its `cells` in display order, each
   `type`, `state` (`affordable`, `unaffordable`, or `undiscovered`), and `label`; while the
@@ -247,7 +255,8 @@ pausing it and stepping frame by frame.
   `waitingForRoom`, `toDepot`), `position` [x, z], `cargo` or null, `amount`, and `target` or null);
   `workedOut` (each worked-out map cell's `mapCell` and `deposit`); each building also has
   `producing` (a collector without a field's output, or null), `recipe` (the name of the
-  recipe a processor runs, or null), and `display` (the item its display stand shows, or null);
+  recipe a processor runs, or null), `display` (the item its display stand shows, or null), and
+  `charge` (a Battery Bank's stored Power, or null);
   `hoveredBuilding` (the id of the building under the pointer outside build mode, or null);
   `focusedBuilding` (the id of the building the detail panel shows and outlines, or null);
   `hoveredField` and `focusedField` (the same for resource fields);
@@ -256,7 +265,8 @@ pausing it and stepping frame by frame.
   `fields` (`id`, `type`, `mapCell`, `amount`, `stage`, `visibleModels`, `explored`, `growing`,
   `motherlode` or null);
   `stockpile` (every resource); `capacity` (`power`, `water`, and `sand`, each with `supply`,
-  `demand`, `speed`, and `state`: `normal`, `brownout`, or `blackout`); `discovered` (the discovered resources' type names, in enum
+  `demand`, `speed`, and `state`: `normal`, `brownout`, or `blackout`, and once there is a Battery
+  Bank, `stored`, `storeCapacity`, and `storeFlow`); `timeOfDay` and `daylight`; `discovered` (the discovered resources' type names, in enum
   order); `unlockedBuildings` (type names, in enum order); and
   `shipsLaunched`. New checks are added as snapshot fields.
 - **Input injection:** keys and mouse buttons go through `Input.ParseInputEvent` followed by
@@ -367,6 +377,9 @@ pausing it and stepping frame by frame.
   generator's panel shows its supply and Best fuel),
   `refining` (a Steel Mill's Auto input picker and its note and recipe text; an Electrolyzer on
   Hydrogen feeding a Fuel Plant to Rocket Fuel; the launch progress with Liquid Oxygen),
+  `power-consumers` (at midday a Solar Array's 60 Power charging a Battery Bank at 50, with the
+  clock, power, and store readouts; at night the bank carrying a Drill Rig at Normal; a Fission
+  Reactor on Fuel Rods and Water adding 400),
   `later-tiers` (a Sawmill's Lumber; a Cement Kiln's Cement turned into Concrete by a Concrete
   Mixer on Sand and Water; a Brine Well on Desert Sand pumping Lithium into a Stockyard; a
   Semiconductor Fab's display stand and recipe changing to Processor),

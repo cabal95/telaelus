@@ -272,6 +272,12 @@ public sealed class CommandExecutor
         return StepOutcome.Ok;
     }
 
+    public StepOutcome SetTimeOfDay(float timeOfDay)
+    {
+        _root.Sim.Debug.SetTimeOfDay(timeOfDay);
+        return StepOutcome.Ok;
+    }
+
     public StepOutcome SetRecipe(int anchorX, int anchorZ, int index)
     {
         _root.Sim.Debug.SetRecipe(anchorX, anchorZ, index);

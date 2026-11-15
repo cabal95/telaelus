@@ -70,9 +70,16 @@ public sealed partial class Simulation
                 demand += building.Def.Draw(type);
                 if (building.Def.Supply(type) > 0f && !unfueled.Contains(building))
                 {
-                    // Its draws come earlier in the order, so their speeds are this tick's.
-                    supply += building.Def.Supply(type) * WorkSpeed(building);
+                    // Its draws usually come earlier in the order, so their speeds are this tick's
+                    // (a Fission Reactor's Water comes after its Power, so it runs on last tick's).
+                    float sun = building.Def.Solar ? Daylight : 1f;
+                    supply += building.Def.Supply(type) * sun * WorkSpeed(building);
                 }
+            }
+            (float stored, float storeCapacity, float flow) = type == CapacityType.Power ? StepStore(supply - demand, dt) : (0f, 0f, 0f);
+            if (flow < 0f)
+            {
+                supply -= flow;
             }
             CapacityState state = StateFor(demand, supply);
             float speed = state switch
@@ -81,8 +88,44 @@ public sealed partial class Simulation
                 CapacityState.Brownout => 1f - 2f * Overload(demand, supply),
                 _ => 0f
             };
-            _capacity[(int)type] = new CapacityReading(supply, demand, speed, state);
+            _capacity[(int)type] = new CapacityReading(supply, demand, speed, state, stored, storeCapacity, flow);
         }
+    }
+
+    /// <summary>
+    /// Battery Banks for one tick: a surplus charges the switched-on, online banks (emptiest first),
+    /// a shortage draws on them (fullest first), each up to its rate. Returns what all banks hold,
+    /// what they can hold, and the Power they moved (positive charging, negative discharging).
+    /// </summary>
+    private (float Stored, float Capacity, float Flow) StepStore(float surplus, double dt)
+    {
+        float seconds = (float)dt;
+        var banks = _buildings.Where(b => b.Def.StoreCapacity > 0f).ToList();
+        var live = banks.Where(b => b.Enabled && b.Online).ToList();
+        float moved = 0f;
+        if (surplus > 0f && seconds > 0f)
+        {
+            float left = surplus * seconds;
+            foreach (Building bank in live.OrderBy(b => b.Charge))
+            {
+                float take = Math.Min(left, Math.Min(bank.Def.StoreRate * seconds, bank.Def.StoreCapacity - bank.Charge));
+                bank.Charge += take;
+                left -= take;
+                moved += take;
+            }
+        }
+        else if (surplus < 0f && seconds > 0f)
+        {
+            float need = -surplus * seconds;
+            foreach (Building bank in live.OrderByDescending(b => b.Charge))
+            {
+                float give = Math.Min(need, Math.Min(bank.Def.StoreRate * seconds, bank.Charge));
+                bank.Charge -= give;
+                need -= give;
+                moved -= give;
+            }
+        }
+        return (banks.Sum(b => b.Charge), banks.Sum(b => b.Def.StoreCapacity), seconds > 0f ? moved / seconds : 0f);
     }
 
     /// <summary>How fast a building works this tick: the slowest speed of the types it draws (1 for none), 0 offline.</summary>
@@ -122,7 +165,7 @@ public sealed partial class Simulation
     /// <summary>The fuel a burner would take next, or null when none is at hand.</summary>
     private ResourceType? NextFuel(Building building)
     {
-        foreach (ResourceType fuel in ResourceDefs.Fuels)
+        foreach (ResourceType fuel in building.Def.Fuels)
         {
             if (building.FuelChoice is ResourceType chosen && chosen != fuel)
             {
@@ -179,7 +222,7 @@ public sealed partial class Simulation
     public bool SetFuelChoice(int id, ResourceType? fuel)
     {
         Building? building = BuildingById(id);
-        if (building is null || !building.Def.BurnsFuel || (fuel is ResourceType type && ResourceDefs.For(type).BurnSeconds is null))
+        if (building is null || !building.Def.BurnsFuel || (fuel is ResourceType type && !building.Def.Fuels.Contains(type)))
         {
             return false;
         }
@@ -213,7 +256,7 @@ public sealed partial class Simulation
         {
             return null;
         }
-        foreach (ResourceType fuel in ResourceDefs.Fuels)
+        foreach (ResourceType fuel in building.Def.Fuels)
         {
             if (building.FuelChoice is ResourceType chosen && chosen != fuel)
             {

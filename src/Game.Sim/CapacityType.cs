@@ -41,7 +41,12 @@ public enum CapacityState
 }
 
 /// <summary>One capacity type's figures for this tick.</summary>
-public readonly record struct CapacityReading(float Supply, float Demand, float Speed, CapacityState State)
+/// <remarks>
+/// For Power, also what Battery Banks hold (`Stored` of `StoreCapacity`, in Power-seconds) and how
+/// fast they moved this tick (`StoreFlow`: positive charging, negative discharging, in Power).
+/// </remarks>
+public readonly record struct CapacityReading(float Supply, float Demand, float Speed, CapacityState State,
+    float Stored = 0f, float StoreCapacity = 0f, float StoreFlow = 0f)
 {
     public static readonly CapacityReading Idle = new(0f, 0f, 1f, CapacityState.Normal);
 }

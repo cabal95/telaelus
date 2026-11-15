@@ -102,6 +102,7 @@ public partial class GameRoot : Node3D
         // Shadows are drawn only up to this distance from the camera, which moves back as the
         // view grows (see CameraRig.ViewDistance), so the range follows it.
         _light.DirectionalShadowMaxDistance = _camera.ViewDistance + _camera.Size;
+        DayLight.Apply(_light, _sim.TimeOfDay);
         _fieldViews.Sync(_sim, _terrainView);
         _buildingViews.Sync(ExploredBuildings());
         _truckViews.Sync(_sim, delta);

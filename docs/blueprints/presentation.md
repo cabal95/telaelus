@@ -87,8 +87,11 @@ ui-style.md. There is no text HUD; the screen holds:
   Then the launch progress: each entry of the ship bill (`Simulation.LaunchCost`: Hull Section,
   Engine, Control Module, Rocket Fuel, Liquid Oxygen) as "have / need" until the bill is met, then
   "[L] Launch ship" once it can launch, or "Build a Shipyard to launch" with the bill met and no
-  online Shipyard, and "Ships: n" once one has launched; all preceded by the network's
-  power ("Power 45 / 100", or "Blackout: Power 140 / 100", colored the same way). Pinning or unpinning rebuilds the entries.
+  online Shipyard, and "Ships: n" once one has launched; all preceded by the clock (the `icon_sun`
+  icon while there is daylight, else `icon_moon`, and the hour of a 24-hour day, "14:00"), the
+  network's power (the `icon_power` bolt and "45 / 100", or "Blackout:" before the bolt, colored
+  the same way), and, once there is a Battery Bank, what the banks hold (the Battery item's icon and
+  "3200 / 6000", `Warning` while discharging). Pinning or unpinning rebuilds the entries.
 - **Hint overlay** (`HintOverlay`): below the top bar, the E key's action with the resource's
   icon and a progress bar toward the next unit: "[E] Harvest Wood" while a hand-harvestable field is
   the target, "[E] Collect Iron Ore (12)" (units left in the output buffer) or "[E] Load Iron Ore
@@ -150,10 +153,13 @@ ui-style.md. There is no text HUD; the screen holds:
   as Power was before it meant electricity), then one row per capacity type the building draws or
   supplies (Power, Water, Sand): "Draws 10", "Draws 10 (running at 80%)", or "Draws 10: blackout"
   for a consumer, "No Water: offline" offline; "Supplies 16", "Supplies 12.8 of 16" for a provider
-  slowed by its own draws, or "Offline: supplies nothing". A recipe with no inputs reads "1 Glass,
+  slowed by its own draws or by the daylight (a Solar Array), or "Offline: supplies nothing". A
+  Battery Bank has a Charge row ("3200 / 6000, charging", or "discharging", "full", "holding"). A
+  recipe with no inputs reads "1 Glass,
   12 s". A building with a fuel slot has a Burning row ("Coal,
-  22 s left; 4 in slot") and, below the rows, a Fuel picker (Best, then each fuel longest-burning
-  first; choosing calls `SetFuelChoice`) with a dim note naming what it burns ("Best: burns Coal
+  22 s left; 4 in slot") and, below the rows, a Fuel picker (Best, then each fuel the building
+  takes, longest-burning first, rebuilt for a building that takes others; choosing calls
+  `SetFuelChoice`) with a dim note naming what it burns ("Best: burns Coal
   (40 s per unit)"). A processor with several recipes has a Recipe picker (choosing calls
   `SetRecipe`; the Recipe row adds "(next: Copper)" while a change waits for the running cycle),
   and one whose recipe has an input with alternatives an input picker labeled with them ("Coal or
@@ -305,7 +311,10 @@ ui-style.md. There is no text HUD; the screen holds:
   `Game.csproj` references the `Game.Sim` project (see simulation.md), whose `Game.Sim.dll` is built
   beside `Game.dll` and loaded by the engine.
 - Lighting (see art-style.md): one `DirectionalLight3D` (the sun, rotated -50 and -40 degrees,
-  energy 1, shadows on) and a `WorldEnvironment` with a clear-color background, ambient light off,
+  shadows on) that never moves, so the hard shadows hold still. Each frame `DayLight.Apply` sets
+  only its color and energy by the time of day: white at midday and warm (1, 0.74, 0.52) when the
+  sun is low, energy 1, by day; a blue moonlight (0.56, 0.64, 0.88) at energy 0.76 by night;
+  blended by the daylight through dawn and dusk. A `WorldEnvironment` with a clear-color background, ambient light off,
   and linear tone mapping; without one, the Mobile renderer would add ambient fill. Directional
   shadows use the hard filter (`soft_shadow_filter_quality` 0), so they stay crisp and dark. The
   first launch on a new machine compiles shaders once (one frame of about a second); Godot caches

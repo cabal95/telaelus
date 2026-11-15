@@ -1210,6 +1210,111 @@ def enrichment_plant():
     return m, mat.mats
 
 
+def solar_array():
+    """6 x 6: three rows of tilted dark-blue panels ruled in silver on low steel frames, and an
+    inverter box with a power-yellow band at the front."""
+    m, mat = Mesh(), Materials()
+    hx, hz = half(6), half(6)
+    box(m, mat("grass", 0.8), -hx, 0, -hz, hx, 0.04, hz, mat_top=mat("mud", 1.15))
+    tilt = math.radians(28)
+    depth = 1.2
+    for row, zc in enumerate((1.9, 0.3, -1.3)):
+        # each row a long panel rising toward the back, on legs
+        y0, y1 = 0.35, 0.35 + depth * math.sin(tilt)
+        z0, z1 = zc - depth * math.cos(tilt) / 2, zc + depth * math.cos(tilt) / 2
+        for x in (-2.5, 0.0, 2.5):
+            cylinder(m, mat("metal_dark"), (x, 0.04, z0 + 0.1), (x, y0 + 0.05, z0 + 0.1), 0.04, segs=5)
+            cylinder(m, mat("metal_dark"), (x, 0.04, z1 - 0.1), (x, y1 - 0.05, z1 - 0.1), 0.04, segs=5)
+        n = (0, math.cos(tilt), -math.sin(tilt))
+        quad(m, mat("solar"), (-2.75, y0, z0), (2.75, y0, z0), (2.75, y1, z1), (-2.75, y1, z1), n)
+        quad(m, mat("metal_dark"), (-2.75, y0, z0), (-2.75, y1, z1), (2.75, y1, z1), (2.75, y0, z0), (0, -n[1], -n[2]))
+        for k in range(1, 6):
+            x = -2.75 + k * 5.5 / 6
+            quad(m, mat("solar_line"), (x - 0.015, y0 + 0.004, z0), (x + 0.015, y0 + 0.004, z0),
+                 (x + 0.015, y1 + 0.004, z1), (x - 0.015, y1 + 0.004, z1), n)
+        ym, zm = (y0 + y1) / 2, (z0 + z1) / 2
+        quad(m, mat("solar_line"), (-2.75, ym - 0.01 + 0.005, zm - 0.01), (2.75, ym - 0.01 + 0.005, zm - 0.01),
+             (2.75, ym + 0.01 + 0.005, zm + 0.01), (-2.75, ym + 0.01 + 0.005, zm + 0.01), n)
+    # the inverter at the front, off to the side
+    box(m, mat("metal"), 1.6, 0.04, -2.85, 2.6, 0.7, -2.35, mat_top=mat("metal_dark"))
+    box(m, mat("power_accent"), 1.58, 0.5, -2.87, 2.62, 0.58, -2.33)
+    return m, mat.mats
+
+
+def battery_bank():
+    """3 x 4: a concrete pad with two rows of white battery cabinets, each with a green charge
+    light, and a transformer at the front."""
+    m, mat = Mesh(), Materials()
+    hx, hz = half(3), half(4)
+    box(m, mat("concrete_dark"), -hx, 0, -hz, hx, 0.08, hz, mat_top=mat("concrete"))
+    for x in (-0.75, 0.35):
+        for k in range(3):
+            z = 0.0 + k * 0.6
+            box(m, mat("ceramic"), x - 0.38, 0.08, z, x + 0.38, 1.0, z + 0.5, mat_top=mat("metal"))
+            box(m, mat("battery_accent"), x - 0.39, 0.82, z - 0.01, x + 0.39, 0.88, z + 0.51)
+            box(m, mat("led"), x - 0.08, 0.6, z - 0.012, x + 0.08, 0.68, z - 0.01)
+    # the transformer at the front, with fins and a yellow band
+    box(m, mat("metal_dark"), -0.6, 0.08, -1.7, 0.4, 0.75, -1.0, mat_top=mat("metal"))
+    for k in range(4):
+        z = -1.62 + k * 0.18
+        box(m, mat("metal_dark"), 0.4, 0.15, z, 0.55, 0.65, z + 0.06)
+    box(m, mat("power_accent"), -0.62, 0.55, -1.72, 0.42, 0.62, -0.98)
+    return m, mat.mats
+
+
+def fission_reactor():
+    """6 x 8: a hyperboloid cooling tower at the back with a white rim, a round reactor building with
+    a domed roof, a turbine hall along the front, and an intake pipe; a power pole."""
+    m, mat = Mesh(), Materials()
+    hx, hz = half(6), half(8)
+    box(m, mat("stone_dark"), -hx, 0, -hz, hx, 0.08, hz, mat_top=mat("concrete", 0.9))
+    # the cooling tower: a lathe narrowing to a waist and flaring to its lip
+    cx, cz = 1.2, 2.1
+    segs = 18
+    profile = [(1.55, 0.08), (1.25, 1.2), (1.05, 2.4), (1.12, 3.4), (1.25, 3.9)]
+    for k in range(len(profile) - 1):
+        (r0, y0), (r1, y1) = profile[k], profile[k + 1]
+        for s in range(segs):
+            a0 = 2 * math.pi * s / segs
+            a1 = 2 * math.pi * (s + 1) / segs
+            p = [(cx + r0 * math.cos(a0), y0, cz + r0 * math.sin(a0)), (cx + r0 * math.cos(a1), y0, cz + r0 * math.sin(a1)),
+                 (cx + r1 * math.cos(a1), y1, cz + r1 * math.sin(a1)), (cx + r1 * math.cos(a0), y1, cz + r1 * math.sin(a0))]
+            out = (math.cos((a0 + a1) / 2), 0.2, math.sin((a0 + a1) / 2))
+            quad(m, mat("concrete", 1.05 if k % 2 else 0.95), p[0], p[3], p[2], p[1], out)
+    cylinder(m, mat("sack_white"), (cx, 3.75, cz), (cx, 3.9, cz), 1.27, segs=segs, caps=False)
+    # its open top: a dark disc just inside the lip
+    cylinder(m, mat("shadow"), (cx, 3.86, cz), (cx, 3.87, cz), 1.2, segs=segs)
+    cylinder(m, mat("reactor_accent"), (cx, 0.9, cz), (cx, 1.05, cz), 1.33, segs=segs, caps=False)
+    # the reactor building: a drum with a domed roof
+    rx, rz = -1.4, 1.2
+    cylinder(m, mat("concrete"), (rx, 0.08, rz), (rx, 1.8, rz), 1.1, segs=16)
+    cylinder(m, mat("reactor_accent"), (rx, 1.5, rz), (rx, 1.65, rz), 1.11, segs=16, caps=False)
+    n = 5
+    for k in range(n):
+        b0 = (math.pi / 2) * k / n
+        b1 = (math.pi / 2) * (k + 1) / n
+        for s in range(16):
+            a0 = 2 * math.pi * s / 16
+            a1 = 2 * math.pi * (s + 1) / 16
+            r0, y0 = 1.1 * math.cos(b0), 1.8 + 0.8 * math.sin(b0)
+            r1, y1 = 1.1 * math.cos(b1), 1.8 + 0.8 * math.sin(b1)
+            p = [(rx + r0 * math.cos(a0), y0, rz + r0 * math.sin(a0)), (rx + r0 * math.cos(a1), y0, rz + r0 * math.sin(a1)),
+                 (rx + r1 * math.cos(a1), y1, rz + r1 * math.sin(a1)), (rx + r1 * math.cos(a0), y1, rz + r1 * math.sin(a0))]
+            quad(m, mat("concrete", 1.1), p[0], p[3], p[2], p[1],
+                 (math.cos((a0 + a1) / 2) * math.cos(b0), math.sin(b0) + 0.1, math.sin((a0 + a1) / 2) * math.cos(b0)))
+    # the turbine hall along the front
+    box(m, mat("metal"), -2.7, 0.08, -3.7, 2.7, 1.3, -1.6, mat_top=mat("metal_dark"))
+    box(m, mat("reactor_accent"), -2.72, 1.05, -3.72, 2.72, 1.17, -1.58)
+    box(m, mat("shadow"), -0.5, 0.08, -3.71, 0.5, 0.9, -3.7)
+    for x in (-1.9, 1.9):
+        cylinder(m, mat("metal_dark"), (x, 1.3, -2.6), (x, 1.75, -2.6), 0.18, segs=8)
+    # the intake pipe from the side to the tower
+    cylinder(m, mat("metal_dark"), (2.85, 0.35, 0.3), (cx, 0.35, 0.3), 0.14, segs=8)
+    cylinder(m, mat("metal_dark"), (cx, 0.35, 0.3), (cx, 0.35, cz - 1.4), 0.14, segs=8)
+    power_pole(m, mat, -2.65, -0.9, 1.8)
+    return m, mat.mats
+
+
 BUILDINGS = {"mine": mine, "lumber_camp": lumber_camp, "smelter": smelter, "refinery": refinery,
              "oil_well": oil_well, "hq": hq, "silo": silo, "stockyard": stockyard, "tank_farm": tank_farm,
              "warehouse": warehouse, "vault": vault, "small_hub": small_hub, "relay": relay,
@@ -1226,7 +1331,8 @@ BUILDINGS = {"mine": mine, "lumber_camp": lumber_camp, "smelter": smelter, "refi
              "ship_hull_ring": ship_hull_ring, "ship_nose": ship_nose, "sawmill": sawmill,
              "cement_kiln": cement_kiln, "concrete_mixer": concrete_mixer, "brine_well": brine_well,
              "semiconductor_fab": semiconductor_fab, "air_separator": air_separator,
-             "enrichment_plant": enrichment_plant}
+             "enrichment_plant": enrichment_plant, "solar_array": solar_array,
+             "battery_bank": battery_bank, "fission_reactor": fission_reactor}
 
 
 def build_all():

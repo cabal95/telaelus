@@ -713,9 +713,89 @@ ITEMS = {
 }
 
 
+# ---- UI icons ---------------------------------------------------------------------------------
+# Flat shapes for the top bar, rendered like the item icons. Each lies in the plane facing the
+# game camera (which looks down from +X +Z at 48 degrees), so its icon shows it face on.
+
+_PITCH = math.radians(48)
+_FACING = (math.cos(_PITCH) / math.sqrt(2), math.sin(_PITCH), math.cos(_PITCH) / math.sqrt(2))
+_ACROSS = (-1 / math.sqrt(2), 0.0, 1 / math.sqrt(2))
+_UP = (-math.sin(_PITCH) / math.sqrt(2), math.cos(_PITCH), -math.sin(_PITCH) / math.sqrt(2))
+
+
+def _on_face(u, v, d=0.0):
+    return tuple(_ACROSS[i] * u + _UP[i] * v + _FACING[i] * d for i in range(3))
+
+
+def _slab(m, front, side, poly, depth=0.1):
+    """A convex polygon (u, v points, counter-clockwise as seen by the camera) as a thin slab."""
+    lift = 0.6
+    pts_f = [_on_face(u, v + lift, depth / 2) for u, v in poly]
+    pts_b = [_on_face(u, v + lift, -depth / 2) for u, v in poly]
+    neg = tuple(-c for c in _FACING)
+    for k in range(1, len(poly) - 1):
+        m.tri(front, pts_f[0], pts_f[k], pts_f[k + 1], outward=_FACING)
+        m.tri(side, pts_b[0], pts_b[k + 1], pts_b[k], outward=neg)
+    cu = sum(u for u, _ in poly) / len(poly)
+    cv = sum(v for _, v in poly) / len(poly)
+    for k in range(len(poly)):
+        j = (k + 1) % len(poly)
+        mu = (poly[k][0] + poly[j][0]) / 2 - cu
+        mv = (poly[k][1] + poly[j][1]) / 2 - cv
+        out = tuple(_ACROSS[i] * mu + _UP[i] * mv for i in range(3))
+        quad(m, side, pts_f[k], pts_b[k], pts_b[j], pts_f[j], out)
+
+
+def icon_sun(_rnd):
+    """A pale yellow disc with eight short rays."""
+    m, mat = Mesh(), Materials()
+    disc = [(0.3 * math.cos(2 * math.pi * k / 16), 0.3 * math.sin(2 * math.pi * k / 16)) for k in range(16)]
+    _slab(m, mat("sun"), mat("sun", 0.8), disc)
+    for k in range(8):
+        a = 2 * math.pi * k / 8
+        w = 0.08
+        base = [(0.38 * math.cos(a + s * w), 0.38 * math.sin(a + s * w)) for s in (-1, 1)]
+        tip = (0.56 * math.cos(a), 0.56 * math.sin(a))
+        _slab(m, mat("sun"), mat("sun", 0.8), [base[0], base[1], tip])
+    return m, mat.mats
+
+
+def icon_moon(_rnd):
+    """A pale crescent opening to the right."""
+    m, mat = Mesh(), Materials()
+    segs = 10
+    r = 0.5
+    for k in range(segs):
+        a0 = math.pi / 2 + math.pi * k / segs
+        a1 = math.pi / 2 + math.pi * (k + 1) / segs
+        outer0, outer1 = (r * math.cos(a0), r * math.sin(a0)), (r * math.cos(a1), r * math.sin(a1))
+        inner0, inner1 = (0.35 * r * math.cos(a0), r * math.sin(a0)), (0.35 * r * math.cos(a1), r * math.sin(a1))
+        _slab(m, mat("moon"), mat("moon", 0.8), [outer0, outer1, inner1, inner0] if k not in (0, segs - 1)
+              else ([outer0, outer1, inner1] if k == segs - 1 else [outer0, outer1, inner0]))
+    return m, mat.mats
+
+
+def icon_power(_rnd):
+    """A lightning bolt in the power yellow: two slanted wedges, stepping down to a point."""
+    m, mat = Mesh(), Materials()
+    _slab(m, mat("power_accent"), mat("power_accent", 0.75), [(-0.02, 0.6), (0.28, 0.6), (0.08, 0.06), (-0.3, 0.06)])
+    _slab(m, mat("power_accent"), mat("power_accent", 0.75), [(-0.22, 0.12), (0.26, 0.12), (-0.16, -0.62)])
+    return m, mat.mats
+
+
+ICONS = {
+    "icon_sun": icon_sun,
+    "icon_moon": icon_moon,
+    "icon_power": icon_power,
+}
+
+
 def build_all():
     for name, (fn, seed) in ITEMS.items():
         m, mats = fn(random.Random(seed))
+        m.write(name, mats)
+    for name, fn in ICONS.items():
+        m, mats = fn(random.Random(0))
         m.write(name, mats)
 
 

@@ -24,7 +24,7 @@ src/asset-factory/
     building_gen.py  building models
     unit_gen.py      unit models (the truck), exported to assets/models/units/
     resource_gen.py  resource field models (the deposits), and site models (worked-out markers, the motherlode base)
-    item_gen.py      resource item models (the UI's resource icons)
+    item_gen.py      resource item models (the UI's resource icons) and icon models, exported to assets/models/icons/
     arrange.py       composes test maps from terrain models (for previews)
     export_glb.py    OBJ to .glb exporter
     preview.py       preview renderer (no window)

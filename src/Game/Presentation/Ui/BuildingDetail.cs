@@ -22,6 +22,7 @@ public partial class BuildingDetail : Dialog
     private Simulation _sim = null!;
     private TurntableView _turntable = null!;
     private StatusRows _rows = null!;
+    private IReadOnlyList<ResourceType> _fuels = System.Array.Empty<ResourceType>();
     private ProgressBar _progress = null!;
     private Label _progressLabel = null!;
     private Button _toggle = null!;
@@ -105,7 +106,7 @@ public partial class BuildingDetail : Dialog
         _turntable = new TurntableView();
         center.AddChild(_turntable);
 
-        _rows = new StatusRows("Network", "Switch", "Power", "Water", "Sand", "State", "Site", "Plot", "Eats", "In range", "Working on", "Recipe", "Buffer", "Truck", "Burning", "Links", "Reach",
+        _rows = new StatusRows("Network", "Switch", "Power", "Water", "Sand", "Charge", "State", "Site", "Plot", "Eats", "In range", "Working on", "Recipe", "Buffer", "Truck", "Burning", "Links", "Reach",
             "Trucks", "Truck 1", "Truck 2", "Truck 3", "Truck 4");
         Body.AddChild(_rows);
 
@@ -136,11 +137,6 @@ public partial class BuildingDetail : Dialog
             Name = "Fuel",
             FocusMode = FocusModeEnum.None
         };
-        _fuel.AddItem("Best");
-        foreach (ResourceType fuel in ResourceDefs.Fuels)
-        {
-            _fuel.AddItem(ResourceDefs.For(fuel).Name);
-        }
         _fuel.ItemSelected += OnFuelSelected;
         Body.AddChild(_fuel);
         Host.Register(Id + "/fuel", _fuel);
@@ -272,6 +268,7 @@ public partial class BuildingDetail : Dialog
             _rows.Set(capacity.ToString(), CapacityRowText(building, capacity));
         }
         _rows.Set("Burning", BurningText(building));
+        _rows.Set("Charge", ChargeText(building));
         RefreshFuel(building);
         bool works = !storage && !def.IsHub;
         _rows.Set("State", works ? status.State == BuildingState.Working ? "Working" : "Idle: " + status.IdleReason : null);
@@ -643,10 +640,27 @@ public partial class BuildingDetail : Dialog
             {
                 return "Offline: supplies nothing";
             }
-            float speed = _sim.WorkSpeed(building);
+            float speed = _sim.WorkSpeed(building) * (def.Solar ? _sim.Daylight : 1f);
             return speed < 1f ? $"Supplies {supply * speed:0.#} of {supply:0}" : $"Supplies {supply:0}";
         }
         return null;
+    }
+
+    /// <summary>A Battery Bank's Charge row: what it holds and whether it is charging, discharging, full, or holding.</summary>
+    private string? ChargeText(Building building)
+    {
+        BuildingDef def = building.Def;
+        if (def.StoreCapacity <= 0f)
+        {
+            return null;
+        }
+        float flow = _sim.Capacity(CapacityType.Power).StoreFlow;
+        bool live = building.Enabled && building.Online;
+        string doing = building.Charge >= def.StoreCapacity - 0.5f ? "full"
+            : live && flow > 0f ? "charging"
+            : live && flow < 0f && building.Charge > 0f ? "discharging"
+            : "holding";
+        return $"{Mathf.FloorToInt(building.Charge)} / {def.StoreCapacity:0}, {doing}";
     }
 
     /// <summary>The Burning row for a building with a fuel slot: what burns and for how long, and what waits in the slot.</summary>
@@ -674,7 +688,19 @@ public partial class BuildingDetail : Dialog
         {
             return;
         }
-        _fuel.Selected = building.FuelChoice is ResourceType chosen ? 1 + ResourceDefs.Fuels.ToList().IndexOf(chosen) : 0;
+        // The picker offers the fuels this building takes (a Fission Reactor's Fuel Rods, a fire's
+        // Coal, Charcoal, and Wood), rebuilt when the panel shows a building that takes others.
+        if (!ReferenceEquals(_fuels, building.Def.Fuels))
+        {
+            _fuels = building.Def.Fuels;
+            _fuel.Clear();
+            _fuel.AddItem("Best");
+            foreach (ResourceType fuel in _fuels)
+            {
+                _fuel.AddItem(ResourceDefs.For(fuel).Name);
+            }
+        }
+        _fuel.Selected = building.FuelChoice is ResourceType chosen ? 1 + _fuels.ToList().IndexOf(chosen) : 0;
         _fuelNote.Text = building.FuelChoice is null
             ? _sim.BestFuelAt(building) is ResourceType best
                 ? $"Best: burns {ResourceDefs.For(best).Name} ({ResourceDefs.For(best).BurnSeconds:0} s per unit)"
@@ -686,7 +712,7 @@ public partial class BuildingDetail : Dialog
     {
         if (Building is Building building)
         {
-            _sim.SetFuelChoice(building.Id, index == 0 ? null : ResourceDefs.Fuels[(int)index - 1]);
+            _sim.SetFuelChoice(building.Id, index == 0 ? null : _fuels[(int)index - 1]);
         }
     }
 

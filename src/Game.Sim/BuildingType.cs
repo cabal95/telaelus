@@ -49,5 +49,8 @@ public enum BuildingType
     BrineWell,
     SemiconductorFab,
     AirSeparator,
-    EnrichmentPlant
+    EnrichmentPlant,
+    SolarArray,
+    BatteryBank,
+    FissionReactor
 }

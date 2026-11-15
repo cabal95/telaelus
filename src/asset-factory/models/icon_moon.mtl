@@ -1,0 +1,6 @@
+newmtl moon
+Kd 0.860 0.890 0.960
+
+newmtl moon_80
+Kd 0.688 0.712 0.768
+

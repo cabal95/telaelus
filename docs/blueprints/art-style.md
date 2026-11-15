@@ -16,7 +16,8 @@ generate, preview, and export an asset is in docs/asset-pipeline.md.
   the furnace mouth). Materials are matte (no metal, no specular).
 - Small surface details (grass patches, sand ripples, pebbles, puddles) stay nearly flat. The game
   lights with one sun and no ambient light (an environment with ambient off, linear tone mapping,
-  and hard-edged shadows; see presentation.md), so any steep face turned from the sun reads as
+  and hard-edged shadows; see presentation.md; the light keeps its angle through the day, warming
+  at dawn and dusk, and by night turns to a dimmer blue moonlight), so any steep face turned from the sun reads as
   black; a small steep detail becomes a black speck. The look was set under the Compatibility
   renderer and matched under the Mobile renderer side by side.
 - The character is the one textured asset, an accepted CC0 exception.
@@ -160,6 +161,10 @@ or 1.05 for facet variation). A new material extends the table.
 | fab_accent | 0.42, 0.40, 0.92 | Semiconductor Fab band, door frame, and tank cap (a clean violet-blue) |
 | nuclear_accent | 0.74, 0.90, 0.20 | Enrichment Plant bands and cask bands (a hazard yellow-green) |
 | brine | 0.86, 0.92, 0.96 | The Brine Well's brine pond |
+| battery_accent | 0.30, 0.82, 0.40 | Battery Bank cabinet bands (a charge green) |
+| reactor_accent | 0.46, 0.42, 0.90 | Fission Reactor bands (a radiation blue-violet) |
+| sun | 1.00, 0.84, 0.30 | The sun icon |
+| moon | 0.86, 0.89, 0.96 | The moon icon |
 
 Crown greens are mid tones with no near-black shade: a crown's shaded side would otherwise read
 as black under the dark ambient light. Crowns shade light on upward faces and dark underneath.
@@ -208,6 +213,14 @@ Emissive materials glow at half their base color. Mountains keep their own stone
   pad, stacking 1 unit apart: `ship_engine` (a thrust frame over two bells, about 1.0 high),
   `ship_hull_ring` (a white ring 1.0 high with a dark band), `ship_nose` (a white cone with a
   window band, about 1.6 high).
+- The power buildings: Solar Array (6 x 6, three rows of tilted dark-blue panels ruled in silver on
+  low steel legs over bare earth, an inverter with a `power_accent` band at the front), Battery
+  Bank (3 x 4, two rows of white cabinets with `battery_accent` bands and green lamps, a finned
+  transformer at the front; static), Fission Reactor (6 x 8, a hyperboloid concrete cooling tower
+  at the back with a white lip and a dark open top, a domed round reactor building, a turbine hall
+  across the front, an intake pipe). Icons (`assets/models/icons/`): `icon_sun` (a pale yellow
+  disc with eight rays), `icon_moon` (a pale crescent), `icon_power` (a lightning bolt in
+  `power_accent`), flat shapes facing the game camera.
 - The later tiers: Sawmill (3 x 5, an open-sided shed with a `lumber_accent` gabled roof over a
   saw bench with a round blade, logs at the back, plank stacks either side at the front), Cement
   Kiln (3 x 7, a sloped rotary drum on piers with tyre rings from a preheater tower and chimney at

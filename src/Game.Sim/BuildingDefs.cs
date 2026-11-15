@@ -98,6 +98,18 @@ public sealed record BuildingDef(
     /// <summary>Whether it has a fuel slot and burns fuel to work (the Smelter, the Burner Generator).</summary>
     public bool BurnsFuel { get; init; }
 
+    /// <summary>The fuels a burner takes, longest-burning first (a fire's Coal, Charcoal, and Wood; a Fission Reactor's Fuel Rods).</summary>
+    public IReadOnlyList<ResourceType> Fuels { get; init; } = ResourceDefs.Combustibles;
+
+    /// <summary>A provider whose supply follows the daylight (the Solar Array).</summary>
+    public bool Solar { get; init; }
+
+    /// <summary>The Power a Battery Bank stores, in Power-seconds (0 for anything else).</summary>
+    public float StoreCapacity { get; init; }
+
+    /// <summary>The most Power a Battery Bank takes in or gives out.</summary>
+    public float StoreRate { get; init; }
+
     public Placement Placement { get; init; } = Placement.Standard;
 
     /// <summary>How many trucks it holds (a Depot); its first comes with it.</summary>
@@ -794,6 +806,56 @@ public static class BuildingDefs
         }
     };
 
+    private static readonly BuildingDef SolarArray = new("Solar Array", 6, 6, new ResourceAmount[]
+    {
+        new(ResourceType.SolarCell, 20f),
+        new(ResourceType.AluminumFrame, 10f),
+        new(ResourceType.Concrete, 10f)
+    }, Array.Empty<ResourceType>(), 0f)
+    {
+        Tier = 2,
+        Solar = true,
+        Supplies = new Dictionary<CapacityType, float>
+        {
+            [CapacityType.Power] = 60f
+        }
+    };
+    private static readonly BuildingDef BatteryBank = new("Battery Bank", 3, 4, new ResourceAmount[]
+    {
+        new(ResourceType.Battery, 20f),
+        new(ResourceType.Steel, 20f),
+        new(ResourceType.Concrete, 10f)
+    }, Array.Empty<ResourceType>(), 0f)
+    {
+        Tier = 2,
+        StoreCapacity = 6000f,
+        StoreRate = 50f
+    };
+    private static readonly BuildingDef FissionReactor = new("Fission Reactor", 6, 8, new ResourceAmount[]
+    {
+        new(ResourceType.Concrete, 40f),
+        new(ResourceType.ArmorPlate, 20f),
+        new(ResourceType.HeatShield, 10f),
+        new(ResourceType.SensorArray, 6f),
+        new(ResourceType.Computer, 10f)
+    }, Array.Empty<ResourceType>(), 0f)
+    {
+        Tier = 3,
+        BurnsFuel = true,
+        Fuels = new[]
+        {
+            ResourceType.FuelRod
+        },
+        Supplies = new Dictionary<CapacityType, float>
+        {
+            [CapacityType.Power] = 400f
+        },
+        Draws = new Dictionary<CapacityType, float>
+        {
+            [CapacityType.Water] = 8f
+        }
+    };
+
     public static BuildingDef For(BuildingType type)
     {
         return type switch
@@ -845,6 +907,9 @@ public static class BuildingDefs
             BuildingType.SemiconductorFab => SemiconductorFab,
             BuildingType.AirSeparator => AirSeparator,
             BuildingType.EnrichmentPlant => EnrichmentPlant,
+            BuildingType.SolarArray => SolarArray,
+            BuildingType.BatteryBank => BatteryBank,
+            BuildingType.FissionReactor => FissionReactor,
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, "no building definition")
         };
     }

@@ -152,6 +152,10 @@ Newest last. One line each; open the file for the full spec.
   Array as new recipes; the Sawmill, Cement Kiln, Concrete Mixer, Brine Well (Lithium on Desert
   Sand), Semiconductor Fab, Air Separator, and Enrichment Plant with their models; the new
   buildings cost Lumber, Concrete, and parts.
+- **2611151108-power-consumers** - Adds a ten-minute day and night (the light warming at dawn and
+  dusk, a dim moonlight at night, its angle fixed), the Solar Array (Power by daylight), the Battery Bank (stored Power that
+  charges from a surplus and covers a shortage), and the Fission Reactor (Fuel Rods for 400 Power,
+  cooled by Water); fuels by building; the top bar's clock, power bolt, and battery readout.
 
 ## Adding a changeset
 

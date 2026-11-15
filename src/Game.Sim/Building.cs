@@ -71,6 +71,9 @@ public sealed class Building
     /// <summary>Seconds left on the unit burning now.</summary>
     public float BurnLeft { get; set; }
 
+    /// <summary>A Battery Bank's stored Power, in Power-seconds.</summary>
+    public float Charge { get; set; }
+
     /// <summary>The fuel it burns: one by name, or null for Best (the longest-burning one at hand).</summary>
     public ResourceType? FuelChoice { get; set; }
 

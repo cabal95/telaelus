@@ -54,8 +54,11 @@ buildings.md). A single global stockpile holds all amounts, within storage limit
   | 3 | ControlModule, Computer, ThrusterAssembly, FuelTank, HeatShield, FuelRod, LifeSupportUnit, SensorArray |
   | 4 | HullSection, Engine |
 
-- **Fuels** have a burn time (`ResourceDef.BurnSeconds`): Coal 40 s, Charcoal 30 s, Wood 10 s
-  (placeholders). `ResourceDefs.Fuels` lists them longest-burning first. A fuel is still a Stored
+- **Fuels** have a burn time (`ResourceDef.BurnSeconds`): Fuel Rod 300 s, Coal 40 s, Charcoal
+  30 s, Wood 10 s (placeholders). `ResourceDefs.Fuels` lists them longest-burning first, and
+  `Combustibles` the same without the Fuel Rod, which only a Fission Reactor burns (buildings.md).
+  Batteries, Solar Cells, Heat Shields, Sensor Arrays, and Computers also go into the power
+  buildings' costs. A fuel is still a Stored
   resource; burning it in a fuel slot is a use of it (buildings.md).
 - Deposits are finite resource fields. Terrain-sourced resources never run out but need a building
   on or beside the right terrain. Every resource is defined so the production plan (see

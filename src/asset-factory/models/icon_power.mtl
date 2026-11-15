@@ -1,0 +1,6 @@
+newmtl power_accent
+Kd 1.000 0.860 0.120
+
+newmtl power_accent_75
+Kd 0.750 0.645 0.090
+

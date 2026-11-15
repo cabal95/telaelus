@@ -151,6 +151,11 @@ public sealed class ScenarioCommand
                     float z = Number(Required(arg, "z"), "z");
                     return e => e.TeleportPlayer(x, z);
                 }
+            case "setTimeOfDay":
+                {
+                    float time = (float)Number(arg, "setTimeOfDay");
+                    return e => e.SetTimeOfDay(time);
+                }
             case "setRecipe":
                 {
                     (int x, int z) = Pair(Required(arg, "anchor"), "anchor");

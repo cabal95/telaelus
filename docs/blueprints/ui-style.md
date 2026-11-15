@@ -107,12 +107,16 @@ The two kinds place themselves:
   the panel color with a 1 px `PanelEdge` bottom border and no rounded corners. Left: every
   pinned resource as a 22-unit icon and "amount / limit" in whole numbers (the amount alone for a
   Cargo or unlimited resource), in `Warning` when full, 16 units apart, each with a tooltip naming it (opening below the entry, so it never
-  covers its neighbors). Right: the power readout (demand over supply, in normal text, `Warning`,
-  or `Danger` by state), then the launch progress, an icon and "have / need" for each entry of
+  covers its neighbors). Right: the clock (a sun or moon icon and "14:00"), the power readout (the
+  power bolt icon and demand over supply, in normal text, `Warning`, or `Danger` by state, with
+  "Blackout:" in `Danger` before the icon in a blackout), the Battery Banks' store (the Battery
+  icon and "stored / capacity", `Warning` while discharging) once there is a bank, then the launch
+  progress, an icon and "have / need" for each entry of
   the ship bill (in `Short` until met, `Gap` apart), hidden once the whole bill is met, then "[L]
   Launch ship" in `Accent` once it can launch, or "Build a Shipyard to launch" in `Warning` with
-  the bill met and no online Shipyard, and "Ships: n" once a ship has launched. The right-hand
-  entries sit `Gap` apart so the five bill entries fit at 1280 wide. It takes the mouse (so hovering it shows no building outline and
+  the bill met and no online Shipyard, and "Ships: n" once a ship has launched. Every section sits
+  `Gap` apart and each icon 3 units from its text, so the pins, clock, power, store, and five bill
+  entries fit at 1280 wide (with a Battery Bank, "Ships: n" after a launch can run past the edge). It takes the mouse (so hovering it shows no building outline and
   clicks on it never reach the world) but no keys.
 - **Hint overlay** (`HintOverlay`): centered, 8 units below the top bar, a small panel-style box
   shown only while a hint applies, never taking the mouse. Today the one hint is harvesting:

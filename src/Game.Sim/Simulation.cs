@@ -60,6 +60,39 @@ public sealed partial class Simulation
     /// <summary>How many ships have been launched (the initial win condition).</summary>
     public int ShipsLaunched { get; private set; }
 
+    /// <summary>Seconds in a day and night.</summary>
+    public const float DayLength = 600f;
+
+    /// <summary>The time of day a new world starts at: mid-morning.</summary>
+    public const float StartTimeOfDay = 0.3f;
+
+    /// <summary>The time of day, 0 to 1 over <see cref="DayLength"/> (0 midnight, 0.5 midday).</summary>
+    public float TimeOfDay { get; private set; } = StartTimeOfDay;
+
+    /// <summary>
+    /// The daylight, 0 to 1: dark from 0.85 to 0.15, rising through dawn (0.15 to 0.25), full from
+    /// 0.25 to 0.75, falling through dusk (0.75 to 0.85).
+    /// </summary>
+    public float Daylight => DaylightAt(TimeOfDay);
+
+    public static float DaylightAt(float timeOfDay)
+    {
+        float t = timeOfDay - MathF.Floor(timeOfDay);
+        if (t < 0.15f || t >= 0.85f)
+        {
+            return 0f;
+        }
+        if (t < 0.25f)
+        {
+            return (t - 0.15f) / 0.1f;
+        }
+        if (t <= 0.75f)
+        {
+            return 1f;
+        }
+        return (0.85f - t) / 0.1f;
+    }
+
     private int _nextBuildingId;
     private int _nextFieldId;
 
@@ -105,6 +138,7 @@ public sealed partial class Simulation
             HarvestProgress = 0f;
             InteractProgress = 0f;
         }
+        TimeOfDay = (TimeOfDay + (float)(dt / DayLength)) % 1f;
         StepBuildings(dt);
         StepTrucks(dt);
     }
@@ -441,6 +475,16 @@ public sealed partial class Simulation
         if (CapacityBlock(building) is string blocked)
         {
             return new BuildingStatus(BuildingState.Idle, blocked);
+        }
+        if (building.Def.StoreCapacity > 0f)
+        {
+            return building.Online
+                ? new BuildingStatus(BuildingState.Working, null)
+                : new BuildingStatus(BuildingState.Idle, "Offline: stores nothing");
+        }
+        if (building.Def.Solar && building.Online && Daylight <= 0f)
+        {
+            return new BuildingStatus(BuildingState.Idle, "Night: supplies nothing");
         }
         if (building.Def.TruckSlots > 0 && !building.Online)
         {

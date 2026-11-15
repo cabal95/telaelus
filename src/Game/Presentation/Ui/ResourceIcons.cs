@@ -18,6 +18,10 @@ public partial class ResourceIcons : Node
     public const int IconSize = 64;
 
     private Dictionary<ResourceType, Texture2D> _icons = new();
+    private Dictionary<string, Texture2D> _uiIcons = new();
+
+    /// <summary>The icon models that stand for no resource (<c>icons/&lt;name&gt;</c>, see the icons README).</summary>
+    public static readonly string[] UiIconNames = { "icon_sun", "icon_moon", "icon_power" };
 
     /// <summary>Raised once the icons are ready.</summary>
     public event Action? IconsReady;
@@ -25,6 +29,9 @@ public partial class ResourceIcons : Node
     public bool IsReady { get; private set; }
 
     public Texture2D? For(ResourceType type) => _icons.GetValueOrDefault(type);
+
+    /// <summary>A UI icon by name ("icon_power"), or null headless.</summary>
+    public Texture2D? Icon(string name) => _uiIcons.GetValueOrDefault(name);
 
     /// <summary>The item model's path for a resource, as "items/item_iron_ore".</summary>
     public static string ModelPath(ResourceType type)
@@ -39,6 +46,10 @@ public partial class ResourceIcons : Node
         {
             ModelLibrary.MeshBounds(ModelPath(type));
         }
+        foreach (string name in UiIconNames)
+        {
+            ModelLibrary.MeshBounds("icons/" + name);
+        }
         if (DisplayServer.GetName() == "headless")
         {
             return;
@@ -52,6 +63,9 @@ public partial class ResourceIcons : Node
             .Select(type => (type, (Action<Node>)(view =>
                 PictureStage.Fill(view, ModelPath(type), 0f, false, PictureStage.Framing.Tight))));
         _icons = await PictureStage.RenderOnce(this, stages, IconSize);
+        var iconStages = UiIconNames.Select(name => (name, (Action<Node>)(view =>
+            PictureStage.Fill(view, "icons/" + name, 0f, false, PictureStage.Framing.Tight))));
+        _uiIcons = await PictureStage.RenderOnce(this, iconStages, IconSize);
         IsReady = true;
         IconsReady?.Invoke();
     }

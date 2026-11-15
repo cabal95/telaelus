@@ -1,0 +1,21 @@
+newmtl grass_80
+Kd 0.264 0.392 0.216
+
+newmtl mud_115
+Kd 0.437 0.368 0.253
+
+newmtl metal_dark
+Kd 0.300 0.310 0.340
+
+newmtl solar
+Kd 0.160 0.260 0.560
+
+newmtl solar_line
+Kd 0.560 0.620 0.740
+
+newmtl metal
+Kd 0.580 0.600 0.630
+
+newmtl power_accent
+Kd 1.000 0.860 0.120
+

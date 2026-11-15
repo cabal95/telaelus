@@ -28,7 +28,7 @@ and mirrors it onto nodes.
   take none; throws on terrain that cannot take a feature or on a field), `PlaceField` (amount
   optional, defaulting to the biome's; throws on a feature cell), `SetFieldAmount` (0 or less removes the field),
   `RemoveField`, `PlaceBuilding` (through the normal placement rules), `RemoveBuilding` (freeing
-  its cells), `TeleportPlayer`, and `SeedStockpile`. Invalid requests throw
+  its cells), `TeleportPlayer`, `SeedStockpile`, and `SetTimeOfDay` (0 up to 1; throws outside). Invalid requests throw
   `InvalidOperationException`. It is used by the unit tests, scenarios, and (later) the live
   control channel.
 - The `MapChanged` event is raised by the debug operations that change terrain, biomes, features,
@@ -46,7 +46,12 @@ and mirrors it onto nodes.
   fixed `1/30 s` steps, clamping the backlog to 8 steps so a stall cannot trigger a runaway
   catch-up.
 - `Simulation.Step(dt)` runs in order: move the player, update the harvest target, harvest (if
-  intended), then step buildings.
+  intended), advance the time of day, then step buildings.
+- **The time of day** (`TimeOfDay`, 0 to 1 over `DayLength`, 600 s; 0 midnight, 0.5 midday)
+  advances with the fixed tick, so peers agree on it, and wraps. A new or reset world starts at
+  `StartTimeOfDay` 0.3. `Daylight` (`DaylightAt(t)`) is 0 from 0.85 to 0.15, rises linearly
+  through dawn (0.15 to 0.25), is 1 from 0.25 to 0.75, and falls through dusk (0.75 to 0.85): six
+  minutes of full light, two of twilight, two of dark. The Solar Array reads it (buildings.md).
 
 ### Input: intent and commands
 
