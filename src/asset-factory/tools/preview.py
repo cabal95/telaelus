@@ -7,11 +7,15 @@ Views: the game camera (yaw 45, pitch 48), yaw 135, yaw 225, and top-down. Ortho
 the game (one directional light with shadows on a grass-colored ground). Several OBJ files are
 drawn together in the same space, which is how arrangement checks are rendered.
 
+With --each COLS the sheet is a family overview instead: every model is framed on its own from
+the game camera only, in a grid COLS wide, in the order given (how previews/items.png is made).
+
 Options:
     --size N      pixels per view (default 256), so the sheet is 2N x 2N
     --margin F    empty border around the model, as a fraction of the view (default 0.06)
     --colors N    quantize to an N-color palette (default 64; 0 keeps full color)
     --aa N        supersampling factor for anti-aliasing (default 3)
+    --each COLS   one game-camera tile per model, in a grid COLS wide (--size is per tile)
 """
 import argparse
 import math
@@ -147,6 +151,31 @@ def render_view(tris, colors, emits, normals, yaw, pitch, extent, center, px):
     return linear_to_srgb(rgb)
 
 
+def prepare(paths, views, margin):
+    """Triangles, colors, emission, normals, centre, and the extent that fits every view."""
+    tris, colors, emits = load(paths)
+    e1, e2 = tris[:, 1] - tris[:, 0], tris[:, 2] - tris[:, 0]
+    normals = np.cross(e1, e2)
+    normals /= np.linalg.norm(normals, axis=1, keepdims=True) + 1e-12
+
+    pts = tris.reshape(-1, 3)
+    center = (pts.min(0) + pts.max(0)) / 2
+    # One scale for all views: the widest projected extent among them, plus the margin.
+    extent = 0.0
+    for yaw, pitch in views:
+        yr, pr = math.radians(yaw), math.radians(pitch)
+        _, right, up = basis(-np.array([math.cos(pr) * math.sin(yr), math.sin(pr), math.cos(pr) * math.cos(yr)]))
+        rel = pts - center
+        extent = max(extent, np.ptp(rel @ right), np.ptp(rel @ up))
+    return tris, colors, emits, normals, center, extent / (1 - 2 * margin)
+
+
+def render_tile(model, yaw, pitch, size, aa):
+    tris, colors, emits, normals, center, extent = model
+    img = render_view(tris, colors, emits, normals, yaw, pitch, extent, center, size * aa)
+    return img.reshape(size, aa, size, aa, 3).mean((1, 3))  # box-filter the supersamples
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("out")
@@ -155,31 +184,19 @@ def main():
     ap.add_argument("--margin", type=float, default=0.06)
     ap.add_argument("--colors", type=int, default=64)
     ap.add_argument("--aa", type=int, default=3)
+    ap.add_argument("--each", type=int, default=0, metavar="COLS")
     a = ap.parse_args()
 
-    tris, colors, emits = load(a.models)
-    e1, e2 = tris[:, 1] - tris[:, 0], tris[:, 2] - tris[:, 0]
-    normals = np.cross(e1, e2)
-    normals /= np.linalg.norm(normals, axis=1, keepdims=True) + 1e-12
-
-    pts = tris.reshape(-1, 3)
-    center = (pts.min(0) + pts.max(0)) / 2
-    # One scale for all four views: the widest projected extent among them, plus the margin.
-    extent = 0.0
-    for yaw, pitch in VIEWS:
-        yr, pr = math.radians(yaw), math.radians(pitch)
-        _, right, up = basis(-np.array([math.cos(pr) * math.sin(yr), math.sin(pr), math.cos(pr) * math.cos(yr)]))
-        rel = pts - center
-        extent = max(extent, np.ptp(rel @ right), np.ptp(rel @ up))
-    extent /= 1 - 2 * a.margin
-
-    px = a.size * a.aa
-    tiles = []
-    for yaw, pitch in VIEWS:
-        img = render_view(tris, colors, emits, normals, yaw, pitch, extent, center, px)
-        img = img.reshape(a.size, a.aa, a.size, a.aa, 3).mean((1, 3))  # box-filter the supersamples
-        tiles.append(img)
-    sheet = np.vstack([np.hstack(tiles[:2]), np.hstack(tiles[2:])])
+    if a.each:
+        game_view = VIEWS[0]
+        tiles = [render_tile(prepare([path], [game_view], a.margin), *game_view, a.size, a.aa) for path in a.models]
+        blank = np.ones_like(tiles[0]) * linear_to_srgb(srgb_to_linear(GROUND_SRGB))
+        tiles += [blank] * (-len(tiles) % a.each)
+        sheet = np.vstack([np.hstack(tiles[i:i + a.each]) for i in range(0, len(tiles), a.each)])
+    else:
+        model = prepare(a.models, VIEWS, a.margin)
+        tiles = [render_tile(model, yaw, pitch, a.size, a.aa) for yaw, pitch in VIEWS]
+        sheet = np.vstack([np.hstack(tiles[:2]), np.hstack(tiles[2:])])
     image = Image.fromarray((sheet * 255 + 0.5).astype(np.uint8), "RGB")
     if a.colors:
         image = image.quantize(colors=a.colors, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE)

@@ -45,7 +45,9 @@ simulation is a separate class library in `src/Game.Sim`, referenced by `Game.cs
 - Asset factory tools (generator, `.glb` exporter, preview renderer) run in a private Python
   environment: `python src/asset-factory/setup_env.py` once per machine, then
   `src/asset-factory/.venv/Scripts/python src/asset-factory/tools/<tool>.py`. See
-  [docs/asset-pipeline.md](docs/asset-pipeline.md).
+  [docs/asset-pipeline.md](docs/asset-pipeline.md). Every new or updated model ships with its
+  kept preview in `src/asset-factory/previews/` (its own sheet, plus its family overview such as
+  `items.png`), committed with the model; see "Kept previews" there.
 - Run the sim unit tests: `dotnet test src/Game.Sim.Tests` (engine-free; must pass before a
   changeset is stamped Implemented)
 - Run the integration tests: `dotnet test src/Game.Integration.Tests` (each JSON scenario in

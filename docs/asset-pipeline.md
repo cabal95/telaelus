@@ -38,8 +38,11 @@ Throwaway output (scratch renders, test scenarios, trial exports) goes in the gi
 
 ```
 gen.py  ->  models/<name>.obj + .mtl  ->  preview.py (PNG)  ->  review and adjust
+                                      |                     \->  previews/<name>.png (kept)
                                       \->  export_glb.py  ->  <name>.glb  ->  src/Game/assets/models/...
 ```
+
+Every new or updated model ships with its kept preview (see Kept previews below).
 
 Assets are described as code (a Python script emits geometry), not edited by hand, so any asset
 can be tweaked by changing a parameter and regenerating.
@@ -125,6 +128,8 @@ errors to the terminal.
   many previews keeps commits small. `--size`, `--colors` (0 for full color), `--margin`, and
   `--aa` (supersampling) override them.
 - Several OBJ files given together are drawn in the same space.
+- `--each COLS` makes a family overview instead: one game-camera tile per model, each framed on
+  its own, in a grid `COLS` wide, in the order given. `previews/items.png` is made this way.
 - Its lighting is a little flatter than the game's. Use it for shape and color; use the Godot
   renderer or the game for the final look.
 
@@ -149,8 +154,6 @@ ambient light, so shapes read), not the game's.
 
 ### Reviewing
 
-- Save a sheet worth keeping to `src/asset-factory/previews/<model name>.png` (rendered by
-  `preview.py` with its defaults).
 - Read the PNG to review the result, then adjust the generator and rerun. Expect several rounds.
 - For terrain, also check a multi-cell arrangement so seams, transitions, and river joins are
   seen in context, not just one tile. `arrange.py` composes a small test map the way the game
@@ -163,6 +166,23 @@ ambient light, so shapes read), not the game's.
 
   The kept sheets are `previews/arrangement_ground.png` and `previews/arrangement_rivers.png`.
   Add a layout to `LAYOUTS` in `arrange.py` to check something new.
+
+### Kept previews
+
+`src/asset-factory/previews/` holds the reviewed look of every shipped model, so a reviewer can see
+a change without running the tools. Every change that adds or updates a model updates its
+previews in the same commit:
+
+- **Its own sheet:** `previews/<model name>.png`, rendered by `preview.py` with its defaults from
+  the model's final `.obj`. A model with variants (`iron_ore_a`, `_b`, `_c`) or one family drawn
+  together may share one sheet named for the family (`previews/iron_ore.png`) that shows every
+  variant.
+- **Its family overview,** where one exists: `previews/items.png` (every resource item, in
+  `ResourceType` order, `--each 8 --size 160 --colors 256`) and the terrain arrangements
+  (`arrangement_<name>.png`, see below). Rerender the whole overview so it always shows every
+  model of the family.
+- Render kept previews after the last change to the model, so the sheet matches what ships.
+  Scratch renders made while iterating stay out of `previews/`.
 
 ## Exporting to .glb
 
@@ -188,8 +208,16 @@ and takes milliseconds.
 3. For anything tileable, render the arrangement test as well.
 4. Export to `.glb` over the shipped file under `src/Game/assets/models/`. Keep the file name;
    the game loads by name.
-5. Open the game (or run a scenario with screenshots, see `docs/blueprints/testing.md`) to
+5. Update its kept previews (its own sheet and its family overview, see Kept previews).
+6. Open the game (or run a scenario with screenshots, see `docs/blueprints/testing.md`) to
    confirm the asset reads correctly in place. Previews do not replace this.
+
+## Adding a new asset
+
+The same steps as updating, plus: follow the naming rules of its `README.md` under
+`src/Game/assets/models/` and add the model to that README's table, create its kept preview
+sheet, add it to its family overview, and commit the new `.glb` with its `.import` file (see
+Shipping below).
 
 ## Shipping an asset to the game
 
