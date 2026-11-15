@@ -17,8 +17,9 @@ on-screen character and camera.
   is moved independently and only if the target fine cell is walkable, so the player slides along
   obstacles rather than sticking. In a bounded world the result is clamped to its extent; a
   generated world has no edge.
-- The speed each tick is `Speed` times the speed multiplier of the terrain under the player (Sand
-  and Snow 0.75, Mud 0.6, others 1; see terrain.md). A river bank moves at its terrain's speed.
+- The speed each tick is `Speed` times the speed multiplier of the cell under the player: the
+  road speed 1.5 on a road or bridge, else the terrain's (Sand and Snow 0.75, Mud 0.6, others 1;
+  see terrain.md). A river bank moves at its terrain's speed.
 - Walkability (see terrain.md) blocks water, lava, mountains, river channels, resource fields (all
   their fine cells, until depleted), and buildings.
 

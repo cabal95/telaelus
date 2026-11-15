@@ -110,7 +110,7 @@ public sealed partial class Simulation
                 {
                     continue;
                 }
-                float step = (diagonal ? MathF.Sqrt(2f) : 1f) / TerrainDefs.For(TerrainAt(nx, nz)).Speed;
+                float step = (diagonal ? MathF.Sqrt(2f) : 1f) / CellSpeed(nx, nz);
                 float next = here + step;
                 if (cost.TryGetValue((nx, nz), out float known) && known <= next)
                 {
@@ -137,11 +137,12 @@ public sealed partial class Simulation
         return cells;
     }
 
+    /// <summary>The least the rest of a path could cost: its octile distance at road speed, the fastest ground (so A* stays exact).</summary>
     private static float Octile(int dx, int dz)
     {
         int low = Math.Min(dx, dz);
         int high = Math.Max(dx, dz);
-        return high - low + low * MathF.Sqrt(2f);
+        return (high - low + low * MathF.Sqrt(2f)) / RoadSpeed;
     }
 
     private static float OctileToRect(int x, int z, int minX, int minZ, int maxX, int maxZ)

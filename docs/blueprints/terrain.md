@@ -75,7 +75,37 @@ it (None out of bounds). A feature adds its own blocking on top of the terrain's
   also needs the cell explored; see buildings.md.)
 - `IsWalkable(x, z)`: the terrain is walkable, no feature blocks the fine cell, no resource field
   covers it (until depleted), and no building stands on it (see resources.md, buildings.md,
-  player.md).
+  player.md); or a bridge stands on it (below), whatever the terrain or river under it.
+
+### Roads and bridges
+
+- **Tiles.** Roads and bridges are 2 x 2 tiles on the even grid: a tile is named by its corner fine
+  cell, both coordinates even (`Simulation.TileOf`), so tiles never overlap and always line up.
+  `RoadTiles`, `Bridges` (each a `Bridge`: its tiles in order and whether it runs along X),
+  `IsRoad`, `IsBridge`, and `IsPaved` (either) read them; `RoadVersion` counts every change.
+- **A road tile** paves four cells that are each explored walkable land, with no building, field,
+  or paving (`CanLayRoadTile`). It costs 1 Stone a cell, 2 on Sand, Snow, and Mud
+  (`RoadTileCost`: 4 Stone on Grass, 8 on Mud).
+- **A bridge** is a straight span of up to `MaxBridgeTiles` (6) tiles along X or Z. Every cell of
+  every tile is explored, unbuilt, with no field or paving, and either walkable land, ShallowWater,
+  or the channel of a Straight river running across the span (a North-South river takes a bridge
+  along X); every tile has at least one water or channel cell; and the tiles just past both ends
+  are walkable land, so a bridge always lands (`BridgeProblem` names what is wrong: "A bridge runs
+  straight", "At most 12 cells long", "Not over open water", "It must land at both ends"). Its
+  cells become walkable. It costs 3 Wood and 1 Stone a cell (`BridgeTileCost`: 12 Wood and 4 Stone
+  a tile).
+- **Speed.** On a paved cell the speed is `RoadSpeed` (1.5) in place of the terrain's
+  (`CellSpeed`), for the player and for trucks.
+- **Lines.** A drag from one cell to another (`RoadLine`): both snap to their tiles, and the line
+  runs along X then Z, an L whose longer leg comes first, through every tile between, in order from
+  the start; a bridge line (`BridgeLine`) must be straight. `PlanRoad` says for each tile whether
+  it is already paved (free, skipped), ready (layable and paid for, in order), short (the stock ran
+  out before it), or blocked; `TryLayRoad` lays the ready tiles and pays for them.
+  `TryLayBridge` lays a whole span only when it is valid and the stock pays for it.
+- **Removing** (`TryRemoveRoad`, `TryRemoveBridge`: every bridge with a tile on the line) refunds
+  half the cost, rounded up per resource, past storage limits as building refunds are. A bridge
+  with the player or a truck on it stays.
+- **Buildings** are refused on any paved cell (`CanPlace`); the paving must be removed first.
 
 ### Biomes
 

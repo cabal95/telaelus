@@ -56,6 +56,11 @@
         { "$ref": "#/definitions/placeMotherlode" },
         { "$ref": "#/definitions/setRecipe" },
         { "$ref": "#/definitions/setTimeOfDay" },
+        { "$ref": "#/definitions/placeRoad" },
+        { "$ref": "#/definitions/removeRoad" },
+        { "$ref": "#/definitions/placeBridge" },
+        { "$ref": "#/definitions/removeBridge" },
+        { "$ref": "#/definitions/aimDrag" },
         { "$ref": "#/definitions/startResearch" },
         { "$ref": "#/definitions/pauseResearch" },
         { "$ref": "#/definitions/setResearchProgress" },
@@ -268,6 +273,98 @@
           "properties": {
             "project": { "$ref": "#/definitions/research" },
             "seconds": { "type": "number", "minimum": 0 }
+          }
+        },
+        "comment": { "$ref": "#/definitions/comment" }
+      }
+    },
+    "placeRoad": {
+      "description": "Lay a road line free (the drag's L of 2 x 2 tiles from one fine cell to another): every layable tile. Fails when none can be laid.",
+      "type": "object",
+      "required": ["placeRoad"],
+      "additionalProperties": false,
+      "properties": {
+        "placeRoad": {
+          "type": "object",
+          "required": ["from", "to"],
+          "additionalProperties": false,
+          "properties": {
+            "from": { "$ref": "#/definitions/pair" },
+            "to": { "$ref": "#/definitions/pair" }
+          }
+        },
+        "comment": { "$ref": "#/definitions/comment" }
+      }
+    },
+    "removeRoad": {
+      "description": "Remove the road tiles on a line, with the half refund.",
+      "type": "object",
+      "required": ["removeRoad"],
+      "additionalProperties": false,
+      "properties": {
+        "removeRoad": {
+          "type": "object",
+          "required": ["from", "to"],
+          "additionalProperties": false,
+          "properties": {
+            "from": { "$ref": "#/definitions/pair" },
+            "to": { "$ref": "#/definitions/pair" }
+          }
+        },
+        "comment": { "$ref": "#/definitions/comment" }
+      }
+    },
+    "placeBridge": {
+      "description": "Lay a bridge span free (straight, 2 x 2 tiles). Fails when it cannot stand there.",
+      "type": "object",
+      "required": ["placeBridge"],
+      "additionalProperties": false,
+      "properties": {
+        "placeBridge": {
+          "type": "object",
+          "required": ["from", "to"],
+          "additionalProperties": false,
+          "properties": {
+            "from": { "$ref": "#/definitions/pair" },
+            "to": { "$ref": "#/definitions/pair" }
+          }
+        },
+        "comment": { "$ref": "#/definitions/comment" }
+      }
+    },
+    "removeBridge": {
+      "description": "Remove every bridge with a tile on the line, with the half refund.",
+      "type": "object",
+      "required": ["removeBridge"],
+      "additionalProperties": false,
+      "properties": {
+        "removeBridge": {
+          "type": "object",
+          "required": ["from", "to"],
+          "additionalProperties": false,
+          "properties": {
+            "from": { "$ref": "#/definitions/pair" },
+            "to": { "$ref": "#/definitions/pair" }
+          }
+        },
+        "comment": { "$ref": "#/definitions/comment" }
+      }
+    },
+    "aimDrag": {
+      "description": "A drag with the pointer over the ground (world x, z): aim at from and press now, aim at to, release at the start of the next frame. Fails if either end is outside the window. The line tools lay (left) or remove (right, or left with shift).",
+      "type": "object",
+      "required": ["aimDrag"],
+      "additionalProperties": false,
+      "properties": {
+        "aimDrag": {
+          "type": "object",
+          "required": ["from", "to"],
+          "additionalProperties": false,
+          "properties": {
+            "from": { "$ref": "#/definitions/point" },
+            "to": { "$ref": "#/definitions/point" },
+            "button": { "enum": ["left", "right"] },
+            "shift": { "type": "boolean" }
           }
         },
         "comment": { "$ref": "#/definitions/comment" }

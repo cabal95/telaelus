@@ -66,6 +66,7 @@ public sealed partial class Simulation
         _unlocked.Clear();
         _discovered.Clear();
         ResetResearch();
+        ResetRoads();
         HarvestTarget = null;
         HarvestProgress = 0f;
         ShipsLaunched = 0;

@@ -235,7 +235,10 @@ ship from a Shipyard, which closes the on-planet loop.
 
 - Trucks path in the sim (`FindPathBeside`, `FindPathTo`): A* over fine cells in 8 directions
   without cutting corners, each step costing its length over the terrain speed of the cell it
-  enters (so Mud and Sand cost more and a path goes round them when that is cheaper). A cell is
+  enters (`CellSpeed`: a road or bridge's 1.5, else the terrain's, so Mud and Sand cost more, a
+  path goes round them when that is cheaper, and takes a road where it saves time; the estimate is
+  the octile distance at road speed, so the search stays exact). Bridge cells are walkable, so a
+  path crosses water only on a bridge. A cell is
   passable when it is walkable (`IsWalkable`) and its chunk already exists (a search never
   generates the world); a truck's own Depot's cells are passable to it, so it can leave and reach
   its bay. "Beside" a building is a cell sharing an edge with its footprint. A search gives up as
@@ -551,6 +554,17 @@ And seven buildings, all processors (output buffer 10, 5 cycles of each input):
   closes, so the player can tell which one they are looking at.
 - For an extractor, the ghost also shows its work area as a flat translucent disc of the work
   radius around the footprint center and highlights each field in range of a type it works.
+- **Line tools.** The build menu's Road and Bridge cells select a line tool (`BuildController.Line`,
+  `LineTool`) instead of a building. The left button pressed on a cell starts a drag; its release
+  lays the line from there to the cell under the pointer (`TryLayRoad`, `TryLayBridge`; terrain.md).
+  The right button, or Shift with the left, removes instead. The line tool takes these presses
+  before the camera, so a right drag removes paving rather than panning. Pressing the other button,
+  or Escape, cancels a drag; Escape again leaves build mode. The ghost is a plate on each tile of
+  the drag (or the tile under the pointer before one starts): green to lay, amber where the stock
+  runs out, red where it cannot go, and a remove tint on what a removing drag would take. The
+  placement tooltip names the tool and, during a drag, the tiles and cost ("Road: 7 tiles, 28
+  Stone", short amounts marked) or what is wrong with a bridge, and the keys ("Drag to lay   Shift
+  or right-drag to remove   Esc cancel").
 - The build menu lists every building (discovered first, then undiscovered silhouettes), and
   while placing, a tooltip beside the pointer shows the building's name, its cost, and for an
   extractor, the count of fields in range. A cost amount the stockpile is short of shows what it

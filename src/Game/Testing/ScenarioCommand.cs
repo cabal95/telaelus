@@ -166,6 +166,30 @@ public sealed class ScenarioCommand
                     float seconds = (float)Number(Required(arg, "seconds"), "seconds");
                     return e => e.SetResearchProgress(project, seconds);
                 }
+            case "placeRoad":
+            case "removeRoad":
+            case "placeBridge":
+            case "removeBridge":
+                {
+                    (int fx, int fz) = Pair(Required(arg, "from"), "from");
+                    (int tx, int tz) = Pair(Required(arg, "to"), "to");
+                    string which = name;
+                    return e => e.Line(which, fx, fz, tx, tz);
+                }
+            case "aimDrag":
+                {
+                    float[] from = Floats(Required(arg, "from"), "from");
+                    float[] to = Floats(Required(arg, "to"), "to");
+                    string button = arg.TryGetProperty("button", out JsonElement b) ? Label(b, "button") : "left";
+                    MouseButton mouse = button switch
+                    {
+                        "right" => MouseButton.Right,
+                        "left" => MouseButton.Left,
+                        _ => throw new FormatException("'button' must be \"right\" or \"left\"")
+                    };
+                    bool shift = arg.TryGetProperty("shift", out JsonElement sh) && sh.GetBoolean();
+                    return e => e.AimDrag(new Vector3(from[0], 0f, from[1]), new Vector3(to[0], 0f, to[1]), mouse, shift);
+                }
             case "setTimeOfDay":
                 {
                     float time = (float)Number(arg, "setTimeOfDay");

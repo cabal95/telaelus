@@ -194,6 +194,18 @@ public sealed partial class Simulation
     public bool CanPlace(BuildingType type, int anchorX, int anchorZ, Facing facing)
     {
         BuildingDef def = BuildingDefs.For(type);
+        // No building stands on a road or bridge: the paving must be removed first.
+        (int footWidth, int footDepth) = def.Footprint(facing);
+        for (int x = anchorX; x < anchorX + footWidth; x++)
+        {
+            for (int z = anchorZ; z < anchorZ + footDepth; z++)
+            {
+                if (IsPaved(x, z))
+                {
+                    return false;
+                }
+            }
+        }
         if (def.Placement == Placement.AcrossStraightRiver)
         {
             return CanPlaceAcrossRiver(type, anchorX, anchorZ, facing);

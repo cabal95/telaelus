@@ -217,6 +217,18 @@ public sealed partial class Simulation
             }
         }
 
+        /// <summary>Lays a road line free, every layable tile (the drag's L from one cell to another); throws when none can be laid.</summary>
+        public void PlaceRoad(int fromX, int fromZ, int toX, int toZ)
+        {
+            _sim.PlaceRoadForDebug(fromX, fromZ, toX, toZ);
+        }
+
+        /// <summary>Lays a bridge span free; throws when it cannot stand there.</summary>
+        public void PlaceBridge(int fromX, int fromZ, int toX, int toZ)
+        {
+            _sim.PlaceBridgeForDebug(fromX, fromZ, toX, toZ);
+        }
+
         /// <summary>Sets a project's work done, in game seconds; at its full work it completes (its fee counted as paid).</summary>
         public void SetResearchProgress(ResearchProject project, float seconds)
         {

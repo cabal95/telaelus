@@ -1,0 +1,6 @@
+newmtl gravel_edge
+Kd 0.430 0.390 0.320
+
+newmtl gravel
+Kd 0.560 0.510 0.430
+

@@ -36,6 +36,8 @@ public sealed class CommandExecutor
     // Keys this executor has pressed, for the snapshot's held-key list.
     private readonly HashSet<Key> _touchedKeys = new();
     private readonly List<InputEvent> _pendingUiReleases = new();
+    // UI clicks and hovers waiting a frame for their control to scroll into view.
+    private readonly List<(Control Control, bool Click)> _scrolledUi = new();
     private readonly Queue<List<InputEvent>> _dragFrames = new(); // a drag's events, one batch per frame
 
     private int _waitFrames;
@@ -106,6 +108,14 @@ public sealed class CommandExecutor
             return;
         }
 
+        if (_scrolledUi.Count > 0)
+        {
+            foreach ((Control control, bool click) in _scrolledUi)
+            {
+                PointAt(control, click);
+            }
+            _scrolledUi.Clear();
+        }
         if (_pendingUiReleases.Count > 0)
         {
             foreach (InputEvent release in _pendingUiReleases)
@@ -296,6 +306,63 @@ public sealed class CommandExecutor
         return StepOutcome.Ok;
     }
 
+    /// <summary>placeRoad and placeBridge lay free (as placeBuilding does); removeRoad and removeBridge remove with the refund.</summary>
+    public StepOutcome Line(string command, int fromX, int fromZ, int toX, int toZ)
+    {
+        Simulation sim = _root.Sim;
+        switch (command)
+        {
+            case "placeRoad":
+                sim.Debug.PlaceRoad(fromX, fromZ, toX, toZ);
+                break;
+            case "placeBridge":
+                sim.Debug.PlaceBridge(fromX, fromZ, toX, toZ);
+                break;
+            case "removeRoad":
+                sim.TryRemoveRoad(fromX, fromZ, toX, toZ);
+                break;
+            default:
+                sim.TryRemoveBridge(fromX, fromZ, toX, toZ);
+                break;
+        }
+        return StepOutcome.Ok;
+    }
+
+    /// <summary>
+    /// A drag with the pointer over the ground: aims at <paramref name="from"/> and presses the button
+    /// now, aims at <paramref name="to"/>, and releases at the start of the next frame (the line tool
+    /// reads the pointer at the press and at the release).
+    /// </summary>
+    public StepOutcome AimDrag(Vector3 from, Vector3 to, MouseButton button, bool shift)
+    {
+        _root.Builder.PointerOverride = from;
+        Vector2 start = _root.Camera.UnprojectPosition(from);
+        Vector2 end = _root.Camera.UnprojectPosition(to);
+        Rect2 window = _root.GetViewport().GetVisibleRect();
+        if (!window.HasPoint(start) || !window.HasPoint(end))
+        {
+            return new StepOutcome(false, $"drag from ({start.X:0}, {start.Y:0}) to ({end.X:0}, {end.Y:0}) leaves the window");
+        }
+        Inject(new InputEventMouseButton
+        {
+            ButtonIndex = button,
+            Pressed = true,
+            ShiftPressed = shift,
+            Position = start,
+            GlobalPosition = start
+        });
+        _root.Builder.PointerOverride = to;
+        Release(new InputEventMouseButton
+        {
+            ButtonIndex = button,
+            Pressed = false,
+            ShiftPressed = shift,
+            Position = end,
+            GlobalPosition = end
+        });
+        return StepOutcome.Ok;
+    }
+
     public StepOutcome SetTimeOfDay(float timeOfDay)
     {
         _root.Sim.Debug.SetTimeOfDay(timeOfDay);
@@ -456,11 +523,46 @@ public sealed class CommandExecutor
         {
             return new StepOutcome(false, $"no visible UI control '{id}'");
         }
+        if (ScrollIntoView(control))
+        {
+            _scrolledUi.Add((control, true));
+            return StepOutcome.Ok;
+        }
+        PointAt(control, click: true);
+        return StepOutcome.Ok;
+    }
+
+    /// <summary>Moves the pointer over a control and, for a click, presses there (released next frame).</summary>
+    private void PointAt(Control control, bool click)
+    {
         Vector2 screen = _root.Dialogs.ScreenCenter(control);
         PushUi(MotionEvent(screen));
-        PushUi(MouseEvent(screen, true));
-        _pendingUiReleases.Add(MouseEvent(screen, false));
-        return StepOutcome.Ok;
+        if (click)
+        {
+            PushUi(MouseEvent(screen, true));
+            _pendingUiReleases.Add(MouseEvent(screen, false));
+        }
+    }
+
+    /// <summary>
+    /// Scrolls a control into view when a scroll container clips it (as a player scrolls to it).
+    /// True when it scrolled: the layout settles by the next frame, when the click or hover lands.
+    /// </summary>
+    private static bool ScrollIntoView(Control control)
+    {
+        for (Node? node = control.GetParent(); node is not null; node = node.GetParent())
+        {
+            if (node is ScrollContainer scroll)
+            {
+                if (scroll.GetGlobalRect().Encloses(control.GetGlobalRect()))
+                {
+                    return false;
+                }
+                scroll.EnsureControlVisible(control);
+                return true;
+            }
+        }
+        return false;
     }
 
     /// <summary>Moves the pointer over a registered UI control (its hover state and tooltip follow).</summary>
@@ -470,7 +572,12 @@ public sealed class CommandExecutor
         {
             return new StepOutcome(false, $"no visible UI control '{id}'");
         }
-        PushUi(MotionEvent(_root.Dialogs.ScreenCenter(control)));
+        if (ScrollIntoView(control))
+        {
+            _scrolledUi.Add((control, false));
+            return StepOutcome.Ok;
+        }
+        PointAt(control, click: false);
         return StepOutcome.Ok;
     }
 

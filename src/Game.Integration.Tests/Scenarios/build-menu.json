@@ -12,6 +12,8 @@
     { "wait": 2 },
     { "expect": "ui.open", "equals": "buildMenu" },
     { "expect": "ui.cells", "equals": [
+      { "type": "Road", "state": "affordable", "label": "Road" },
+      { "type": "Bridge", "state": "affordable", "label": "Bridge" },
       { "type": "LumberCamp", "state": "affordable", "label": "Lumber Camp" },
       { "type": "Mine", "state": "unaffordable", "label": "Mine" },
       { "type": "SandCollector", "state": "unaffordable", "label": "Sand Collector" },

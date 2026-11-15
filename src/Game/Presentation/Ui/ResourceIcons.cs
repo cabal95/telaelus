@@ -23,7 +23,14 @@ public partial class ResourceIcons : Node
     /// <summary>The icon models that stand for no resource (<c>icons/&lt;name&gt;</c>, see the icons README).</summary>
     public static readonly string[] UiIconNames = Ui.UiIcons.Fixed
         .Concat(ResearchDefs.All.Select(ResearchTree.ResearchIconName))
+        .Concat(Ui.UiIcons.Pictures.Keys)
         .ToArray();
+
+    /// <summary>The model a UI icon is drawn from: <c>icons/&lt;name&gt;</c>, or another model for a picture icon.</summary>
+    public static string IconModel(string name)
+    {
+        return Ui.UiIcons.Pictures.TryGetValue(name, out string? path) ? path : "icons/" + name;
+    }
 
     /// <summary>Raised once the icons are ready.</summary>
     public event Action? IconsReady;
@@ -50,7 +57,7 @@ public partial class ResourceIcons : Node
         }
         foreach (string name in UiIconNames)
         {
-            ModelLibrary.MeshBounds("icons/" + name);
+            ModelLibrary.MeshBounds(IconModel(name));
         }
         if (DisplayServer.GetName() == "headless")
         {
@@ -66,7 +73,7 @@ public partial class ResourceIcons : Node
                 PictureStage.Fill(view, ModelPath(type), 0f, false, PictureStage.Framing.Tight))));
         _icons = await PictureStage.RenderOnce(this, stages, IconSize);
         var iconStages = UiIconNames.Select(name => (name, (Action<Node>)(view =>
-            PictureStage.Fill(view, "icons/" + name, 0f, false, PictureStage.Framing.Tight))));
+            PictureStage.Fill(view, IconModel(name), 0f, false, PictureStage.Framing.Tight))));
         _uiIcons = await PictureStage.RenderOnce(this, iconStages, IconSize);
         IsReady = true;
         IconsReady?.Invoke();

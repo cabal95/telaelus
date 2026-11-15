@@ -22,6 +22,7 @@ public partial class GameRoot : Node3D
     private BuildingViews _buildingViews = null!;
     private TruckViews _truckViews = null!;
     private SiteViews _siteViews = null!;
+    private RoadViews _roadViews = null!;
     private DisplayStandViews _standViews = null!;
     private BuildController _buildController = null!;
     private DebugOverlay _debug = null!;
@@ -125,6 +126,7 @@ public partial class GameRoot : Node3D
         _buildingViews.Sync(ExploredBuildings());
         _truckViews.Sync(_sim, delta);
         _siteViews.Sync(_sim);
+        _roadViews.Sync(_sim);
         _standViews.Sync(_sim, delta);
         _topBar.Refresh(_sim, _dialogs.UiSize);
         _hint.Refresh(_sim, _dialogs.UiSize);
@@ -312,7 +314,7 @@ public partial class GameRoot : Node3D
             _dialogs.PlacementTip.HideTip();
             return;
         }
-        if (_buildController.Selected is null)
+        if (!_buildController.InBuildMode)
         {
             // Outside build mode the same tooltip names the truck under the pointer.
             Vector2 screen = _buildController.PointerScreen();
@@ -448,6 +450,12 @@ public partial class GameRoot : Node3D
         };
         AddChild(_siteViews);
 
+        _roadViews = new RoadViews
+        {
+            Name = "Roads"
+        };
+        AddChild(_roadViews);
+
         _standViews = new DisplayStandViews
         {
             Name = "DisplayStands"
@@ -519,7 +527,7 @@ public partial class GameRoot : Node3D
         {
             Name = "BuildMenu"
         };
-        _buildMenu.Initialize(_sim, _buildController, _buildingPictures);
+        _buildMenu.Initialize(_sim, _buildController, _buildingPictures, _icons);
         _dialogs.Add(_buildMenu, "Buildings");
 
         _buildingDetail = new BuildingDetail

@@ -4,4 +4,12 @@ namespace Game.Presentation.Ui;
 public static class UiIcons
 {
     public static readonly string[] Fixed = { "icon_sun", "icon_moon", "icon_power" };
+
+    /// <summary>Icons drawn from other models: the build menu's road and bridge cells.</summary>
+    public static readonly System.Collections.Generic.IReadOnlyDictionary<string, string> Pictures =
+        new System.Collections.Generic.Dictionary<string, string>
+        {
+            ["road"] = "infrastructure/road_cross",
+            ["bridge"] = "infrastructure/bridge_deck"
+        };
 }

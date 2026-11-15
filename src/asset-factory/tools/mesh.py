@@ -248,6 +248,10 @@ PALETTE = {
     "sun": (1.00, 0.84, 0.30),
     "moon": (0.86, 0.89, 0.96),
     "research_accent": (0.36, 0.86, 0.66),
+    "gravel": (0.56, 0.51, 0.43),
+    "gravel_edge": (0.43, 0.39, 0.32),
+    "bridge_wood": (0.56, 0.39, 0.23),
+    "bridge_rail": (0.40, 0.27, 0.16),
 }
 GLOW = {"lava", "furnace_glow", "uranium_glow", "crystal_light", "screen", "led", "nozzle_hot", "hub_accent"}  # palette entries that are emissive
 GLOW_STRENGTH = 0.5  # emission as a fraction of the base color

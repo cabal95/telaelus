@@ -168,6 +168,10 @@ Newest last. One line each; open the file for the full spec.
 - **2611151337-scenario-camera** - Fixes the `trucks` click flake: scenario runs start from seed 1,
   `initMap` and `teleportPlayer` jump the camera onto the player, and `click` fails when the aim is
   outside the window instead of clicking there.
+- **2611151401-roads-and-bridges** - Adds roads (2 x 2 gravel tiles on walkable land, 1.5x speed for
+  trucks and the player, laid as an L by drag) and bridges (straight spans over ShallowWater or across
+  a straight river), with costs, half refunds, buildings kept off them, truck paths using them, the
+  build menu's Infrastructure cells, and the joining road and bridge pieces.
 
 ## Adding a changeset
 

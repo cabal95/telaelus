@@ -55,7 +55,11 @@ planned multiplayer feasible.
   `BuildingViews` (footprint-sized building boxes, created and freed as buildings appear and are
   removed; `GameRoot` passes only the buildings on explored cells), `TruckViews` (a truck model
   per truck, placed at its sim position each frame and turned smoothly toward its heading, with the
-  carried resource's item model on its bed, at 0.7 scale, while loaded), `SiteViews` (a marker on
+  carried resource's item model on its bed, at 0.7 scale, while loaded), `RoadViews` (rebuilt
+  when `RoadVersion` changes: each road tile the piece from `assets/models/infrastructure/` whose
+  open edges match the neighbouring road or bridge tiles (patch, end, straight, corner, tee,
+  crossing), turned in quarter turns; each bridge tile a deck along its span, its end tiles a ramp
+  turned with its low end to the land, and every other tile a pier), `SiteViews` (a marker on
   each explored worked-out cell with no field or building on it, `worked_out_oil` for Crude Oil and
   `worked_out_pit` otherwise; and each explored motherlode as `motherlode_base` with twelve of its
   yields' field models round its ring, shared out by its shares, at 1.3 scale),
@@ -134,6 +138,11 @@ ui-style.md. There is no text HUD; the screen holds:
 - **Build menu** (`BuildMenu`, a modal titled "Buildings"): B opens it (leaving build
   mode) and B, Escape, the Close button, or a click on the backdrop closes it. Its body is a grid
   of 112-unit square cells, as many columns as fit, scrolling when taller than the panel allows.
+  At the top, under a dim "Infrastructure" heading, a grid holds the Road and Bridge cells, so they
+  are found without scrolling past the buildings, which follow under a dim "Buildings" heading
+  (the Road and Bridge cells have pictures drawn from `road_cross` and `bridge_deck` as UI icons, in color when one
+  tile is affordable on plain ground, grayscale when not; a hover names the tool and its price);
+  clicking one closes the menu and selects that line tool (buildings.md).
   It lists every buildable type (not the HQ). Discovered buildings (`IsUnlocked`) come first, then undiscovered ones, each group by name.
   A discovered cell shows the building's picture and name, in full color when affordable and in
   grayscale when not; an undiscovered cell shows its silhouette labeled "Undiscovered" in the dim

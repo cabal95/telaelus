@@ -146,6 +146,13 @@ pausing it and stepping frame by frame.
   two labs at 1.5x; no lab working leaving research waiting; Material Transfer draining an online
   Mine but not an offline one nor a Drill Rig's Bauxite until Advanced Material Transfer;
   transfer stopping when storage is full.
+- `RoadTests`: the road line's L on the tile grid; tile costs on Grass and Mud and laying them;
+  a line skipping paved tiles and stopping when Stone runs out; roads refused on water, Lava, a
+  mountain, a field, a river channel, and a building; a building refused over a road; the player at
+  road speed over Mud; a truck path taking a road that saves time; a bridge over ShallowWater
+  letting a path cross and refusing a building; bridges refused when not straight, along the water,
+  over dry land, too long, or over DeepWater; a bridge across a straight river only at right angles
+  and not over a bend; removing refunding half, and a bridge with the player on it staying.
 - `PowerStoreTests`: the clock starting mid-morning, advancing, and wrapping; daylight through the
   day; the Solar Array's supply by daylight and its night status; a Battery Bank charging at its
   rate up to its capacity, covering a shortage at Normal until it runs dry, giving at most its rate
@@ -186,7 +193,9 @@ pausing it and stepping frame by frame.
     and whether or not unlocked), `teleportPlayer` `{ x, z }` (the camera jumps onto the player too), `seedStockpile` `{ type, amount }`, `fillBuffer` `{ anchor, type, amount }` (sets one
     resource in the output buffer of the building at that anchor; 0 removes it), `setRecipe`
     `{ anchor, index }` (chooses the recipe of the building at that anchor, as its picker does),
-    `setTimeOfDay` (a number from 0 up to 1, 0.5 midday), `startResearch` (a project name; fails
+    `setTimeOfDay` (a number from 0 up to 1, 0.5 midday), `placeRoad` and `placeBridge`
+    `{ from: [x, z], to: [x, z] }` (lay a road line or bridge span free, as `placeBuilding` places;
+    fail when nothing can be laid), `removeRoad` and `removeBridge` (the same, with the refund), `startResearch` (a project name; fails
     when it cannot start), `pauseResearch` (`{}`), `setResearchProgress` `{ project, seconds }` (at
     full work it completes),
     `placeMotherlode`
@@ -194,7 +203,10 @@ pausing it and stepping frame by frame.
     (unlocks any building whose whole cost is then held; scenarios that place through the menu and a click seed first), `cameraZoom` `{ size }` (the camera's zoom: world units across 720 pixels
     of window height, so at the 1280 x 720 scenario resolution it is the visible world height).
   - Input: `press` (key down now, up at the start of the next frame), `keyDown`, `keyUp`, `hold`
-    `{ key, frames }` (down, wait, up), `aimAt` `{ cell: [x, z] }` (a fine cell's center) or
+    `{ key, frames }` (down, wait, up), `aimDrag` `{ from: [x, z], to: [x, z], button?: left|right,
+    shift? }` (world points: aims at `from` and presses now, aims at `to`, releases at the start
+    of the next frame; fails if either end is outside the window; drives the line tools),
+    `aimAt` `{ cell: [x, z] }` (a fine cell's center) or
     `{ world: [x, z] }`, `click` `{}` (left button at the aim, up the next frame; it fails, "click at
     (x, y) is outside the window", when the aim projects outside the window, since a player cannot
     click there), `drag`
@@ -204,8 +216,9 @@ pausing it and stepping frame by frame.
     `{ id }` (moves the pointer over a registered UI control and clicks it, released the next
     frame), `hoverUi` `{ id }` (moves the pointer over one, so its hover state and tooltip
     show), and `scrollUi` `{ id, ticks }` (turns the wheel over one: positive ticks down,
-    negative up). Keys are Godot `Key` names (`R`, `E`, `B`, `Escape`). UI ids are a dialog's id and a
-    control's name: `buildMenu/<BuildingType>` for a cell, `buildingDetail/toggle` and
+    negative up). When a scroll container clips the control, `clickUi` and `hoverUi` first scroll
+    it into view, as a player would, and act a frame later, once the layout has settled. Keys are Godot `Key` names (`R`, `E`, `B`, `Escape`). UI ids are a dialog's id and a
+    control's name: `buildMenu/<BuildingType>` for a cell (`buildMenu/Road` and `buildMenu/Bridge` for the line tools), `buildingDetail/toggle` and
     `buildingDetail/destroy` for the detail panel's actions, `buildingDetail/siloResource` for the
     Silo picker, `inventory/<ResourceType>` for an inventory row, `inventory/pin/<ResourceType>`
     for a row's Pin toggle (shown only on discovered rows, and only clickable while the row is
@@ -237,7 +250,8 @@ pausing it and stepping frame by frame.
   and their `chunk` [x, z]); `build` (null when not in build
   mode, else `selected`, `facing`, `fieldsInRange`, and `ghost`: `anchor`, `width`, `depth`,
   `placeable` (the spot), `affordable` (the cost), or null, and `tooltip`: the placement
-  tooltip's lines, or null); `ui` (`open`: the open dialog's id or null, `debug`: whether the debug overlay shows,
+  tooltip's lines, or null; with a line tool instead, `line` (`Road` or `Bridge`), `drag`
+  (`from`, `to`, `removes`) or null, and `tooltip`); `ui` (`open`: the open dialog's id or null, `debug`: whether the debug overlay shows,
   `network`: `overlay` (whether N has it on), `shownHubs` (the ids of the hubs whose coverage is
   drawn), and `offlineMarkers` (how many offline markers are drawn),
   `topBar`: its `items` (each pinned resource's `type`, `amount`, `limit` (null for a Cargo or
@@ -245,7 +259,7 @@ pausing it and stepping frame by frame.
   `danger`), its `power` readout ("45 / 100", "Blackout: 140 / 100"), its `clock` ("14:00"), its
   `store` (the Battery Banks' readout, or null with none), and its `launch` text, `hint`: the hint's `text`, `progress`,
   and `storageFull` or null, `tooltip`: the hover
-  tooltip's lines or null, `worldTip`: the truck tooltip's lines outside build mode, or null, and while the build menu is open, its `cells` in display order, each
+  tooltip's lines or null, `worldTip`: the truck tooltip's lines outside build mode, or null, and while the build menu is open, its `cells` in display order (`Road` and `Bridge`, then the buildings), each
   `type`, `state` (`affordable`, `unaffordable`, or `undiscovered`), and `label`; while the
   research tree is open, its `header`, its `cards` (each `project`, `running`, `progress` 0 to 1,
   `selected`, and `locked`), and its `drawer` (the selected `project`, its `state` as shown,
@@ -282,7 +296,8 @@ pausing it and stepping frame by frame.
   `demand`, `speed`, and `state`: `normal`, `brownout`, or `blackout`, and once there is a Battery
   Bank, `stored`, `storeCapacity`, and `storeFlow`); `timeOfDay` and `daylight`; `research` (its
   `active` project or null, `speed`, and `projects`, each camel-cased with `state`, `progress`, and
-  `paid`); `discovered` (the discovered resources' type names, in enum
+  `paid`); `roads` (each road tile's corner cell, by row); `bridges` (each span's `tiles` and
+  `alongX`); `discovered` (the discovered resources' type names, in enum
   order); `unlockedBuildings` (type names, in enum order); and
   `shipsLaunched`. New checks are added as snapshot fields.
 - **Input injection:** keys and mouse buttons go through `Input.ParseInputEvent` followed by
@@ -430,6 +445,9 @@ pausing it and stepping frame by frame.
   generator's panel shows its supply and Best fuel),
   `refining` (a Steel Mill's Auto input picker and its note and recipe text; an Electrolyzer on
   Hydrogen feeding a Fuel Plant to Rocket Fuel; the launch progress with Liquid Oxygen),
+  `roads` (the menu's Road tool laying an L of tiles by drag and taking their Stone, a right drag
+  removing three for half back, Escape leaving build mode; a Mine across a strip of ShallowWater out
+  of a truck's reach until the Bridge tool spans it, then the truck hauling its ore home over it),
   `research` (a Research Lab; T opening the tree on Material Transfer with Advanced Material
   Transfer locked, selecting its card showing it disabled in the drawer; starting Material
   Transfer from the drawer taking its fee; pausing keeping progress; resuming without a second fee; the

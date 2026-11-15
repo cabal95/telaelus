@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Game.Presentation.Ui;
 using Game.Sim;
 using Godot;
@@ -39,6 +40,27 @@ public partial class BuildController : Node3D
     private readonly List<MeshInstance3D> _highlights = new();
 
     public BuildingType? Selected { get; private set; }
+
+    /// <summary>The line tool selected instead of a building (Road or Bridge), or null.</summary>
+    public LineTool? Line { get; private set; }
+
+    /// <summary>Whether build mode is on: a building or a line tool selected.</summary>
+    public bool InBuildMode => Selected is not null || Line is not null;
+
+    // A line drag in progress: its start cell and whether it removes.
+    private (int X, int Z)? _lineStart;
+    private bool _lineRemoves;
+    private MouseButton _lineButton;
+    private readonly List<MeshInstance3D> _linePlates = new();
+    private StandardMaterial3D _lineReady = null!;
+    private StandardMaterial3D _lineShort = null!;
+    private StandardMaterial3D _lineBlocked = null!;
+    private StandardMaterial3D _lineRemove = null!;
+    private Node3D _lineGhost = null!;
+
+    /// <summary>The line drag in progress (start cell, current end cell, whether it removes), or null.</summary>
+    public (int FromX, int FromZ, int ToX, int ToZ, bool Removes)? LineDrag =>
+        _lineStart is (int sx, int sz) && TryGetPointerCell(out int x, out int z) ? (sx, sz, x, z, _lineRemoves) : null;
 
     /// <summary>Raised on a left click on a placed building outside build mode.</summary>
     public event Action<Building>? BuildingClicked;
@@ -150,6 +172,16 @@ public partial class BuildController : Node3D
         _hoverOutline = MakeOutline("HoverOutline", outlineMaterial);
         _focusOutline = MakeOutline("FocusOutline", outlineMaterial);
 
+        _lineReady = PlateMaterial(ValidColor);
+        _lineShort = PlateMaterial(new Color(UiTheme.Warning, 0.45f));
+        _lineBlocked = PlateMaterial(InvalidColor);
+        _lineRemove = PlateMaterial(new Color(UiTheme.Danger, 0.5f));
+        _lineGhost = new Node3D
+        {
+            Name = "LineGhost"
+        };
+        AddChild(_lineGhost);
+
         _highlightMaterial = new StandardMaterial3D
         {
             Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
@@ -163,6 +195,7 @@ public partial class BuildController : Node3D
         GhostInfo? ghost = CurrentGhost();
         FieldsInRange = ghost?.FieldsInRange ?? 0;
         UpdateHover();
+        ShowLineGhost();
         if (Selected is null || ghost is null)
         {
             HideGhost();
@@ -194,6 +227,8 @@ public partial class BuildController : Node3D
     public void ResetBuildMode()
     {
         Selected = null;
+        Line = null;
+        _lineStart = null;
         Facing = Facing.North;
         PointerOverride = null;
     }
@@ -229,6 +264,13 @@ public partial class BuildController : Node3D
 
     public override void _UnhandledInput(InputEvent @event)
     {
+        if (Line is not null && @event is InputEventMouseButton line && HandleLineInput(line))
+        {
+            // The line tool owns the left and right buttons, so a right drag removes paving
+            // instead of panning the camera.
+            GetViewport().SetInputAsHandled();
+            return;
+        }
         if (@event is InputEventKey key && key.Pressed && !key.Echo)
         {
             HandleKey(key.PhysicalKeycode);
@@ -330,7 +372,14 @@ public partial class BuildController : Node3D
                 Facing = (Facing)(((int)Facing + 1) % 4);
                 break;
             case Key.Escape:
-                Cancel();
+                if (_lineStart is not null)
+                {
+                    _lineStart = null;
+                }
+                else
+                {
+                    Cancel();
+                }
                 break;
         }
     }
@@ -479,18 +528,240 @@ public partial class BuildController : Node3D
         if (_sim.IsUnlocked(type))
         {
             Selected = type;
+            Line = null;
+            _lineStart = null;
         }
+    }
+
+    /// <summary>Selects the road or bridge line tool.</summary>
+    public void SelectLine(LineTool tool)
+    {
+        Selected = null;
+        Line = tool;
+        _lineStart = null;
     }
 
     /// <summary>Leaves build mode (the facing is kept).</summary>
     public void Cancel()
     {
         Selected = null;
+        Line = null;
+        _lineStart = null;
+    }
+
+    /// <summary>
+    /// A mouse button with a line tool: the left button (or the right, or Shift with the left, to
+    /// remove) starts a drag at the cell under the pointer; its release lays or removes the line.
+    /// The other button cancels a drag. True when the event was the line tool's.
+    /// </summary>
+    private bool HandleLineInput(InputEventMouseButton mb)
+    {
+        if (mb.ButtonIndex is not (MouseButton.Left or MouseButton.Right) || mb.CtrlPressed)
+        {
+            return false;
+        }
+        if (mb.Pressed)
+        {
+            if (_lineStart is not null)
+            {
+                _lineStart = null;
+                return true;
+            }
+            if (!TryGetPointerCell(out int x, out int z))
+            {
+                return true;
+            }
+            _lineStart = (x, z);
+            _lineButton = mb.ButtonIndex;
+            _lineRemoves = mb.ButtonIndex == MouseButton.Right || mb.ShiftPressed;
+            return true;
+        }
+        if (_lineStart is not (int sx, int sz) || mb.ButtonIndex != _lineButton)
+        {
+            return true;
+        }
+        _lineStart = null;
+        if (!TryGetPointerCell(out int ex, out int ez))
+        {
+            return true;
+        }
+        if (Line == LineTool.Road)
+        {
+            _ = _lineRemoves ? _sim.TryRemoveRoad(sx, sz, ex, ez) : _sim.TryLayRoad(sx, sz, ex, ez);
+        }
+        else
+        {
+            _ = _lineRemoves ? _sim.TryRemoveBridge(sx, sz, ex, ez) : (_sim.TryLayBridge(sx, sz, ex, ez) ? 1 : 0);
+        }
+        return true;
+    }
+
+    /// <summary>The fine cell under the pointer's ground point (explored or not).</summary>
+    private bool TryGetPointerCell(out int x, out int z)
+    {
+        x = 0;
+        z = 0;
+        if (!TryGetMouseGround(out Vector3 hit))
+        {
+            return false;
+        }
+        (x, z) = Simulation.CellAt(hit.X, hit.Z);
+        return true;
+    }
+
+    /// <summary>
+    /// The line ghost: a plate on each tile of the drag (or the tile under the pointer before one
+    /// starts): green to lay, amber where the stock runs out, red where it cannot go, and a remove
+    /// tint on what a removing drag would take away.
+    /// </summary>
+    private void ShowLineGhost()
+    {
+        var plates = new List<((int X, int Z) Tile, Material Material)>();
+        if (Line is LineTool tool && TryGetPointerCell(out int px, out int pz))
+        {
+            (int sx, int sz) = _lineStart ?? (px, pz);
+            if (_lineStart is not null && _lineRemoves)
+            {
+                foreach ((int X, int Z) tile in Simulation.RoadLine(sx, sz, px, pz))
+                {
+                    bool there = tool == LineTool.Road ? _sim.RoadTiles.Contains(tile) : _sim.IsBridge(tile.X, tile.Z);
+                    if (there)
+                    {
+                        plates.Add((tile, _lineRemove));
+                    }
+                }
+            }
+            else if (tool == LineTool.Road)
+            {
+                foreach (RoadPlanTile planned in _sim.PlanRoad(sx, sz, px, pz).Tiles)
+                {
+                    Material? material = planned.State switch
+                    {
+                        RoadTileState.Ready => _lineReady,
+                        RoadTileState.Short => _lineShort,
+                        RoadTileState.Blocked => _lineBlocked,
+                        _ => null
+                    };
+                    if (material is not null)
+                    {
+                        plates.Add((planned.Tile, material));
+                    }
+                }
+            }
+            else
+            {
+                List<(int X, int Z)>? tiles = Simulation.BridgeLine(sx, sz, px, pz);
+                bool ok = _lineStart is null || (_sim.BridgeProblem(tiles) is null);
+                Material material = !ok ? _lineBlocked
+                    : _lineStart is not null && !_sim.CanAffordBridge(tiles!.Count) ? _lineShort
+                    : _lineReady;
+                foreach ((int X, int Z) tile in tiles ?? new List<(int X, int Z)> { Simulation.TileOf(px, pz) })
+                {
+                    plates.Add((tile, material));
+                }
+            }
+        }
+        while (_linePlates.Count < plates.Count)
+        {
+            var plate = new MeshInstance3D
+            {
+                Mesh = new BoxMesh
+                {
+                    Size = new Vector3(1.9f, PlateHeight, 1.9f)
+                },
+                CastShadow = GeometryInstance3D.ShadowCastingSetting.Off
+            };
+            _lineGhost.AddChild(plate);
+            _linePlates.Add(plate);
+        }
+        for (int i = 0; i < _linePlates.Count; i++)
+        {
+            MeshInstance3D plate = _linePlates[i];
+            plate.Visible = i < plates.Count;
+            if (i < plates.Count)
+            {
+                ((int x, int z), Material material) = plates[i];
+                plate.Position = new Vector3(x + 1f, PlateHeight * 0.5f + 0.05f, z + 1f);
+                plate.MaterialOverride = material;
+            }
+        }
+    }
+
+    private static StandardMaterial3D PlateMaterial(Color color)
+    {
+        return new StandardMaterial3D
+        {
+            Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
+            ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
+            AlbedoColor = color
+        };
+    }
+
+    /// <summary>The placement tooltip's lines for a line tool: its name, the drag's length and cost (or what is wrong), and the keys.</summary>
+    private List<TipLine> LineLines(LineTool tool)
+    {
+        var lines = new List<TipLine>
+        {
+            new(tool == LineTool.Road ? "Road" : "Bridge", UiTheme.Accent)
+        };
+        if (LineDrag is (int fx, int fz, int tx, int tz, bool removes))
+        {
+            if (removes)
+            {
+                lines.Add(new TipLine("Remove: half the cost back"));
+            }
+            else if (tool == LineTool.Road)
+            {
+                RoadPlan plan = _sim.PlanRoad(fx, fz, tx, tz);
+                int layable = plan.Tiles.Count(t => t.State is RoadTileState.Ready or RoadTileState.Short);
+                lines.Add(new TipLine($"Road: {layable} tile{(layable == 1 ? "" : "s")}, {CostText(plan.Cost)}"));
+                lines.AddRange(ShortLines(plan.Cost));
+            }
+            else
+            {
+                List<(int X, int Z)>? tiles = Simulation.BridgeLine(fx, fz, tx, tz);
+                if (_sim.BridgeProblem(tiles) is string problem)
+                {
+                    lines.Add(new TipLine(problem, UiTheme.Warning));
+                }
+                else
+                {
+                    IReadOnlyList<ResourceAmount> cost = Simulation.BridgeCost(tiles!.Count);
+                    lines.Add(new TipLine($"Bridge: {tiles.Count} tile{(tiles.Count == 1 ? "" : "s")}, {CostText(cost)}"));
+                    lines.AddRange(ShortLines(cost));
+                }
+            }
+        }
+        else
+        {
+            lines.Add(tool == LineTool.Road
+                ? new TipLine("1 Stone a cell, 2 on Sand, Snow, and Mud")
+                : new TipLine("3 Wood and 1 Stone a cell; straight over water"));
+        }
+        lines.Add(new TipLine("Drag to lay   Shift or right-drag to remove   Esc cancel", UiTheme.TextDim));
+        return lines;
+    }
+
+    private static string CostText(IReadOnlyList<ResourceAmount> cost)
+    {
+        return cost.Count == 0 ? "nothing to lay" : string.Join(", ", cost.Select(c => $"{c.Amount:0} {ResourceDefs.For(c.Type).Name}"));
+    }
+
+    private IEnumerable<TipLine> ShortLines(IReadOnlyList<ResourceAmount> cost)
+    {
+        foreach (ResourceAmount c in cost)
+        {
+            int have = HudOverlay.Whole(_sim, c.Type);
+            if (have < c.Amount)
+            {
+                yield return new TipLine($"{c.Amount:0} {ResourceDefs.For(c.Type).Name} (have {have})", UiTheme.Short);
+            }
+        }
     }
 
     /// <summary>The pointer's screen position: the projected override, or the mouse.</summary>
     /// <summary>Whether the pointer is over the world outside build mode (not over a UI control).</summary>
-    public bool PointingAtWorld => Selected is null && !(PointerOverride is null && GetViewport().GuiGetHoveredControl() is not null);
+    public bool PointingAtWorld => !InBuildMode && !(PointerOverride is null && GetViewport().GuiGetHoveredControl() is not null);
 
     public Vector2 PointerScreen()
     {
@@ -507,6 +778,10 @@ public partial class BuildController : Node3D
     public List<TipLine> PlacementLines()
     {
         var lines = new List<TipLine>();
+        if (Line is LineTool tool)
+        {
+            return LineLines(tool);
+        }
         if (Selected is not BuildingType type)
         {
             return lines;
@@ -595,4 +870,11 @@ public partial class BuildController : Node3D
         hit = origin + direction * t;
         return true;
     }
+}
+
+/// <summary>The line tools of build mode.</summary>
+public enum LineTool
+{
+    Road,
+    Bridge
 }

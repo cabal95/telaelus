@@ -1358,6 +1358,111 @@ def research_lab():
     return m, mat.mats
 
 
+# ---- Infrastructure: road and bridge pieces ------------------------------------------------------
+# Each covers a 2 x 2 tile, origin at its center on the ground. A road piece is authored with its open
+# edges toward North (-Z) first, then East (+X): the end opens North, the straight North and South,
+# the corner North and East, the tee every edge but West. The game turns each to fit its neighbors.
+
+ROAD_TOP = 0.03
+EDGE = 0.16
+
+
+def _road(open_edges):
+    m, mat = Mesh(), Materials()
+    box(m, mat("gravel_edge"), -1.0, 0, -1.0, 1.0, ROAD_TOP, 1.0, mat_top=mat("gravel"))
+    # a darker verge along every closed edge, and a few pebbles
+    strips = {
+        "N": (-1.0, -1.0, 1.0, -1.0 + EDGE),
+        "S": (-1.0, 1.0 - EDGE, 1.0, 1.0),
+        "W": (-1.0, -1.0, -1.0 + EDGE, 1.0),
+        "E": (1.0 - EDGE, -1.0, 1.0, 1.0),
+    }
+    for edge, (x0, z0, x1, z1) in strips.items():
+        if edge not in open_edges:
+            box(m, mat("gravel_edge"), x0, ROAD_TOP, z0, x1, ROAD_TOP + 0.006, z1)
+    for x, z in ((-0.4, 0.3), (0.35, -0.45), (0.1, 0.55)):
+        box(m, mat("gravel_edge"), x - 0.05, ROAD_TOP, z - 0.04, x + 0.05, ROAD_TOP + 0.012, z + 0.04)
+    return m, mat.mats
+
+
+def road_patch():
+    """A lone 2 x 2 patch of gravel with a darker verge all round."""
+    return _road("")
+
+
+def road_end():
+    """A road's end, open to the North."""
+    return _road("N")
+
+
+def road_straight():
+    """A straight run, open North and South."""
+    return _road("NS")
+
+
+def road_corner():
+    """A corner, open North and East."""
+    return _road("NE")
+
+
+def road_tee():
+    """A tee, open North, East, and South."""
+    return _road("NES")
+
+
+def road_cross():
+    """A crossing, open on every edge."""
+    return _road("NESW")
+
+
+DECK = 0.14
+
+
+def _deck(m, mat, z0, z1, y0, y1):
+    """Planks across a deck running North-South from z0 (at height y0) to z1 (at y1), with rails."""
+    n = 8
+    for k in range(n):
+        za = z0 + (z1 - z0) * k / n + 0.01
+        zb = z0 + (z1 - z0) * (k + 1) / n - 0.01
+        ya = y0 + (y1 - y0) * k / n
+        yb = y0 + (y1 - y0) * (k + 1) / n
+        shade = 1.0 if k % 2 else 0.9
+        quad(m, mat("bridge_wood", shade), (-0.92, ya, za), (0.92, ya, za), (0.92, yb, zb), (-0.92, yb, zb), (0, 1, 0))
+        quad(m, mat("bridge_rail"), (-0.92, ya - 0.06, za), (0.92, ya - 0.06, za), (0.92, ya, za), (-0.92, ya, za), (0, 0, -1))
+    # stringers under the planks, and a rail on posts along each side
+    for x in (-0.6, 0.6):
+        quad(m, mat("bridge_rail"), (x, y0 - 0.08, z0), (x, y0 - 0.08, z1), (x, y1 - 0.08, z1), (x, y1 - 0.08, z0), (1, 0, 0))
+    for x in (-0.95, 0.95):
+        for k in range(3):
+            z = z0 + (z1 - z0) * (0.12 + 0.38 * k)
+            y = y0 + (y1 - y0) * (0.12 + 0.38 * k)
+            box(m, mat("bridge_rail"), x - 0.04, y, z - 0.04, x + 0.04, y + 0.38, z + 0.04)
+        cylinder(m, mat("bridge_wood"), (x, y0 + 0.36, z0), (x, y1 + 0.36, z1), 0.035, segs=5)
+
+
+def bridge_deck():
+    """A 2 x 2 bridge deck running North-South: planks across, a rail on posts along each side."""
+    m, mat = Mesh(), Materials()
+    _deck(m, mat, -1.0, 1.0, DECK, DECK)
+    return m, mat.mats
+
+
+def bridge_ramp():
+    """A deck that slopes down toward the North onto the bank."""
+    m, mat = Mesh(), Materials()
+    _deck(m, mat, -1.0, 1.0, ROAD_TOP + 0.01, DECK)
+    return m, mat.mats
+
+
+def bridge_pier():
+    """Two piles under a deck, down into the water, with a cross beam."""
+    m, mat = Mesh(), Materials()
+    for x in (-0.6, 0.6):
+        cylinder(m, mat("bridge_rail"), (x, -0.7, 0), (x, DECK - 0.08, 0), 0.09, segs=6)
+    box(m, mat("bridge_wood"), -0.75, DECK - 0.2, -0.07, 0.75, DECK - 0.08, 0.07)
+    return m, mat.mats
+
+
 BUILDINGS = {"mine": mine, "lumber_camp": lumber_camp, "smelter": smelter, "refinery": refinery,
              "oil_well": oil_well, "hq": hq, "silo": silo, "stockyard": stockyard, "tank_farm": tank_farm,
              "warehouse": warehouse, "vault": vault, "small_hub": small_hub, "relay": relay,
@@ -1376,7 +1481,10 @@ BUILDINGS = {"mine": mine, "lumber_camp": lumber_camp, "smelter": smelter, "refi
              "semiconductor_fab": semiconductor_fab, "air_separator": air_separator,
              "enrichment_plant": enrichment_plant, "solar_array": solar_array,
              "battery_bank": battery_bank, "fission_reactor": fission_reactor,
-             "research_lab": research_lab}
+             "research_lab": research_lab, "road_patch": road_patch, "road_end": road_end,
+             "road_straight": road_straight, "road_corner": road_corner, "road_tee": road_tee,
+             "road_cross": road_cross, "bridge_deck": bridge_deck, "bridge_ramp": bridge_ramp,
+             "bridge_pier": bridge_pier}
 
 
 def build_all():

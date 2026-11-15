@@ -166,6 +166,10 @@ or 1.05 for facet variation). A new material extends the table.
 | sun | 1.00, 0.84, 0.30 | The sun icon |
 | moon | 0.86, 0.89, 0.96 | The moon icon |
 | research_accent | 0.36, 0.86, 0.66 | Research Lab band and awning (a mint green) |
+| gravel | 0.56, 0.51, 0.43 | Road surface |
+| gravel_edge | 0.43, 0.39, 0.32 | Road verges, pebbles, and slab sides |
+| bridge_wood | 0.56, 0.39, 0.23 | Bridge planks and rails |
+| bridge_rail | 0.40, 0.27, 0.16 | Bridge posts, stringers, piles, and plank edges |
 
 Crown greens are mid tones with no near-black shade: a crown's shaded side would otherwise read
 as black under the dark ambient light. Crowns shade light on upward faces and dark underneath.
@@ -222,6 +226,12 @@ Emissive materials glow at half their base color. Mountains keep their own stone
   across the front, an intake pipe). Icons (`assets/models/icons/`): `icon_sun` (a pale yellow
   disc with eight rays), `icon_moon` (a pale crescent), `icon_power` (a lightning bolt in
   `power_accent`), flat shapes facing the game camera.
+- Infrastructure (`assets/models/infrastructure/`, 2 x 2 tiles): road pieces are a gravel slab 0.03
+  high with a darker verge along each closed edge and three pebbles at the same spots on every
+  piece (patch, end, straight, corner, tee, crossing, authored open North first, then East); a
+  bridge deck is planks across a span running North-South 0.14 up, on two stringers, with a rail on
+  three posts along each side; the ramp slopes it down to the North; a pier is two piles into the
+  water under a cross beam.
 - The Research Lab (4 x 5, a low white lab with a mint band, a glass-roofed bay at the back, a
   slotted dome and a small dish on the roof, an instrument bench under a mint awning at the front).
   Project icons: `icon_material_transfer` (a crate under a `hub_accent` arrow arcing over it) and

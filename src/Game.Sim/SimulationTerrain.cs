@@ -201,6 +201,11 @@ public sealed partial class Simulation
     /// </summary>
     public bool IsWalkable(int x, int z)
     {
+        // A bridge carries its cells over water and river channel.
+        if (_bridgeCells.ContainsKey((x, z)))
+        {
+            return !_occupied.Contains((x, z));
+        }
         return TerrainDefs.For(TerrainAt(x, z)).Walkable
             && !FeatureBlocks(x, z)
             && FieldAt(x, z) is null
@@ -213,11 +218,11 @@ public sealed partial class Simulation
         return IsWalkable(x, z);
     }
 
-    /// <summary>The speed multiplier of the terrain under a world point.</summary>
+    /// <summary>The speed multiplier under a world point: the road speed on paving, else the terrain's.</summary>
     private float TerrainSpeedAt(float worldX, float worldZ)
     {
         (int x, int z) = CellAt(worldX, worldZ);
-        return TerrainDefs.For(TerrainAt(x, z)).Speed;
+        return CellSpeed(x, z);
     }
 
     // ---- Fixed test map --------------------------------------------------

@@ -57,7 +57,13 @@ public static class StateSnapshot
             ["shipsLaunched"] = sim.ShipsLaunched,
             ["timeOfDay"] = Round(sim.TimeOfDay),
             ["daylight"] = Round(sim.Daylight),
-            ["research"] = Research(sim)
+            ["research"] = Research(sim),
+            ["roads"] = new JsonArray(sim.RoadTiles.OrderBy(t => t.Z).ThenBy(t => t.X).Select(t => (JsonNode)Pair(t.X, t.Z)).ToArray()),
+            ["bridges"] = new JsonArray(sim.Bridges.Select(b => (JsonNode)new JsonObject
+            {
+                ["tiles"] = new JsonArray(b.Tiles.Select(t => (JsonNode)Pair(t.X, t.Z)).ToArray()),
+                ["alongX"] = b.AlongX
+            }).ToArray())
         };
     }
 
@@ -139,7 +145,7 @@ public static class StateSnapshot
         {
             ["open"] = root.Dialogs.Current?.Id,
             ["tooltip"] = Lines(root.Dialogs.HoverTip),
-            ["worldTip"] = root.Builder.Selected is null ? Lines(root.Dialogs.PlacementTip) : null,
+            ["worldTip"] = !root.Builder.InBuildMode ? Lines(root.Dialogs.PlacementTip) : null,
             ["debug"] = root.Debug.Shown,
             ["network"] = new JsonObject
             {
@@ -217,11 +223,11 @@ public static class StateSnapshot
         if (root.Dialogs.Current == root.BuildMenu)
         {
             var cells = new JsonArray();
-            foreach ((BuildingType type, BuildCellState state, string label) in root.BuildMenu.Cells)
+            foreach ((string type, BuildCellState state, string label) in root.BuildMenu.Cells)
             {
                 cells.Add(new JsonObject
                 {
-                    ["type"] = type.ToString(),
+                    ["type"] = type,
                     ["state"] = Camel(state.ToString()),
                     ["label"] = label
                 });
@@ -351,6 +357,22 @@ public static class StateSnapshot
 
     private static JsonNode? Build(BuildController builder, DialogHost dialogs)
     {
+        if (builder.Line is LineTool tool)
+        {
+            return new JsonObject
+            {
+                ["line"] = tool.ToString(),
+                ["drag"] = builder.LineDrag is (int fx, int fz, int tx, int tz, bool removes)
+                    ? new JsonObject
+                    {
+                        ["from"] = Pair(fx, fz),
+                        ["to"] = Pair(tx, tz),
+                        ["removes"] = removes
+                    }
+                    : null,
+                ["tooltip"] = Lines(dialogs.PlacementTip)
+            };
+        }
         if (builder.Selected is not BuildingType selected)
         {
             return null;
