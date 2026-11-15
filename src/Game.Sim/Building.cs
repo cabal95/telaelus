@@ -22,6 +22,9 @@ public sealed class Building
     /// <summary>Whether the building runs; a switched-off building does nothing (see Simulation.SetBuildingEnabled).</summary>
     public bool Enabled { get; set; } = true;
 
+    /// <summary>A Silo's chosen Bulk resource (see Simulation.SetSiloResource).</summary>
+    public ResourceType SiloResource { get; set; } = ResourceType.Wood;
+
     // Extractor: the field it is currently working (null when idle).
     public ResourceField? CurrentField { get; set; }
 

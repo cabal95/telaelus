@@ -1,0 +1,31 @@
+newmtl stone_dark
+Kd 0.360 0.340 0.330
+
+newmtl stone_80
+Kd 0.400 0.376 0.352
+
+newmtl concrete_dark
+Kd 0.540 0.540 0.520
+
+newmtl concrete
+Kd 0.660 0.660 0.640
+
+newmtl concrete_108
+Kd 0.713 0.713 0.691
+
+newmtl vault_accent
+Kd 0.780 0.620 0.220
+
+newmtl metal
+Kd 0.580 0.600 0.630
+
+newmtl metal_115
+Kd 0.667 0.690 0.724
+
+newmtl metal_dark
+Kd 0.300 0.310 0.340
+
+newmtl uranium_glow
+Kd 0.620 0.920 0.220
+Ke 0.310 0.460 0.110
+

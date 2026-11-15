@@ -40,10 +40,10 @@
     { "expect": "ui.open", "equals": "buildingDetail" },
     { "comment": "UI buttons take no keyboard focus, so Space after clicking one does not press it again.", "clickUi": { "id": "buildingDetail/toggle" } },
     { "wait": 2 },
-    { "expect": "buildings[0].enabled", "equals": false },
+    { "expect": "buildings[1].enabled", "equals": false },
     { "press": "Space" },
     { "wait": 2 },
-    { "expect": "buildings[0].enabled", "equals": false },
+    { "expect": "buildings[1].enabled", "equals": false },
     { "comment": "With the player under the open panel (the left third), they count as off screen: moving jumps the camera back.", "drag": { "button": "right", "from": [900, 400], "to": [450, 400] } },
     { "expect": "camera.detached", "equals": true },
     { "keyDown": "D" },
@@ -88,6 +88,6 @@
     { "drag": { "button": "left", "ctrl": true, "from": [640, 300], "to": [540, 300] } },
     { "expect": "camera.detached", "equals": true },
     { "expect": "build.selected", "equals": "Mine" },
-    { "expect": "buildings[1]", "exists": false }
+    { "expect": "buildings[2]", "exists": false }
   ]
 }

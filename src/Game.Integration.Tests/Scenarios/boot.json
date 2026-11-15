@@ -10,6 +10,8 @@
     { "expect": "player.position[1]", "approx": 32 },
     { "expect": "build", "equals": null },
     { "expect": "fields", "equals": [] },
-    { "expect": "buildings", "equals": [] }
+    { "comment": "The world places the HQ in the empty map's north-east corner, and nothing else stands.", "expect": "buildings[0].type", "equals": "Hq" },
+    { "expect": "buildings[0].anchor", "equals": [56, 2] },
+    { "expect": "buildings[1]", "exists": false }
   ]
 }

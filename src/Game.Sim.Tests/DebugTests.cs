@@ -16,7 +16,7 @@ public class DebugTests
         sim.Debug.ResetToEmptyMap();
 
         Assert.Empty(sim.Fields);
-        Assert.Empty(sim.Buildings);
+        Assert.Empty(SimTestHelpers.Placed(sim));
         Assert.Empty(sim.Stockpile);
         Assert.Equal(new Vector3(32f, 0f, 32f), sim.Player.Position);
         for (int mapX = 0; mapX < sim.MapWidth; mapX++)
@@ -90,7 +90,7 @@ public class DebugTests
 
         sim.Debug.RemoveBuilding(SimTestHelpers.ClearX, SimTestHelpers.ClearZ);
 
-        Assert.Empty(sim.Buildings);
+        Assert.Empty(SimTestHelpers.Placed(sim));
         Assert.True(sim.IsWalkable(SimTestHelpers.ClearX + 2, SimTestHelpers.ClearZ + 1));
         Assert.True(sim.CanPlace(BuildingType.Smelter, SimTestHelpers.ClearX, SimTestHelpers.ClearZ, Facing.North));
     }

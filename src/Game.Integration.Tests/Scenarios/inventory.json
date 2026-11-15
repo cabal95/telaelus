@@ -9,19 +9,19 @@
     { "wait": 2 },
     { "expect": "ui.open", "equals": "inventory" },
     { "expect": "discovered", "equals": [] },
-    { "expect": "ui.inventory[0]", "equals": { "type": "Wood", "amount": 0, "section": "raw", "discovered": false } },
+    { "expect": "ui.inventory[0]", "equals": { "type": "Wood", "amount": 0, "limit": 100, "section": "raw", "discovered": false, "pinned": true } },
     { "expect": "ui.inventory[17].section", "equals": "tier1" },
-    { "expect": "ui.inventory[62]", "equals": { "type": "Engine", "amount": 0, "section": "tier4", "discovered": false } },
+    { "expect": "ui.inventory[62]", "equals": { "type": "Engine", "amount": 0, "limit": null, "section": "tier4", "discovered": false, "pinned": false } },
     { "screenshot": "nothing-discovered" },
 
     { "comment": "A Quartz field in an explored cell discovers Quartz, which moves to the top of the raw rows.", "placeResource": { "type": "Quartz", "mapCell": [6, 6] } },
     { "seedStockpile": { "type": "Steel", "amount": 3 } },
     { "wait": 2 },
     { "expect": "discovered", "equals": ["Quartz", "Steel"] },
-    { "expect": "ui.inventory[0]", "equals": { "type": "Quartz", "amount": 0, "section": "raw", "discovered": true } },
-    { "expect": "ui.inventory[1]", "equals": { "type": "Wood", "amount": 0, "section": "raw", "discovered": false } },
-    { "expect": "ui.inventory[17]", "equals": { "type": "Steel", "amount": 3, "section": "tier1", "discovered": true } },
-    { "expect": "ui.inventory[18]", "equals": { "type": "Iron", "amount": 0, "section": "tier1", "discovered": false } },
+    { "expect": "ui.inventory[0]", "equals": { "type": "Quartz", "amount": 0, "limit": 0, "section": "raw", "discovered": true, "pinned": false } },
+    { "expect": "ui.inventory[1]", "equals": { "type": "Wood", "amount": 0, "limit": 100, "section": "raw", "discovered": false, "pinned": true } },
+    { "expect": "ui.inventory[17]", "equals": { "type": "Steel", "amount": 3, "limit": null, "section": "tier1", "discovered": true, "pinned": false } },
+    { "expect": "ui.inventory[18]", "equals": { "type": "Iron", "amount": 0, "limit": null, "section": "tier1", "discovered": false, "pinned": false } },
     { "screenshot": "some-discovered" }
   ]
 }

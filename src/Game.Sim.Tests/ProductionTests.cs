@@ -26,6 +26,7 @@ public class ProductionTests
         var sim = new Simulation();
         sim.Debug.SeedStockpile(ResourceType.CrudeOil, 10f);
         sim.Debug.PlaceBuilding(BuildingType.Refinery, SimTestHelpers.ClearX, SimTestHelpers.ClearZ, Facing.North);
+        sim.Debug.PlaceBuilding(BuildingType.TankFarm, SimTestHelpers.ClearX + 4, SimTestHelpers.ClearZ, Facing.North);
 
         SimTestHelpers.Ticks(sim, JustOver33Seconds);
 

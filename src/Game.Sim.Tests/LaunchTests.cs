@@ -34,8 +34,9 @@ public class LaunchTests
     {
         var sim = new Simulation();
 
-        // Mines beside the Iron Ore fields, one Oil Well between the two Crude Oil seeps, and two
-        // each of Smelters and Refineries, so the one Oil Well keeps both Refineries busy.
+        // Mines beside the Iron Ore fields, one Oil Well between the two Crude Oil seeps, two each
+        // of Smelters and Refineries, so the one Oil Well keeps both Refineries busy, and two Tank
+        // Farms to hold the Crude Oil and the launch's 500 Rocket Fuel.
         (BuildingType Type, int X, int Z)[] placements =
         {
             (BuildingType.Mine, 40, 34),
@@ -46,7 +47,9 @@ public class LaunchTests
             (BuildingType.Smelter, 28, 28),
             (BuildingType.Smelter, 24, 28),
             (BuildingType.Refinery, 32, 28),
-            (BuildingType.Refinery, 34, 28)
+            (BuildingType.Refinery, 34, 28),
+            (BuildingType.TankFarm, 36, 28),
+            (BuildingType.TankFarm, 40, 28)
         };
         foreach ((BuildingType type, int x, int z) in placements)
         {

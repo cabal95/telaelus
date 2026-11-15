@@ -65,11 +65,14 @@ planned multiplayer feasible.
 The kinds of UI (modals, panels, overlays), their look, layers, and input rules are in
 ui-style.md. There is no text HUD; the screen holds:
 
-- **Top bar** (`TopBar`, always shown): the starting raw resources' icons and amounts (the six
-  starting deposits, then Sand and Water), with name tooltips,
-  and the launch progress with "[L] Launch ship" once it can launch.
+- **Top bar** (`TopBar`, always shown): the pinned resources (`ResourcePins`, presentation state
+  for the session; the six starting deposits and Sand and Water at start, kept in table order),
+  each as its icon and "amount / limit" (the amount alone for a Cargo or unlimited resource), in
+  `Warning` when storage has no room for another unit, with name tooltips; and the launch
+  progress with "[L] Launch ship" once it can launch. Pinning or unpinning rebuilds the entries.
 - **Hint overlay** (`HintOverlay`): below the top bar, "[E] Harvest" with the resource's icon,
-  name, and a progress bar toward the next unit, while a hand-harvestable field is in range.
+  name, and a progress bar toward the next unit, while a hand-harvestable field is in range; while
+  storage has no room for the resource, "Storage full" in `Warning` replaces the bar.
 - **Debug overlay** (`DebugOverlay`, F3, hidden at start): the world line for exploring (for
   example `seed 1234   Highlands / Rock   chunk (1, -2)   cell (87, -101)`) and the performance
   line (see Performance below), in the top-left corner below the top bar, behind everything else.
@@ -83,18 +86,22 @@ ui-style.md. There is no text HUD; the screen holds:
   bar of the fraction left) and Worked by (the switched-on extractors working it now, as
   "2 Mines", or "nothing"). The UI shows no biome and no gather speeds. The panel closes itself
   when its field depletes. Its field keeps the hover outline while it is open.
-- **Inventory** (`InventoryPanel`, a panel titled "Inventory"): I opens and closes it. Every
-  resource, under tier headings in `TextDim` (Raw, then Tier 1 to Tier 4), each over a thin rule.
-  Within a heading the discovered resources come first, then the undiscovered, each group in table
-  order; rows move as resources are discovered. A discovered row is its icon and "Iron (23)",
-  including those at 0; an undiscovered row is darkened like an undiscovered building in the build
-  menu: its icon tinted `Silhouette` and "Undiscovered" in `TextDim`, with no name or amount. The
+- **Inventory** (`InventoryPanel`, a panel titled "Inventory"): I opens and closes it. First the
+  Cargo pool, "Cargo (40 / 150)" (in `Warning` when full); then every resource, under tier headings
+  in `TextDim` (Raw, then Tier 1 to Tier 4), each over a thin rule. Within a heading the
+  discovered resources come first, then the undiscovered, each group in table order; rows move as
+  resources are discovered. A discovered row is its icon, "Wood (45 / 100)" (the amount alone for
+  a Cargo or unlimited resource, as "Iron (23)"), including those at 0, in `Warning` when storage
+  has no room for another unit, and a Pin toggle at the right ("Pin", or "Pinned" when on the top
+  bar) that pins or unpins it; an undiscovered row is darkened like an undiscovered building in the build
+  menu: its icon tinted `Silhouette` and "Undiscovered" in `TextDim`, with no name, amount, or
+  pin. The
   body scrolls. Like every panel, opening it closes a building's detail panel and the other way
   round.
 - **Build menu** (`BuildMenu`, a modal titled "Buildings"): B opens it (leaving build
   mode) and B, Escape, the Close button, or a click on the backdrop closes it. Its body is a grid
   of 112-unit square cells, as many columns as fit, scrolling when taller than the panel allows.
-  Discovered buildings (`IsUnlocked`) come first, then undiscovered ones, each group by name.
+  It lists every buildable type (not the HQ). Discovered buildings (`IsUnlocked`) come first, then undiscovered ones, each group by name.
   A discovered cell shows the building's picture and name, in full color when affordable and in
   grayscale when not; an undiscovered cell shows its silhouette labeled "Undiscovered" in the dim
   text color. Hovering a cell outlines it; a discovered cell also shows its cost tooltip, while
@@ -112,7 +119,11 @@ ui-style.md. There is no text HUD; the screen holds:
   (250)", or "none"), Working on (only for a building that works
   more than one type: the current field's type and amount left, as "Stone (212 left)"), Recipe
   (processors: "1 Iron Ore to 1 Iron, 16 s"), and a progress bar (toward the next unit, or
-  through the cycle). Then its actions: Turn off / Turn on, and Destroy, which shows its refund
+  through the cycle). A storage building shows no Power, State, or progress; instead a Silo shows
+  "Holds" and a picker of the Bulk resources (choosing one calls `SetSiloResource`), and every
+  storage building lists "Adds to storage": one line per resource it adds to, with the amount
+  ("Wood   +300"), and "Cargo pool" for the HQ and a Warehouse. Then its actions: Turn off / Turn
+  on (not for a storage building), and Destroy (not for the HQ), which shows its refund
   ("Destroy (refund 13 Wood, 8 Stone)") and asks once: the first click changes it to "Confirm
   destroy" for 3 seconds, and a second click in that time destroys the building. The panel closes
   itself when its building is gone. While it is open, its building keeps the hover outline in

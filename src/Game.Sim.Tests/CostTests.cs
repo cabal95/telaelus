@@ -86,7 +86,7 @@ public class CostTests
 
         Assert.Equal(5f, SimTestHelpers.Stock(sim, ResourceType.Wood));
         Assert.Equal(5f, SimTestHelpers.Stock(sim, ResourceType.Stone));
-        Assert.Single(sim.Buildings);
+        Assert.Single(SimTestHelpers.Placed(sim));
     }
 
     [Fact]
@@ -104,7 +104,7 @@ public class CostTests
 
         Assert.Equal(5f, SimTestHelpers.Stock(sim, ResourceType.Wood));
         Assert.Equal(0f, SimTestHelpers.Stock(sim, ResourceType.Stone));
-        Assert.Single(sim.Buildings);
+        Assert.Single(SimTestHelpers.Placed(sim));
     }
 
     [Fact]
@@ -113,7 +113,7 @@ public class CostTests
         Simulation sim = EmptyMap();
 
         Assert.False(sim.TryPlaceBuilding(BuildingType.LumberCamp, SimTestHelpers.ClearX, SimTestHelpers.ClearZ, Facing.North));
-        Assert.Empty(sim.Buildings);
+        Assert.Empty(SimTestHelpers.Placed(sim));
     }
 
     [Fact]
@@ -134,16 +134,17 @@ public class CostTests
 
         sim.Debug.PlaceBuilding(BuildingType.Refinery, SimTestHelpers.ClearX, SimTestHelpers.ClearZ, Facing.North);
 
-        Assert.Single(sim.Buildings);
+        Assert.Single(SimTestHelpers.Placed(sim));
         Assert.Empty(sim.Stockpile);
     }
 
     [Fact]
-    public void EveryBuilding_HasACost_AndEveryDeposit_AGatherTime()
+    public void EveryBuildableBuilding_HasACost_AndEveryDeposit_AGatherTime()
     {
         foreach (BuildingType type in System.Enum.GetValues<BuildingType>())
         {
-            Assert.NotEmpty(BuildingDefs.For(type).Cost);
+            BuildingDef def = BuildingDefs.For(type);
+            Assert.Equal(def.Buildable, def.Cost.Count > 0);
         }
         foreach (ResourceType type in System.Enum.GetValues<ResourceType>())
         {

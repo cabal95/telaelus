@@ -1,0 +1,24 @@
+newmtl stone_dark
+Kd 0.360 0.340 0.330
+
+newmtl mud_115
+Kd 0.437 0.368 0.253
+
+newmtl stockyard_accent
+Kd 0.560 0.400 0.740
+
+newmtl wood_dark
+Kd 0.400 0.280 0.170
+
+newmtl boulder
+Kd 0.700 0.680 0.640
+
+newmtl iron_rust
+Kd 0.660 0.310 0.170
+
+newmtl bark
+Kd 0.450 0.320 0.210
+
+newmtl log_end
+Kd 0.800 0.660 0.450
+

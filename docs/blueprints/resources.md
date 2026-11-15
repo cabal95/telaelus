@@ -4,7 +4,7 @@
 
 Resources are the materials the factory loop produces and consumes. Raw resources come from
 resource fields on the map (by hand or by extractor); refined resources come from buildings (see
-buildings.md). A single global stockpile holds all amounts.
+buildings.md). A single global stockpile holds all amounts, within storage limits.
 
 ## Current state
 
@@ -107,6 +107,57 @@ buildings.md). A single global stockpile holds all amounts.
 - `ExtractorsWorking(field)` lists the switched-on extractors whose current field it is (display
   only; it changes no rule).
 
+### Storage limits
+
+- Each `ResourceDef` has a `ResourceStorage`: a **storage class** and its amounts.
+
+  | Class | Limit | Resources |
+  |---|---|---|
+  | Bulk | per type | Wood, Stone, Iron Ore, Copper Ore, Coal, Bauxite, Limestone, Quartz, Titanium Ore, Sulfur, Lithium, Charcoal |
+  | Fluid | per type | Crude Oil, Kerosene, Rocket Fuel, Hydrogen, Liquid Oxygen, Sulfuric Acid |
+  | Secure | per type | Rare Earths, Uranium Ore, Crystals, Enriched Uranium, Fuel Rod |
+  | Cargo | one shared pool | every other tier 1 to 4 resource |
+  | Unlimited | none | Sand, Water |
+
+- A per-type resource's limit (`StorageLimit`) is the sum, over every standing building, of what
+  it adds (`StorageAdded`): the HQ adds the resource's **HQ base**, a Silo set to it adds its
+  **Silo step**, and a class store of its class (Stockyard for Bulk, Tank Farm for Fluid, Vault for
+  Secure) adds its **class step**. The amounts (placeholders for tuning):
+
+  | Resources | HQ base | Silo step | Class step |
+  |---|---|---|---|
+  | Wood, Stone | 100 | 300 | 200 |
+  | Iron Ore, Copper Ore, Coal, Charcoal, Limestone | 60 | 200 | 120 |
+  | Bauxite, Quartz, Titanium Ore, Sulfur | 0 | 150 | 80 |
+  | Lithium | 0 | 100 | 50 |
+  | Crude Oil, Rocket Fuel, Liquid Oxygen | 0 | | 300 |
+  | Kerosene, Hydrogen | 0 | | 200 |
+  | Sulfuric Acid | 0 | | 150 |
+  | Rare Earths | 0 | | 50 |
+  | Uranium Ore, Crystals | 0 | | 30 |
+  | Enriched Uranium, Fuel Rod | 0 | | 20 |
+
+- The **Cargo pool** (`CargoPool`) is what the HQ (150) and the Warehouses (200 each) add. Each
+  Cargo resource takes up its **Cargo** weight per unit (`CargoUsed` sums them): 0.25 for Copper
+  Wire, Circuit, Silicon Wafer, Processor; 0.5 for Plastic, Silicon, Rubber, Carbon Fiber, Insulated
+  Cable, Magnet, Ceramic Tile; 1 for Iron, Copper, Steel, Glass, Lumber, Cement, Aluminum,
+  Titanium, Machine Parts, Battery, Solar Cell; 2 for Concrete, Hull Plate, Electric Motor,
+  Composite Panel, Computer; 3 for Steel Beam, Aluminum Frame, Armor Plate; Control Module and
+  Sensor Array 4, Heat Shield and Life Support Unit 6, Thruster Assembly 8, Fuel Tank 10, Hull
+  Section 20, Engine 25.
+- `RoomFor(type)` is how much more fits: the limit less the amount for a per-type resource, the
+  free pool over the weight for a Cargo resource, and infinite for Sand and Water. It is never
+  below 0.
+- **Gathering and production add only what fits** (hand-harvesting and extractors, see below and
+  buildings.md; processors, see buildings.md). **Returns** (a destroy refund, the inputs a
+  switched-off processor hands back) and `Debug.SeedStockpile` add in full, even past a limit.
+  An amount can sit above its limit (after a return, or when a storage building is destroyed or a
+  Silo changes); nothing is removed, and gathering and production of it wait until it falls
+  below the limit.
+- With only the HQ, the starting materials (Wood, Stone, Iron Ore, Copper Ore, Coal, Charcoal,
+  Limestone) and 150 Cargo fit; every other per-type resource needs its storage building first.
+  Every building cost fits the HQ's base except the Vault's Steel.
+
 ### Stockpile and hand-harvesting
 
 - The stockpile is a map from `ResourceType` to amount, exposed read-only. It starts empty: the
@@ -120,6 +171,8 @@ buildings.md). A single global stockpile holds all amounts.
   at 1 one unit moves from the field to the stockpile and progress starts over. Releasing the
   intent or a change of target (walking away, or a nearer field) drops the partial progress. A
   depleted field is removed.
+- While the target's resource has no room for the unit (`HarvestBlocked`), progress does not
+  advance; the hint shows "Storage full" (see presentation.md).
 
 ### Rendering
 
@@ -141,8 +194,8 @@ buildings.md). A single global stockpile holds all amounts.
   in every slot at ~0.6 units, so a field placed through the debug tools still shows. The
   models are required: a missing file throws (see presentation.md). Assets and conventions live in
   `src/Game/assets/models/nature/README.md`.
-- The top bar shows the starting raw resources' amounts, and the inventory panel (I) every
-  resource by tier, discovered or not;
+- The top bar shows the pinned resources' amounts and limits, and the inventory panel (I) the
+  Cargo pool and every resource by tier, discovered or not;
   the hint overlay shows "[E] Harvest" with the resource's icon, name, and a progress bar toward
   the next unit when a hand-harvestable field is in range (see presentation.md).
 

@@ -108,6 +108,10 @@ Newest last. One line each; open the file for the full spec.
 - **2611141930-resource-catalog** - Adds every resource in the catalog (63, by tier) with item models
   and icons, discovery (a deposit when first revealed on the map, anything when first held), and an
   inventory grouped by tier with undiscovered resources darkened; startup pictures draw in batches.
+- **2611142016-storage-limits** - Adds storage limits: a per-type limit for raw materials, fluids, and
+  secure resources and a shared Cargo pool for made goods; the HQ placed by every world, and the
+  Silo, Stockyard, Tank Farm, Warehouse, and Vault; gathering and production stop at the limit
+  ("Storage full"); top bar pins with amount over limit.
 
 ## Adding a changeset
 

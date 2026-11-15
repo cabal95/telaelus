@@ -8,8 +8,9 @@ namespace Game.Presentation.Ui;
 
 /// <summary>
 /// The top bar: a full-width strip across the top of the window in the panel style.
-/// Left, the starting raw resources (deposits, then Sand and Water) as an icon and its amount,
-/// each with a name tooltip. Right, the launch progress (Rocket Fuel and Iron against
+/// Left, the pinned resources (see <see cref="ResourcePins"/>) in table order, each as an icon and
+/// "amount / limit" (the amount alone for a Cargo or unlimited resource), in the warning color
+/// when storage is full, each with a tooltip naming it. Right, the launch progress (Rocket Fuel and Iron against
 /// the launch cost, short amounts in the short color), "[L] Launch ship" once both are
 /// met, and the ships launched once there is one. It takes the mouse but no keys.
 /// </summary>
@@ -20,6 +21,9 @@ public partial class TopBar : HudOverlay
 
     private DialogHost _host = null!;
     private ResourceIcons _icons = null!;
+    private ResourcePins _pins = null!;
+    private Simulation? _sim;
+    private HBoxContainer _pinRow = null!;
     private readonly Dictionary<ResourceType, (TextureRect Icon, Label Amount)> _entries = new();
     private TextureRect _fuelIcon = null!;
     private TextureRect _ironIcon = null!;
@@ -28,31 +32,21 @@ public partial class TopBar : HudOverlay
     private Label _launch = null!;
     private Label _ships = null!;
 
-    /// <summary>The raw resources the bar shows: the starting deposits, then Sand and Water.</summary>
-    public static IReadOnlyList<ResourceType> Raw { get; } = new[]
-    {
-        ResourceType.Wood,
-        ResourceType.Stone,
-        ResourceType.IronOre,
-        ResourceType.CopperOre,
-        ResourceType.Coal,
-        ResourceType.CrudeOil,
-        ResourceType.Sand,
-        ResourceType.Water
-    };
-
-    /// <summary>The entries as shown (type and amount), for the snapshot.</summary>
-    public IEnumerable<(ResourceType Type, string Amount)> Entries =>
-        Raw.Select(type => (type, _entries[type].Amount.Text));
+    /// <summary>The entries as shown (type, amount, its own limit or null, and whether storage is full), for the snapshot.</summary>
+    public IEnumerable<(ResourceType Type, int Amount, int? Limit, bool Full)> Entries => _sim is Simulation sim
+        ? _pins.Pinned.Select(type => (type, Whole(sim, type), WholeLimit(sim, type), IsFull(sim, type)))
+        : Enumerable.Empty<(ResourceType, int, int?, bool)>();
 
     /// <summary>The launch progress as shown, for the snapshot.</summary>
     public string LaunchText => string.Join("   ", new[] { _fuel.Text, _iron.Text, _launch.Visible ? _launch.Text : "", _ships.Visible ? _ships.Text : "" }
         .Where(text => text.Length > 0));
 
-    public void Initialize(DialogHost host, ResourceIcons icons)
+    public void Initialize(DialogHost host, ResourceIcons icons, ResourcePins pins)
     {
         _host = host;
         _icons = icons;
+        _pins = pins;
+        _pins.Changed += RebuildPins;
     }
 
     public override void _Ready()
@@ -81,13 +75,13 @@ public partial class TopBar : HudOverlay
         row.AddThemeConstantOverride("separation", UiTheme.Padding);
         bar.AddChild(row);
 
-        foreach (ResourceType type in Raw)
+        _pinRow = new HBoxContainer
         {
-            (HBoxContainer entry, TextureRect icon, Label amount) = MakeEntry(type, ResourceDefs.For(type).Name);
-            row.AddChild(entry);
-            _entries[type] = (icon, amount);
-            _host.Register("topBar/" + type, entry);
-        }
+            MouseFilter = MouseFilterEnum.Ignore
+        };
+        _pinRow.AddThemeConstantOverride("separation", UiTheme.Padding);
+        row.AddChild(_pinRow);
+        RebuildPins();
 
         row.AddChild(new Control
         {
@@ -103,6 +97,27 @@ public partial class TopBar : HudOverlay
         row.AddChild(_launch);
         _ships = UiTheme.MakeLabel("", UiTheme.BodySize);
         row.AddChild(_ships);
+    }
+
+    private void RebuildPins()
+    {
+        foreach (Node child in _pinRow.GetChildren())
+        {
+            _pinRow.RemoveChild(child);
+            child.QueueFree();
+        }
+        foreach (ResourceType type in _entries.Keys)
+        {
+            _host.Unregister("topBar/" + type);
+        }
+        _entries.Clear();
+        foreach (ResourceType type in _pins.Pinned)
+        {
+            (HBoxContainer entry, TextureRect icon, Label amount) = MakeEntry(type, ResourceDefs.For(type).Name);
+            _pinRow.AddChild(entry);
+            _entries[type] = (icon, amount);
+            _host.Register("topBar/" + type, entry);
+        }
     }
 
     private (HBoxContainer Entry, TextureRect Icon, Label Amount) MakeEntry(ResourceType type, string tooltip)
@@ -130,11 +145,12 @@ public partial class TopBar : HudOverlay
         Position = Vector2.Zero;
         Size = new Vector2(uiSize.X, Height);
 
-        foreach (ResourceType type in Raw)
+        _sim = sim;
+        foreach ((ResourceType type, (TextureRect icon, Label amount)) in _entries)
         {
-            (TextureRect icon, Label amount) = _entries[type];
             icon.Texture ??= _icons.For(type);
-            amount.Text = Whole(sim, type).ToString();
+            amount.Text = StorageText(sim, type);
+            amount.AddThemeColorOverride("font_color", IsFull(sim, type) ? UiTheme.Warning : UiTheme.Text);
         }
 
         _fuelIcon.Texture ??= _icons.For(ResourceType.RocketFuel);

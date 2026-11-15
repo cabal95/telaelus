@@ -20,6 +20,7 @@ public static class UiTheme
     public static readonly Color Accent = new(0.98f, 0.80f, 0.35f);
     public static readonly Color Short = new(1.00f, 0.42f, 0.38f);
     public static readonly Color Danger = new(0.85f, 0.30f, 0.25f);
+    public static readonly Color Warning = new(0.98f, 0.66f, 0.18f);
     public static readonly Color Backdrop = new(0f, 0f, 0f, 0.35f);
     public static readonly Color Silhouette = new(0.06f, 0.07f, 0.06f);
 

@@ -23,6 +23,7 @@
     { "placeResource": { "type": "Coal", "mapCell": [7, 8] } },
     { "placeBuilding": { "type": "Mine", "anchor": [24, 33] } },
     { "comment": "The Oil Well's center (37, 18) is 1 unit from the seep at (8, 4).", "placeBuilding": { "type": "OilWell", "anchor": [36, 17] } },
+    { "comment": "Crude Oil needs a Tank Farm: the HQ stores none.", "placeBuilding": { "type": "TankFarm", "anchor": [40, 20] } },
     { "comment": "250 frames is about 8.3 s: one Iron Ore at 8 s a unit and two Crude Oil at 4 s.", "wait": 250 },
     { "expect": "stockpile.IronOre", "equals": 1 },
     { "expect": "stockpile.Coal", "equals": 0 },

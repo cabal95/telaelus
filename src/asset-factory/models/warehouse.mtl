@@ -1,0 +1,24 @@
+newmtl stone_dark
+Kd 0.360 0.340 0.330
+
+newmtl stone_90
+Kd 0.450 0.423 0.396
+
+newmtl metal
+Kd 0.580 0.600 0.630
+
+newmtl warehouse_accent
+Kd 0.840 0.360 0.580
+
+newmtl metal_dark
+Kd 0.300 0.310 0.340
+
+newmtl metal_85
+Kd 0.493 0.510 0.535
+
+newmtl wood
+Kd 0.580 0.410 0.240
+
+newmtl wood_120
+Kd 0.696 0.492 0.288
+

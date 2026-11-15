@@ -62,6 +62,9 @@ public class BuildingControlTests
 
         Assert.Equal(new BuildingStatus(BuildingState.Working, null), sim.BuildingStatusOf(mine));
         Assert.Equal(new BuildingStatus(BuildingState.Idle, "No fields in range"), sim.BuildingStatusOf(idleMine));
+        Assert.Equal(new BuildingStatus(BuildingState.Idle, "Storage full: Rocket Fuel"), sim.BuildingStatusOf(refinery));
+
+        sim.Debug.PlaceBuilding(BuildingType.TankFarm, 20, 32, Facing.North);
         Assert.Equal(new BuildingStatus(BuildingState.Idle, "Waiting for Crude Oil"), sim.BuildingStatusOf(refinery));
 
         sim.Debug.SeedStockpile(ResourceType.CrudeOil, 1f);
@@ -84,7 +87,7 @@ public class BuildingControlTests
 
         Assert.Equal(13f, SimTestHelpers.Stock(sim, ResourceType.Wood));
         Assert.Equal(8f, SimTestHelpers.Stock(sim, ResourceType.Stone));
-        Assert.Empty(sim.Buildings);
+        Assert.Empty(SimTestHelpers.Placed(sim));
         Assert.Null(sim.BuildingAt(SimTestHelpers.ClearX, SimTestHelpers.ClearZ));
         Assert.True(sim.CanPlace(BuildingType.Mine, SimTestHelpers.ClearX, SimTestHelpers.ClearZ, Facing.North));
         Assert.False(sim.TryDestroyBuilding(mine.Id));

@@ -125,6 +125,12 @@ or 1.05 for facet variation). A new material extends the table.
 | smelter_accent | 0.78, 0.26, 0.20 | Smelter identity color (red) |
 | refinery_accent | 0.22, 0.42, 0.78 | Refinery identity color (blue) |
 | oil_well_accent | 0.92, 0.74, 0.16 | Oil Well identity color (yellow, with oil black) |
+| hq_accent | 0.16, 0.60, 0.56 | HQ identity color (teal) |
+| silo_accent | 0.42, 0.66, 0.28 | Silo identity color (green) |
+| stockyard_accent | 0.56, 0.40, 0.74 | Stockyard identity color (purple) |
+| tank_farm_accent | 0.30, 0.78, 0.92 | Tank Farm identity color (cyan) |
+| warehouse_accent | 0.84, 0.36, 0.58 | Warehouse identity color (pink) |
+| vault_accent | 0.78, 0.62, 0.22 | Vault identity color (gold) |
 
 Crown greens are mid tones with no near-black shade: a crown's shaded side would otherwise read
 as black under the dark ambient light. Crowns shade light on upward faces and dark underneath.

@@ -4,6 +4,24 @@ using Godot;
 
 namespace Game.Sim;
 
+/// <summary>What a building does for storage.</summary>
+public enum StorageRole
+{
+    None,
+
+    /// <summary>The HQ: every per-type resource's HQ base, and its Cargo pool.</summary>
+    Hq,
+
+    /// <summary>A Silo: its chosen Bulk resource's Silo step.</summary>
+    Silo,
+
+    /// <summary>A Stockyard, Tank Farm, or Vault: the class step of every resource in its class.</summary>
+    ClassStore,
+
+    /// <summary>A Warehouse: its Cargo pool.</summary>
+    Warehouse
+}
+
 /// <summary>
 /// Static definition of a building type: its display name, its footprint in fine
 /// cells (width along X and depth along Z when facing North), its cost (paid from
@@ -26,6 +44,20 @@ public sealed record BuildingDef(
     public const float BaseSpeed = 0.75f;
 
     public float Speed { get; init; } = BaseSpeed;
+
+    /// <summary>What it does for storage; a class store raises <see cref="StoresClass"/>.</summary>
+    public StorageRole Storage { get; init; } = StorageRole.None;
+
+    public StorageClass StoresClass { get; init; } = StorageClass.Unlimited;
+
+    /// <summary>The Cargo it adds to the pool (the HQ and Warehouses).</summary>
+    public float CargoPool { get; init; }
+
+    /// <summary>A permanent building (the HQ) cannot be switched off or destroyed.</summary>
+    public bool Permanent { get; init; }
+
+    /// <summary>Whether the player can place it (it is in the build menu); the world places the HQ.</summary>
+    public bool Buildable { get; init; } = true;
 
     public bool IsExtractor => Works.Count > 0;
 
@@ -85,6 +117,57 @@ public static class BuildingDefs
         new(ResourceType.Wood, 20f)
     }, Array.Empty<ResourceType>(), 0f);
 
+    private static readonly BuildingDef Hq = new("HQ", 6, 10, Array.Empty<ResourceAmount>(), Array.Empty<ResourceType>(), 0f)
+    {
+        Storage = StorageRole.Hq,
+        CargoPool = 150f,
+        Permanent = true,
+        Buildable = false
+    };
+    private static readonly BuildingDef Silo = new("Silo", 2, 2, new ResourceAmount[]
+    {
+        new(ResourceType.Wood, 30f)
+    }, Array.Empty<ResourceType>(), 0f)
+    {
+        Storage = StorageRole.Silo
+    };
+    private static readonly BuildingDef Stockyard = new("Stockyard", 3, 3, new ResourceAmount[]
+    {
+        new(ResourceType.Wood, 40f),
+        new(ResourceType.Iron, 20f)
+    }, Array.Empty<ResourceType>(), 0f)
+    {
+        Storage = StorageRole.ClassStore,
+        StoresClass = StorageClass.Bulk
+    };
+    private static readonly BuildingDef TankFarm = new("Tank Farm", 3, 3, new ResourceAmount[]
+    {
+        new(ResourceType.Iron, 30f),
+        new(ResourceType.Stone, 20f)
+    }, Array.Empty<ResourceType>(), 0f)
+    {
+        Storage = StorageRole.ClassStore,
+        StoresClass = StorageClass.Fluid
+    };
+    private static readonly BuildingDef Warehouse = new("Warehouse", 3, 3, new ResourceAmount[]
+    {
+        new(ResourceType.Wood, 40f),
+        new(ResourceType.Stone, 30f)
+    }, Array.Empty<ResourceType>(), 0f)
+    {
+        Storage = StorageRole.Warehouse,
+        CargoPool = 200f
+    };
+    private static readonly BuildingDef Vault = new("Vault", 3, 3, new ResourceAmount[]
+    {
+        new(ResourceType.Steel, 40f),
+        new(ResourceType.Stone, 40f)
+    }, Array.Empty<ResourceType>(), 0f)
+    {
+        Storage = StorageRole.ClassStore,
+        StoresClass = StorageClass.Secure
+    };
+
     public static BuildingDef For(BuildingType type)
     {
         return type switch
@@ -94,6 +177,12 @@ public static class BuildingDefs
             BuildingType.Smelter => Smelter,
             BuildingType.Refinery => Refinery,
             BuildingType.OilWell => OilWell,
+            BuildingType.Hq => Hq,
+            BuildingType.Silo => Silo,
+            BuildingType.Stockyard => Stockyard,
+            BuildingType.TankFarm => TankFarm,
+            BuildingType.Warehouse => Warehouse,
+            BuildingType.Vault => Vault,
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, "no building definition")
         };
     }

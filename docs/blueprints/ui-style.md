@@ -57,6 +57,7 @@ were not there, and they may cover it.
 | `Accent` | 0.98, 0.80, 0.35 | Hover outline, title rule, tooltip headings |
 | `Short` | 1.00, 0.42, 0.38 | A cost amount the player lacks |
 | `Danger` | 0.85, 0.30, 0.25 | Destructive buttons |
+| `Warning` | 0.98, 0.66, 0.18 | Storage full (top bar, inventory, the harvest hint) |
 | `Backdrop` | black at 35% | Behind a modal |
 | `Silhouette` | 0.06, 0.07, 0.06 | Undiscovered building pictures |
 
@@ -104,8 +105,8 @@ The two kinds place themselves:
 
 - **Top bar** (`TopBar`): a full-width strip across the top of the window, 36 UI units tall, in
   the panel color with a 1 px `PanelEdge` bottom border and no rounded corners. Left: every
-  starting raw resource (the six starting deposits, then Sand and Water) as a 22-unit icon and its whole
-  amount, 16 units apart, each with a tooltip naming it (opening below the entry, so it never
+  pinned resource as a 22-unit icon and "amount / limit" in whole numbers (the amount alone for a
+  Cargo or unlimited resource), in `Warning` when full, 16 units apart, each with a tooltip naming it (opening below the entry, so it never
   covers its neighbors). Right: the launch progress, the Rocket Fuel and Iron icons with "have /
   need" in `Short` until met, then "[L] Launch ship" in `Accent` once both are, and "Ships: n"
   once a ship has launched. It takes the mouse (so hovering it shows no building outline and
@@ -113,7 +114,7 @@ The two kinds place themselves:
 - **Hint overlay** (`HintOverlay`): centered, 8 units below the top bar, a small panel-style box
   shown only while a hint applies, never taking the mouse. Today the one hint is harvesting:
   "[E] Harvest" in `Accent`, the resource's icon and name, over a progress bar toward the next
-  unit. Later hints and notifications stack in the same place.
+  unit, or "Storage full" (14 units, `Warning`, centered) in place of the bar. Later hints and notifications stack in the same place.
 - **Debug overlay** (`DebugOverlay`): F3 toggles it; it starts hidden. Two lines of outlined text
   (readable over bright ground) in the top-left corner below the top bar: the world line (the
   seed or the bounded map's name, the biome and terrain under the player, their chunk and map

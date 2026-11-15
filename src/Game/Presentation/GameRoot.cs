@@ -28,6 +28,7 @@ public partial class GameRoot : Node3D
     private FieldDetail _fieldDetail = null!;
     private FieldPictures _fieldPictures = null!;
     private BuildingPictures _buildingPictures = null!;
+    private readonly ResourcePins _pins = new();
     private DialogHost _dialogs = null!;
     private BuildMenu _buildMenu = null!;
     private BuildingDetail _buildingDetail = null!;
@@ -397,7 +398,7 @@ public partial class GameRoot : Node3D
         {
             Name = "TopBar"
         };
-        _topBar.Initialize(_dialogs, _icons);
+        _topBar.Initialize(_dialogs, _icons, _pins);
         _dialogs.AddOverlay(_topBar);
         _hint = new HintOverlay
         {
@@ -425,7 +426,7 @@ public partial class GameRoot : Node3D
         {
             Name = "Inventory"
         };
-        _inventory.Initialize(_sim, _icons);
+        _inventory.Initialize(_sim, _icons, _pins);
         _dialogs.Add(_inventory, "Inventory");
 
         _fieldDetail = new FieldDetail

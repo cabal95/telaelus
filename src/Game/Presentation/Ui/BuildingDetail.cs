@@ -8,9 +8,11 @@ namespace Game.Presentation.Ui;
 /// <summary>
 /// The detail panel for a placed building: its name as the title, a turning
 /// picture of it, its status rows (power, state, fields in range, what it is working
-/// on, its recipe, and its progress), and its actions (turn off or on, destroy with a
-/// confirming second click, and close). The rows refresh every frame; the panel closes
-/// itself when its building is gone.
+/// on, its recipe, and its progress), for a storage building what it adds to storage
+/// (a Silo also picks its resource), and its actions (turn off or on, destroy with a
+/// confirming second click, and close; a storage building has no power to switch, and a
+/// permanent building, the HQ, cannot be destroyed). The
+/// rows refresh every frame; the panel closes itself when its building is gone.
 /// </summary>
 public partial class BuildingDetail : Dialog
 {
@@ -24,6 +26,16 @@ public partial class BuildingDetail : Dialog
     private Label _progressLabel = null!;
     private Button _toggle = null!;
     private Button _destroy = null!;
+    private Label _addsLabel = null!;
+    private GridContainer _adds = null!;
+    private Label _siloLabel = null!;
+    private OptionButton _silo = null!;
+    private string _addsSignature = "";
+
+    /// <summary>The Bulk resources a Silo can hold, in table order (the picker's items).</summary>
+    private static readonly ResourceType[] SiloChoices = System.Enum.GetValues<ResourceType>()
+        .Where(type => ResourceDefs.For(type).Storage.Class == StorageClass.Bulk)
+        .ToArray();
     private double _confirmLeft;
 
     public override DialogKind Kind => DialogKind.Panel;
@@ -36,8 +48,13 @@ public partial class BuildingDetail : Dialog
     /// <summary>The status rows as shown (label to value), for the snapshot.</summary>
     public IReadOnlyDictionary<string, string> Rows => _rows.Shown;
 
-    /// <summary>The Destroy button's text (it reads "Confirm destroy" while waiting).</summary>
-    public string DestroyText => _destroy.Text;
+    /// <summary>The Destroy button's text (it reads "Confirm destroy" while waiting), or null when hidden.</summary>
+    public string? DestroyText => _destroy.Visible ? _destroy.Text : null;
+
+    /// <summary>What a storage building adds, as shown ("Wood", "+200"), for the snapshot.</summary>
+    public IEnumerable<(string Resource, string Amount)> Adds => _adds.GetChildren().OfType<Label>()
+        .Chunk(2)
+        .Select(pair => (pair[0].Text, pair[1].Text));
 
     public float TurnDegrees => _turntable.TurnDegrees;
 
@@ -63,6 +80,32 @@ public partial class BuildingDetail : Dialog
         Body.AddChild(_progressLabel);
         _progress = StatusRows.MakeProgressBar();
         Body.AddChild(_progress);
+
+        _siloLabel = UiTheme.MakeLabel("Holds", UiTheme.SmallSize, UiTheme.TextDim);
+        Body.AddChild(_siloLabel);
+        _silo = new OptionButton
+        {
+            Name = "SiloResource",
+            FocusMode = FocusModeEnum.None
+        };
+        foreach (ResourceType type in SiloChoices)
+        {
+            _silo.AddItem(ResourceDefs.For(type).Name);
+        }
+        _silo.ItemSelected += OnSiloSelected;
+        Body.AddChild(_silo);
+        Host.Register(Id + "/siloResource", _silo);
+
+        _addsLabel = UiTheme.MakeLabel("Adds to storage", UiTheme.SmallSize, UiTheme.TextDim);
+        Body.AddChild(_addsLabel);
+        _adds = new GridContainer
+        {
+            Columns = 2,
+            MouseFilter = MouseFilterEnum.Ignore
+        };
+        _adds.AddThemeConstantOverride("h_separation", UiTheme.Padding);
+        _adds.AddThemeConstantOverride("v_separation", 2);
+        Body.AddChild(_adds);
 
         Body.AddChild(new Control
         {
@@ -101,6 +144,7 @@ public partial class BuildingDetail : Dialog
     {
         Building = building;
         _confirmLeft = 0;
+        _addsSignature = "";
         TitleLabel.Text = building.Def.Name;
         _turntable.Show(building.Type);
         Host.Open(this);
@@ -124,8 +168,10 @@ public partial class BuildingDetail : Dialog
 
         BuildingDef def = building.Def;
         BuildingStatus status = _sim.BuildingStatusOf(building);
-        _rows.Set("Power", building.Enabled ? "On" : "Off");
-        _rows.Set("State", status.State == BuildingState.Working ? "Working" : "Idle: " + status.IdleReason);
+        bool storage = def.Storage != StorageRole.None;
+        _rows.Set("Power", storage ? null : building.Enabled ? "On" : "Off");
+        _rows.Set("State", storage ? null : status.State == BuildingState.Working ? "Working" : "Idle: " + status.IdleReason);
+        RefreshStorage(building);
 
         float progress = 0f;
         if (def.IsExtractor)
@@ -164,7 +210,11 @@ public partial class BuildingDetail : Dialog
             }
         }
         _progress.Value = Mathf.Clamp(progress, 0f, 1f);
+        _progressLabel.Visible = !storage;
+        _progress.Visible = !storage;
 
+        _toggle.Visible = !storage;
+        _destroy.Visible = !def.Permanent;
         _toggle.Text = building.Enabled ? "Turn off" : "Turn on";
         _destroy.Text = _confirmLeft > 0 ? "Confirm destroy" : "Destroy (refund " + RefundText(building) + ")";
     }
@@ -174,6 +224,51 @@ public partial class BuildingDetail : Dialog
         if (_confirmLeft > 0)
         {
             _confirmLeft -= delta;
+        }
+    }
+
+    /// <summary>The Silo picker, and the rows of what a storage building adds (rebuilt only when they change).</summary>
+    private void RefreshStorage(Building building)
+    {
+        bool silo = building.Def.Storage == StorageRole.Silo;
+        _siloLabel.Visible = silo;
+        _silo.Visible = silo;
+        if (silo)
+        {
+            _silo.Selected = System.Array.IndexOf(SiloChoices, building.SiloResource);
+        }
+
+        var lines = Simulation.StorageAddedBy(building)
+            .Select(a => (ResourceDefs.For(a.Type).Name, $"+{a.Amount:0}"))
+            .ToList();
+        if (building.Def.CargoPool > 0f)
+        {
+            lines.Add(("Cargo pool", $"+{building.Def.CargoPool:0}"));
+        }
+        string signature = string.Join("|", lines);
+        _addsLabel.Visible = lines.Count > 0;
+        if (signature == _addsSignature)
+        {
+            return;
+        }
+        _addsSignature = signature;
+        foreach (Node child in _adds.GetChildren())
+        {
+            _adds.RemoveChild(child);
+            child.QueueFree();
+        }
+        foreach ((string name, string amount) in lines)
+        {
+            _adds.AddChild(UiTheme.MakeLabel(name, UiTheme.SmallSize));
+            _adds.AddChild(UiTheme.MakeLabel(amount, UiTheme.SmallSize));
+        }
+    }
+
+    private void OnSiloSelected(long index)
+    {
+        if (Building is Building building)
+        {
+            _sim.SetSiloResource(building.Id, SiloChoices[index]);
         }
     }
 

@@ -153,6 +153,8 @@ second hash picks the type by weight, and the field takes the biome's amount for
 - The region whose site is nearest the spawn is Grassland, and every cell within
   `SpawnClearRadius` (10) map cells of it is Grassland grass with no mountain, river, or water. No
   field lies within `SpawnFieldGap` (2) cells of it.
+- The HQ stands just north of the spawn (`HqAnchor`, see buildings.md): no field is placed on a
+  map cell under its footprint, the same way none is placed near the spawn.
 - Resources are not placed for the player: the deposits around the spawn come from ordinary
   generation, so finding them is part of exploring.
 

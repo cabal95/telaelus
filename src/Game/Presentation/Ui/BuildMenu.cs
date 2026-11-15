@@ -68,7 +68,7 @@ public partial class BuildMenu : Dialog
         _grid.AddThemeConstantOverride("v_separation", UiTheme.Gap);
         Body.AddChild(_grid);
 
-        foreach (BuildingType type in Enum.GetValues<BuildingType>())
+        foreach (BuildingType type in Enum.GetValues<BuildingType>().Where(type => BuildingDefs.For(type).Buildable))
         {
             var cell = new Cell(this, type);
             _cells[type] = cell;

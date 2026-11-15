@@ -41,12 +41,12 @@
 
     { "clickUi": { "id": "buildingDetail/toggle" } },
     { "comment": "A button acts on release, the frame after the click.", "wait": 2 },
-    { "expect": "buildings[0].enabled", "equals": false },
+    { "expect": "buildings[1].enabled", "equals": false },
     { "expect": "ui.rows.power", "equals": "Off" },
     { "expect": "ui.rows.state", "equals": "Idle: Switched off" },
     { "clickUi": { "id": "buildingDetail/toggle" } },
     { "comment": "A button acts on release, the frame after the click.", "wait": 2 },
-    { "expect": "buildings[0].enabled", "equals": true },
+    { "expect": "buildings[1].enabled", "equals": true },
 
     { "comment": "Clicking another building switches the panel to it.", "aimAt": { "world": [29, 29] } },
     { "wait": 1 },
@@ -87,12 +87,12 @@
     { "clickUi": { "id": "buildingDetail/destroy" } },
     { "comment": "A button acts on release, the frame after the click.", "wait": 2 },
     { "comment": "The first click only arms the button.", "expect": "ui.destroy", "equals": "Confirm destroy" },
-    { "expect": "buildings[1]", "exists": true },
+    { "expect": "buildings[2]", "exists": true },
     { "clickUi": { "id": "buildingDetail/destroy" } },
     { "comment": "A button acts on release, the frame after the click.", "wait": 2 },
     { "expect": "ui.open", "equals": null },
-    { "expect": "buildings[1]", "exists": false },
-    { "expect": "buildings[0].type", "equals": "LumberCamp" },
+    { "expect": "buildings[2]", "exists": false },
+    { "expect": "buildings[1].type", "equals": "LumberCamp" },
     { "expect": "stockpile.Wood", "equals": 13 },
     { "expect": "stockpile.Stone", "equals": 8 }
   ]

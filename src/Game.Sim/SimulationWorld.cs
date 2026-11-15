@@ -48,7 +48,8 @@ public sealed partial class Simulation
 
     /// <summary>
     /// Replaces the whole world: clears every chunk, field, building, the stockpile,
-    /// launches, and discoveries, then builds the new world and puts the player at its spawn.
+    /// launches, and discoveries, then builds the new world, places its HQ, and puts the player at
+    /// its spawn.
     /// </summary>
     private void ResetWorld(WorldSettings settings)
     {
@@ -80,10 +81,29 @@ public sealed partial class Simulation
             DiscoverChunkWithoutFog(_chunks[(0, 0)]);
         }
 
+        (int hqX, int hqZ) = HqAnchor;
+        AddBuilding(BuildingType.Hq, hqX, hqZ, Facing.South);
         Player.Position = SpawnPoint;
         EnsureChunksAroundPlayer();
         RevealAroundPlayer();
     }
+
+    /// <summary>The empty map's HQ sits in its north-east corner, clear of the center where tests and scenarios build.</summary>
+    public static readonly (int X, int Z) EmptyMapHqAnchor = (56, 2);
+
+    /// <summary>The test map's HQ, on clear ground west of the spawn and of the tests' clear spot.</summary>
+    public static readonly (int X, int Z) TestMapHqAnchor = (23, 16);
+
+    /// <summary>
+    /// Where the world places the HQ (facing South): beside a generated world's spawn, or at a
+    /// fixed spot on the bounded maps.
+    /// </summary>
+    private (int X, int Z) HqAnchor => World.Kind switch
+    {
+        WorldKind.Generated => _generator!.HqAnchor,
+        WorldKind.TestMap => TestMapHqAnchor,
+        _ => EmptyMapHqAnchor
+    };
 
     /// <summary>Generates the player's chunk and every chunk within <see cref="LoadRadius"/> of it.</summary>
     private void EnsureChunksAroundPlayer()

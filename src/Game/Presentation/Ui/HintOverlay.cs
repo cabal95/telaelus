@@ -6,8 +6,9 @@ namespace Game.Presentation.Ui;
 /// <summary>
 /// The hint overlay: a small panel-style box centered just below the top bar, shown only
 /// while a hint applies. Today the one hint is harvesting: "[E] Harvest" with the
-/// resource's icon and name over a progress bar toward the next unit. It never takes the
-/// mouse. Later hints and notifications stack in the same place.
+/// resource's icon and name over a progress bar toward the next unit, or "Storage full" in
+/// the warning color in place of the bar while there is no room for the resource. It never
+/// takes the mouse. Later hints and notifications stack in the same place.
 /// </summary>
 public partial class HintOverlay : HudOverlay
 {
@@ -16,11 +17,15 @@ public partial class HintOverlay : HudOverlay
     private TextureRect _icon = null!;
     private Label _name = null!;
     private ProgressBar _progress = null!;
+    private Label _full = null!;
 
     /// <summary>The hint as shown, or null when none applies (for the snapshot).</summary>
     public string? Text => _box.Visible ? "[E] Harvest " + _name.Text : null;
 
     public float Progress => (float)_progress.Value;
+
+    /// <summary>Whether the hint shows "Storage full" in place of its bar.</summary>
+    public bool StorageFull => _box.Visible && _full.Visible;
 
     public void Initialize(ResourceIcons icons)
     {
@@ -61,6 +66,9 @@ public partial class HintOverlay : HudOverlay
 
         _progress = StatusRows.MakeProgressBar(180f);
         column.AddChild(_progress);
+        _full = UiTheme.MakeLabel("Storage full", UiTheme.SmallSize, UiTheme.Warning);
+        _full.HorizontalAlignment = HorizontalAlignment.Center;
+        column.AddChild(_full);
     }
 
     public override void Refresh(Simulation sim, Vector2 uiSize)
@@ -74,6 +82,8 @@ public partial class HintOverlay : HudOverlay
         _icon.Texture = _icons.For(target.Type);
         _name.Text = ResourceDefs.For(target.Type).Name;
         _progress.Value = sim.HarvestProgress;
+        _full.Visible = sim.HarvestBlocked;
+        _progress.Visible = !sim.HarvestBlocked;
 
         _box.Size = Vector2.Zero;
         Vector2 size = _box.GetCombinedMinimumSize();

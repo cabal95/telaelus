@@ -130,8 +130,126 @@ def oil_well():
     return m, mat.mats
 
 
+def hq():
+    """The landing base: a long hall with an entrance at the front, a comms tower at the back, and a
+    landing pad before the door."""
+    m, mat = Mesh(), Materials()
+    hx, hz = half(6), half(10)
+    box(m, mat("stone_dark"), -hx, 0, -hz, hx, 0.1, hz, mat_top=mat("stone", 0.9))
+    # landing pad at the front
+    cylinder(m, mat("metal_dark"), (0, 0.1, -3.6), (0, 0.14, -3.6), 1.15, segs=16)
+    cylinder(m, mat("hq_accent"), (0, 0.14, -3.6), (0, 0.15, -3.6), 0.95, segs=16)
+    cylinder(m, mat("metal_dark"), (0, 0.15, -3.6), (0, 0.16, -3.6), 0.8, segs=16)
+    # the hall, with an accent band, a shallow roof, and an entrance under an awning
+    box(m, mat("hull"), -2.4, 0.1, -2.3, 2.4, 1.5, 2.6)
+    box(m, mat("hq_accent"), -2.42, 1.1, -2.32, 2.42, 1.3, 2.62)
+    prism_roof(m, mat("hull_dark"), -2.5, 2.5, -2.4, 2.7, 1.5, 2.0, mat_gable=mat("hull"))
+    box(m, mat("shadow"), -0.5, 0.1, -2.31, 0.5, 0.95, -2.3)
+    box(m, mat("hq_accent"), -0.8, 1.0, -2.75, 0.8, 1.08, -2.3)
+    for x in (-1.7, -1.1, 1.1, 1.7):
+        box(m, mat("screen"), x - 0.2, 0.6, -2.31, x + 0.2, 0.9, -2.3)
+    # comms tower at the back, with a dish and a mast
+    cylinder(m, mat("hull"), (0, 0.1, 3.7), (0, 3.0, 3.7), 0.62, segs=12, mat_cap=mat("hull_dark"))
+    cylinder(m, mat("hq_accent"), (0, 2.2, 3.7), (0, 2.45, 3.7), 0.64, segs=12)
+    cylinder(m, mat("metal"), (0, 3.0, 3.7), (0, 3.9, 3.7), 0.05, segs=6)
+    spike(m, mat("band_red"), (0, 3.9, 3.7), (0, 4.1, 3.7), 0.06, segs=5)
+    cylinder(m, mat("metal_dark"), (0.3, 3.0, 3.5), (0.55, 3.25, 3.25), 0.05, segs=6)
+    cylinder(m, mat("hull_dark"), (0.55, 3.25, 3.25), (0.75, 3.45, 3.05), 0.5, segs=12)
+    return m, mat.mats
+
+
+def silo():
+    """A tall round silo with a conical cap, an accent band, and a ladder up its front."""
+    m, mat = Mesh(), Materials()
+    hx, hz = half(2), half(2)
+    box(m, mat("stone_dark"), -hx, 0, -hz, hx, 0.08, hz, mat_top=mat("stone"))
+    cylinder(m, mat("metal"), (0, 0.08, 0.05), (0, 2.0, 0.05), 0.66, segs=14)
+    for y in (0.6, 1.3):
+        cylinder(m, mat("metal", 0.85), (0, y, 0.05), (0, y + 0.04, 0.05), 0.67, segs=14, caps=False)
+    cylinder(m, mat("silo_accent"), (0, 1.6, 0.05), (0, 1.8, 0.05), 0.68, segs=14)
+    spike(m, mat("silo_accent", 0.85), (0, 2.0, 0.05), (0, 2.5, 0.05), 0.7, segs=14)
+    for x in (-0.12, 0.12):
+        box(m, mat("metal_dark"), x - 0.02, 0.08, -0.66, x + 0.02, 2.0, -0.62)
+    for k in range(8):
+        y = 0.25 + k * 0.22
+        box(m, mat("metal_dark"), -0.12, y, -0.66, 0.12, y + 0.02, -0.62)
+    return m, mat.mats
+
+
+def stockyard():
+    """A fenced yard of material heaps (stone, ore, logs), open at the front."""
+    m, mat = Mesh(), Materials()
+    hx, hz = half(3), half(3)
+    box(m, mat("stone_dark"), -hx, 0, -hz, hx, 0.06, hz, mat_top=mat("mud", 1.15))
+    # fence along the back and sides, rails in the accent color
+    for x0, z0, x1, z1 in ((-hx, hz - 0.08, hx, hz), (-hx, -hz, -hx + 0.08, hz), (hx - 0.08, -hz, hx, hz)):
+        box(m, mat("stockyard_accent"), x0, 0.42, z0, x1, 0.5, z1)
+        box(m, mat("stockyard_accent"), x0, 0.22, z0, x1, 0.28, z1)
+    for x, z in ((-hx + 0.04, -hz + 0.04), (hx - 0.04, -hz + 0.04), (-hx + 0.04, hz - 0.04), (hx - 0.04, hz - 0.04),
+                 (0, hz - 0.04), (-hx + 0.04, 0), (hx - 0.04, 0)):
+        box(m, mat("wood_dark"), x - 0.06, 0.06, z - 0.06, x + 0.06, 0.62, z + 0.06)
+    # heaps
+    spike(m, mat("boulder"), (-0.75, 0.06, 0.55), (-0.75, 0.75, 0.55), 0.62, segs=7)
+    spike(m, mat("iron_rust"), (0.75, 0.06, 0.6), (0.75, 0.6, 0.6), 0.55, segs=7)
+    for y, z in ((0.17, -0.55), (0.17, -0.28), (0.4, -0.42)):
+        cylinder(m, mat("bark"), (-0.2, y, z), (0.9, y, z), 0.13, segs=7, mat_cap=mat("log_end"))
+    return m, mat.mats
+
+
+def tank_farm():
+    """Three tanks joined by pipes, with accent bands and a valve box at the front."""
+    m, mat = Mesh(), Materials()
+    hx, hz = half(3), half(3)
+    box(m, mat("stone_dark"), -hx, 0, -hz, hx, 0.08, hz, mat_top=mat("stone", 0.85))
+    for x, z, r, h in ((-0.62, 0.55, 0.62, 1.35), (0.68, 0.5, 0.56, 1.15), (0.55, -0.6, 0.42, 0.9)):
+        cylinder(m, mat("metal"), (x, 0.08, z), (x, h, z), r, segs=14)
+        cylinder(m, mat("tank_farm_accent"), (x, h * 0.6, z), (x, h * 0.6 + 0.16, z), r + 0.01, segs=14)
+        spike(m, mat("metal", 1.1), (x, h, z), (x, h + 0.16, z), r, segs=14)
+    cylinder(m, mat("metal_dark"), (-0.62, 0.35, 0.55), (0.68, 0.35, 0.5), 0.06, segs=6)
+    cylinder(m, mat("metal_dark"), (0.55, 0.3, -0.6), (0.6, 0.3, 0.5), 0.06, segs=6)
+    cylinder(m, mat("metal_dark"), (-0.62, 0.3, 0.55), (-0.62, 0.3, -0.75), 0.06, segs=6)
+    box(m, mat("metal_dark"), -0.85, 0.08, -1.2, -0.35, 0.45, -0.85, mat_top=mat("tank_farm_accent"))
+    cylinder(m, mat("band_red"), (-0.6, 0.45, -1.02), (-0.6, 0.55, -1.02), 0.1, segs=8)
+    return m, mat.mats
+
+
+def warehouse():
+    """A long shed with a gabled roof, a roller door at the front, and crates beside it."""
+    m, mat = Mesh(), Materials()
+    hx, hz = half(3), half(3)
+    box(m, mat("stone_dark"), -hx, 0, -hz, hx, 0.08, hz, mat_top=mat("stone", 0.9))
+    box(m, mat("metal"), -1.25, 0.08, -0.85, 1.25, 1.15, 1.3)
+    prism_roof(m, mat("warehouse_accent"), -1.35, 1.35, -0.95, 1.4, 1.15, 1.75, mat_gable=mat("metal"))
+    box(m, mat("metal_dark"), -0.55, 0.08, -0.86, 0.55, 0.85, -0.85)
+    for k in range(5):
+        y = 0.16 + k * 0.15
+        box(m, mat("metal", 0.85), -0.55, y, -0.87, 0.55, y + 0.03, -0.86)
+    for x, z, s in ((-1.0, -1.15, 0.2), (-0.62, -1.18, 0.16), (0.95, -1.12, 0.22)):
+        box(m, mat("wood"), x - s, 0.08, z - s, x + s, 0.08 + 2 * s, z + s, mat_top=mat("wood", 1.2))
+    return m, mat.mats
+
+
+def vault():
+    """A squat armored bunker with a round vault door in its front and hazard bands."""
+    m, mat = Mesh(), Materials()
+    hx, hz = half(3), half(3)
+    box(m, mat("stone_dark"), -hx, 0, -hz, hx, 0.1, hz, mat_top=mat("stone", 0.8))
+    box(m, mat("concrete_dark"), -1.2, 0.1, -1.0, 1.2, 0.95, 1.2, mat_top=mat("concrete"))
+    box(m, mat("concrete"), -0.9, 0.95, -0.7, 0.9, 1.25, 0.9, mat_top=mat("concrete", 1.08))
+    for y in (0.15, 0.78):
+        box(m, mat("vault_accent"), -1.22, y, -1.02, 1.22, y + 0.1, 1.22)
+    cylinder(m, mat("vault_accent"), (0, 0.5, -1.0), (0, 0.5, -1.08), 0.42, segs=14)
+    cylinder(m, mat("metal"), (0, 0.5, -1.08), (0, 0.5, -1.14), 0.34, segs=14, mat_cap=mat("metal", 1.15))
+    for a in (0, math.pi / 2):
+        x, y = math.cos(a) * 0.22, math.sin(a) * 0.22
+        cylinder(m, mat("metal_dark"), (-x, 0.5 - y, -1.15), (x, 0.5 + y, -1.15), 0.03, segs=5)
+    cylinder(m, mat("uranium_glow"), (0.75, 1.25, 0.2), (0.75, 1.32, 0.2), 0.08, segs=8)
+    return m, mat.mats
+
+
 BUILDINGS = {"mine": mine, "lumber_camp": lumber_camp, "smelter": smelter, "refinery": refinery,
-             "oil_well": oil_well}
+             "oil_well": oil_well, "hq": hq, "silo": silo, "stockyard": stockyard, "tank_farm": tank_farm,
+             "warehouse": warehouse, "vault": vault}
 
 
 def build_all():

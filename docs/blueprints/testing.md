@@ -65,6 +65,13 @@ pausing it and stepping frame by frame.
 - `ResourceTests`: the resource definitions (63 by tier, raw resources at tier 0, the new
   deposits' gather times, an item model file for each), biome deposits, the Mine and Oil Well, and
   hand-harvest rules.
+- `StorageTests`: every resource's storage class and amounts; the HQ's base; limits summing the
+  HQ and storage buildings; a Silo's step following its resource; Cargo room as the free pool over
+  the weight; hand-harvest, extractors, and processors stopping at the limit and resuming; a
+  finished cycle waiting for room; refunds passing the limit; destroying storage leaving stock
+  over the limit; the HQ permanent, placed in every kind of world, and on clear ground with no
+  field under it in generated worlds; every building cost but the Vault's fitting the HQ's base.
+  `SimTestHelpers.Placed` lists the buildings other than the HQ, for tests that count them.
 - `DiscoveryTests`: nothing discovered on an all-grass map; a field discovers its deposit when
   placed in an explored cell or when its cell is revealed; Sand, Water, and rivers discover from
   terrain; a debug edit to an explored cell discovers; holding a resource discovers it; discovery
@@ -118,8 +125,10 @@ pausing it and stepping frame by frame.
     show), and `scrollUi` `{ id, ticks }` (turns the wheel over one: positive ticks down,
     negative up). Keys are Godot `Key` names (`R`, `E`, `B`, `Escape`). UI ids are a dialog's id and a
     control's name: `buildMenu/<BuildingType>` for a cell, `buildingDetail/toggle` and
-    `buildingDetail/destroy` for the detail panel's actions, `inventory/<ResourceType>` for an
-    inventory row, `topBar/<ResourceType>` for a top bar entry (top bar ids work while no dialog is
+    `buildingDetail/destroy` for the detail panel's actions, `buildingDetail/siloResource` for the
+    Silo picker, `inventory/<ResourceType>` for an inventory row, `inventory/pin/<ResourceType>`
+    for a row's Pin toggle (shown only on discovered rows, and only clickable while the row is
+    scrolled into view), `topBar/<ResourceType>` for a top bar entry (top bar ids work while no dialog is
     open), and `<dialog>/close` for the Close button. Buttons act on release, the frame after a `clickUi`, so check their effect after
     `wait` 2. UI pointer events go straight to the viewport (`PushInput`), so they reach the GUI in
     headless runs too.
@@ -147,15 +156,18 @@ pausing it and stepping frame by frame.
   mode, else `selected`, `facing`, `fieldsInRange`, and `ghost`: `anchor`, `width`, `depth`,
   `placeable` (the spot), `affordable` (the cost), or null, and `tooltip`: the placement
   tooltip's lines, or null); `ui` (`open`: the open dialog's id or null, `debug`: whether the debug overlay shows,
-  `topBar`: its `items` (each raw resource's `type` and `amount`) and its `launch` text, `hint`:
-  the hint's `text` and `progress` or null, `tooltip`: the hover
+  `topBar`: its `items` (each pinned resource's `type`, `amount`, `limit` (null for a Cargo or
+  unlimited resource), and `full`) and its `launch` text, `hint`: the hint's `text`, `progress`,
+  and `storageFull` or null, `tooltip`: the hover
   tooltip's lines or null, and while the build menu is open, its `cells` in display order, each
   `type`, `state` (`affordable`, `unaffordable`, or `undiscovered`), and `label`; while the
   detail panel is open, `building` (its id), `rows` (each shown status row, keyed in camel case:
-  `power`, `state`, `inRange`, `workingOn`, `recipe`), `destroy` (the Destroy button's text), and
+  `power`, `state`, `inRange`, `workingOn`, `recipe`), `adds` (what a storage building adds, by
+  resource name, as "+300"), `destroy` (the Destroy button's text, or null when hidden), and
   `turnDegrees`; while the field detail panel is open, `field` (its id), `title`, and `rows`
   (`remaining`, `workedBy`); while the inventory is open, `inventory`: its rows in display order,
-  each `type`, `amount`, `section` (`raw`, `tier1` to `tier4`), and `discovered`); `buildings` (`id`, `type`, `anchor`, `facing`, `width`, `depth`,
+  each `type`, `amount`, `limit` (null for a Cargo or unlimited resource), `section` (`raw`,
+  `tier1` to `tier4`), `discovered`, and `pinned`, and `cargo`, the Cargo row's text); `buildings` (`id`, `type`, `anchor`, `facing`, `width`, `depth`,
   `currentField`, `enabled`, `status` (`working`, `idle`, or `off`), and `idleReason` or null);
   `hoveredBuilding` (the id of the building under the pointer outside build mode, or null);
   `focusedBuilding` (the id of the building the detail panel shows and outlines, or null);
@@ -251,7 +263,8 @@ pausing it and stepping frame by frame.
 - **What belongs here:** what only the running game can show (input reaching the right place,
   presentation state, views mirroring the sim). Sim rules belong in the unit tests. Screenshot
   steps in a kept scenario are for manual runs; the test suite skips them.
-- **Current scenarios:** `boot` (the game starts; player at the center, nothing on the map),
+- **Current scenarios:** `boot` (the game starts; player at the center, nothing on the map but
+  the HQ in the empty map's north-east corner),
   `field-detail` (clicking a field opens its panel with its name, Remaining, and Worked by; the
   field keeps its outline; two Mines show as "2 Mines" and Remaining falls as they dig; a
   building and a Forest Wood field switch the panel; empty ground closes it; it closes when its
@@ -268,6 +281,9 @@ pausing it and stepping frame by frame.
   resources with name tooltips and the launch progress; the hint overlay shows the harvest hint
   and its bar; I opens and closes the inventory, grouped by tier with discovered resources first;
   the inventory and a building's detail replace each other; a panel covers the debug overlay),
+  `storage` (Wood at the HQ's 100 shows full on the top bar and the harvest hint says Storage
+  full; a Silo raises the limit to 400 and harvesting resumes; the inventory's Cargo row, and
+  pinning and unpinning from it, which reorders the top bar; the Silo's detail lists what it adds),
   `inventory` (on the empty map nothing is discovered and every row is darkened, through the last
   tier; a field in sight and a held resource are discovered and move to the top of their tier),
   `building-detail` (clicking a building opens its panel with the right status rows; the

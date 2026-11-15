@@ -32,4 +32,22 @@ public abstract partial class HudOverlay : Control
         sim.Stockpile.TryGetValue(type, out float amount);
         return Mathf.FloorToInt(amount);
     }
+
+    /// <summary>A resource's own limit as a whole number, or null for a Cargo or unlimited resource.</summary>
+    public static int? WholeLimit(Simulation sim, ResourceType type)
+    {
+        return ResourceDefs.For(type).Storage.IsPerType ? Mathf.FloorToInt(sim.StorageLimit(type)) : null;
+    }
+
+    /// <summary>"45 / 100" for a resource with a limit of its own, else the amount alone.</summary>
+    public static string StorageText(Simulation sim, ResourceType type)
+    {
+        return WholeLimit(sim, type) is int limit ? $"{Whole(sim, type)} / {limit}" : Whole(sim, type).ToString();
+    }
+
+    /// <summary>Whether storage has no room for another unit of a limited resource (shown in the warning color).</summary>
+    public static bool IsFull(Simulation sim, ResourceType type)
+    {
+        return ResourceDefs.For(type).Storage.Class != StorageClass.Unlimited && sim.RoomFor(type) < 1f;
+    }
 }

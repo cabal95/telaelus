@@ -114,7 +114,7 @@ public class PlacementTests
     {
         var sim = new Simulation();
         sim.Debug.PlaceBuilding(BuildingType.Refinery, X, Z, Facing.East);
-        Building building = Assert.Single(sim.Buildings);
+        Building building = Assert.Single(SimTestHelpers.Placed(sim));
 
         Assert.Equal(3, building.Width);
         Assert.Equal(2, building.Depth);
@@ -126,7 +126,7 @@ public class PlacementTests
     {
         var sim = new Simulation();
         Assert.False(sim.TryPlaceBuilding(BuildingType.Smelter, 36, 20, Facing.North));
-        Assert.Empty(sim.Buildings);
+        Assert.Empty(SimTestHelpers.Placed(sim));
     }
 
     // The player stands in fine cell (32, 32) for these tests.
@@ -161,7 +161,7 @@ public class PlacementTests
         var sim = new Simulation();
         sim.Debug.TeleportPlayer(32.5f, 32.5f);
         Assert.False(sim.TryPlaceBuilding(BuildingType.Smelter, 31, 31, Facing.North));
-        Assert.Empty(sim.Buildings);
+        Assert.Empty(SimTestHelpers.Placed(sim));
         Assert.True(sim.IsWalkable(32, 32));
     }
 

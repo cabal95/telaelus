@@ -130,7 +130,7 @@ public class ResourceTests
         ResourceField coal = sim.Debug.PlaceField(ResourceType.Coal, 4, 4, 100f);
         sim.Debug.PlaceField(ResourceType.Wood, 4, 3, 100f);
         sim.Debug.PlaceBuilding(BuildingType.Mine, 12, 17, Facing.North);
-        Building mine = Assert.Single(sim.Buildings);
+        Building mine = Assert.Single(SimTestHelpers.Placed(sim));
 
         SimTestHelpers.Ticks(sim, 15);
         Assert.Same(copper, mine.CurrentField);
@@ -151,8 +151,8 @@ public class ResourceTests
         Simulation sim = EmptyMap();
         ResourceField near = sim.Debug.PlaceField(ResourceType.CrudeOil, 3, 3);
         sim.Debug.PlaceField(ResourceType.CrudeOil, 5, 2);
-        sim.Debug.PlaceBuilding(BuildingType.OilWell, 12, 10, Facing.North);
-        Building well = Assert.Single(sim.Buildings);
+        Building well = sim.Debug.PlaceBuilding(BuildingType.OilWell, 12, 10, Facing.North);
+        sim.Debug.PlaceBuilding(BuildingType.TankFarm, 40, 40, Facing.North);
 
         // 4 s per unit at base speed.
         SimTestHelpers.Seconds(sim, 4.1);

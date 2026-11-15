@@ -15,7 +15,7 @@
     { "placeBuilding": { "type": "Refinery", "anchor": [22, 26], "facing": "East" } },
     { "placeBuilding": { "type": "Refinery", "anchor": [27, 26], "facing": "South" } },
     { "placeBuilding": { "type": "Refinery", "anchor": [31, 26], "facing": "West" } },
-    { "expect": "buildings[7].type", "equals": "Refinery" },
+    { "expect": "buildings[8].type", "equals": "Refinery" },
     { "teleportPlayer": { "x": 26, "z": 28 } },
     { "cameraZoom": { "size": 20 } },
     { "wait": 10 },
@@ -60,7 +60,7 @@
     { "wait": 2 },
     { "click": {} },
     { "wait": 2 },
-    { "expect": "buildings[8].type", "equals": "Mine" },
-    { "expect": "buildings[8].anchor", "equals": [20, 34] }
+    { "expect": "buildings[9].type", "equals": "Mine" },
+    { "expect": "buildings[9].anchor", "equals": [20, 34] }
   ]
 }

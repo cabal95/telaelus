@@ -115,7 +115,8 @@ public static class StateSnapshot
                 ? new JsonObject
                 {
                     ["text"] = hint,
-                    ["progress"] = Math.Round(root.Hint.Progress, 3)
+                    ["progress"] = Math.Round(root.Hint.Progress, 3),
+                    ["storageFull"] = root.Hint.StorageFull
                 }
                 : null
         };
@@ -133,17 +134,20 @@ public static class StateSnapshot
         if (root.Dialogs.Current == root.Inventory)
         {
             var rows = new JsonArray();
-            foreach ((ResourceType type, int amount, string section, bool discovered) in root.Inventory.Rows)
+            foreach ((ResourceType type, int amount, string section, bool discovered, int? limit, bool pinned) in root.Inventory.Rows)
             {
                 rows.Add(new JsonObject
                 {
                     ["type"] = type.ToString(),
                     ["amount"] = amount,
+                    ["limit"] = limit,
                     ["section"] = section,
-                    ["discovered"] = discovered
+                    ["discovered"] = discovered,
+                    ["pinned"] = pinned
                 });
             }
             ui["inventory"] = rows;
+            ui["cargo"] = root.Inventory.CargoText;
         }
         if (root.Dialogs.Current == root.BuildMenu)
         {
@@ -169,6 +173,12 @@ public static class StateSnapshot
             ui["building"] = building.Id;
             ui["rows"] = rows;
             ui["destroy"] = root.BuildingDetail.DestroyText;
+            var adds = new JsonObject();
+            foreach ((string resource, string amount) in root.BuildingDetail.Adds)
+            {
+                adds[resource] = amount;
+            }
+            ui["adds"] = adds;
             ui["turnDegrees"] = Math.Round(root.BuildingDetail.TurnDegrees, 1);
         }
         return ui;
@@ -177,12 +187,14 @@ public static class StateSnapshot
     private static JsonObject TopBar(TopBar bar)
     {
         var items = new JsonArray();
-        foreach ((ResourceType type, string amount) in bar.Entries)
+        foreach ((ResourceType type, int amount, int? limit, bool full) in bar.Entries)
         {
             items.Add(new JsonObject
             {
                 ["type"] = type.ToString(),
-                ["amount"] = int.Parse(amount)
+                ["amount"] = amount,
+                ["limit"] = limit,
+                ["full"] = full
             });
         }
         return new JsonObject

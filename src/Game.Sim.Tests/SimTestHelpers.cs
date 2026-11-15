@@ -38,6 +38,12 @@ internal static class SimTestHelpers
         return field;
     }
 
+    /// <summary>Every building but the HQ, which every world places at start.</summary>
+    public static System.Collections.Generic.List<Building> Placed(Simulation sim)
+    {
+        return System.Linq.Enumerable.ToList(System.Linq.Enumerable.Where(sim.Buildings, b => b.Type != BuildingType.Hq));
+    }
+
     public static float Stock(Simulation sim, ResourceType type)
     {
         sim.Stockpile.TryGetValue(type, out float amount);

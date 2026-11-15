@@ -87,6 +87,21 @@ public sealed class WorldGenerator
 
     public Vector3 SpawnPoint => Simulation.MapCellCenter(SpawnCell.X, SpawnCell.Z);
 
+    /// <summary>
+    /// The HQ's anchor fine cell: facing South, its footprint is centered on the spawn point's X and
+    /// ends 3 fine cells north of it, inside the spawn's clear Grassland.
+    /// </summary>
+    public (int X, int Z) HqAnchor
+    {
+        get
+        {
+            (int width, int depth) = BuildingDefs.For(BuildingType.Hq).Footprint(Facing.South);
+            int spawnX = SpawnCell.X * Simulation.FineCellsPerMapCell + Simulation.FineCellsPerMapCell / 2;
+            int spawnZ = SpawnCell.Z * Simulation.FineCellsPerMapCell + Simulation.FineCellsPerMapCell / 2;
+            return (spawnX - width / 2, spawnZ - 3 - depth);
+        }
+    }
+
     public WorldGenerator(int seed, PlanetDef planet)
     {
         Seed = seed;
@@ -391,9 +406,18 @@ public sealed class WorldGenerator
         return dx * dx + dz * dz <= SpawnClearRadius * SpawnClearRadius;
     }
 
+    /// <summary>Whether a map cell is too near the spawn for a field: within the gap, or under the HQ.</summary>
     private bool NearSpawn(int x, int z)
     {
-        return Math.Abs(x - SpawnCell.X) <= SpawnFieldGap && Math.Abs(z - SpawnCell.Z) <= SpawnFieldGap;
+        return (Math.Abs(x - SpawnCell.X) <= SpawnFieldGap && Math.Abs(z - SpawnCell.Z) <= SpawnFieldGap) || UnderHq(x, z);
+    }
+
+    private bool UnderHq(int mapX, int mapZ)
+    {
+        (int anchorX, int anchorZ) = HqAnchor;
+        (int width, int depth) = BuildingDefs.For(BuildingType.Hq).Footprint(Facing.South);
+        return mapX >= Simulation.MapCellOf(anchorX) && mapX <= Simulation.MapCellOf(anchorX + width - 1)
+            && mapZ >= Simulation.MapCellOf(anchorZ) && mapZ <= Simulation.MapCellOf(anchorZ + depth - 1);
     }
 
     // ---- Terrain ---------------------------------------------------------

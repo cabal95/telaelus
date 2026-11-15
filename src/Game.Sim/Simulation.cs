@@ -54,6 +54,9 @@ public sealed partial class Simulation
     /// <summary>Progress toward the next hand-gathered unit, 0 to 1; drops to 0 on release or a target change.</summary>
     public float HarvestProgress { get; private set; }
 
+    /// <summary>Whether the harvest target's resource has no room in storage, so harvesting it does nothing.</summary>
+    public bool HarvestBlocked => HarvestTarget is ResourceField field && !HasRoom(field.Type, Mathf.Min(field.Amount, 1f));
+
     /// <summary>How many ships have been launched (the initial win condition).</summary>
     public int ShipsLaunched { get; private set; }
 
@@ -222,7 +225,7 @@ public sealed partial class Simulation
     }
 
     /// <summary>
-    /// Switches a building on or off. Switching off drops the work in hand: progress
+    /// Switches a building on or off (never a permanent one, the HQ). Switching off drops the work in hand: progress
     /// goes back to 0, and a processor's running cycle ends with its inputs returned to
     /// the stockpile (fuel, once buildings burn it, will not be). False when there is
     /// no such building.
@@ -230,7 +233,7 @@ public sealed partial class Simulation
     public bool SetBuildingEnabled(int id, bool enabled)
     {
         Building? building = BuildingById(id);
-        if (building is null)
+        if (building is null || building.Def.Permanent)
         {
             return false;
         }
@@ -286,12 +289,13 @@ public sealed partial class Simulation
 
     /// <summary>
     /// Destroys a building: removes it, frees its cells, and adds its refund
-    /// (<see cref="DestroyRefund"/>) to the stockpile. False when there is no such building.
+    /// (<see cref="DestroyRefund"/>) to the stockpile, even past a storage limit. False when there
+    /// is no such building or it is permanent (the HQ).
     /// </summary>
     public bool TryDestroyBuilding(int id)
     {
         Building? building = BuildingById(id);
-        if (building is null)
+        if (building is null || building.Def.Permanent)
         {
             return false;
         }
@@ -328,12 +332,24 @@ public sealed partial class Simulation
         }
         if (building.Def.IsExtractor)
         {
-            bool hasField = building.CurrentField is { Depleted: false } || NearestFieldInWorkArea(building) is not null;
-            return hasField
+            ResourceField? field = building.CurrentField is { Depleted: false } current ? current : NearestFieldInWorkArea(building);
+            if (field is null)
+            {
+                return new BuildingStatus(BuildingState.Idle, "No fields in range");
+            }
+            return HasRoom(field.Type, Mathf.Min(field.Amount, 1f))
                 ? new BuildingStatus(BuildingState.Working, null)
-                : new BuildingStatus(BuildingState.Idle, "No fields in range");
+                : new BuildingStatus(BuildingState.Idle, StorageFull(field.Type));
         }
-        if (building.Recipe is not Recipe recipe || building.Crafting)
+        if (building.Recipe is not Recipe recipe)
+        {
+            return new BuildingStatus(BuildingState.Working, null);
+        }
+        if (FirstOutputWithoutRoom(recipe) is ResourceType full && (!building.Crafting || building.Progress >= recipe.CycleTime))
+        {
+            return new BuildingStatus(BuildingState.Idle, StorageFull(full));
+        }
+        if (building.Crafting)
         {
             return new BuildingStatus(BuildingState.Working, null);
         }
@@ -528,7 +544,7 @@ public sealed partial class Simulation
     private void Harvest(double dt)
     {
         ResourceField? field = HarvestTarget;
-        if (field is null)
+        if (field is null || HarvestBlocked)
         {
             return;
         }
@@ -604,6 +620,12 @@ public sealed partial class Simulation
         {
             return;
         }
+        if (!HasRoom(field.Type, Mathf.Min(field.Amount, 1f)))
+        {
+            // A whole unit waits at the field until storage has room for it.
+            building.Progress = perUnit;
+            return;
+        }
 
         building.Progress -= perUnit;
         TakeUnit(field);
@@ -634,7 +656,7 @@ public sealed partial class Simulation
     {
         if (!building.Crafting)
         {
-            if (!HasInputs(recipe))
+            if (!HasInputs(recipe) || !OutputsFit(recipe))
             {
                 return;
             }
@@ -643,8 +665,9 @@ public sealed partial class Simulation
             building.Progress = 0f;
         }
 
-        building.Progress += (float)dt;
-        if (building.Progress >= recipe.CycleTime)
+        // A finished cycle's output waits in the building until it fits.
+        building.Progress = Mathf.Min(building.Progress + (float)dt, recipe.CycleTime);
+        if (building.Progress >= recipe.CycleTime && OutputsFit(recipe))
         {
             ProduceOutputs(recipe);
             building.Crafting = false;
@@ -701,7 +724,7 @@ public sealed partial class Simulation
     {
         foreach (BuildingType type in Enum.GetValues<BuildingType>())
         {
-            if (!_unlocked.Contains(type) && CanAfford(type))
+            if (!_unlocked.Contains(type) && BuildingDefs.For(type).Buildable && CanAfford(type))
             {
                 _unlocked.Add(type);
             }

@@ -21,7 +21,7 @@ public class ExtractorTests
     {
         var sim = new Simulation();
         sim.Debug.PlaceBuilding(BuildingType.Mine, NearOreX, NearOreZ, Facing.North);
-        Building mine = Assert.Single(sim.Buildings);
+        Building mine = Assert.Single(SimTestHelpers.Placed(sim));
 
         // Iron Ore takes 6 s by hand, so 8 s at speed 0.75.
         SimTestHelpers.Seconds(sim, 7.9);
@@ -40,7 +40,7 @@ public class ExtractorTests
         ResourceField second = SimTestHelpers.FieldAtMapCell(sim, 11, 10);
         sim.Debug.SetFieldAmount(10, 9, 2f);
         sim.Debug.PlaceBuilding(BuildingType.Mine, NearOreX, NearOreZ, Facing.North);
-        Building mine = Assert.Single(sim.Buildings);
+        Building mine = Assert.Single(SimTestHelpers.Placed(sim));
 
         // Two units empty the first field at 16 s; the next unit comes from the second at 24 s.
         SimTestHelpers.Seconds(sim, 24.2);
@@ -57,7 +57,7 @@ public class ExtractorTests
     {
         var sim = new Simulation();
         sim.Debug.PlaceBuilding(BuildingType.Mine, SimTestHelpers.ClearX, SimTestHelpers.ClearZ, Facing.North);
-        Building mine = Assert.Single(sim.Buildings);
+        Building mine = Assert.Single(SimTestHelpers.Placed(sim));
 
         SimTestHelpers.Seconds(sim, 9.0);
 
@@ -70,7 +70,7 @@ public class ExtractorTests
     {
         var sim = new Simulation();
         sim.Debug.PlaceBuilding(BuildingType.LumberCamp, NearOreX, NearOreZ, Facing.North);
-        Building camp = Assert.Single(sim.Buildings);
+        Building camp = Assert.Single(SimTestHelpers.Placed(sim));
 
         SimTestHelpers.Seconds(sim, 9.0);
 
