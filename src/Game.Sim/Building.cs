@@ -18,7 +18,23 @@ public sealed class Building
     public int AnchorX { get; }
     public int AnchorZ { get; }
     public Facing Facing { get; }
-    public Recipe? Recipe { get; }
+    /// <summary>The recipes it can run (none for a building that is not a processor), the default first.</summary>
+    public IReadOnlyList<Recipe> Recipes { get; }
+
+    /// <summary>The index of the recipe it runs (see Simulation.SetRecipe).</summary>
+    public int RecipeIndex { get; set; }
+
+    /// <summary>A recipe chosen while a cycle runs, taken up when the cycle finishes; null for none.</summary>
+    public int? PendingRecipe { get; set; }
+
+    /// <summary>The recipe it runs, or null for a building that is not a processor.</summary>
+    public Recipe? Recipe => Recipes.Count > 0 ? Recipes[RecipeIndex] : null;
+
+    /// <summary>The choice for each input with alternatives, by input index: a type, or absent for Auto.</summary>
+    public Dictionary<int, ResourceType> InputChoices { get; } = new();
+
+    /// <summary>The inputs the running cycle took (refunded if the building is destroyed mid-cycle).</summary>
+    public List<ResourceAmount> CycleInputs { get; } = new();
 
     /// <summary>Whether the building runs; a switched-off building does nothing (see Simulation.SetBuildingEnabled).</summary>
     public bool Enabled { get; set; } = true;
@@ -90,7 +106,7 @@ public sealed class Building
     /// <summary>Whether a provider that eats had nothing to eat this tick.</summary>
     public bool Starved { get; set; }
 
-    public Building(int id, BuildingType type, int anchorX, int anchorZ, Facing facing, Recipe? recipe)
+    public Building(int id, BuildingType type, int anchorX, int anchorZ, Facing facing, IReadOnlyList<Recipe> recipes)
     {
         Id = id;
         Type = type;
@@ -98,7 +114,7 @@ public sealed class Building
         AnchorX = anchorX;
         AnchorZ = anchorZ;
         Facing = facing;
-        Recipe = recipe;
+        Recipes = recipes;
     }
 
     public int Width => Def.Footprint(Facing).Width;

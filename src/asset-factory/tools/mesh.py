@@ -227,6 +227,13 @@ PALETTE = {
     "kiln_accent": (0.68, 0.34, 0.22),
     "tilled": (0.42, 0.30, 0.20),
     "motherlode_rock": (0.30, 0.28, 0.27),
+    "steel_accent": (0.36, 0.52, 0.74),
+    "gas_accent": (0.56, 0.86, 0.84),
+    "fuel_accent": (0.94, 0.42, 0.18),
+    "chemical_accent": (0.62, 0.38, 0.80),
+    "aluminum_accent": (0.74, 0.80, 0.90),
+    "furnace_accent": (0.30, 0.60, 1.00),
+    "brick": (0.58, 0.30, 0.24),
 }
 GLOW = {"lava", "furnace_glow", "uranium_glow", "crystal_light", "screen", "led", "nozzle_hot", "hub_accent"}  # palette entries that are emissive
 GLOW_STRENGTH = 0.5  # emission as a fraction of the base color

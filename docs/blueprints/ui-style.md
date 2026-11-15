@@ -108,7 +108,7 @@ The two kinds place themselves:
   pinned resource as a 22-unit icon and "amount / limit" in whole numbers (the amount alone for a
   Cargo or unlimited resource), in `Warning` when full, 16 units apart, each with a tooltip naming it (opening below the entry, so it never
   covers its neighbors). Right: the power readout (demand over supply, in normal text, `Warning`,
-  or `Danger` by state), then the launch progress, the Rocket Fuel and Iron icons with "have /
+  or `Danger` by state), then the launch progress, the Rocket Fuel, Liquid Oxygen, and Iron icons with "have /
   need" in `Short` until met, then "[L] Launch ship" in `Accent` once both are, and "Ships: n"
   once a ship has launched. It takes the mouse (so hovering it shows no building outline and
   clicks on it never reach the world) but no keys.

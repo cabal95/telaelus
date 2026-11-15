@@ -34,6 +34,14 @@ public partial class BuildingDetail : Dialog
     private OptionButton _fuel = null!;
     private Label _fuelNote = null!;
     private Button _buyTruck = null!;
+    private Label _recipeLabel = null!;
+    private OptionButton _recipe = null!;
+    private string _recipeSignature = "";
+    private Label _inputLabel = null!;
+    private OptionButton _input = null!;
+    private Label _inputNote = null!;
+    private string _inputSignature = "";
+    private int _inputIndex = -1;
     private Label _outputLabel = null!;
     private OptionButton _output = null!;
     private string _outputSignature = "";
@@ -64,6 +72,12 @@ public partial class BuildingDetail : Dialog
     public string? DestroyText => _destroy.Visible ? _destroy.Text : null;
 
     /// <summary>The Buy truck button's text and whether it can be pressed, or null when hidden (not a Depot).</summary>
+    /// <summary>The Recipe picker's choice as shown ("Copper"), or null when hidden.</summary>
+    public string? RecipeChoiceText => _recipe.Visible && _recipe.Selected >= 0 ? _recipe.GetItemText(_recipe.Selected) : null;
+
+    /// <summary>The input picker's choice and note as shown ("Auto", "Auto: uses Coal (Coal 59, Charcoal 1)"), or null when hidden.</summary>
+    public (string Choice, string Note)? InputChoiceText => _input.Visible && _input.Selected >= 0 ? (_input.GetItemText(_input.Selected), _inputNote.Text) : null;
+
     /// <summary>The Output picker's choice as shown ("Iron Ore, every 5 s"), or null when hidden.</summary>
     public string? OutputText => _output.Visible && _output.Selected >= 0 ? _output.GetItemText(_output.Selected) : null;
 
@@ -132,6 +146,30 @@ public partial class BuildingDetail : Dialog
         Host.Register(Id + "/fuel", _fuel);
         _fuelNote = UiTheme.MakeLabel("", UiTheme.SmallSize, UiTheme.TextDim);
         Body.AddChild(_fuelNote);
+
+        _recipeLabel = UiTheme.MakeLabel("Recipe", UiTheme.SmallSize, UiTheme.TextDim);
+        Body.AddChild(_recipeLabel);
+        _recipe = new OptionButton
+        {
+            Name = "Recipe",
+            FocusMode = FocusModeEnum.None
+        };
+        _recipe.ItemSelected += OnRecipeSelected;
+        Body.AddChild(_recipe);
+        Host.Register(Id + "/recipe", _recipe);
+
+        _inputLabel = UiTheme.MakeLabel("Input", UiTheme.SmallSize, UiTheme.TextDim);
+        Body.AddChild(_inputLabel);
+        _input = new OptionButton
+        {
+            Name = "InputChoice",
+            FocusMode = FocusModeEnum.None
+        };
+        _input.ItemSelected += OnInputSelected;
+        Body.AddChild(_input);
+        Host.Register(Id + "/input", _input);
+        _inputNote = UiTheme.MakeLabel("", UiTheme.SmallSize, UiTheme.TextDim);
+        Body.AddChild(_inputNote);
 
         _outputLabel = UiTheme.MakeLabel("Output", UiTheme.SmallSize, UiTheme.TextDim);
         Body.AddChild(_outputLabel);
@@ -243,6 +281,7 @@ public partial class BuildingDetail : Dialog
         _rows.Set("Truck", TruckText.CollectorRow(_sim, building));
         RefreshTrucks(building);
         RefreshRenewables(building);
+        RefreshRecipePickers(building);
         _rows.Set("Links", def.IsHub ? _sim.LinkedHubs(building).Count.ToString() : null);
         _rows.Set("Reach", def.IsHub ? $"covers {def.CoverageRadius:0}, links {def.LinkRadius:0}" : null);
 
@@ -276,7 +315,8 @@ public partial class BuildingDetail : Dialog
             _rows.Set("In range", null);
             _rows.Set("Working on", null);
             Recipe? recipe = building.Recipe;
-            _rows.Set("Recipe", recipe is null ? null : RecipeText(recipe));
+            _rows.Set("Recipe", recipe is null ? null : RecipeText(recipe)
+                + (building.PendingRecipe is int next ? $" (next: {building.Recipes[next].Name})" : ""));
             if (recipe is not null && building.Crafting)
             {
                 progress = building.Progress / recipe.CycleTime;
@@ -303,6 +343,98 @@ public partial class BuildingDetail : Dialog
         {
             _confirmLeft -= delta;
         }
+    }
+
+    /// <summary>
+    /// The Recipe picker (a building with more than one recipe; a change waits for the running cycle)
+    /// and the input picker for the recipe's input with alternatives (Auto, then each by name), with
+    /// a dim note naming what it uses and why.
+    /// </summary>
+    private void RefreshRecipePickers(Building building)
+    {
+        bool many = building.Recipes.Count > 1;
+        _recipeLabel.Visible = many;
+        _recipe.Visible = many;
+        if (many)
+        {
+            string signature = string.Join("|", building.Recipes.Select(r => r.Name));
+            if (signature != _recipeSignature)
+            {
+                _recipeSignature = signature;
+                _recipe.Clear();
+                foreach (Recipe option in building.Recipes)
+                {
+                    _recipe.AddItem(option.Name);
+                }
+            }
+            _recipe.Selected = building.PendingRecipe ?? building.RecipeIndex;
+        }
+
+        _inputIndex = -1;
+        if (building.Recipe is Recipe recipe)
+        {
+            for (int i = 0; i < recipe.Inputs.Count; i++)
+            {
+                if (recipe.OptionsFor(i).Count > 1)
+                {
+                    _inputIndex = i;
+                    break;
+                }
+            }
+        }
+        bool alternative = _inputIndex >= 0;
+        _inputLabel.Visible = alternative;
+        _input.Visible = alternative;
+        _inputNote.Visible = alternative;
+        if (!alternative)
+        {
+            _inputSignature = "";
+            return;
+        }
+        Recipe current = building.Recipe!;
+        IReadOnlyList<ResourceType> options = current.OptionsFor(_inputIndex);
+        string inputSignature = current.Name + "|" + _inputIndex;
+        if (inputSignature != _inputSignature)
+        {
+            _inputSignature = inputSignature;
+            _input.Clear();
+            _input.AddItem("Auto");
+            foreach (ResourceType option in options)
+            {
+                _input.AddItem(ResourceDefs.For(option).Name);
+            }
+        }
+        _inputLabel.Text = current.InputName(_inputIndex);
+        ResourceType uses = _sim.ChosenInput(building, current, _inputIndex);
+        if (building.InputChoices.TryGetValue(_inputIndex, out ResourceType chosen))
+        {
+            _input.Selected = 1 + options.ToList().IndexOf(chosen);
+            _inputNote.Text = $"Uses only {ResourceDefs.For(chosen).Name}";
+        }
+        else
+        {
+            _input.Selected = 0;
+            _inputNote.Text = $"Auto: uses {ResourceDefs.For(uses).Name} ("
+                + string.Join(", ", options.Select(o => $"{ResourceDefs.For(o).Name} {Mathf.FloorToInt(_sim.AtHand(building, o))}")) + ")";
+        }
+    }
+
+    private void OnRecipeSelected(long index)
+    {
+        if (Building is Building building)
+        {
+            _sim.SetRecipe(building.Id, (int)index);
+        }
+    }
+
+    private void OnInputSelected(long index)
+    {
+        if (Building is not Building building || building.Recipe is not Recipe recipe || _inputIndex < 0)
+        {
+            return;
+        }
+        IReadOnlyList<ResourceType> options = recipe.OptionsFor(_inputIndex);
+        _sim.SetInputChoice(building.Id, _inputIndex, index <= 0 ? null : options[(int)index - 1]);
     }
 
     /// <summary>
@@ -460,7 +592,7 @@ public partial class BuildingDetail : Dialog
     /// The buffer row: an extractor's output ("Iron Ore 12, Coal 3 / 20"), a processor's output and
     /// inputs ("Iron 4 / 10; in: Iron Ore 3 / 5"), or null for a building without one.
     /// </summary>
-    private static string? BufferText(Building building)
+    private string? BufferText(Building building)
     {
         BuildingDef def = building.Def;
         if (def.OutputBuffer <= 0f)
@@ -471,9 +603,9 @@ public partial class BuildingDetail : Dialog
             ? "empty"
             : string.Join(", ", building.Output.Select(e => $"{ResourceDefs.For(e.Key).Name} {Mathf.FloorToInt(e.Value)}"));
         string text = $"{output} / {def.OutputBuffer:0}";
-        if (def.InputCycles > 0 && building.Recipe is Recipe recipe)
+        if (def.InputCycles > 0 && building.Recipe is Recipe recipe && recipe.Inputs.Count > 0)
         {
-            text += "; in: " + string.Join(", ", recipe.Inputs.Select(input =>
+            text += "; in: " + string.Join(", ", _sim.ResolvedInputs(building, recipe).Select(input =>
             {
                 building.Input.TryGetValue(input.Type, out float held);
                 return $"{ResourceDefs.For(input.Type).Name} {Mathf.FloorToInt(held)} / {input.Amount * def.InputCycles:0}";
@@ -570,7 +702,9 @@ public partial class BuildingDetail : Dialog
     {
         static string Amounts(IEnumerable<ResourceAmount> amounts) =>
             string.Join(" + ", amounts.Select(a => $"{(int)a.Amount} {ResourceDefs.For(a.Type).Name}"));
-        string makes = recipe.Inputs.Count == 0 ? Amounts(recipe.Outputs) : $"{Amounts(recipe.Inputs)} to {Amounts(recipe.Outputs)}";
+        // An input with alternatives reads as all of them ("1 Coal or Charcoal").
+        string inputs = string.Join(" + ", recipe.Inputs.Select((a, i) => $"{(int)a.Amount} {recipe.InputName(i)}"));
+        string makes = recipe.Inputs.Count == 0 ? Amounts(recipe.Outputs) : $"{inputs} to {Amounts(recipe.Outputs)}";
         return $"{makes}, {recipe.CycleTime:0.#} s";
     }
 

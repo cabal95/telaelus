@@ -10,13 +10,15 @@ loop.
 
 ### Building types and definitions
 
-- `BuildingType` has twenty-nine values: **Mine**, **Lumber Camp**, **Smelter**, **Refinery**,
+- `BuildingType` has thirty-five values: **Mine**, **Lumber Camp**, **Smelter**, **Refinery**,
   **Oil Well**, the **HQ**, the storage buildings **Silo**, **Stockyard**, **Tank Farm**,
   **Warehouse**, and **Vault**, the hubs **Small Hub** and **Relay**, the generators **Water
   Wheel** and **Burner Generator**, the powered extractors **Lumber Mill** and **Drill Rig**, the
   Water and Sand providers **Water Pump**, **Pumping Station**, **Sand Collector**, and **Sand
   Dredge**, the **Glassworks**, the **Depot**, and the renewables **Forester**, **Quarry**,
-  **Charcoal Kiln**, **Rock Crusher**, **Deep Well**, and **Deep Mine**.
+  **Charcoal Kiln**, **Rock Crusher**, **Deep Well**, and **Deep Mine**, and the tier-1 refining
+  **Steel Mill**, **Electrolyzer**, **Fuel Plant**, **Chemical Plant**, **Aluminum Smelter**, and
+  **Electric Furnace**.
 - Each type has a `BuildingDef` (in `BuildingDefs`): a display name, a footprint in fine cells
   (width along X, depth along Z when facing North), a cost, a speed, and for an extractor, the
   deposit types it works (`Works`; a building is an extractor when the list is not empty) and its
@@ -64,8 +66,8 @@ loop.
   - Extractors (Mine, Lumber Camp, Oil Well): no recipe; each takes one unit at a time at the
     deposit's gather time divided by its speed (at base speed: Wood 4 s, Stone and Coal 6 s, Iron
     Ore and Copper Ore 8 s, Crude Oil 4 s).
-  - Smelter: 1 Iron Ore to 1 Iron, cycle 16 s.
-  - Refinery: 1 Crude Oil to 1 Rocket Fuel, cycle 8 s.
+  - Smelter: 1 Iron Ore to 1 Iron, or 1 Copper Ore to 1 Copper, cycle 16 s (burns fuel).
+  - Refinery: 1 Crude Oil to 1 Kerosene, cycle 8 s (Rocket Fuel is made from it in the Fuel Plant).
   - Glassworks: no inputs to 1 Glass, cycle 12 s (its Sand is capacity, below).
   - Charcoal Kiln: 3 Wood to 1 Charcoal, cycle 15 s (no fuel slot: part of the wood burns).
   Processors run at half the pace of one base extractor, so one Mine keeps two Smelters busy and
@@ -236,6 +238,34 @@ loop.
   building placed on it), when it searches again for the same end; a collector it then cannot
   reach is dropped and counted unreachable.
 
+### Recipes and refining
+
+- `Recipes.For(type)` lists a processor's recipes, the default first (an empty list for anything
+  else); every recipe has one output, named for it in a picker (`Recipe.Name`). A building runs one
+  (`RecipeIndex`, `Building.Recipe`). `SetRecipe` changes it at once between cycles, or, during a
+  cycle, when that cycle finishes (`PendingRecipe`); the input buffer keeps what it holds, and
+  what the running recipe cannot use goes back to storage whenever the building is online.
+- **Alternative inputs:** a recipe input may be filled by any of several types in the same amount
+  (`Recipe.Alternatives`, `OptionsFor`; Steel's and Silicon's carbon is Coal or Charcoal).
+  `SetInputChoice` picks one (`Building.InputChoices`) or clears it for **Auto**, which takes the
+  one most at hand (`AtHand`: the input buffer, plus storage when online), the first on a tie
+  (`ChosenInput`, `ResolvedInputs`). A cycle records what it took (`CycleInputs`), refunded if the
+  building is destroyed mid-cycle. A building waiting on an Auto input names all of them ("Waiting
+  for Coal or Charcoal"); on a chosen one, that one.
+
+| Building | Footprint | Cost | Draws | Recipes (inputs to 1 output, cycle) |
+|---|---|---|---|---|
+| Steel Mill | 4 x 6 | 60 Stone, 40 Iron | 20 Power | Steel: 2 Iron, 1 Coal or Charcoal, 1 Limestone, 20 s |
+| Electrolyzer | 4 x 5 | 40 Iron, 20 Copper | 50 Power, 4 Water | Hydrogen: no inputs, 6 s; Liquid Oxygen: no inputs, 6 s |
+| Fuel Plant | 4 x 5 | 40 Steel, 20 Copper | 20 Power | Rocket Fuel: 1 Kerosene, 1 Hydrogen, 8 s |
+| Chemical Plant | 5 x 6 | 40 Steel, 20 Copper | 25 Power, 2 Water | Plastic: 2 Crude Oil, 10 s; Rubber: 1 Crude Oil, 1 Sulfur, 12 s; Carbon Fiber: 2 Plastic, 15 s |
+| Aluminum Smelter | 3 x 8 | 50 Steel, 30 Stone | 60 Power | Aluminum: 2 Bauxite, 20 s |
+| Electric Furnace | 4 x 4 | 50 Steel, 20 Copper | 40 Power | Silicon: 1 Quartz, 1 Coal or Charcoal, 15 s; Titanium: 2 Titanium Ore, 20 s |
+
+- All six are tier 1 with an output buffer of 10 and 5 cycles of each input. Steel is the gate:
+  the Steel Mill is built from Stone and Iron, the rest of the tier from Steel (the Electrolyzer
+  from Iron and Copper).
+
 ### Renewables
 
 | Building | Footprint | Cost | Tier, draws | Placement | Does |
@@ -362,8 +392,8 @@ loop.
 
 ### Ship launch (win condition)
 
-- When the stockpile holds at least `LaunchRocketFuelCost` (500 Rocket Fuel) and `LaunchIronCost`
-  (100 Iron),
+- When the stockpile holds at least `LaunchRocketFuelCost` (500 Rocket Fuel),
+  `LaunchLiquidOxygenCost` (200 Liquid Oxygen), and `LaunchIronCost` (100 Iron),
   `CanLaunchShip` is true. `TryLaunchShip` consumes that cost and increments `ShipsLaunched`. This
   is the current win that closes the initial loop.
 

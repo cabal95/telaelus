@@ -132,7 +132,13 @@ pausing it and stepping frame by frame.
   when the stock runs out), placement
   deducting the cost, refusal with nothing deducted when locked, unaffordable, or blocked, free
   debug placement, and every building having a cost and every deposit a gather time.
-- `LaunchTests`: launch cost and an end-to-end run from the starting fields to a launch.
+- `LaunchTests`: launch cost (Rocket Fuel, Liquid Oxygen, and Iron) and an end-to-end run on the
+  empty map from placed fields through the refining chain (Refineries, Electrolyzers on each gas,
+  Fuel Plants) to a launch, hauling by hand.
+- `RefiningTests`: each building's recipes; the Steel Mill on Auto taking Coal, on Charcoal only
+  Charcoal, waiting for it, and back on Auto; a recipe change waiting for the running cycle and
+  unused inputs going back to storage; the Electrolyzer's two gases and the Fuel Plant's Rocket
+  Fuel; the Chemical Plant's and Electric Furnace's recipes; Aluminum Smelters' heavy draw.
 - `SeamTests`: the seam rule above.
 - `DebugTests`: each `Simulation.Debug` operation and the `MapChanged` event.
 
@@ -213,7 +219,8 @@ pausing it and stepping frame by frame.
   `network`, `switch`, `power`, `water`, `sand`, `state`, `inRange`, `workingOn`, `recipe`, `buffer`,
   `truck`, `burning`, `links`, `reach`, `trucks`, `truck1` to `truck4`, `site`, `plot`, `eats`),
   `fuel` (the fuel picker's choice, or null), `output` (the Output picker's choice as shown, or
-  null), `buyTruck` (a Depot's button: `text` and `enabled`, or null), `adds` (what a storage building adds, by
+  null), `recipe` (the Recipe picker's choice, or null), `input` (the input picker's `choice` and
+  `note`, or null), `buyTruck` (a Depot's button: `text` and `enabled`, or null), `adds` (what a storage building adds, by
   resource name, as "+300"), `destroy` (the Destroy button's text, or null when hidden), and
   `turnDegrees`; while the field detail panel is open, `field` (its id), `title`, and `rows`
   (`remaining`, `workedBy`); while the inventory is open, `inventory`: its rows in display order,
@@ -225,7 +232,8 @@ pausing it and stepping frame by frame.
   `trucks` (`id`, `depot`, `bay`, `state` (`parked`, `toCollector`, `loading`, `toHq`, `unloading`,
   `waitingForRoom`, `toDepot`), `position` [x, z], `cargo` or null, `amount`, and `target` or null);
   `workedOut` (each worked-out map cell's `mapCell` and `deposit`); each building also has
-  `producing` (a collector without a field's output, or null);
+  `producing` (a collector without a field's output, or null) and `recipe` (the name of the
+  recipe a processor runs, or null);
   `hoveredBuilding` (the id of the building under the pointer outside build mode, or null);
   `focusedBuilding` (the id of the building the detail panel shows and outlines, or null);
   `hoveredField` and `focusedField` (the same for resource fields);
@@ -343,6 +351,8 @@ pausing it and stepping frame by frame.
   `power` (a Drill Rig with no supply is in a blackout; a Burner Generator on Coal powers it; four
   then five Refineries push demand into a brownout at 80% and a blackout, on the top bar; the
   generator's panel shows its supply and Best fuel),
+  `refining` (a Steel Mill's Auto input picker and its note and recipe text; an Electrolyzer on
+  Hydrogen feeding a Fuel Plant to Rocket Fuel; the launch progress with Liquid Oxygen),
   `renewables` (a Forester on Water and Power growing its trees, a Lumber Camp idle until they are
   grown and then cutting; a Quarry beside a mountain; a Deep Mine on a Laterite producing Iron Ore,
   its panel's Site row and Output picker; a worked-out Crude Oil marker named on hover; a Rock

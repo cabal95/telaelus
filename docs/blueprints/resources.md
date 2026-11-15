@@ -33,8 +33,11 @@ buildings.md). A single global stockpile holds all amounts, within storage limit
   | Water | TerrainSourced | no | | capacity from a Water Pump or Pumping Station beside water (buildings.md) |
   | Lithium | TerrainSourced | no | | a Brine Well (not yet built) |
 
-  The refined resources, by tier (Iron from the Smelter and Rocket Fuel from the Refinery; nothing
-  makes the others yet):
+  The refined resources, by tier. What makes them today: the Smelter Iron and Copper; the
+  Refinery Kerosene; the Fuel Plant Rocket Fuel (Kerosene and Hydrogen); the Electrolyzer Hydrogen
+  and Liquid Oxygen; the Steel Mill Steel; the Chemical Plant Plastic, Rubber, and Carbon Fiber;
+  the Aluminum Smelter Aluminum; the Electric Furnace Silicon and Titanium; the Glassworks Glass;
+  the Charcoal Kiln Charcoal (buildings.md has the recipes). Nothing makes the others yet:
 
   | Tier | Refined resources |
   |---|---|
@@ -104,7 +107,8 @@ buildings.md). A single global stockpile holds all amounts, within storage limit
   It also has a Laterite motherlode on map cells (11..12, 13..14), so it holds twenty-three fields
   in all.
 
-  That is enough for a ship launch: 100 Iron from Iron Ore and 500 Rocket Fuel from Crude Oil.
+  That holds what a ship launch needs from fields: 100 Iron from Iron Ore and 500 Rocket Fuel's
+  Kerosene from Crude Oil (its Hydrogen and the launch's Liquid Oxygen come from Water and Power).
 - A field blocks movement and placement on all its fine cells until it depletes and is removed,
   which reopens them.
 - **Worked-out records:** when a field of any deposit but Wood depletes (and is not a Forester's),

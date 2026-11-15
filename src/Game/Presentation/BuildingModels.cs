@@ -38,6 +38,11 @@ public static class BuildingModels
             BuildingType.RockCrusher => "rock_crusher",
             BuildingType.DeepWell => "deep_well",
             BuildingType.DeepMine => "deep_mine",
+            BuildingType.SteelMill => "steel_mill",
+            BuildingType.FuelPlant => "fuel_plant",
+            BuildingType.ChemicalPlant => "chemical_plant",
+            BuildingType.AluminumSmelter => "aluminum_smelter",
+            BuildingType.ElectricFurnace => "electric_furnace",
             _ => type.ToString().ToLowerInvariant()
         };
     }

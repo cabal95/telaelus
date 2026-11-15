@@ -188,6 +188,14 @@ public static class StateSnapshot
             ui["destroy"] = root.BuildingDetail.DestroyText;
             ui["fuel"] = root.BuildingDetail.FuelText;
             ui["output"] = root.BuildingDetail.OutputText;
+            ui["recipe"] = root.BuildingDetail.RecipeChoiceText;
+            ui["input"] = root.BuildingDetail.InputChoiceText is (string choice, string note)
+                ? new JsonObject
+                {
+                    ["choice"] = choice,
+                    ["note"] = note
+                }
+                : null;
             ui["buyTruck"] = root.BuildingDetail.BuyTruck is (string text, bool enabled)
                 ? new JsonObject
                 {
@@ -375,6 +383,7 @@ public static class StateSnapshot
                 ["fuelSlot"] = Amounts(b.FuelSlot),
                 ["burning"] = b.BurnLeft > 0f ? b.Burning?.ToString() : null,
                 ["producing"] = b.Def.ProduceSeconds > 0f ? sim.OutputOf(b)?.ToString() : null,
+                ["recipe"] = b.Recipe?.Name,
                 ["status"] = Camel(sim.BuildingStatusOf(b).State.ToString()),
                 ["idleReason"] = sim.BuildingStatusOf(b).IdleReason
             });

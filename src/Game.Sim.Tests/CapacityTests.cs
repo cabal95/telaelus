@@ -56,12 +56,12 @@ public class CapacityTests
         SimTestHelpers.Seconds(sim, 10.0);
 
         Assert.Equal(new BuildingStatus(BuildingState.Idle, "Blackout: Water"), sim.BuildingStatusOf(refinery));
-        Assert.Equal(0f, SimTestHelpers.Gathered(sim, ResourceType.RocketFuel));
+        Assert.Equal(0f, SimTestHelpers.Gathered(sim, ResourceType.Kerosene));
         Assert.Equal(5f, SimTestHelpers.Stock(sim, ResourceType.CrudeOil));
 
         sim.Debug.PlaceBuilding(BuildingType.WaterPump, 48, 14, Facing.North);
         SimTestHelpers.Seconds(sim, 8.5);
-        Assert.Equal(1f, SimTestHelpers.Gathered(sim, ResourceType.RocketFuel));
+        Assert.Equal(1f, SimTestHelpers.Gathered(sim, ResourceType.Kerosene));
     }
 
     [Fact]

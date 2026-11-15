@@ -693,6 +693,152 @@ def deep_mine():
     return m, mat.mats
 
 
+def steel_mill():
+    """4 x 6: a tall brick hall running back from the front, a converter tipping at the back end
+    under a chimney, a casting bay along one side, billets stacked at the front, a power pole."""
+    m, mat = Mesh(), Materials()
+    hx, hz = half(4), half(6)
+    box(m, mat("stone_dark"), -hx, 0, -hz, hx, 0.08, hz, mat_top=mat("stone", 0.85))
+    box(m, mat("brick"), -1.6, 0.08, -1.6, 0.7, 1.7, 2.0, mat_top=mat("metal_dark"))
+    prism_roof(m, mat("steel_accent"), -1.7, 0.8, -1.7, 2.1, 1.7, 2.2, mat_gable=mat("brick", 0.9))
+    box(m, mat("shadow"), -0.8, 0.08, -1.61, -0.1, 1.0, -1.6)
+    # the casting bay on the right, low, with a steel-blue band
+    box(m, mat("metal"), 0.75, 0.08, -1.2, 1.8, 0.9, 1.6, mat_top=mat("metal_dark"))
+    box(m, mat("steel_accent"), 0.73, 0.65, -1.22, 1.82, 0.75, 1.62)
+    # the converter at the back, tipped, and a chimney beside it
+    cylinder(m, mat("metal_dark"), (-0.4, 1.75, 2.3), (0.3, 2.3, 2.5), 0.45, segs=10, mat_cap=mat("furnace_glow"))
+    cylinder(m, mat("brick", 0.8), (-1.2, 1.7, 2.4), (-1.2, 3.3, 2.4), 0.22, segs=8)
+    cylinder(m, mat("steel_accent"), (-1.2, 3.0, 2.4), (-1.2, 3.1, 2.4), 0.25, segs=8)
+    cylinder(m, mat("shadow"), (-1.2, 3.3, 2.4), (-1.2, 3.301, 2.4), 0.15, segs=8)
+    # billets at the front
+    for k in range(3):
+        for j in range(2 - (k > 1)):
+            x = -1.2 + j * 0.42 + k * 0.1
+            y = 0.08 + k * 0.12
+            box(m, mat("steel"), x, y, -2.75, x + 0.38, y + 0.12, -2.0, mat_top=mat("steel_light"))
+    power_pole(m, mat, 1.65, -2.65, 1.6)
+    return m, mat.mats
+
+
+def electrolyzer():
+    """4 x 5: two rows of tall cells down its length with electrodes on top, a rectifier house at
+    the back, and pipe outlets to two gas tanks at the front, a power pole."""
+    m, mat = Mesh(), Materials()
+    hx, hz = half(4), half(5)
+    box(m, mat("stone_dark"), -hx, 0, -hz, hx, 0.08, hz, mat_top=mat("stone", 0.9))
+    for x in (-0.9, 0.2):
+        for k in range(4):
+            z = -0.9 + k * 0.62
+            box(m, mat("metal"), x - 0.3, 0.08, z - 0.24, x + 0.3, 1.05, z + 0.24, mat_top=mat("gas_accent"))
+            for dx in (-0.12, 0.12):
+                cylinder(m, mat("copper"), (x + dx, 1.05, z), (x + dx, 1.3, z), 0.04, segs=5)
+    # the rectifier house at the back with a yellow band
+    box(m, mat("stone"), -1.6, 0.08, 1.6, 1.0, 1.0, 2.3, mat_top=mat("metal"))
+    box(m, mat("power_accent"), -1.62, 0.75, 1.58, 1.02, 0.83, 2.32)
+    # two gas tanks at the front, oxygen white and hydrogen pale, piped from the cells
+    for x, colour in ((-0.8, "ceramic"), (0.6, "gas_accent")):
+        cylinder(m, mat(colour), (x - 0.5, 0.5, -1.85), (x + 0.5, 0.5, -1.85), 0.38, segs=12)
+        cylinder(m, mat("metal_dark"), (x, 0.08, -1.85), (x, 0.15, -1.85), 0.4, segs=8)
+        cylinder(m, mat("metal_dark"), (x, 0.9, -1.85), (x, 0.9, -1.2), 0.05, segs=5)
+    power_pole(m, mat, 1.65, -2.15, 1.6)
+    return m, mat.mats
+
+
+def fuel_plant():
+    """4 x 5: two process columns at the back joined by a pipe rack, a blending tank with a red
+    band in the middle, and a loading arm over a pad at the front, a power pole."""
+    m, mat = Mesh(), Materials()
+    hx, hz = half(4), half(5)
+    box(m, mat("stone_dark"), -hx, 0, -hz, hx, 0.08, hz, mat_top=mat("stone", 0.85))
+    for x, h in ((-1.0, 2.8), (0.3, 2.3)):
+        cylinder(m, mat("metal"), (x, 0.08, 1.4), (x, h, 1.4), 0.35, segs=10)
+        cylinder(m, mat("fuel_accent"), (x, h * 0.6, 1.4), (x, h * 0.6 + 0.15, 1.4), 0.36, segs=10, caps=False)
+        spike(m, mat("metal", 1.1), (x, h, 1.4), (x, h + 0.2, 1.4), 0.35, segs=10)
+    for y in (0.7, 1.4):
+        cylinder(m, mat("metal_dark"), (-1.0, y, 1.0), (1.4, y, 1.0), 0.05, segs=5)
+    cylinder(m, mat("metal"), (0.4, 0.08, 0.0), (0.4, 1.2, 0.0), 0.6, segs=14)
+    cylinder(m, mat("fuel_accent"), (0.4, 0.75, 0.0), (0.4, 0.95, 0.0), 0.61, segs=14, caps=False)
+    spike(m, mat("metal", 1.1), (0.4, 1.2, 0.0), (0.4, 1.35, 0.0), 0.6, segs=14)
+    # the loading pad and arm at the front
+    box(m, mat("stone"), -1.4, 0.08, -2.25, 0.6, 0.12, -1.0)
+    cylinder(m, mat("metal_dark"), (-0.4, 0.12, -1.2), (-0.4, 1.2, -1.2), 0.06, segs=6)
+    cylinder(m, mat("fuel_accent"), (-0.4, 1.2, -1.2), (-0.4, 0.9, -1.9), 0.05, segs=6)
+    power_pole(m, mat, 1.65, -2.15, 1.6)
+    return m, mat.mats
+
+
+def chemical_plant():
+    """5 x 6, the largest: a reactor vessel and a tall distillation tower at the back, a pipe rack
+    across the middle, a control house, and drums at the front, a power pole."""
+    m, mat = Mesh(), Materials()
+    hx, hz = half(5), half(6)
+    box(m, mat("stone_dark"), -hx, 0, -hz, hx, 0.08, hz, mat_top=mat("stone", 0.85))
+    cylinder(m, mat("metal"), (-1.2, 0.08, 1.7), (-1.2, 1.4, 1.7), 0.75, segs=14)
+    spike(m, mat("chemical_accent"), (-1.2, 1.4, 1.7), (-1.2, 1.9, 1.7), 0.75, segs=14)
+    cylinder(m, mat("metal_dark"), (0.9, 0.08, 2.0), (0.9, 3.4, 2.0), 0.3, segs=10)
+    for y in (1.0, 1.8, 2.6):
+        cylinder(m, mat("chemical_accent"), (0.9, y, 2.0), (0.9, y + 0.08, 2.0), 0.36, segs=10, caps=False)
+    # the pipe rack across the middle
+    for x in (-2.0, -0.6, 0.8, 2.0):
+        cylinder(m, mat("metal_dark"), (x, 0.08, 0.2), (x, 1.0, 0.2), 0.05, segs=5)
+    for k, y in enumerate((0.8, 0.95)):
+        for z in (0.1, 0.3):
+            cylinder(m, mat("chemical_accent" if k else "metal"), (-2.1, y, z), (2.1, y, z), 0.05, segs=6)
+    # control house and drums at the front
+    box(m, mat("stone"), 0.6, 0.08, -2.6, 2.1, 0.9, -1.4, mat_top=mat("metal"))
+    box(m, mat("chemical_accent"), 0.58, 0.68, -2.62, 2.12, 0.76, -1.38)
+    for k in range(5):
+        x = -2.0 + (k % 3) * 0.45
+        z = -2.4 + (k // 3) * 0.45
+        cylinder(m, mat("chemical_accent", 0.85 if k % 2 else 1.0), (x, 0.08, z), (x, 0.5, z), 0.18, segs=8, mat_cap=mat("metal_dark"))
+    power_pole(m, mat, 2.15, 2.65, 1.6)
+    return m, mat.mats
+
+
+def aluminum_smelter():
+    """3 x 8: a long, narrow pot line under a low saw-tooth roof with fat bus bars along its side, a
+    fume duct along the ridge, and ingots stacked at the front end, a power pole."""
+    m, mat = Mesh(), Materials()
+    hx, hz = half(3), half(8)
+    box(m, mat("stone_dark"), -hx, 0, -hz, hx, 0.06, hz, mat_top=mat("stone", 0.85))
+    box(m, mat("metal"), -1.1, 0.06, -3.0, 0.9, 0.95, 3.8, mat_top=mat("metal_dark"))
+    for k in range(7):
+        z0 = -3.0 + k * 0.97
+        quad(m, mat("aluminum_accent"), (-1.15, 0.95, z0), (0.95, 0.95, z0), (0.95, 1.35, z0 + 0.6), (-1.15, 1.35, z0 + 0.6), (0, 0.8, -0.6))
+        quad(m, mat("glass"), (-1.15, 1.35, z0 + 0.6), (0.95, 1.35, z0 + 0.6), (0.95, 0.95, z0 + 0.97), (-1.15, 0.95, z0 + 0.97), (0, 0.6, 0.8))
+    cylinder(m, mat("metal_dark"), (-0.1, 1.5, -3.0), (-0.1, 1.5, 3.8), 0.12, segs=8)
+    # bus bars down the right side
+    for y in (0.35, 0.55):
+        box(m, mat("copper"), 0.92, y, -2.9, 1.05, y + 0.1, 3.7)
+    # ingots at the front end
+    for k in range(3):
+        y = 0.06 + k * 0.1
+        box(m, mat("aluminum_accent"), -0.9 + k * 0.05, y, -3.85, 0.3 - k * 0.05, y + 0.1, -3.2, mat_top=mat("aluminum_light"))
+    power_pole(m, mat, 1.15, -3.6, 1.6)
+    return m, mat.mats
+
+
+def electric_furnace():
+    """4 x 4: a squat round arc furnace in the middle with three graphite electrodes rising through
+    its lid, a transformer box at the back, and a glowing tap at the front, a power pole."""
+    m, mat = Mesh(), Materials()
+    hx, hz = half(4), half(4)
+    box(m, mat("stone_dark"), -hx, 0, -hz, hx, 0.08, hz, mat_top=mat("stone", 0.85))
+    cylinder(m, mat("metal_dark"), (0, 0.08, 0), (0, 1.0, 0), 1.0, segs=16)
+    cylinder(m, mat("furnace_accent"), (0, 0.7, 0), (0, 0.85, 0), 1.02, segs=16, caps=False)
+    spike(m, mat("metal"), (0, 1.0, 0), (0, 1.3, 0), 1.0, segs=16)
+    for k in range(3):
+        a = 2 * math.pi * k / 3
+        x, z = math.cos(a) * 0.35, math.sin(a) * 0.35
+        cylinder(m, mat("coal"), (x, 1.1, z), (x, 2.3, z), 0.1, segs=6)
+        cylinder(m, mat("furnace_accent"), (x, 1.9, z), (x, 2.0, z), 0.13, segs=6)
+    box(m, mat("metal"), -1.3, 0.08, 1.15, 0.3, 1.0, 1.85, mat_top=mat("furnace_accent"))
+    box(m, mat("furnace_glow"), -0.2, 0.08, -1.45, 0.2, 0.35, -0.95)
+    cylinder(m, mat("metal_dark"), (0, 0.4, -0.9), (0, 0.3, -1.3), 0.08, segs=6)
+    power_pole(m, mat, 1.65, -1.65, 1.6)
+    return m, mat.mats
+
+
 BUILDINGS = {"mine": mine, "lumber_camp": lumber_camp, "smelter": smelter, "refinery": refinery,
              "oil_well": oil_well, "hq": hq, "silo": silo, "stockyard": stockyard, "tank_farm": tank_farm,
              "warehouse": warehouse, "vault": vault, "small_hub": small_hub, "relay": relay,
@@ -700,7 +846,10 @@ BUILDINGS = {"mine": mine, "lumber_camp": lumber_camp, "smelter": smelter, "refi
              "drill_rig": drill_rig, "water_pump": water_pump, "pumping_station": pumping_station,
              "sand_collector": sand_collector, "sand_dredge": sand_dredge, "glassworks": glassworks,
              "depot": depot, "forester": forester, "quarry": quarry, "charcoal_kiln": charcoal_kiln,
-             "rock_crusher": rock_crusher, "deep_well": deep_well, "deep_mine": deep_mine}
+             "rock_crusher": rock_crusher, "deep_well": deep_well, "deep_mine": deep_mine,
+             "steel_mill": steel_mill, "electrolyzer": electrolyzer, "fuel_plant": fuel_plant,
+             "chemical_plant": chemical_plant, "aluminum_smelter": aluminum_smelter,
+             "electric_furnace": electric_furnace}
 
 
 def build_all():

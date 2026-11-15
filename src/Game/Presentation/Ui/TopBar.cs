@@ -28,6 +28,8 @@ public partial class TopBar : HudOverlay
     private readonly Dictionary<ResourceType, (TextureRect Icon, Label Amount)> _entries = new();
     private TextureRect _fuelIcon = null!;
     private TextureRect _ironIcon = null!;
+    private TextureRect _oxygenIcon = null!;
+    private Label _oxygen = null!;
     private Label _fuel = null!;
     private Label _iron = null!;
     private Label _launch = null!;
@@ -43,7 +45,7 @@ public partial class TopBar : HudOverlay
     public string PowerText => _power.Text;
 
     /// <summary>The launch progress as shown, for the snapshot.</summary>
-    public string LaunchText => string.Join("   ", new[] { _fuel.Text, _iron.Text, _launch.Visible ? _launch.Text : "", _ships.Visible ? _ships.Text : "" }
+    public string LaunchText => string.Join("   ", new[] { _fuel.Text, _oxygen.Text, _iron.Text, _launch.Visible ? _launch.Text : "", _ships.Visible ? _ships.Text : "" }
         .Where(text => text.Length > 0));
 
     public void Initialize(DialogHost host, ResourceIcons icons, ResourcePins pins)
@@ -98,6 +100,8 @@ public partial class TopBar : HudOverlay
         row.AddChild(_power);
         (HBoxContainer fuelEntry, _fuelIcon, _fuel) = MakeEntry(ResourceType.RocketFuel, "Rocket Fuel for a launch");
         row.AddChild(fuelEntry);
+        (HBoxContainer oxygenEntry, _oxygenIcon, _oxygen) = MakeEntry(ResourceType.LiquidOxygen, "Liquid Oxygen for a launch");
+        row.AddChild(oxygenEntry);
         (HBoxContainer ironEntry, _ironIcon, _iron) = MakeEntry(ResourceType.Iron, "Iron for a launch");
         row.AddChild(ironEntry);
         _launch = UiTheme.MakeLabel("[L] Launch ship", UiTheme.BodySize, UiTheme.Accent);
@@ -165,6 +169,8 @@ public partial class TopBar : HudOverlay
         _power.AddThemeColorOverride("font_color", CapacityColor(power.Demand, power.Supply));
         _fuelIcon.Texture ??= _icons.For(ResourceType.RocketFuel);
         _ironIcon.Texture ??= _icons.For(ResourceType.Iron);
+        _oxygenIcon.Texture ??= _icons.For(ResourceType.LiquidOxygen);
+        SetProgress(_oxygen, Whole(sim, ResourceType.LiquidOxygen), (int)Simulation.LaunchLiquidOxygenCost);
         SetProgress(_fuel, Whole(sim, ResourceType.RocketFuel), (int)Simulation.LaunchRocketFuelCost);
         SetProgress(_iron, Whole(sim, ResourceType.Iron), (int)Simulation.LaunchIronCost);
         _launch.Visible = sim.CanLaunchShip();

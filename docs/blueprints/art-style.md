@@ -139,6 +139,13 @@ or 1.05 for facet variation). A new material extends the table.
 | sand_accent | 0.90, 0.72, 0.42 | Sand Collector and Sand Dredge identity color (tan bands, chute, scoops) |
 | glass_accent | 0.66, 0.94, 0.96 | Glassworks identity color (pale cyan band, roof ties, pane rack) |
 | depot_accent | 0.92, 0.20, 0.24 | Depot trim and its trucks' cabs (a bright red) |
+| steel_accent | 0.36, 0.52, 0.74 | Steel Mill roof and band (a steel blue) |
+| gas_accent | 0.56, 0.86, 0.84 | Electrolyzer cell tops and hydrogen tank (a pale aqua) |
+| fuel_accent | 0.94, 0.42, 0.18 | Fuel Plant bands and loading arm (a rocket red-orange) |
+| chemical_accent | 0.62, 0.38, 0.80 | Chemical Plant reactor cap, bands, and drums (a violet) |
+| aluminum_accent | 0.74, 0.80, 0.90 | Aluminum Smelter roof and ingots (a pale silver-blue) |
+| furnace_accent | 0.30, 0.60, 1.00 | Electric Furnace band, electrode collars, transformer (an electric blue) |
+| brick | 0.58, 0.30, 0.24 | Steel Mill brick hall and chimney |
 | forester_accent | 0.36, 0.72, 0.30 | Forester shed roof and water-tank band (a leaf green) |
 | quarry_accent | 0.44, 0.54, 0.66 | Quarry face band and crane hoist (a slate blue-grey) |
 | kiln_accent | 0.68, 0.34, 0.22 | Charcoal Kiln's brick domes |
@@ -164,6 +171,14 @@ Emissive materials glow at half their base color. Mountains keep their own stone
   Stone 0.9; Crude Oil is a flat pool about 0.05 high), trees 2.5 to 3.5 (by field size),
   mountains 3.2 to 3.5, buildings 1.2 to 2.2 (see buildings.md; the Deep Well's derrick about
   3.1 and the Deep Mine's headframe about 3.3), a truck 1.6 long, 0.8 wide, and about 0.85 tall.
+- The tier-1 refining buildings are bigger than the tier-0 start and mostly long: Steel Mill (4 x
+  6, a brick hall with a tipped converter and chimney at the back, a casting bay, billets at the
+  front), Electrolyzer (4 x 5, two rows of cells, a rectifier house, an oxygen and a hydrogen tank
+  at the front), Fuel Plant (4 x 5, two process columns, a blending tank, a loading arm), Chemical
+  Plant (5 x 6, a reactor and distillation tower, a pipe rack, a control house, drums), Aluminum
+  Smelter (3 x 8, a narrow pot line under a saw-tooth roof with bus bars and a fume duct), Electric
+  Furnace (4 x 4, a round arc furnace with three electrodes, a transformer, a glowing tap); each
+  powered one has a power pole.
 - The renewables: Forester (a fenced tilled plot with a potting shed, a water tank, and a power
   pole; the trees are its field), Quarry (stepped benches cut into a block at the back, a derrick
   crane, cut blocks at the front), Charcoal Kiln (two domed brick kilns, logs, a charcoal heap),

@@ -67,6 +67,7 @@ public sealed partial class Simulation
 
     public const float LaunchRocketFuelCost = 500f;
     public const float LaunchIronCost = 100f;
+    public const float LaunchLiquidOxygenCost = 200f;
 
     /// <summary>A simulation of the fixed test map.</summary>
     public Simulation() : this(WorldSettings.TestMap)
@@ -327,9 +328,7 @@ public sealed partial class Simulation
     /// <summary>The inputs a processor's running cycle has consumed (none when idle or not a processor).</summary>
     private static IReadOnlyList<ResourceAmount> RunningInputs(Building building)
     {
-        return building.Crafting && building.Recipe is Recipe recipe
-            ? recipe.Inputs
-            : Array.Empty<ResourceAmount>();
+        return building.Crafting ? building.CycleInputs : Array.Empty<ResourceAmount>();
     }
 
     /// <summary>
@@ -491,13 +490,13 @@ public sealed partial class Simulation
             return new BuildingStatus(BuildingState.Working, null);
         }
         var missing = new List<string>();
-        foreach (ResourceAmount input in recipe.Inputs)
+        for (int i = 0; i < recipe.Inputs.Count; i++)
         {
-            _stockpile.TryGetValue(input.Type, out float stock);
-            float have = Held(building.Input, input.Type) + (building.Online ? stock : 0f);
-            if (have < input.Amount - RoomTolerance)
+            ResourceType type = ChosenInput(building, recipe, i);
+            if (AtHand(building, type) < recipe.Inputs[i].Amount - RoomTolerance)
             {
-                missing.Add(ResourceDefs.For(input.Type).Name);
+                // On Auto with none at hand it waits for any of them.
+                missing.Add(building.InputChoices.ContainsKey(i) ? ResourceDefs.For(type).Name : recipe.InputName(i));
             }
         }
         if (missing.Count == 0)
@@ -512,7 +511,7 @@ public sealed partial class Simulation
 
     private Building AddBuilding(BuildingType type, int anchorX, int anchorZ, Facing facing)
     {
-        var building = new Building(_nextBuildingId++, type, anchorX, anchorZ, facing, Recipes.For(type));
+        var building = new Building(_nextBuildingId++, type, anchorX, anchorZ, facing, Game.Sim.Recipes.For(type));
         _buildings.Add(building);
         for (int x = anchorX; x < anchorX + building.Width; x++)
         {
@@ -533,7 +532,8 @@ public sealed partial class Simulation
     {
         _stockpile.TryGetValue(ResourceType.RocketFuel, out float fuel);
         _stockpile.TryGetValue(ResourceType.Iron, out float iron);
-        return fuel >= LaunchRocketFuelCost && iron >= LaunchIronCost;
+        _stockpile.TryGetValue(ResourceType.LiquidOxygen, out float oxygen);
+        return fuel >= LaunchRocketFuelCost && iron >= LaunchIronCost && oxygen >= LaunchLiquidOxygenCost;
     }
 
     /// <summary>Consume the launch cost and record a launched ship. The initial win.</summary>
@@ -546,6 +546,7 @@ public sealed partial class Simulation
 
         AddToStockpile(ResourceType.RocketFuel, -LaunchRocketFuelCost);
         AddToStockpile(ResourceType.Iron, -LaunchIronCost);
+        AddToStockpile(ResourceType.LiquidOxygen, -LaunchLiquidOxygenCost);
         ShipsLaunched++;
         return true;
     }
@@ -851,6 +852,7 @@ public sealed partial class Simulation
         if (building.Online)
         {
             DrainOutput(building);
+            ReturnStaleInputs(building);
         }
         float speed = WorkSpeed(building);
         if (!building.Crafting)
@@ -880,17 +882,17 @@ public sealed partial class Simulation
         {
             building.Crafting = false;
             building.Progress = 0f;
+            building.CycleInputs.Clear();
+            TakeUpPendingRecipe(building);
         }
     }
 
     /// <summary>Whether the inputs are at hand: in the input buffer, plus storage when online.</summary>
     private bool InputsAvailable(Building building, Recipe recipe)
     {
-        foreach (ResourceAmount input in recipe.Inputs)
+        foreach (ResourceAmount input in ResolvedInputs(building, recipe))
         {
-            _stockpile.TryGetValue(input.Type, out float stock);
-            float have = Held(building.Input, input.Type) + (building.Online ? stock : 0f);
-            if (have < input.Amount - RoomTolerance)
+            if (AtHand(building, input.Type) < input.Amount - RoomTolerance)
             {
                 return false;
             }
@@ -901,8 +903,10 @@ public sealed partial class Simulation
     /// <summary>Takes a cycle's inputs, from the input buffer first and then (online) from storage.</summary>
     private void ConsumeInputs(Building building, Recipe recipe)
     {
-        foreach (ResourceAmount input in recipe.Inputs)
+        building.CycleInputs.Clear();
+        foreach (ResourceAmount input in ResolvedInputs(building, recipe))
         {
+            building.CycleInputs.Add(input);
             float fromBuffer = Mathf.Min(Held(building.Input, input.Type), input.Amount);
             Put(building.Input, input.Type, -fromBuffer);
             if (input.Amount - fromBuffer > RoomTolerance)

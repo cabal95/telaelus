@@ -137,6 +137,11 @@ Newest last. One line each; open the file for the full spec.
   Rock Crusher (Sand from Stone), and the Deep Well and Deep Mine over worked-out cells; depleted
   fields leave worked-out markers; rare 8 x 8 motherlodes, endless, each worked by one centered Deep
   Mine or Deep Well yielding one chosen resource at its share's rate.
+- **2611151006-production-refining** - Adds tier-1 refining: processors with several recipes (a Recipe
+  picker) and Coal-or-Charcoal inputs (an Auto picker); the Smelter's Copper, the Refinery's
+  Kerosene, and the Steel Mill, Electrolyzer, Fuel Plant, Chemical Plant, Aluminum Smelter, and
+  Electric Furnace with their models; Rocket Fuel from Kerosene and Hydrogen; the launch adds 200
+  Liquid Oxygen.
 
 ## Adding a changeset
 

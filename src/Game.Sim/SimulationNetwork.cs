@@ -73,7 +73,7 @@ public sealed partial class Simulation
             return (slot, BuildingDef.FuelSlotSize);
         }
         float capacity = 0f;
-        foreach (ResourceAmount input in building.Recipe!.Inputs)
+        foreach (ResourceAmount input in ResolvedInputs(building, building.Recipe!))
         {
             if (input.Type == type)
             {
@@ -251,7 +251,7 @@ public sealed partial class Simulation
         {
             return null;
         }
-        foreach (ResourceAmount input in recipe.Inputs)
+        foreach (ResourceAmount input in ResolvedInputs(building, recipe))
         {
             float room = InputCapacity(building, input) - Held(building.Input, input.Type);
             _stockpile.TryGetValue(input.Type, out float stock);

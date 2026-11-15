@@ -31,5 +31,11 @@ public enum BuildingType
     CharcoalKiln,
     RockCrusher,
     DeepWell,
-    DeepMine
+    DeepMine,
+    SteelMill,
+    Electrolyzer,
+    FuelPlant,
+    ChemicalPlant,
+    AluminumSmelter,
+    ElectricFurnace
 }

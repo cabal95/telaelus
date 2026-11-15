@@ -22,7 +22,7 @@ public class ProductionTests
     }
 
     [Fact]
-    public void Refinery_TurnsCrudeOilIntoRocketFuelEvery8Seconds()
+    public void Refinery_TurnsCrudeOilIntoKeroseneEvery8Seconds()
     {
         var sim = new Simulation();
         sim.Debug.SeedStockpile(ResourceType.CrudeOil, 10f);
@@ -35,7 +35,7 @@ public class ProductionTests
         SimTestHelpers.Ticks(sim, JustOver33Seconds);
 
         // Four cycles finished and a fifth started.
-        Assert.Equal(4f, SimTestHelpers.Stock(sim, ResourceType.RocketFuel));
+        Assert.Equal(4f, SimTestHelpers.Stock(sim, ResourceType.Kerosene));
         Assert.Equal(5f, SimTestHelpers.Stock(sim, ResourceType.CrudeOil));
     }
 
@@ -49,22 +49,20 @@ public class ProductionTests
 
         SimTestHelpers.Ticks(sim, JustOver33Seconds);
 
-        Assert.Equal(0f, SimTestHelpers.Stock(sim, ResourceType.RocketFuel));
+        Assert.Equal(0f, SimTestHelpers.Stock(sim, ResourceType.Kerosene));
         Assert.Equal(5f, SimTestHelpers.Stock(sim, ResourceType.Iron));
     }
 
     [Fact]
     public void Recipes_RunAtHalfThePaceOfOneBaseExtractor()
     {
-        Recipe? smelter = Recipes.For(BuildingType.Smelter);
-        Recipe? refinery = Recipes.For(BuildingType.Refinery);
+        Recipe smelter = Recipes.For(BuildingType.Smelter)[0];
+        Recipe refinery = Recipes.For(BuildingType.Refinery)[0];
 
         // A base Mine yields Iron Ore every 8 s and a base Oil Well Crude Oil every 4 s.
-        Assert.NotNull(smelter);
         Assert.Equal(16f, smelter.CycleTime);
-        Assert.NotNull(refinery);
         Assert.Equal(8f, refinery.CycleTime);
-        Assert.Null(Recipes.For(BuildingType.Mine));
-        Assert.Null(Recipes.For(BuildingType.LumberCamp));
+        Assert.Empty(Recipes.For(BuildingType.Mine));
+        Assert.Empty(Recipes.For(BuildingType.LumberCamp));
     }
 }
