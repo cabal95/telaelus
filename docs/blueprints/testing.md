@@ -65,6 +65,11 @@ pausing it and stepping frame by frame.
 - `ResourceTests`: the resource definitions (63 by tier, raw resources at tier 0, the new
   deposits' gather times, an item model file for each), biome deposits, the Mine and Oil Well, and
   hand-harvest rules.
+- `PowerTests`: brownout speeds and a blackout past a quarter over, demand counting idle
+  consumers; offline buildings neither drawing nor supplying; the Burner Generator burning whenever
+  on, Best fuel first, stopping when switched off, its burning unit not refunded; a fuel choice
+  burning only that fuel; the Smelter's cycle advancing only while fuel burns; a Drill Rig's speed
+  2; the Water Wheel only across a Straight river cell, supplying 20 online.
 - `NetworkTests`: hubs linking within the larger link radius; coverage reaching a footprint's
   nearest point; switching off or destroying a hub cutting its branch; an extractor filling its
   buffer and waiting for pickup; collecting by hand at a tenth of the gather time and stopping on
@@ -167,18 +172,20 @@ pausing it and stepping frame by frame.
   `network`: `overlay` (whether N has it on), `shownHubs` (the ids of the hubs whose coverage is
   drawn), and `offlineMarkers` (how many offline markers are drawn),
   `topBar`: its `items` (each pinned resource's `type`, `amount`, `limit` (null for a Cargo or
-  unlimited resource), and `full`) and its `launch` text, `hint`: the hint's `text`, `progress`,
+  unlimited resource), and `full`), its `power` readout, and its `launch` text, `hint`: the hint's `text`, `progress`,
   and `storageFull` or null, `tooltip`: the hover
   tooltip's lines or null, and while the build menu is open, its `cells` in display order, each
   `type`, `state` (`affordable`, `unaffordable`, or `undiscovered`), and `label`; while the
   detail panel is open, `building` (its id), `rows` (each shown status row, keyed in camel case:
-  `power`, `state`, `inRange`, `workingOn`, `recipe`), `adds` (what a storage building adds, by
+  `network`, `switch`, `power`, `state`, `inRange`, `workingOn`, `recipe`, `buffer`, `burning`,
+  `links`, `reach`), `fuel` (the fuel picker's choice, or null), `adds` (what a storage building adds, by
   resource name, as "+300"), `destroy` (the Destroy button's text, or null when hidden), and
   `turnDegrees`; while the field detail panel is open, `field` (its id), `title`, and `rows`
   (`remaining`, `workedBy`); while the inventory is open, `inventory`: its rows in display order,
   each `type`, `amount`, `limit` (null for a Cargo or unlimited resource), `section` (`raw`,
   `tier1` to `tier4`), `discovered`, and `pinned`, and `cargo`, the Cargo row's text); `buildings` (`id`, `type`, `anchor`, `facing`, `width`, `depth`,
-  `currentField`, `enabled`, `online`, `output` and `input` (buffer amounts by type), `status`
+  `currentField`, `enabled`, `online`, `output`, `input`, and `fuelSlot` (amounts by type),
+  `burning` (the fuel burning, or null), `status`
   (`working`, `idle`, or `off`), and `idleReason` or null);
   `hoveredBuilding` (the id of the building under the pointer outside build mode, or null);
   `focusedBuilding` (the id of the building the detail panel shows and outlines, or null);
@@ -186,7 +193,8 @@ pausing it and stepping frame by frame.
   `camera` (`zoom`: world units across 720 pixels, `target` [x, z]: the ground point at the view's
   center, `detached`: whether a drag has moved it off the player);
   `fields` (`id`, `type`, `mapCell`, `amount`, `stage`, `visibleModels`, `explored`);
-  `stockpile` (every resource); `discovered` (the discovered resources' type names, in enum
+  `stockpile` (every resource); `power` (`supply`, `demand`, `speed`, and `state`: `normal`,
+  `brownout`, or `blackout`); `discovered` (the discovered resources' type names, in enum
   order); `unlockedBuildings` (type names, in enum order); and
   `shipsLaunched`. New checks are added as snapshot fields.
 - **Input injection:** keys and mouse buttons go through `Input.ParseInputEvent` followed by
@@ -292,6 +300,9 @@ pausing it and stepping frame by frame.
   resources with name tooltips and the launch progress; the hint overlay shows the harvest hint
   and its bar; I opens and closes the inventory, grouped by tier with discovered resources first;
   the inventory and a building's detail replace each other; a panel covers the debug overlay),
+  `power` (a Drill Rig with no supply is in a blackout; a Burner Generator on Coal powers it; four
+  then five Refineries push demand into a brownout at 80% and a blackout, on the top bar; the
+  generator's panel shows its supply and Best fuel),
   `network` (a Mine out of reach is offline with the warning marker and fills its buffer; E collects
   from it; N shows the overlay; a chain of Small Hubs brings it online; the placement tooltip's
   online line; a selected hub shows only its own coverage),

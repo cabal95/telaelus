@@ -26,6 +26,10 @@ public static class BuildingModels
             BuildingType.OilWell => "oil_well",
             BuildingType.TankFarm => "tank_farm",
             BuildingType.SmallHub => "small_hub",
+            BuildingType.WaterWheel => "water_wheel",
+            BuildingType.BurnerGenerator => "burner_generator",
+            BuildingType.LumberMill => "lumber_mill",
+            BuildingType.DrillRig => "drill_rig",
             _ => type.ToString().ToLowerInvariant()
         };
     }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Game.Sim;
 
@@ -24,6 +25,9 @@ public enum ResourceKind
 /// </summary>
 public sealed record ResourceDef(string Name, ResourceKind Kind, int Tier, ResourceStorage Storage, bool HandHarvestable, float? GatherSeconds = null)
 {
+    /// <summary>A fuel's burn time: how long one unit burns in a fuel slot; null for a resource that is not a fuel.</summary>
+    public float? BurnSeconds { get; init; }
+
     /// <summary>Only deposits can be resource fields.</summary>
     public bool HasFields => Kind == ResourceKind.Deposit;
 }
@@ -35,11 +39,17 @@ public static class ResourceDefs
 
     private static readonly Dictionary<ResourceType, ResourceDef> Table = new()
     {
-        [ResourceType.Wood] = Deposit("Wood", 3f, ResourceStorage.Bulk(100f, 300f, 200f)),
+        [ResourceType.Wood] = Deposit("Wood", 3f, ResourceStorage.Bulk(100f, 300f, 200f)) with
+        {
+            BurnSeconds = 10f
+        },
         [ResourceType.Stone] = Deposit("Stone", 4.5f, ResourceStorage.Bulk(100f, 300f, 200f)),
         [ResourceType.IronOre] = Deposit("Iron Ore", 6f, ResourceStorage.Bulk(60f, 200f, 120f)),
         [ResourceType.CopperOre] = Deposit("Copper Ore", 6f, ResourceStorage.Bulk(60f, 200f, 120f)),
-        [ResourceType.Coal] = Deposit("Coal", 4.5f, ResourceStorage.Bulk(60f, 200f, 120f)),
+        [ResourceType.Coal] = Deposit("Coal", 4.5f, ResourceStorage.Bulk(60f, 200f, 120f)) with
+        {
+            BurnSeconds = 40f
+        },
         [ResourceType.CrudeOil] = Deposit("Crude Oil", 3f, ResourceStorage.Fluid(300f), handHarvestable: false),
         [ResourceType.Bauxite] = Deposit("Bauxite", 6f, ResourceStorage.Bulk(0f, 150f, 80f)),
         [ResourceType.Limestone] = Deposit("Limestone", 4.5f, ResourceStorage.Bulk(60f, 200f, 120f)),
@@ -58,7 +68,10 @@ public static class ResourceDefs
         [ResourceType.Steel] = Refined("Steel", 1, ResourceStorage.Pooled(1f)),
         [ResourceType.Glass] = Refined("Glass", 1, ResourceStorage.Pooled(1f)),
         [ResourceType.Lumber] = Refined("Lumber", 1, ResourceStorage.Pooled(1f)),
-        [ResourceType.Charcoal] = Refined("Charcoal", 1, ResourceStorage.Bulk(60f, 200f, 120f)),
+        [ResourceType.Charcoal] = Refined("Charcoal", 1, ResourceStorage.Bulk(60f, 200f, 120f)) with
+        {
+            BurnSeconds = 30f
+        },
         [ResourceType.Cement] = Refined("Cement", 1, ResourceStorage.Pooled(1f)),
         [ResourceType.Concrete] = Refined("Concrete", 1, ResourceStorage.Pooled(2f)),
         [ResourceType.Kerosene] = Refined("Kerosene", 1, ResourceStorage.Fluid(200f)),
@@ -99,6 +112,12 @@ public static class ResourceDefs
         [ResourceType.HullSection] = Refined("Hull Section", 4, ResourceStorage.Pooled(20f)),
         [ResourceType.Engine] = Refined("Engine", 4, ResourceStorage.Pooled(25f))
     };
+
+    /// <summary>The fuels, longest-burning first (the order the Best fuel choice tries them).</summary>
+    public static readonly IReadOnlyList<ResourceType> Fuels = Enum.GetValues<ResourceType>()
+        .Where(type => For(type).BurnSeconds is not null)
+        .OrderByDescending(type => For(type).BurnSeconds)
+        .ToList();
 
     public static ResourceDef For(ResourceType type)
     {

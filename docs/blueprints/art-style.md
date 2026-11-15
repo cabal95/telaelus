@@ -132,6 +132,9 @@ or 1.05 for facet variation). A new material extends the table.
 | warehouse_accent | 0.84, 0.36, 0.58 | Warehouse identity color (pink) |
 | vault_accent | 0.78, 0.62, 0.22 | Vault identity color (gold) |
 | hub_accent | 0.30, 0.95, 0.70 | The Small Hub's and Relay's glowing ring (emissive) |
+| water_wheel_accent | 0.25, 0.58, 0.92 | Water Wheel identity color (blue paddles and housing roof) |
+| burner_accent | 0.88, 0.36, 0.16 | Burner Generator identity color (orange-red) |
+| power_accent | 1.00, 0.86, 0.12 | The powered family's mark: power pole bands, stripes, junction boxes |
 
 Crown greens are mid tones with no near-black shade: a crown's shaded side would otherwise read
 as black under the dark ambient light. Crowns shade light on upward faces and dark underneath.

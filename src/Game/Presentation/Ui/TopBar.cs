@@ -10,7 +10,8 @@ namespace Game.Presentation.Ui;
 /// The top bar: a full-width strip across the top of the window in the panel style.
 /// Left, the pinned resources (see <see cref="ResourcePins"/>) in table order, each as an icon and
 /// "amount / limit" (the amount alone for a Cargo or unlimited resource), in the warning color
-/// when storage is full, each with a tooltip naming it. Right, the launch progress (Rocket Fuel and Iron against
+/// when storage is full, each with a tooltip naming it. Right, the network's power ("Power 45 /
+/// 100", colored by its state), then the launch progress (Rocket Fuel and Iron against
 /// the launch cost, short amounts in the short color), "[L] Launch ship" once both are
 /// met, and the ships launched once there is one. It takes the mouse but no keys.
 /// </summary>
@@ -30,12 +31,16 @@ public partial class TopBar : HudOverlay
     private Label _fuel = null!;
     private Label _iron = null!;
     private Label _launch = null!;
+    private Label _power = null!;
     private Label _ships = null!;
 
     /// <summary>The entries as shown (type, amount, its own limit or null, and whether storage is full), for the snapshot.</summary>
     public IEnumerable<(ResourceType Type, int Amount, int? Limit, bool Full)> Entries => _sim is Simulation sim
         ? _pins.Pinned.Select(type => (type, Whole(sim, type), WholeLimit(sim, type), IsFull(sim, type)))
         : Enumerable.Empty<(ResourceType, int, int?, bool)>();
+
+    /// <summary>The power readout as shown, for the snapshot.</summary>
+    public string PowerText => _power.Text;
 
     /// <summary>The launch progress as shown, for the snapshot.</summary>
     public string LaunchText => string.Join("   ", new[] { _fuel.Text, _iron.Text, _launch.Visible ? _launch.Text : "", _ships.Visible ? _ships.Text : "" }
@@ -89,6 +94,8 @@ public partial class TopBar : HudOverlay
             MouseFilter = MouseFilterEnum.Ignore
         });
 
+        _power = UiTheme.MakeLabel("", UiTheme.BodySize);
+        row.AddChild(_power);
         (HBoxContainer fuelEntry, _fuelIcon, _fuel) = MakeEntry(ResourceType.RocketFuel, "Rocket Fuel for a launch");
         row.AddChild(fuelEntry);
         (HBoxContainer ironEntry, _ironIcon, _iron) = MakeEntry(ResourceType.Iron, "Iron for a launch");
@@ -153,6 +160,8 @@ public partial class TopBar : HudOverlay
             amount.AddThemeColorOverride("font_color", IsFull(sim, type) ? UiTheme.Warning : UiTheme.Text);
         }
 
+        _power.Text = HudOverlay.PowerText(sim);
+        _power.AddThemeColorOverride("font_color", PowerColor(sim.PowerDemand, sim.PowerSupply));
         _fuelIcon.Texture ??= _icons.For(ResourceType.RocketFuel);
         _ironIcon.Texture ??= _icons.For(ResourceType.Iron);
         SetProgress(_fuel, Whole(sim, ResourceType.RocketFuel), (int)Simulation.LaunchRocketFuelCost);

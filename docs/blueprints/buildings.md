@@ -10,9 +10,10 @@ loop.
 
 ### Building types and definitions
 
-- `BuildingType` has thirteen values: **Mine**, **Lumber Camp**, **Smelter**, **Refinery**, **Oil
+- `BuildingType` has seventeen values: **Mine**, **Lumber Camp**, **Smelter**, **Refinery**, **Oil
   Well**, the **HQ**, the storage buildings **Silo**, **Stockyard**, **Tank Farm**, **Warehouse**,
-  and **Vault**, and the hubs **Small Hub** and **Relay**.
+  and **Vault**, the hubs **Small Hub** and **Relay**, the generators **Water Wheel** and **Burner
+  Generator**, and the powered extractors **Lumber Mill** and **Drill Rig**.
 - Each type has a `BuildingDef` (in `BuildingDefs`): a display name, a footprint in fine cells
   (width along X, depth along Z when facing North), a cost, a speed, and for an extractor, the
   deposit types it works (`Works`; a building is an extractor when the list is not empty) and its
@@ -20,7 +21,10 @@ loop.
   `StoresClass`, or Warehouse), the `CargoPool` it adds, whether it is `Permanent` (cannot be
   switched off or destroyed), whether it is `Buildable` (placed by the player; the world places
   the HQ), a hub's `CoverageRadius` and `LinkRadius` (`IsHub` when either is set), and the sizes of
-  its buffers: `OutputBuffer` (units) and `InputCycles` (cycles' worth of each recipe input).
+  its buffers: `OutputBuffer` (units) and `InputCycles` (cycles' worth of each recipe input). For
+  power it has a `Tier` (0 unpowered, 1 the first powered tier), a `PowerDraw` (a consumer when
+  above 0), a `PowerSupply` (a generator), `BurnsFuel` (a fuel slot, `FuelSlotSize` 5 units), and
+  `OnStraightRiver` (the Water Wheel's placement rule).
 
   | Type        | Footprint | Cost                       | Works                             | Work radius |
   |-------------|-----------|----------------------------|-----------------------------------|-------------|
@@ -121,6 +125,52 @@ loop.
   facing)` whether a building placed there would be online (for the placement ghost).
 - Storage buildings count toward limits only while online (resources.md).
 
+### Power
+
+- Each tick, before buildings work (`StepPower`): every switched-on fuel burner that is a
+  generator burns (a Burner Generator burns whenever it is on, with or without demand, online or
+  not; switching it off is how fuel is saved); **supply** (`PowerSupply`) is the output of every
+  online, switched-on generator that runs (a Water Wheel always, a Burner Generator while a unit
+  burns); **demand** (`PowerDemand`) is the draw of every online, switched-on consumer, working or
+  not, so a blackout cannot flap.
+- **Overload** is demand over supply less 1. The state (`PowerState`) is Normal at or under supply,
+  Brownout up to `BrownoutLimit` (25%) over, and Blackout past it or with demand and no supply.
+  Every online consumer runs at `PowerSpeed`: 1 when Normal, 1 less twice the overload in a
+  Brownout (0.8 at 10% over, 0.5 at 25%), 0 in a Blackout. An offline consumer gets no power.
+  Unpowered buildings (tier 0, storage, hubs, generators) are unaffected.
+- A powered extractor's progress and a powered processor's cycle advance at their speed times
+  `PowerSpeed`; at 0 they do not start or advance.
+
+| Generator | Footprint | Cost | Supplies | Notes |
+|---|---|---|---|---|
+| Water Wheel | 4 x 2 | 40 Wood, 20 Stone | 20 | Across a Straight river map cell (below); runs whenever it stands. |
+| Burner Generator | 2 x 2 | 60 Stone, 40 Iron | 100 | Burns fuel whenever switched on. |
+
+| Powered building | Footprint | Cost | Draw | Speed | Works | Buffer |
+|---|---|---|---|---|---|---|
+| Lumber Mill | 3 x 3 | 30 Wood, 20 Iron | 5 | 2.0 | Wood, radius 8 | 40 |
+| Drill Rig | 3 x 3 | 30 Iron, 20 Stone | 10 | 2.0 | Iron Ore, Copper Ore, Coal, Stone, radius 8 | 40 |
+| Refinery | 2 x 3 | as above | 25 | | | 10, inputs 5 cycles |
+
+- **The Water Wheel's placement** (`CanPlaceAcrossRiver`): its whole footprint lies within one map
+  cell whose river is Straight, its 4-unit side across the flow (facing North or South on a
+  North-South river, East or West on an East-West one); each cell is buildable or river channel,
+  explored, free, and not the player's.
+
+### Fuel
+
+- A fuel burner (the Burner Generator, the Smelter) has a **fuel slot** (`FuelSlot`, unburned units
+  by type) and a fire: the unit burning (`Burning`) and its seconds left (`BurnLeft`). When the fire
+  is out it takes the next unit, from the slot first and then, online, from storage, and burns it
+  for its burn time (resources.md). A unit taken is spent: switching off or destroying the building
+  does not return it, though unburned slot units are refunded.
+- **Fuel choice** (`FuelChoice`, `SetFuelChoice`): one fuel by name, or null for **Best**, the
+  longest-burning fuel at hand (`ResourceDefs.Fuels` order), falling back when it runs out.
+  `BestFuelAt` names what Best would take next.
+- **The Smelter** burns fuel on top of its ore: it starts a cycle only with fuel at hand, and its
+  cycle advances only while a unit burns, taking the next when one burns out mid-cycle (a 16 s
+  cycle uses 0.4 Coal or 1.6 Wood). A finished cycle waiting for room burns nothing.
+
 ### Buffers
 
 - Extractors (Mine, Lumber Camp, Oil Well) have a 20-unit output buffer (any mix of the types they
@@ -178,7 +228,10 @@ loop.
   nowhere to go, before a cycle or with a finished one waiting, is idle "Storage full: Iron" online
   or "Full: collect by hand" offline; otherwise it works during a cycle, else is idle "Waiting for"
   its missing inputs ("Waiting for Crude Oil", and offline "Waiting for Iron Ore (load by hand)").
-  Storage buildings and hubs report Working (they do no work).
+  A powered building that is offline is idle "No power: offline", and in a blackout "Blackout"
+  (checked first). A fuel burner with no fuel at hand is idle "Waiting for fuel" (offline "Waiting
+  for fuel (load by hand)"); an offline generator is idle "Offline: supplies nothing". Storage
+  buildings and hubs report Working (they do no work).
 - A permanent building (the HQ) cannot be switched off or destroyed: `SetBuildingEnabled` and
   `TryDestroyBuilding` return false for it.
 - `TryDestroyBuilding(id)` removes a building, frees its cells, and adds its refund
@@ -214,7 +267,12 @@ loop.
   cyan), Warehouse (a gabled shed with a roller door at the front and crates beside it, pink roof),
   Vault (a squat armored bunker with a round door at the front and gold hazard bands), Small Hub (a
   short mast on a square base with a glowing hub-green ring), Relay (a tall lattice tower with a dish
-  and the same glowing ring). The front
+  and the same glowing ring), Water Wheel (a paddle wheel on an axle between two stone piers on the
+  banks, a generator housing on one, blue), Burner Generator (a banded boiler with a chimney, a
+  coal hopper at the front, and a yellow junction box, orange-red), Lumber Mill (a saw hall with a
+  yellow powered stripe, logs feeding in at the front, and a plank stack), Drill Rig (a steel
+  derrick over a drill head, an orange motor house at the front with a yellow band, an ore pile);
+  every powered building also has a wooden power pole with a yellow band. The front
   marks the facing, so a
   rotated building reads as rotated.
 - `BuildController` drives build mode: a building is selected from the build menu (B; see

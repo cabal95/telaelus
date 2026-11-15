@@ -45,6 +45,20 @@ public abstract partial class HudOverlay : Control
         return WholeLimit(sim, type) is int limit ? $"{Whole(sim, type)} / {limit}" : Whole(sim, type).ToString();
     }
 
+    /// <summary>The network's power as demand over supply ("Power 45 / 100"; "Blackout: Power 140 / 100" in a blackout).</summary>
+    public static string PowerText(Simulation sim, float extraDemand = 0f, float extraSupply = 0f)
+    {
+        string text = $"Power {Mathf.CeilToInt(sim.PowerDemand + extraDemand)} / {Mathf.FloorToInt(sim.PowerSupply + extraSupply)}";
+        return sim.PowerState == PowerState.Blackout && extraDemand == 0f && extraSupply == 0f ? "Blackout: " + text : text;
+    }
+
+    /// <summary>The color for a power readout of demand over supply: normal, warning in a brownout, danger in a blackout.</summary>
+    public static Color PowerColor(float demand, float supply)
+    {
+        float overload = supply > 0f ? demand / supply - 1f : demand > 0f ? float.PositiveInfinity : 0f;
+        return overload <= 0f ? UiTheme.Text : overload <= Simulation.BrownoutLimit ? UiTheme.Warning : UiTheme.Danger;
+    }
+
     /// <summary>Whether storage has no room for another unit of a limited resource (shown in the warning color).</summary>
     public static bool IsFull(Simulation sim, ResourceType type)
     {

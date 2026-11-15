@@ -43,6 +43,9 @@ buildings.md). A single global stockpile holds all amounts, within storage limit
   | 3 | ControlModule, Computer, ThrusterAssembly, FuelTank, HeatShield, FuelRod, LifeSupportUnit, SensorArray |
   | 4 | HullSection, Engine |
 
+- **Fuels** have a burn time (`ResourceDef.BurnSeconds`): Coal 40 s, Charcoal 30 s, Wood 10 s
+  (placeholders). `ResourceDefs.Fuels` lists them longest-burning first. A fuel is still a Stored
+  resource; burning it in a fuel slot is a use of it (buildings.md).
 - Deposits are finite resource fields. Terrain-sourced resources never run out but need a building
   on or beside the right terrain. Every resource is defined so the production plan (see
   docs/game-plan.md) and the UI are settled; most have no source yet (no fields, no building, no
@@ -187,8 +190,10 @@ buildings.md). A single global stockpile holds all amounts, within storage limit
   takes 0.6 s. With no room for the next unit (`InteractBlocked`) progress waits and the hint says
   "Storage full".
 - **Load** (`InteractAction.Load`): an offline processor with an empty output buffer and a recipe
-  input short of its input buffer's 5 cycles' worth and held in storage. Each unit moves from
-  storage into the input buffer at the same pace.
+  input short of its input buffer's 5 cycles' worth and held in storage, or else an offline fuel
+  burner whose fuel slot has room for a unit of its fuel (its choice, or with Best the
+  longest-burning fuel storage holds). Each unit moves from storage into the input buffer or the
+  fuel slot at the same pace; recipe inputs load before fuel.
 - `InteractProgress` runs 0 to 1 per unit and resets on release or a new target or action;
   `InteractResource` and `InteractAmounts` give the hint its resource and counts.
 

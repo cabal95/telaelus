@@ -56,8 +56,8 @@ were not there, and they may cover it.
 | `TextDim` | 0.60, 0.64, 0.61 | Secondary text, hints, "Undiscovered" |
 | `Accent` | 0.98, 0.80, 0.35 | Hover outline, title rule, tooltip headings |
 | `Short` | 1.00, 0.42, 0.38 | A cost amount the player lacks |
-| `Danger` | 0.85, 0.30, 0.25 | Destructive buttons |
-| `Warning` | 0.98, 0.66, 0.18 | Storage full (top bar, inventory, the harvest hint) |
+| `Danger` | 0.85, 0.30, 0.25 | Destructive buttons; a power blackout |
+| `Warning` | 0.98, 0.66, 0.18 | Storage full (top bar, inventory, the harvest hint); a power brownout |
 | `Backdrop` | black at 35% | Behind a modal |
 | `Silhouette` | 0.06, 0.07, 0.06 | Undiscovered building pictures |
 
@@ -107,7 +107,8 @@ The two kinds place themselves:
   the panel color with a 1 px `PanelEdge` bottom border and no rounded corners. Left: every
   pinned resource as a 22-unit icon and "amount / limit" in whole numbers (the amount alone for a
   Cargo or unlimited resource), in `Warning` when full, 16 units apart, each with a tooltip naming it (opening below the entry, so it never
-  covers its neighbors). Right: the launch progress, the Rocket Fuel and Iron icons with "have /
+  covers its neighbors). Right: the power readout (demand over supply, in normal text, `Warning`,
+  or `Danger` by state), then the launch progress, the Rocket Fuel and Iron icons with "have /
   need" in `Short` until met, then "[L] Launch ship" in `Accent` once both are, and "Ships: n"
   once a ship has launched. It takes the mouse (so hovering it shows no building outline and
   clicks on it never reach the world) but no keys.

@@ -140,6 +140,7 @@ public class StorageTests
         Simulation sim = EmptyMap();
         sim.Debug.SeedStockpile(ResourceType.Iron, 150f);
         sim.Debug.SeedStockpile(ResourceType.IronOre, 15f);
+        sim.Debug.SeedStockpile(ResourceType.Coal, 10f);
         Building smelter = sim.Debug.PlaceBuilding(BuildingType.Smelter, 20, 20, Facing.North);
         SimTestHelpers.Connect(sim, 21f, 21f);
 
@@ -157,6 +158,7 @@ public class StorageTests
         Simulation sim = EmptyMap();
         sim.Debug.SeedStockpile(ResourceType.Iron, 150f);
         sim.Debug.SeedStockpile(ResourceType.IronOre, 1f);
+        sim.Debug.SeedStockpile(ResourceType.Coal, 1f);
         Building smelter = sim.Debug.PlaceBuilding(BuildingType.Smelter, 20, 20, Facing.North);
         SimTestHelpers.Connect(sim, 21f, 21f);
         SimTestHelpers.Seconds(sim, 20.0);

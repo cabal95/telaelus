@@ -116,6 +116,10 @@ Newest last. One line each; open the file for the full spec.
   buildings, which are online or offline; collectors fill local buffers the player collects by
   hand (E), online processors use storage, offline ones run from buffers loaded by hand; storage
   counts only online; the network overlay (N), a selected hub's coverage, and offline markers.
+- **2611142117-power** - Adds power on the HQ network: online generators supply, online powered
+  buildings draw, a brownout slows consumers by twice the overload and past 25% over a blackout
+  stops them; fuel slots with burn times and a Best fuel picker (the Smelter now burns fuel); the
+  Water Wheel, Burner Generator, Lumber Mill, and Drill Rig; the Refinery draws power.
 
 ## Adding a changeset
 

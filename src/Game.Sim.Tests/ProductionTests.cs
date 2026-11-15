@@ -11,11 +11,12 @@ public class ProductionTests
     {
         var sim = new Simulation();
         sim.Debug.SeedStockpile(ResourceType.IronOre, 10f);
+        sim.Debug.SeedStockpile(ResourceType.Coal, 5f);
         sim.Debug.PlaceBuilding(BuildingType.Smelter, SimTestHelpers.ClearX, SimTestHelpers.ClearZ, Facing.North);
 
         SimTestHelpers.Ticks(sim, JustOver33Seconds);
 
-        // Two cycles finished and a third started (its Ore already consumed).
+        // Burning Coal (40 s a unit), two cycles finished and a third started (its Ore already consumed).
         Assert.Equal(2f, SimTestHelpers.Stock(sim, ResourceType.Iron));
         Assert.Equal(7f, SimTestHelpers.Stock(sim, ResourceType.IronOre));
     }
@@ -27,6 +28,8 @@ public class ProductionTests
         sim.Debug.SeedStockpile(ResourceType.CrudeOil, 10f);
         sim.Debug.PlaceBuilding(BuildingType.Refinery, SimTestHelpers.ClearX, SimTestHelpers.ClearZ, Facing.North);
         sim.Debug.PlaceBuilding(BuildingType.TankFarm, SimTestHelpers.ClearX + 4, SimTestHelpers.ClearZ, Facing.North);
+        sim.Debug.SeedStockpile(ResourceType.Coal, 5f);
+        sim.Debug.PlaceBuilding(BuildingType.BurnerGenerator, SimTestHelpers.ClearX - 3, SimTestHelpers.ClearZ, Facing.North);
 
         SimTestHelpers.Ticks(sim, JustOver33Seconds);
 

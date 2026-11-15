@@ -74,6 +74,24 @@ public sealed record BuildingDef(
     /// <summary>How many cycles' worth of each recipe input its input buffer holds (processors).</summary>
     public int InputCycles { get; init; }
 
+    /// <summary>Its tier: 0 for the unpowered start, 1 for the first powered buildings.</summary>
+    public int Tier { get; init; }
+
+    /// <summary>The power it draws while switched on and online; above 0 makes it a powered consumer.</summary>
+    public float PowerDraw { get; init; }
+
+    /// <summary>The power it supplies while it runs online (generators).</summary>
+    public float PowerSupply { get; init; }
+
+    /// <summary>Whether it has a fuel slot and burns fuel to work (the Smelter, the Burner Generator).</summary>
+    public bool BurnsFuel { get; init; }
+
+    /// <summary>Whether it is placed across a Straight river map cell (the Water Wheel) instead of by the standard rule.</summary>
+    public bool OnStraightRiver { get; init; }
+
+    /// <summary>How many units of fuel a fuel slot holds.</summary>
+    public const float FuelSlotSize = 5f;
+
     public bool IsExtractor => Works.Count > 0;
 
     /// <summary>The footprint size for a facing; East and West swap width and depth.</summary>
@@ -136,7 +154,8 @@ public static class BuildingDefs
     }, Array.Empty<ResourceType>(), 0f)
     {
         OutputBuffer = 10f,
-        InputCycles = 5
+        InputCycles = 5,
+        BurnsFuel = true
     };
     private static readonly BuildingDef Refinery = new("Refinery", 2, 3, new ResourceAmount[]
     {
@@ -146,7 +165,9 @@ public static class BuildingDefs
     }, Array.Empty<ResourceType>(), 0f)
     {
         OutputBuffer = 10f,
-        InputCycles = 5
+        InputCycles = 5,
+        Tier = 1,
+        PowerDraw = 25f
     };
 
     private static readonly BuildingDef Hq = new("HQ", 6, 10, Array.Empty<ResourceAmount>(), Array.Empty<ResourceType>(), 0f)
@@ -221,6 +242,56 @@ public static class BuildingDefs
         LinkRadius = 30f
     };
 
+    private static readonly BuildingDef WaterWheel = new("Water Wheel", 4, 2, new ResourceAmount[]
+    {
+        new(ResourceType.Wood, 40f),
+        new(ResourceType.Stone, 20f)
+    }, Array.Empty<ResourceType>(), 0f)
+    {
+        PowerSupply = 20f,
+        OnStraightRiver = true
+    };
+    private static readonly BuildingDef BurnerGenerator = new("Burner Generator", 2, 2, new ResourceAmount[]
+    {
+        new(ResourceType.Stone, 60f),
+        new(ResourceType.Iron, 40f)
+    }, Array.Empty<ResourceType>(), 0f)
+    {
+        PowerSupply = 100f,
+        BurnsFuel = true
+    };
+    private static readonly BuildingDef LumberMill = new("Lumber Mill", 3, 3, new ResourceAmount[]
+    {
+        new(ResourceType.Wood, 30f),
+        new(ResourceType.Iron, 20f)
+    }, new[]
+    {
+        ResourceType.Wood
+    }, 8f)
+    {
+        Speed = 2f,
+        OutputBuffer = 40f,
+        Tier = 1,
+        PowerDraw = 5f
+    };
+    private static readonly BuildingDef DrillRig = new("Drill Rig", 3, 3, new ResourceAmount[]
+    {
+        new(ResourceType.Iron, 30f),
+        new(ResourceType.Stone, 20f)
+    }, new[]
+    {
+        ResourceType.IronOre,
+        ResourceType.CopperOre,
+        ResourceType.Coal,
+        ResourceType.Stone
+    }, 8f)
+    {
+        Speed = 2f,
+        OutputBuffer = 40f,
+        Tier = 1,
+        PowerDraw = 10f
+    };
+
     public static BuildingDef For(BuildingType type)
     {
         return type switch
@@ -238,6 +309,10 @@ public static class BuildingDefs
             BuildingType.Vault => Vault,
             BuildingType.SmallHub => SmallHub,
             BuildingType.Relay => Relay,
+            BuildingType.WaterWheel => WaterWheel,
+            BuildingType.BurnerGenerator => BurnerGenerator,
+            BuildingType.LumberMill => LumberMill,
+            BuildingType.DrillRig => DrillRig,
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, "no building definition")
         };
     }

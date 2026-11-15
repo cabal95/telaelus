@@ -30,6 +30,9 @@ public partial class BuildingDetail : Dialog
     private GridContainer _adds = null!;
     private Label _siloLabel = null!;
     private OptionButton _silo = null!;
+    private Label _fuelLabel = null!;
+    private OptionButton _fuel = null!;
+    private Label _fuelNote = null!;
     private string _addsSignature = "";
 
     /// <summary>The Bulk resources a Silo can hold, in table order (the picker's items).</summary>
@@ -47,6 +50,9 @@ public partial class BuildingDetail : Dialog
 
     /// <summary>The status rows as shown (label to value), for the snapshot.</summary>
     public IReadOnlyDictionary<string, string> Rows => _rows.Shown;
+
+    /// <summary>The fuel picker's choice as shown ("Best", "Coal"), or null when hidden.</summary>
+    public string? FuelText => _fuel.Visible ? _fuel.GetItemText(_fuel.Selected) : null;
 
     /// <summary>The Destroy button's text (it reads "Confirm destroy" while waiting), or null when hidden.</summary>
     public string? DestroyText => _destroy.Visible ? _destroy.Text : null;
@@ -73,7 +79,7 @@ public partial class BuildingDetail : Dialog
         _turntable = new TurntableView();
         center.AddChild(_turntable);
 
-        _rows = new StatusRows("Network", "Power", "State", "In range", "Working on", "Recipe", "Buffer", "Links", "Reach");
+        _rows = new StatusRows("Network", "Switch", "Power", "State", "In range", "Working on", "Recipe", "Buffer", "Burning", "Links", "Reach");
         Body.AddChild(_rows);
 
         _progressLabel = UiTheme.MakeLabel("Progress", UiTheme.SmallSize, UiTheme.TextDim);
@@ -95,6 +101,24 @@ public partial class BuildingDetail : Dialog
         _silo.ItemSelected += OnSiloSelected;
         Body.AddChild(_silo);
         Host.Register(Id + "/siloResource", _silo);
+
+        _fuelLabel = UiTheme.MakeLabel("Fuel", UiTheme.SmallSize, UiTheme.TextDim);
+        Body.AddChild(_fuelLabel);
+        _fuel = new OptionButton
+        {
+            Name = "Fuel",
+            FocusMode = FocusModeEnum.None
+        };
+        _fuel.AddItem("Best");
+        foreach (ResourceType fuel in ResourceDefs.Fuels)
+        {
+            _fuel.AddItem(ResourceDefs.For(fuel).Name);
+        }
+        _fuel.ItemSelected += OnFuelSelected;
+        Body.AddChild(_fuel);
+        Host.Register(Id + "/fuel", _fuel);
+        _fuelNote = UiTheme.MakeLabel("", UiTheme.SmallSize, UiTheme.TextDim);
+        Body.AddChild(_fuelNote);
 
         _addsLabel = UiTheme.MakeLabel("Adds to storage", UiTheme.SmallSize, UiTheme.TextDim);
         Body.AddChild(_addsLabel);
@@ -169,7 +193,10 @@ public partial class BuildingDetail : Dialog
         BuildingDef def = building.Def;
         BuildingStatus status = _sim.BuildingStatusOf(building);
         bool storage = def.Storage != StorageRole.None;
-        _rows.Set("Power", storage ? null : building.Enabled ? "On" : "Off");
+        _rows.Set("Switch", storage ? null : building.Enabled ? "On" : "Off");
+        _rows.Set("Power", PowerRowText(building));
+        _rows.Set("Burning", BurningText(building));
+        RefreshFuel(building);
         bool works = !storage && !def.IsHub;
         _rows.Set("State", works ? status.State == BuildingState.Working ? "Working" : "Idle: " + status.IdleReason : null);
         RefreshStorage(building);
@@ -215,8 +242,9 @@ public partial class BuildingDetail : Dialog
             }
         }
         _progress.Value = Mathf.Clamp(progress, 0f, 1f);
-        _progressLabel.Visible = works;
-        _progress.Visible = works;
+        bool hasProgress = works && (def.IsExtractor || building.Recipe is not null);
+        _progressLabel.Visible = hasProgress;
+        _progress.Visible = hasProgress;
 
         _toggle.Visible = !storage;
         _destroy.Visible = !def.Permanent;
@@ -294,6 +322,71 @@ public partial class BuildingDetail : Dialog
             }));
         }
         return text;
+    }
+
+    /// <summary>The Power row: what a powered building draws and how fast it runs, or what a generator supplies.</summary>
+    private string? PowerRowText(Building building)
+    {
+        BuildingDef def = building.Def;
+        if (def.PowerDraw > 0f)
+        {
+            if (!building.Online)
+            {
+                return "No power: offline";
+            }
+            return _sim.PowerState switch
+            {
+                PowerState.Blackout => $"Draws {def.PowerDraw:0}: blackout",
+                PowerState.Brownout => $"Draws {def.PowerDraw:0} (running at {_sim.PowerSpeed * 100f:0}%)",
+                _ => $"Draws {def.PowerDraw:0}"
+            };
+        }
+        if (def.PowerSupply > 0f)
+        {
+            return building.Online ? $"Supplies {def.PowerSupply:0}" : "Offline: supplies nothing";
+        }
+        return null;
+    }
+
+    /// <summary>The Burning row for a building with a fuel slot: what burns and for how long, and what waits in the slot.</summary>
+    private static string? BurningText(Building building)
+    {
+        if (!building.Def.BurnsFuel)
+        {
+            return null;
+        }
+        float slot = building.FuelSlot.Values.Sum();
+        string burning = building.Burning is ResourceType fuel && building.BurnLeft > 0f
+            ? $"{ResourceDefs.For(fuel).Name}, {Mathf.CeilToInt(building.BurnLeft)} s left"
+            : "nothing";
+        return $"{burning}; {Mathf.FloorToInt(slot)} in slot";
+    }
+
+    /// <summary>The fuel picker and its note naming what Best burns now.</summary>
+    private void RefreshFuel(Building building)
+    {
+        bool burns = building.Def.BurnsFuel;
+        _fuelLabel.Visible = burns;
+        _fuel.Visible = burns;
+        _fuelNote.Visible = burns;
+        if (!burns)
+        {
+            return;
+        }
+        _fuel.Selected = building.FuelChoice is ResourceType chosen ? 1 + ResourceDefs.Fuels.ToList().IndexOf(chosen) : 0;
+        _fuelNote.Text = building.FuelChoice is null
+            ? _sim.BestFuelAt(building) is ResourceType best
+                ? $"Best: burns {ResourceDefs.For(best).Name} ({ResourceDefs.For(best).BurnSeconds:0} s per unit)"
+                : "Best: no fuel at hand"
+            : $"Burns only {ResourceDefs.For(building.FuelChoice.Value).Name}";
+    }
+
+    private void OnFuelSelected(long index)
+    {
+        if (Building is Building building)
+        {
+            _sim.SetFuelChoice(building.Id, index == 0 ? null : ResourceDefs.Fuels[(int)index - 1]);
+        }
     }
 
     private void OnSiloSelected(long index)

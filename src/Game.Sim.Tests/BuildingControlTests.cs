@@ -32,6 +32,7 @@ public class BuildingControlTests
     {
         var sim = new Simulation();
         sim.Debug.SeedStockpile(ResourceType.IronOre, 1f);
+        sim.Debug.SeedStockpile(ResourceType.Coal, 1f);
         Building smelter = sim.Debug.PlaceBuilding(BuildingType.Smelter, SimTestHelpers.ClearX, SimTestHelpers.ClearZ, Facing.North);
 
         SimTestHelpers.Seconds(sim, 10.0);
@@ -62,6 +63,12 @@ public class BuildingControlTests
 
         Assert.Equal(new BuildingStatus(BuildingState.Working, null), sim.BuildingStatusOf(mine));
         Assert.Equal(new BuildingStatus(BuildingState.Idle, "No fields in range"), sim.BuildingStatusOf(idleMine));
+        Assert.Equal(new BuildingStatus(BuildingState.Idle, "Blackout"), sim.BuildingStatusOf(refinery));
+
+        // A Burner Generator with Coal powers it; then it waits for its Crude Oil.
+        sim.Debug.SeedStockpile(ResourceType.Coal, 5f);
+        sim.Debug.PlaceBuilding(BuildingType.BurnerGenerator, 20, 32, Facing.North);
+        SimTestHelpers.Ticks(sim, 1);
         Assert.Equal(new BuildingStatus(BuildingState.Idle, "Waiting for Crude Oil"), sim.BuildingStatusOf(refinery));
 
         sim.Debug.SeedStockpile(ResourceType.CrudeOil, 1f);
@@ -96,6 +103,7 @@ public class BuildingControlTests
         var sim = new Simulation();
         sim.Debug.ResetToEmptyMap();
         sim.Debug.SeedStockpile(ResourceType.IronOre, 1f);
+        sim.Debug.SeedStockpile(ResourceType.Coal, 1f);
         Building smelter = sim.Debug.PlaceBuilding(BuildingType.Smelter, SimTestHelpers.ClearX, SimTestHelpers.ClearZ, Facing.North);
         SimTestHelpers.Connect(sim, SimTestHelpers.ClearX, SimTestHelpers.ClearZ);
         SimTestHelpers.Seconds(sim, 2.0);

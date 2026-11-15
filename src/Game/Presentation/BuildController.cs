@@ -512,6 +512,15 @@ public partial class BuildController : Node3D
         if (CurrentGhost() is GhostInfo ghost)
         {
             lines.Add(ghost.Online ? new TipLine("Online") : new TipLine("Offline (no hub in reach)", UiTheme.Warning));
+            if (def.PowerDraw > 0f || def.PowerSupply > 0f)
+            {
+                // The network's power with this building added, if it would be online.
+                float demand = ghost.Online ? def.PowerDraw : 0f;
+                float supply = ghost.Online ? def.PowerSupply : 0f;
+                string role = def.PowerDraw > 0f ? $"Draws {def.PowerDraw:0}" : $"Supplies {def.PowerSupply:0}";
+                lines.Add(new TipLine($"{role}: {HudOverlay.PowerText(_sim, demand, supply)}",
+                    HudOverlay.PowerColor(_sim.PowerDemand + demand, _sim.PowerSupply + supply)));
+            }
         }
         lines.Add(new TipLine("R rotate   Esc cancel", UiTheme.TextDim));
         return lines;

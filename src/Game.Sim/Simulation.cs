@@ -151,6 +151,11 @@ public sealed partial class Simulation
     /// </summary>
     public bool CanPlace(BuildingType type, int anchorX, int anchorZ, Facing facing)
     {
+        if (BuildingDefs.For(type).OnStraightRiver)
+        {
+            return CanPlaceAcrossRiver(type, anchorX, anchorZ, facing);
+        }
+
         // The player's cell, by the same point test movement collision uses.
         (int playerX, int playerZ) = CellAt(Player.Position.X, Player.Position.Z);
 
@@ -164,6 +169,42 @@ public sealed partial class Simulation
                     return false;
                 }
                 if (x == playerX && z == playerZ)
+                {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    /// <summary>
+    /// The Water Wheel's rule: its footprint lies within one map cell whose river is Straight, its
+    /// long side across the flow (facing North or South on a North-South river, East or West on an
+    /// East-West one); each cell is buildable or river channel, explored, free, and not the
+    /// player's.
+    /// </summary>
+    private bool CanPlaceAcrossRiver(BuildingType type, int anchorX, int anchorZ, Facing facing)
+    {
+        int mapX = MapCellOf(anchorX);
+        int mapZ = MapCellOf(anchorZ);
+        if (RiverShapeAt(mapX, mapZ) != RiverShape.Straight)
+        {
+            return false;
+        }
+        bool northSouth = RiverConnects(mapX, mapZ, Facing.North);
+        bool facingAcross = northSouth ? facing is Facing.North or Facing.South : facing is Facing.East or Facing.West;
+        if (!facingAcross)
+        {
+            return false;
+        }
+        (int playerX, int playerZ) = CellAt(Player.Position.X, Player.Position.Z);
+        (int width, int depth) = BuildingDefs.For(type).Footprint(facing);
+        for (int x = anchorX; x < anchorX + width; x++)
+        {
+            for (int z = anchorZ; z < anchorZ + depth; z++)
+            {
+                if (MapCellOf(x) != mapX || MapCellOf(z) != mapZ || !InBounds(x, z) || !IsExplored(mapX, mapZ)
+                    || _occupied.Contains((x, z)) || !(IsBuildable(x, z) || IsRiverChannel(x, z)) || (x == playerX && z == playerZ))
                 {
                     return false;
                 }
@@ -288,6 +329,10 @@ public sealed partial class Simulation
         {
             Add(refund, type, amount);
         }
+        foreach ((ResourceType type, float amount) in building.FuelSlot)
+        {
+            Add(refund, type, amount);
+        }
         var list = new List<ResourceAmount>();
         foreach ((ResourceType type, float amount) in refund)
         {
@@ -351,6 +396,20 @@ public sealed partial class Simulation
         {
             return new BuildingStatus(BuildingState.Off, "Switched off");
         }
+        if (PowerBlock(building) is string noPower)
+        {
+            return new BuildingStatus(BuildingState.Idle, noPower);
+        }
+        if (building.Def.PowerSupply > 0f)
+        {
+            if (building.Def.BurnsFuel && !HasFuel(building))
+            {
+                return new BuildingStatus(BuildingState.Idle, building.Online ? "Waiting for fuel" : "Waiting for fuel (load by hand)");
+            }
+            return building.Online
+                ? new BuildingStatus(BuildingState.Working, null)
+                : new BuildingStatus(BuildingState.Idle, "Offline: supplies nothing");
+        }
         if (building.Def.IsExtractor)
         {
             ResourceField? field = building.CurrentField is { Depleted: false } current ? current : NearestFieldInWorkArea(building);
@@ -373,6 +432,11 @@ public sealed partial class Simulation
                 ? StorageFull(FirstOutputWithoutRoom(recipe) ?? recipe.Outputs[0].Type)
                 : "Full: collect by hand");
         }
+        bool needsFuel = building.Def.BurnsFuel && !HasFuel(building);
+        if (building.Crafting && !finished && needsFuel)
+        {
+            return new BuildingStatus(BuildingState.Idle, building.Online ? "Waiting for fuel" : "Waiting for fuel (load by hand)");
+        }
         if (building.Crafting)
         {
             return new BuildingStatus(BuildingState.Working, null);
@@ -389,7 +453,9 @@ public sealed partial class Simulation
         }
         if (missing.Count == 0)
         {
-            return new BuildingStatus(BuildingState.Working, null);
+            return needsFuel
+                ? new BuildingStatus(BuildingState.Idle, building.Online ? "Waiting for fuel" : "Waiting for fuel (load by hand)")
+                : new BuildingStatus(BuildingState.Working, null);
         }
         return new BuildingStatus(BuildingState.Idle, "Waiting for " + string.Join(", ", missing)
             + (building.Online ? "" : " (load by hand)"));
@@ -614,6 +680,7 @@ public sealed partial class Simulation
 
     private void StepBuildings(double dt)
     {
+        StepPower(dt);
         foreach (Building building in _buildings)
         {
             if (!building.Enabled)
@@ -648,7 +715,7 @@ public sealed partial class Simulation
             return;
         }
 
-        building.Progress += (float)dt;
+        building.Progress += (float)dt * WorkSpeed(building);
         float perUnit = GatherSeconds(field.Type) / building.Def.Speed;
         if (building.Progress < perUnit)
         {
@@ -693,9 +760,11 @@ public sealed partial class Simulation
         {
             DrainOutput(building);
         }
+        float speed = WorkSpeed(building);
         if (!building.Crafting)
         {
-            if (!InputsAvailable(building, recipe) || !OutputsHaveRoom(building, recipe))
+            if (speed <= 0f || !InputsAvailable(building, recipe) || !OutputsHaveRoom(building, recipe)
+                || (building.Def.BurnsFuel && !HasFuel(building)))
             {
                 return;
             }
@@ -704,8 +773,17 @@ public sealed partial class Simulation
             building.Progress = 0f;
         }
 
+        if (building.Progress < recipe.CycleTime)
+        {
+            // A fuel burner's cycle runs only while a unit burns.
+            if (building.Def.BurnsFuel && !Burn(building, dt))
+            {
+                return;
+            }
+            building.Progress = Mathf.Min(building.Progress + (float)dt * speed, recipe.CycleTime);
+        }
+
         // A finished cycle's output waits in the building until it fits somewhere.
-        building.Progress = Mathf.Min(building.Progress + (float)dt, recipe.CycleTime);
         if (building.Progress >= recipe.CycleTime && Deliver(building, recipe))
         {
             building.Crafting = false;

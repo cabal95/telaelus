@@ -49,6 +49,13 @@ public static class StateSnapshot
             ["buildings"] = Buildings(sim),
             ["fields"] = Fields(sim, root.FieldViews),
             ["stockpile"] = Stockpile(sim),
+            ["power"] = new JsonObject
+            {
+                ["supply"] = Round(sim.PowerSupply),
+                ["demand"] = Round(sim.PowerDemand),
+                ["speed"] = Round(sim.PowerSpeed),
+                ["state"] = Camel(sim.PowerState.ToString())
+            },
             ["discovered"] = Discovered(sim),
             ["unlockedBuildings"] = Unlocked(sim),
             ["shipsLaunched"] = sim.ShipsLaunched
@@ -182,6 +189,7 @@ public static class StateSnapshot
             ui["building"] = building.Id;
             ui["rows"] = rows;
             ui["destroy"] = root.BuildingDetail.DestroyText;
+            ui["fuel"] = root.BuildingDetail.FuelText;
             var adds = new JsonObject();
             foreach ((string resource, string amount) in root.BuildingDetail.Adds)
             {
@@ -209,6 +217,7 @@ public static class StateSnapshot
         return new JsonObject
         {
             ["items"] = items,
+            ["power"] = bar.PowerText,
             ["launch"] = bar.LaunchText
         };
     }
@@ -303,6 +312,8 @@ public static class StateSnapshot
                 ["online"] = b.Online,
                 ["output"] = Amounts(b.Output),
                 ["input"] = Amounts(b.Input),
+                ["fuelSlot"] = Amounts(b.FuelSlot),
+                ["burning"] = b.BurnLeft > 0f ? b.Burning?.ToString() : null,
                 ["status"] = Camel(sim.BuildingStatusOf(b).State.ToString()),
                 ["idleReason"] = sim.BuildingStatusOf(b).IdleReason
             });

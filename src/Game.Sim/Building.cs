@@ -46,6 +46,18 @@ public sealed class Building
         }
     }
 
+    /// <summary>Its fuel slot: unburned fuel waiting by type.</summary>
+    public Dictionary<ResourceType, float> FuelSlot { get; } = new();
+
+    /// <summary>The fuel burning now, or null; it is spent once taken.</summary>
+    public ResourceType? Burning { get; set; }
+
+    /// <summary>Seconds left on the unit burning now.</summary>
+    public float BurnLeft { get; set; }
+
+    /// <summary>The fuel it burns: one by name, or null for Best (the longest-burning one at hand).</summary>
+    public ResourceType? FuelChoice { get; set; }
+
     /// <summary>A Silo's chosen Bulk resource (see Simulation.SetSiloResource).</summary>
     public ResourceType SiloResource { get; set; } = ResourceType.Wood;
 

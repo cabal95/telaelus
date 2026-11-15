@@ -8,11 +8,12 @@ public class ExtractorTests
     private const int NearOreZ = 34;
 
     [Fact]
-    public void BaseBuildings_AreSlowerThanThePlayer()
+    public void BaseBuildings_AreSlowerThanThePlayer_AndPoweredOnesFaster()
     {
         foreach (BuildingType type in System.Enum.GetValues<BuildingType>())
         {
-            Assert.Equal(0.75f, BuildingDefs.For(type).Speed);
+            BuildingDef def = BuildingDefs.For(type);
+            Assert.Equal(def.Tier == 0 ? 0.75f : def.IsExtractor ? 2f : 0.75f, def.Speed);
         }
     }
 

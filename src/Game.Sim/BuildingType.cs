@@ -15,5 +15,9 @@ public enum BuildingType
     Warehouse,
     Vault,
     SmallHub,
-    Relay
+    Relay,
+    WaterWheel,
+    BurnerGenerator,
+    LumberMill,
+    DrillRig
 }

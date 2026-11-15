@@ -16,6 +16,9 @@
       { "type": "Mine", "state": "unaffordable", "label": "Mine" },
       { "type": "Silo", "state": "affordable", "label": "Silo" },
       { "type": "SmallHub", "state": "affordable", "label": "Small Hub" },
+      { "type": "BurnerGenerator", "state": "undiscovered", "label": "Undiscovered" },
+      { "type": "DrillRig", "state": "undiscovered", "label": "Undiscovered" },
+      { "type": "LumberMill", "state": "undiscovered", "label": "Undiscovered" },
       { "type": "OilWell", "state": "undiscovered", "label": "Undiscovered" },
       { "type": "Refinery", "state": "undiscovered", "label": "Undiscovered" },
       { "type": "Relay", "state": "undiscovered", "label": "Undiscovered" },
@@ -23,7 +26,8 @@
       { "type": "Stockyard", "state": "undiscovered", "label": "Undiscovered" },
       { "type": "TankFarm", "state": "undiscovered", "label": "Undiscovered" },
       { "type": "Vault", "state": "undiscovered", "label": "Undiscovered" },
-      { "type": "Warehouse", "state": "undiscovered", "label": "Undiscovered" }
+      { "type": "Warehouse", "state": "undiscovered", "label": "Undiscovered" },
+      { "type": "WaterWheel", "state": "undiscovered", "label": "Undiscovered" }
     ] },
 
     { "comment": "The modal menu takes all input: holding D moves nothing.", "keyDown": "D" },

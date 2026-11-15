@@ -63,6 +63,15 @@ public sealed partial class Simulation
         {
             return (Held(building.Output, type), null);
         }
+        if (LoadsFuel(building))
+        {
+            float slot = 0f;
+            foreach (float amount in building.FuelSlot.Values)
+            {
+                slot += amount;
+            }
+            return (slot, BuildingDef.FuelSlotSize);
+        }
         float capacity = 0f;
         foreach (ResourceAmount input in building.Recipe!.Inputs)
         {
@@ -223,8 +232,20 @@ public sealed partial class Simulation
         return null;
     }
 
-    /// <summary>The next recipe input to load into an offline processor, or null when none is short and in storage.</summary>
+    /// <summary>The next unit to load into an offline building by hand: a recipe input first, then fuel; null when neither is short and in storage.</summary>
     private (ResourceType Type, float Amount)? NextLoad(Building building)
+    {
+        return NextInputLoad(building) ?? NextFuelLoad(building);
+    }
+
+    /// <summary>Whether the next load goes into the fuel slot rather than the input buffer.</summary>
+    private bool LoadsFuel(Building building)
+    {
+        return NextInputLoad(building) is null && NextFuelLoad(building) is not null;
+    }
+
+    /// <summary>The next recipe input to load into an offline processor, or null when none is short and in storage.</summary>
+    private (ResourceType Type, float Amount)? NextInputLoad(Building building)
     {
         if (building.Online || building.Recipe is not Recipe recipe || building.Def.InputCycles == 0 || building.OutputCount > RoomTolerance)
         {
@@ -316,8 +337,9 @@ public sealed partial class Simulation
         }
         else
         {
+            bool fuel = LoadsFuel(building);
             AddToStockpile(type, -amount);
-            Put(building.Input, type, amount);
+            Put(fuel ? building.FuelSlot : building.Input, type, amount);
         }
     }
 }

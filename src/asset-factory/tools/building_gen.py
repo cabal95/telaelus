@@ -285,9 +285,111 @@ def relay():
     return m, mat.mats
 
 
+def power_pole(m, mat, x, z, height=1.6):
+    """A wooden power pole with a crossbar and a yellow insulator band: the powered tier's mark."""
+    cylinder(m, mat("wood_dark"), (x, 0.06, z), (x, height, z), 0.05, segs=6)
+    cylinder(m, mat("wood_dark"), (x - 0.25, height - 0.15, z), (x + 0.25, height - 0.15, z), 0.03, segs=4)
+    cylinder(m, mat("power_accent"), (x, height - 0.45, z), (x, height - 0.35, z), 0.07, segs=6)
+
+
+def water_wheel():
+    """A paddle wheel on an axle between two stone piers, across the flow (along Z), with a
+    generator housing on the east bank."""
+    m, mat = Mesh(), Materials()
+    radius, half_width = 0.85, 0.55
+    centre_y = 0.55
+    # piers on the banks, the axle across the channel
+    for x in (-1.35, 1.35):
+        box(m, mat("stone_dark"), x - 0.32, 0, -0.45, x + 0.32, 0.75, 0.45, mat_top=mat("stone"))
+    cylinder(m, mat("metal_dark"), (-1.4, centre_y, 0), (1.4, centre_y, 0), 0.07, segs=6)
+    # two rims of segments, spokes, and paddles between them
+    segs = 10
+    for side in (-half_width, half_width):
+        points = [(side, centre_y + radius * math.cos(2 * math.pi * k / segs), radius * math.sin(2 * math.pi * k / segs))
+                  for k in range(segs)]
+        for k in range(segs):
+            cylinder(m, mat("wood_dark"), points[k], points[(k + 1) % segs], 0.04, segs=4)
+            cylinder(m, mat("wood"), (side, centre_y, 0), points[k], 0.025, segs=4)
+    for k in range(segs):
+        a = 2 * math.pi * (k + 0.5) / segs
+        y, z = centre_y + radius * math.cos(a), radius * math.sin(a)
+        cylinder(m, mat("water_wheel_accent"), (-half_width, y, z), (half_width, y, z), 0.09, segs=4)
+    # generator housing on the east pier
+    box(m, mat("metal"), 1.12, 0.75, -0.3, 1.58, 1.15, 0.3, mat_top=mat("water_wheel_accent"))
+    cylinder(m, mat("power_accent"), (1.35, 1.15, 0), (1.35, 1.25, 0), 0.08, segs=6)
+    return m, mat.mats
+
+
+def burner_generator():
+    """A squat boiler with a chimney, a fuel hopper at the front, and a yellow junction box."""
+    m, mat = Mesh(), Materials()
+    hx, hz = half(2), half(2)
+    box(m, mat("stone_dark"), -hx, 0, -hz, hx, 0.08, hz, mat_top=mat("stone", 0.85))
+    cylinder(m, mat("metal_dark"), (-0.55, 0.45, 0.15), (0.45, 0.45, 0.15), 0.42, segs=12, mat_cap=mat("metal"))
+    cylinder(m, mat("burner_accent"), (-0.1, 0.45, 0.15), (0.05, 0.45, 0.15), 0.44, segs=12, caps=False)
+    for x in (-0.4, 0.3):
+        box(m, mat("metal_dark"), x - 0.08, 0.08, -0.2, x + 0.08, 0.2, 0.5)
+    cylinder(m, mat("stone_dark"), (0.5, 0.08, 0.5), (0.5, 1.6, 0.5), 0.16, segs=8)
+    cylinder(m, mat("burner_accent"), (0.5, 1.35, 0.5), (0.5, 1.45, 0.5), 0.18, segs=8)
+    cylinder(m, mat("shadow"), (0.5, 1.6, 0.5), (0.5, 1.601, 0.5), 0.11, segs=8)
+    box(m, mat("metal"), -0.55, 0.08, -0.85, -0.05, 0.55, -0.4, mat_top=mat("coal"))
+    box(m, mat("power_accent"), 0.2, 0.08, -0.8, 0.6, 0.45, -0.45, mat_top=mat("metal_dark"))
+    power_pole(m, mat, 0.75, -0.75, 1.3)
+    return m, mat.mats
+
+
+def lumber_mill():
+    """A covered saw hall with logs feeding in at the front, a yellow powered stripe, and a power pole."""
+    m, mat = Mesh(), Materials()
+    hx, hz = half(3), half(3)
+    box(m, mat("wood_dark"), -hx, 0, -hz, hx, 0.06, hz, mat_top=mat("mud", 1.1))
+    box(m, mat("wood"), -1.1, 0.06, -0.4, 1.1, 0.95, 1.25)
+    box(m, mat("power_accent"), -1.12, 0.7, -0.42, 1.12, 0.8, 1.27)
+    prism_roof(m, mat("lumber_accent"), -1.2, 1.2, -0.5, 1.35, 0.95, 1.45, mat_gable=mat("wood"))
+    box(m, mat("shadow"), -0.35, 0.06, -0.41, 0.35, 0.6, -0.4)
+    # conveyor of logs into the hall
+    box(m, mat("metal_dark"), -0.3, 0.06, -1.3, 0.3, 0.3, -0.4, mat_top=mat("metal"))
+    for z in (-1.15, -0.85, -0.55):
+        cylinder(m, mat("bark"), (-0.35, 0.42, z), (0.35, 0.42, z), 0.11, segs=7, mat_cap=mat("log_end"))
+    # sawn plank stack on the side
+    for k in range(3):
+        y = 0.06 + k * 0.1
+        box(m, mat("plank_dark"), 0.55, y, -1.25, 1.25, y + 0.09, -0.75, mat_top=mat("plank"))
+    power_pole(m, mat, -1.2, -1.15)
+    return m, mat.mats
+
+
+def drill_rig():
+    """A steel derrick over a drill head, a motor house in the mine's orange, and a power pole."""
+    m, mat = Mesh(), Materials()
+    hx, hz = half(3), half(3)
+    box(m, mat("stone_dark"), -hx, 0, -hz, hx, 0.08, hz, mat_top=mat("stone"))
+    top = 2.4
+    legs = [(-0.55, -0.55), (0.55, -0.55), (0.55, 0.55), (-0.55, 0.55)]
+    for x, z in legs:
+        cylinder(m, mat("metal_dark"), (x, 0.08, z), (x * 0.3, top, z * 0.3), 0.05, segs=5)
+    for y in (0.7, 1.4):
+        s = 0.55 - (y - 0.08) / (top - 0.08) * 0.385
+        for i in range(4):
+            (ax, az), (bx, bz) = legs[i], legs[(i + 1) % 4]
+            cylinder(m, mat("metal"), (ax / 0.55 * s, y, az / 0.55 * s), (bx / 0.55 * s, y, bz / 0.55 * s), 0.03, segs=4)
+    box(m, mat("mine_accent"), -0.25, top - 0.1, -0.25, 0.25, top + 0.15, 0.25, mat_top=mat("power_accent"))
+    cylinder(m, mat("metal"), (0, 0.08, 0), (0, top - 0.1, 0), 0.08, segs=6)
+    cylinder(m, mat("metal_dark"), (0, 0.08, 0), (0, 0.3, 0), 0.22, segs=8)
+    # motor house at the front with a yellow band
+    box(m, mat("mine_accent"), -1.2, 0.08, -1.25, -0.25, 0.75, -0.7, mat_top=mat("mine_accent", 0.85))
+    box(m, mat("power_accent"), -1.22, 0.55, -1.27, -0.23, 0.63, -0.68)
+    # ore pile beside the head
+    spike(m, mat("iron_rust"), (0.85, 0.08, 0.7), (0.85, 0.45, 0.7), 0.35, segs=6)
+    power_pole(m, mat, 1.15, -1.1)
+    return m, mat.mats
+
+
 BUILDINGS = {"mine": mine, "lumber_camp": lumber_camp, "smelter": smelter, "refinery": refinery,
              "oil_well": oil_well, "hq": hq, "silo": silo, "stockyard": stockyard, "tank_farm": tank_farm,
-             "warehouse": warehouse, "vault": vault, "small_hub": small_hub, "relay": relay}
+             "warehouse": warehouse, "vault": vault, "small_hub": small_hub, "relay": relay,
+             "water_wheel": water_wheel, "burner_generator": burner_generator, "lumber_mill": lumber_mill,
+             "drill_rig": drill_rig}
 
 
 def build_all():

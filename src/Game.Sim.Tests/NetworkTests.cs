@@ -132,6 +132,7 @@ public class NetworkTests
     {
         Simulation sim = EmptyMap();
         sim.Debug.SeedStockpile(ResourceType.IronOre, 10f);
+        sim.Debug.SeedStockpile(ResourceType.Coal, 10f);
         Building smelter = sim.Debug.PlaceBuilding(BuildingType.Smelter, 20, 20, Facing.North);
         Assert.False(smelter.Online);
         SimTestHelpers.Ticks(sim, 1);
@@ -140,20 +141,25 @@ public class NetworkTests
         Assert.False(smelter.Crafting);
         Assert.Equal(new BuildingStatus(BuildingState.Idle, "Waiting for Iron Ore (load by hand)"), sim.BuildingStatusOf(smelter));
 
-        // Loading fills its input buffer to 5 cycles' worth: 5 Iron Ore, 0.6 s each.
+        // Loading fills its input buffer to 5 cycles' worth (5 Iron Ore, 0.6 s each), then its fuel
+        // slot (5 Coal, 0.45 s each).
         SimTestHelpers.Teleport(sim, 21.5f, 21.5f);
         sim.Intent = new PlayerIntent
         {
             Harvest = true
         };
-        SimTestHelpers.Seconds(sim, 3.5);
-        sim.Intent = default;
+        SimTestHelpers.Ticks(sim, 1);
         Assert.Equal(InteractAction.Load, sim.InteractAction);
-        Assert.Equal(5f, SimTestHelpers.Stock(sim, ResourceType.IronOre));
+        SimTestHelpers.Seconds(sim, 6.0);
+        sim.Intent = default;
+        // Its first cycle started once fuel was in, taking an ore, and loading topped it back up: 6 Iron Ore in all.
+        Assert.True(smelter.Crafting);
+        Assert.Equal(4f, SimTestHelpers.Stock(sim, ResourceType.IronOre));
+        Assert.Equal(5f, SimTestHelpers.Stock(sim, ResourceType.Coal));
 
-        // It works the 5 loaded units into its output buffer and then waits.
-        SimTestHelpers.Seconds(sim, 90.0);
-        Assert.Equal(5f, smelter.Output[ResourceType.Iron]);
+        // It works the 6 loaded units into its output buffer (16 s each) and then waits.
+        SimTestHelpers.Seconds(sim, 100.0);
+        Assert.Equal(6f, smelter.Output[ResourceType.Iron]);
         Assert.Equal(0f, SimTestHelpers.Stock(sim, ResourceType.Iron));
         Assert.Equal(new BuildingStatus(BuildingState.Idle, "Waiting for Iron Ore (load by hand)"), sim.BuildingStatusOf(smelter));
     }
