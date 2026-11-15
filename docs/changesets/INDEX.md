@@ -124,6 +124,10 @@ Newest last. One line each; open the file for the full spec.
   the Water Pump and Pumping Station beside water, the Sand Collector and Sand Dredge on Sand; the
   Glassworks makes Glass from fuel and 2 Sand; the Refinery draws 2 Water; Sand and Water readouts
   on the top bar, inventory, panel, and placement tooltip.
+- **2611142204-depot-trucks** - Adds the Depot and its trucks: an online Depot comes with one truck and
+  buys up to four; trucks dispatch themselves to the fullest collector buffer (10 or more), load one
+  resource, drive it to the HQ, unload into storage, and park; A* paths in the sim over walkable
+  cells; truck models with their cargo, the Depot panel, and a collector's Truck row.
 
 ## Adding a changeset
 

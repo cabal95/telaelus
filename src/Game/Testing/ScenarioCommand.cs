@@ -151,6 +151,13 @@ public sealed class ScenarioCommand
                     float z = Number(Required(arg, "z"), "z");
                     return e => e.TeleportPlayer(x, z);
                 }
+            case "fillBuffer":
+                {
+                    (int x, int z) = Pair(Required(arg, "anchor"), "anchor");
+                    ResourceType type = ParseEnum<ResourceType>(Required(arg, "type"));
+                    float amount = Number(Required(arg, "amount"), "amount");
+                    return e => e.FillBuffer(x, z, type, amount);
+                }
             case "seedStockpile":
                 {
                     ResourceType type = ParseEnum<ResourceType>(Required(arg, "type"));

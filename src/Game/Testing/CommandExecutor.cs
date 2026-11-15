@@ -272,6 +272,12 @@ public sealed class CommandExecutor
         return StepOutcome.Ok;
     }
 
+    public StepOutcome FillBuffer(int anchorX, int anchorZ, ResourceType type, float amount)
+    {
+        _root.Sim.Debug.FillBuffer(anchorX, anchorZ, type, amount);
+        return StepOutcome.Ok;
+    }
+
     public StepOutcome SeedStockpile(ResourceType type, float amount)
     {
         _root.Sim.Debug.SeedStockpile(type, amount);

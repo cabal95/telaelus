@@ -10,12 +10,12 @@ loop.
 
 ### Building types and definitions
 
-- `BuildingType` has twenty-two values: **Mine**, **Lumber Camp**, **Smelter**, **Refinery**,
+- `BuildingType` has twenty-three values: **Mine**, **Lumber Camp**, **Smelter**, **Refinery**,
   **Oil Well**, the **HQ**, the storage buildings **Silo**, **Stockyard**, **Tank Farm**,
   **Warehouse**, and **Vault**, the hubs **Small Hub** and **Relay**, the generators **Water
   Wheel** and **Burner Generator**, the powered extractors **Lumber Mill** and **Drill Rig**, the
   Water and Sand providers **Water Pump**, **Pumping Station**, **Sand Collector**, and **Sand
-  Dredge**, and the **Glassworks**.
+  Dredge**, the **Glassworks**, and the **Depot**.
 - Each type has a `BuildingDef` (in `BuildingDefs`): a display name, a footprint in fine cells
   (width along X, depth along Z when facing North), a cost, a speed, and for an extractor, the
   deposit types it works (`Works`; a building is an extractor when the list is not empty) and its
@@ -180,6 +180,52 @@ loop.
   North-South river, East or West on an East-West one); each cell is buildable or river channel,
   explored, free, and not the player's.
 
+### Trucks
+
+- **The Depot** (4 x 4, 40 Wood and 20 Stone, tier 0) holds up to 4 trucks (`TruckSlots`), parked
+  in bays across the apron at its front (`BayPosition`), nose out. A new Depot comes with 1;
+  `TryBuyTruck` buys another into the next free bay for `TruckDefs.Cost` (15 Iron, 10 Wood) while
+  a bay is free (`CanBuyTruck`). It draws nothing, but its trucks take work only while it is
+  **online**: offline it is idle "Offline: trucks stay parked".
+- **A truck** (`Truck`, in `Trucks`) carries one resource at a time, up to `TruckDefs.Capacity`
+  (20), at `TruckDefs.Speed` (8 units per second, faster than the player's 6) times the terrain
+  speed under it. Trucks occupy no cells and pass through the player and each other.
+- **Each tick, after buildings** (`StepTrucks`), a truck steps through its trip
+  (`TruckState`):
+  - **Parked** or **ToDepot** (heading home): while its Depot is switched on and online, it
+    **dispatches**:
+    among extractors (online or offline) whose buffer holds at least `TruckDefs.DispatchAt` (10)
+    in all, or is full, that no truck targets (`TruckFor`) and that it has not found unreachable,
+    it takes the one holding the most, nearest on a tie, and the first a path reaches.
+  - **ToCollector:** it drives beside the collector; if the collector is destroyed or its buffer
+    falls under 1 unit first, it drops the job and heads home (dispatching again on the way).
+  - **Loading** (`TruckDefs.LoadSeconds`, 2 s): then it takes the buffer's most-held resource, up
+    to 20 whole units, and drives beside the HQ (**ToHq**). With nothing left to take it heads
+    home; with no path to the HQ it takes nothing and counts the collector unreachable.
+  - **Unloading** (2 s): it puts what storage has room for into the stockpile; the rest waits
+    (**WaitingForRoom**, unloading as room appears). Empty, it heads home.
+  - **ToDepot:** on arrival it parks in its bay, facing out.
+- A switched-off or offline Depot's trucks finish the trip they are on, then park; they dispatch
+  again when it is switched back on and online.
+- **Destroying a Depot** removes its trucks; its refund (`DestroyRefund`) adds half each bought
+  truck's cost, rounded up (the truck it came with refunds nothing), and every load in full.
+- `NoTruckCanReach(collector)` is true when every truck has found no path to it; the unreachable
+  set clears whenever a building is placed or removed.
+
+### Paths
+
+- Trucks path in the sim (`FindPathBeside`, `FindPathTo`): A* over fine cells in 8 directions
+  without cutting corners, each step costing its length over the terrain speed of the cell it
+  enters (so Mud and Sand cost more and a path goes round them when that is cheaper). A cell is
+  passable when it is walkable (`IsWalkable`) and its chunk already exists (a search never
+  generates the world); a truck's own Depot's cells are passable to it, so it can leave and reach
+  its bay. "Beside" a building is a cell sharing an edge with its footprint. A search gives up as
+  unreachable after 60,000 cells.
+- A path is the list of cell centers to drive through. A truck searches only on dispatch, on
+  leaving a collector or the HQ, and when the next cell of its path has become impassable (a
+  building placed on it), when it searches again for the same end; a collector it then cannot
+  reach is dropped and counted unreachable.
+
 ### Fuel
 
 - A fuel burner (the Burner Generator, the Smelter, the Glassworks) has a **fuel slot** (`FuelSlot`, unburned units
@@ -302,8 +348,11 @@ loop.
   chute to the front, tan), Sand Dredge (a scoop wheel over a sand pit at the front, a conveyor up
   to a hopper, a motor house, tan), Glassworks (a long works: a stone furnace with a glowing kiln
   mouth at the back, a cooling line of panes down its length under an open roof frame, and a rack
-  of finished panes at the front, pale cyan); every powered building also has a wooden power pole
-  with a yellow band. The front
+  of finished panes at the front, pale cyan), Depot (a garage across the back half with two roller
+  doors and a fuel pump between them, tyres behind, and an apron painted with four bays at the
+  front, red trim); every powered building also has a wooden power pole with a yellow band. The
+  truck (a unit, not a building) is a small flatbed, 1.6 long and 0.8 wide, with a red cab and an
+  empty bed the presentation sets the cargo on. The front
   marks the facing, so a
   rotated building reads as rotated.
 - `BuildController` drives build mode: a building is selected from the build menu (B; see

@@ -47,6 +47,7 @@ public static class StateSnapshot
             },
             ["ui"] = Ui(root),
             ["buildings"] = Buildings(sim),
+            ["trucks"] = Trucks(sim),
             ["fields"] = Fields(sim, root.FieldViews),
             ["stockpile"] = Stockpile(sim),
             ["capacity"] = Capacity(sim),
@@ -113,6 +114,7 @@ public static class StateSnapshot
         {
             ["open"] = root.Dialogs.Current?.Id,
             ["tooltip"] = Lines(root.Dialogs.HoverTip),
+            ["worldTip"] = root.Builder.Selected is null ? Lines(root.Dialogs.PlacementTip) : null,
             ["debug"] = root.Debug.Shown,
             ["network"] = new JsonObject
             {
@@ -184,6 +186,13 @@ public static class StateSnapshot
             ui["rows"] = rows;
             ui["destroy"] = root.BuildingDetail.DestroyText;
             ui["fuel"] = root.BuildingDetail.FuelText;
+            ui["buyTruck"] = root.BuildingDetail.BuyTruck is (string text, bool enabled)
+                ? new JsonObject
+                {
+                    ["text"] = text,
+                    ["enabled"] = enabled
+                }
+                : null;
             var adds = new JsonObject();
             foreach ((string resource, string amount) in root.BuildingDetail.Adds)
             {
@@ -304,6 +313,26 @@ public static class StateSnapshot
             {
                 list.Add(type.ToString());
             }
+        }
+        return list;
+    }
+
+    private static JsonArray Trucks(Simulation sim)
+    {
+        var list = new JsonArray();
+        foreach (Truck t in sim.Trucks)
+        {
+            list.Add(new JsonObject
+            {
+                ["id"] = t.Id,
+                ["depot"] = t.Depot.Id,
+                ["bay"] = t.Bay,
+                ["state"] = Camel(t.State.ToString()),
+                ["position"] = Pair(t.Position.X, t.Position.Z),
+                ["cargo"] = t.Cargo?.ToString(),
+                ["amount"] = Round(t.Amount),
+                ["target"] = t.Target?.Id
+            });
         }
         return list;
     }

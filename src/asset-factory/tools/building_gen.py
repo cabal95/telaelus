@@ -517,12 +517,43 @@ def glassworks():
     return m, mat.mats
 
 
+def depot():
+    """A garage across the back half with two roller doors, a fuel pump between them, tyres
+    stacked behind, and a paved apron across the front half painted with four parking bays."""
+    m, mat = Mesh(), Materials()
+    hx, hz = half(4), half(4)
+    # the apron, with bay lines dividing four slots 1 wide and 1.8 deep, nose out
+    box(m, mat("stone_dark"), -hx, 0, -hz, hx, 0.05, hz, mat_top=mat("stone_dark", 1.15))
+    for x in (-1.0, 0.0, 1.0):
+        box(m, mat("ceramic"), x - 0.03, 0.05, -1.85, x + 0.03, 0.055, -0.15)
+    box(m, mat("ceramic"), -1.85, 0.05, -0.15, 1.85, 0.055, -0.09)
+    # the garage
+    box(m, mat("stone"), -1.85, 0.05, 0.1, 1.85, 1.3, 1.55, mat_top=mat("metal"))
+    box(m, mat("depot_accent"), -1.87, 1.05, 0.08, 1.87, 1.18, 1.57)
+    for z0, z1 in ((0.05, 0.15), (1.5, 1.6)):
+        box(m, mat("depot_accent"), -1.9, 1.3, z0, 1.9, 1.38, z1)
+    for x in (-0.95, 0.95):
+        box(m, mat("metal_dark"), x - 0.7, 0.05, 0.09, x + 0.7, 0.95, 0.1)
+        for y in (0.25, 0.45, 0.65, 0.85):
+            box(m, mat("metal"), x - 0.68, y, 0.085, x + 0.68, y + 0.03, 0.09)
+    # fuel pump between the doors
+    box(m, mat("depot_accent"), -0.14, 0.05, -0.12, 0.14, 0.62, 0.08, mat_top=mat("metal_dark"))
+    box(m, mat("panel_dark"), -0.09, 0.38, -0.121, 0.09, 0.52, -0.12)
+    # tyres stacked behind the garage
+    for k in range(3):
+        y = 0.05 + k * 0.12
+        cylinder(m, mat("rubber"), (1.45, y, 1.73), (1.45, y + 0.11, 1.73), 0.17, segs=10, mat_cap=mat("rubber_light"))
+    cylinder(m, mat("rubber"), (1.05, 0.05, 1.73), (1.05, 0.16, 1.73), 0.17, segs=10, mat_cap=mat("rubber_light"))
+    return m, mat.mats
+
+
 BUILDINGS = {"mine": mine, "lumber_camp": lumber_camp, "smelter": smelter, "refinery": refinery,
              "oil_well": oil_well, "hq": hq, "silo": silo, "stockyard": stockyard, "tank_farm": tank_farm,
              "warehouse": warehouse, "vault": vault, "small_hub": small_hub, "relay": relay,
              "water_wheel": water_wheel, "burner_generator": burner_generator, "lumber_mill": lumber_mill,
              "drill_rig": drill_rig, "water_pump": water_pump, "pumping_station": pumping_station,
-             "sand_collector": sand_collector, "sand_dredge": sand_dredge, "glassworks": glassworks}
+             "sand_collector": sand_collector, "sand_dredge": sand_dredge, "glassworks": glassworks,
+             "depot": depot}
 
 
 def build_all():

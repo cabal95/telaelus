@@ -51,8 +51,9 @@ down, that feeds the space game.
 - **Facilities** are placed by the player: extraction facilities on resource sites, and
   processing facilities to refine raw resources into intermediates and fuel.
 - **Trucks** are the RTS-flavored part. They are not micromanaged: a Depot's trucks dispatch
-  themselves to whichever collector needs emptying. Trucks are buildable (build more for more
-  throughput) and upgradeable (more capacity, more speed).
+  themselves to whichever collector needs emptying. Trucks are cheap and faster than the player on
+  foot, bought at a Depot (build more for more throughput) and later upgradeable (more capacity,
+  more speed).
 
 **Logistics model:**
 
@@ -69,8 +70,9 @@ down, that feeds the space game.
 
 **Decided early specifics:**
 
-- Trucks use **free navmesh pathfinding** (Godot NavigationServer) over walkable terrain,
-  avoiding water and obstacles. Roads are a later truck speed bonus.
+- Trucks path **in the simulation** with A* over the fine-cell grid's walkable cells (the
+  player's walk rules), avoiding water and obstacles, so movement stays authoritative and
+  engine-free. Roads are a later truck speed bonus.
 - Buildings are placed on a **tile grid** (grids simplify pathfinding, network coverage, and
   saves). Finer placement can come later if needed.
 

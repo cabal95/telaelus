@@ -221,6 +221,7 @@ PALETTE = {
     "water_accent": (0.40, 0.74, 0.98),
     "sand_accent": (0.90, 0.72, 0.42),
     "glass_accent": (0.66, 0.94, 0.96),
+    "depot_accent": (0.92, 0.20, 0.24),
 }
 GLOW = {"lava", "furnace_glow", "uranium_glow", "crystal_light", "screen", "led", "nozzle_hot", "hub_accent"}  # palette entries that are emissive
 GLOW_STRENGTH = 0.5  # emission as a fraction of the base color

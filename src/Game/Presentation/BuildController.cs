@@ -483,6 +483,9 @@ public partial class BuildController : Node3D
     }
 
     /// <summary>The pointer's screen position: the projected override, or the mouse.</summary>
+    /// <summary>Whether the pointer is over the world outside build mode (not over a UI control).</summary>
+    public bool PointingAtWorld => Selected is null && !(PointerOverride is null && GetViewport().GuiGetHoveredControl() is not null);
+
     public Vector2 PointerScreen()
     {
         return PointerOverride is Vector3 world

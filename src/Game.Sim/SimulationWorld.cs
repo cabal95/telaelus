@@ -58,6 +58,8 @@ public sealed partial class Simulation
         _fields.Clear();
         _fieldsByMapCell.Clear();
         _buildings.Clear();
+        _trucks.Clear();
+        _unreachable.Clear();
         _occupied.Clear();
         _stockpile.Clear();
         _unlocked.Clear();

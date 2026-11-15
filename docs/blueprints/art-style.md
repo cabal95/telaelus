@@ -138,6 +138,7 @@ or 1.05 for facet variation). A new material extends the table.
 | water_accent | 0.40, 0.74, 0.98 | Water Pump and Pumping Station identity color (light blue roof, bands, valve) |
 | sand_accent | 0.90, 0.72, 0.42 | Sand Collector and Sand Dredge identity color (tan bands, chute, scoops) |
 | glass_accent | 0.66, 0.94, 0.96 | Glassworks identity color (pale cyan band, roof ties, pane rack) |
+| depot_accent | 0.92, 0.20, 0.24 | Depot trim and its trucks' cabs (a bright red) |
 
 Crown greens are mid tones with no near-black shade: a crown's shaded side would otherwise read
 as black under the dark ambient light. Crowns shade light on upward faces and dark underneath.
@@ -150,7 +151,8 @@ Emissive materials glow at half their base color. Mountains keep their own stone
 - 1 fine cell = 1 unit; 1 map cell = 4 x 4 units.
 - Size targets: the player about 1.4 tall, deposits (Iron Ore and Copper Ore about 0.8, Coal 0.6,
   Stone 0.9; Crude Oil is a flat pool about 0.05 high), trees 2.5 to 3.5 (by field size),
-  mountains 3.2 to 3.5, buildings 1.2 to 2.2 (see buildings.md).
+  mountains 3.2 to 3.5, buildings 1.2 to 2.2 (see buildings.md), a truck 1.6 long, 0.8 wide, and
+  about 0.85 tall.
 
 ### Ground levels
 

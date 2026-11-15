@@ -1,0 +1,21 @@
+newmtl rubber
+Kd 0.300 0.300 0.320
+
+newmtl metal_dark
+Kd 0.300 0.310 0.340
+
+newmtl depot_accent
+Kd 0.920 0.200 0.240
+
+newmtl depot_accent_85
+Kd 0.782 0.170 0.204
+
+newmtl panel_dark
+Kd 0.240 0.260 0.300
+
+newmtl glass_edge
+Kd 0.800 0.920 0.960
+
+newmtl metal
+Kd 0.580 0.600 0.630
+

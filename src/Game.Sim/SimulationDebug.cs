@@ -199,6 +199,24 @@ public sealed partial class Simulation
             _sim.RemoveBuilding(building);
         }
 
+        /// <summary>Sets one resource's amount in the output buffer of the building anchored at a fine cell (0 removes it).</summary>
+        public void FillBuffer(int anchorX, int anchorZ, ResourceType type, float amount)
+        {
+            Building? building = _sim._buildings.Find(b => b.AnchorX == anchorX && b.AnchorZ == anchorZ);
+            if (building is null)
+            {
+                throw new InvalidOperationException($"no building anchored at ({anchorX}, {anchorZ})");
+            }
+            if (amount <= 0f)
+            {
+                building.Output.Remove(type);
+            }
+            else
+            {
+                building.Output[type] = amount;
+            }
+        }
+
         /// <summary>Moves the player to a world position on the ground.</summary>
         public void TeleportPlayer(float x, float z)
         {

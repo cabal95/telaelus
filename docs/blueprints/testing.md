@@ -65,6 +65,16 @@ pausing it and stepping frame by frame.
 - `ResourceTests`: the resource definitions (63 by tier, raw resources at tier 0, the new
   deposits' gather times, an item model file for each), biome deposits, the Mine and Oil Well, and
   hand-harvest rules.
+- `PathTests`: a straight path on open ground; a path round a building ending beside its target;
+  no path to a collector on an island; a path round slow ground when that is cheaper.
+- `TruckTests`: a new Depot's one truck and buying up to four; a truck hauling an offline Mine's
+  buffer to the HQ and parking; waiting for 10 units; dispatch taking the fullest, then one no
+  other truck is on; loading one resource up to 20 (and parking when what is left is under a
+  trip); waiting at the HQ for room; dropping a job when the collector is destroyed or emptied;
+  finding a way round a building placed in its path; skipping a collector no truck can reach; a
+  switched-off Depot's truck finishing its trip and parking; an offline Depot's truck staying
+  parked; a destroyed Depot refunding its bought
+  truck and the load.
 - `CapacityTests`: Water supply and demand over online, switched-on buildings only; the Refinery
   stopping without Water; a consumer of two types running at the slower (Water at half speed with
   Power plenty); a Pumping Station supplying at its power speed (12.8 at 80%) and nothing in a
@@ -129,7 +139,8 @@ pausing it and stepping frame by frame.
     `{ mapCell, amount }` (0 removes), `removeResource` `{ mapCell }`, `removeBuilding`
     `{ anchor }`.
   - Other setup: `placeBuilding` `{ type, anchor, facing? }` (the spatial placement rule, free
-    and whether or not unlocked), `teleportPlayer` `{ x, z }`, `seedStockpile` `{ type, amount }`
+    and whether or not unlocked), `teleportPlayer` `{ x, z }`, `seedStockpile` `{ type, amount }`, `fillBuffer` `{ anchor, type, amount }` (sets one
+    resource in the output buffer of the building at that anchor; 0 removes it)
     (unlocks any building whose whole cost is then held; scenarios that place through the menu and a click seed first), `cameraZoom` `{ size }` (the camera's zoom: world units across 720 pixels
     of window height, so at the 1280 x 720 scenario resolution it is the visible world height).
   - Input: `press` (key down now, up at the start of the next frame), `keyDown`, `keyUp`, `hold`
@@ -181,11 +192,12 @@ pausing it and stepping frame by frame.
   unlimited resource), `full`, the `text` shown, and its `tone`: `normal`, `warning`, or
   `danger`), its `power` readout, and its `launch` text, `hint`: the hint's `text`, `progress`,
   and `storageFull` or null, `tooltip`: the hover
-  tooltip's lines or null, and while the build menu is open, its `cells` in display order, each
+  tooltip's lines or null, `worldTip`: the truck tooltip's lines outside build mode, or null, and while the build menu is open, its `cells` in display order, each
   `type`, `state` (`affordable`, `unaffordable`, or `undiscovered`), and `label`; while the
   detail panel is open, `building` (its id), `rows` (each shown status row, keyed in camel case:
-  `network`, `switch`, `power`, `water`, `sand`, `state`, `inRange`, `workingOn`, `recipe`, `buffer`, `burning`,
-  `links`, `reach`), `fuel` (the fuel picker's choice, or null), `adds` (what a storage building adds, by
+  `network`, `switch`, `power`, `water`, `sand`, `state`, `inRange`, `workingOn`, `recipe`, `buffer`,
+  `truck`, `burning`, `links`, `reach`, `trucks`, `truck1` to `truck4`), `fuel` (the fuel picker's
+  choice, or null), `buyTruck` (a Depot's button: `text` and `enabled`, or null), `adds` (what a storage building adds, by
   resource name, as "+300"), `destroy` (the Destroy button's text, or null when hidden), and
   `turnDegrees`; while the field detail panel is open, `field` (its id), `title`, and `rows`
   (`remaining`, `workedBy`); while the inventory is open, `inventory`: its rows in display order,
@@ -194,6 +206,8 @@ pausing it and stepping frame by frame.
   `currentField`, `enabled`, `online`, `output`, `input`, and `fuelSlot` (amounts by type),
   `burning` (the fuel burning, or null), `status`
   (`working`, `idle`, or `off`), and `idleReason` or null);
+  `trucks` (`id`, `depot`, `bay`, `state` (`parked`, `toCollector`, `loading`, `toHq`, `unloading`,
+  `waitingForRoom`, `toDepot`), `position` [x, z], `cargo` or null, `amount`, and `target` or null);
   `hoveredBuilding` (the id of the building under the pointer outside build mode, or null);
   `focusedBuilding` (the id of the building the detail panel shows and outlines, or null);
   `hoveredField` and `focusedField` (the same for resource fields);
@@ -310,6 +324,9 @@ pausing it and stepping frame by frame.
   `power` (a Drill Rig with no supply is in a blackout; a Burner Generator on Coal powers it; four
   then five Refineries push demand into a brownout at 80% and a blackout, on the top bar; the
   generator's panel shows its supply and Best fuel),
+  `trucks` (a new Depot online beside the HQ with one truck, buying a second from its panel, a Mine off the network
+  filled to 12 getting a truck that loads, carries, and unloads it into storage and parks, the
+  Mine's Truck row, hovering a parked truck),
   `capacity` (a Glassworks with no Sand is in a blackout, in `Danger` on the Sand pin; a Sand
   Collector on Sand supplies it and Glass is made; five Glassworks on four Collectors are a Sand
   brownout at half speed, in `Warning`, shown in the Glassworks panel's Sand row and its recipe),

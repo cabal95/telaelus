@@ -24,5 +24,6 @@ public enum BuildingType
     PumpingStation,
     SandCollector,
     SandDredge,
-    Glassworks
+    Glassworks,
+    Depot
 }

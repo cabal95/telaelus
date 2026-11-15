@@ -33,6 +33,8 @@ public partial class BuildingDetail : Dialog
     private Label _fuelLabel = null!;
     private OptionButton _fuel = null!;
     private Label _fuelNote = null!;
+    private Button _buyTruck = null!;
+    private Label _buyNote = null!;
     private string _addsSignature = "";
 
     /// <summary>The Bulk resources a Silo can hold, in table order (the picker's items).</summary>
@@ -57,6 +59,9 @@ public partial class BuildingDetail : Dialog
     /// <summary>The Destroy button's text (it reads "Confirm destroy" while waiting), or null when hidden.</summary>
     public string? DestroyText => _destroy.Visible ? _destroy.Text : null;
 
+    /// <summary>The Buy truck button's text and whether it can be pressed, or null when hidden (not a Depot).</summary>
+    public (string Text, bool Enabled)? BuyTruck => _buyTruck.Visible ? (_buyTruck.Text, !_buyTruck.Disabled) : null;
+
     /// <summary>What a storage building adds, as shown ("Wood", "+200"), for the snapshot.</summary>
     public IEnumerable<(string Resource, string Amount)> Adds => _adds.GetChildren().OfType<Label>()
         .Chunk(2)
@@ -79,7 +84,8 @@ public partial class BuildingDetail : Dialog
         _turntable = new TurntableView();
         center.AddChild(_turntable);
 
-        _rows = new StatusRows("Network", "Switch", "Power", "Water", "Sand", "State", "In range", "Working on", "Recipe", "Buffer", "Burning", "Links", "Reach");
+        _rows = new StatusRows("Network", "Switch", "Power", "Water", "Sand", "State", "In range", "Working on", "Recipe", "Buffer", "Truck", "Burning", "Links", "Reach",
+            "Trucks", "Truck 1", "Truck 2", "Truck 3", "Truck 4");
         Body.AddChild(_rows);
 
         _progressLabel = UiTheme.MakeLabel("Progress", UiTheme.SmallSize, UiTheme.TextDim);
@@ -119,6 +125,17 @@ public partial class BuildingDetail : Dialog
         Host.Register(Id + "/fuel", _fuel);
         _fuelNote = UiTheme.MakeLabel("", UiTheme.SmallSize, UiTheme.TextDim);
         Body.AddChild(_fuelNote);
+
+        _buyTruck = new Button
+        {
+            Name = "BuyTruck",
+            FocusMode = FocusModeEnum.None
+        };
+        _buyTruck.Pressed += OnBuyTruck;
+        Body.AddChild(_buyTruck);
+        Host.Register(Id + "/buyTruck", _buyTruck);
+        _buyNote = UiTheme.MakeLabel("", UiTheme.SmallSize, UiTheme.Short);
+        Body.AddChild(_buyNote);
 
         _addsLabel = UiTheme.MakeLabel("Adds to storage", UiTheme.SmallSize, UiTheme.TextDim);
         Body.AddChild(_addsLabel);
@@ -205,6 +222,8 @@ public partial class BuildingDetail : Dialog
         RefreshStorage(building);
         _rows.Set("Network", building.Online ? "Online" : "Offline");
         _rows.Set("Buffer", BufferText(building));
+        _rows.Set("Truck", TruckText.CollectorRow(_sim, building));
+        RefreshTrucks(building);
         _rows.Set("Links", def.IsHub ? _sim.LinkedHubs(building).Count.ToString() : null);
         _rows.Set("Reach", def.IsHub ? $"covers {def.CoverageRadius:0}, links {def.LinkRadius:0}" : null);
 
@@ -260,6 +279,42 @@ public partial class BuildingDetail : Dialog
         if (_confirmLeft > 0)
         {
             _confirmLeft -= delta;
+        }
+    }
+
+    /// <summary>A Depot's Trucks row, a row per truck with its state, and the Buy truck button with what it is short of.</summary>
+    private void RefreshTrucks(Building building)
+    {
+        int slots = building.Def.TruckSlots;
+        var trucks = slots > 0 ? _sim.TrucksOf(building) : new List<Truck>();
+        _rows.Set("Trucks", slots > 0 ? $"{trucks.Count} / {slots}" : null);
+        for (int i = 0; i < 4; i++)
+        {
+            _rows.Set($"Truck {i + 1}", i < trucks.Count ? TruckText.State(trucks[i]) : null);
+        }
+        _buyTruck.Visible = slots > 0;
+        _buyNote.Visible = false;
+        if (slots <= 0)
+        {
+            return;
+        }
+        _buyTruck.Text = "Buy truck (" + string.Join(", ", TruckDefs.Cost.Select(c => $"{(int)c.Amount} {ResourceDefs.For(c.Type).Name}")) + ")";
+        _buyTruck.Disabled = !_sim.CanBuyTruck(building);
+        string? note = trucks.Count >= slots
+            ? "Every bay is full"
+            : string.Join(", ", TruckDefs.Cost
+                .Where(c => (_sim.Stockpile.TryGetValue(c.Type, out float have) ? have : 0f) < c.Amount)
+                .Select(c => $"{(int)c.Amount} {ResourceDefs.For(c.Type).Name} (have {Mathf.FloorToInt(_sim.Stockpile.TryGetValue(c.Type, out float have) ? have : 0f)})"));
+        _buyNote.Visible = !string.IsNullOrEmpty(note);
+        _buyNote.Text = note ?? "";
+        _buyNote.AddThemeColorOverride("font_color", trucks.Count >= slots ? UiTheme.TextDim : UiTheme.Short);
+    }
+
+    private void OnBuyTruck()
+    {
+        if (Building is Building building)
+        {
+            _sim.TryBuyTruck(building.Id);
         }
     }
 

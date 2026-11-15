@@ -20,6 +20,7 @@ public partial class GameRoot : Node3D
     private CameraRig _camera = null!;
     private ResourceFieldViews _fieldViews = null!;
     private BuildingViews _buildingViews = null!;
+    private TruckViews _truckViews = null!;
     private BuildController _buildController = null!;
     private DebugOverlay _debug = null!;
     private TopBar _topBar = null!;
@@ -101,6 +102,7 @@ public partial class GameRoot : Node3D
         _light.DirectionalShadowMaxDistance = _camera.ViewDistance + _camera.Size;
         _fieldViews.Sync(_sim, _terrainView);
         _buildingViews.Sync(ExploredBuildings());
+        _truckViews.Sync(_sim, delta);
         _topBar.Refresh(_sim, _dialogs.UiSize);
         _hint.Refresh(_sim, _dialogs.UiSize);
         _debug.Refresh(_sim, _perf);
@@ -248,11 +250,33 @@ public partial class GameRoot : Node3D
     }
 
     /// <summary>Shows the placement tooltip beside the pointer while a building is selected.</summary>
+    /// <summary>How near (in screen pixels) the pointer must be to a truck to hover it.</summary>
+    private const float TruckHoverPixels = 28f;
+
     private void UpdatePlacementTip()
     {
-        if (_buildController.Selected is null || _dialogs.CapturesWorldInput)
+        if (_dialogs.CapturesWorldInput)
         {
             _dialogs.PlacementTip.HideTip();
+            return;
+        }
+        if (_buildController.Selected is null)
+        {
+            // Outside build mode the same tooltip names the truck under the pointer.
+            Vector2 screen = _buildController.PointerScreen();
+            if (_buildController.PointingAtWorld && _truckViews.TruckAt(_sim, _camera, screen, TruckHoverPixels) is Truck truck)
+            {
+                var lines = new List<TipLine>
+                {
+                    new("Truck", UiTheme.Accent),
+                    new(TruckText.State(truck))
+                };
+                _dialogs.PlacementTip.ShowAt(_dialogs.ToUi(screen) + new Vector2(28f, 28f), lines, _dialogs.UiSize);
+            }
+            else
+            {
+                _dialogs.PlacementTip.HideTip();
+            }
             return;
         }
         // Below and to the right of the pointer, clear of the ghost under it.
@@ -351,6 +375,12 @@ public partial class GameRoot : Node3D
             Name = "Buildings"
         };
         AddChild(_buildingViews);
+
+        _truckViews = new TruckViews
+        {
+            Name = "Trucks"
+        };
+        AddChild(_truckViews);
 
         _playerView = new PlayerView
         {

@@ -99,6 +99,7 @@ public sealed partial class Simulation
             InteractProgress = 0f;
         }
         StepBuildings(dt);
+        StepTrucks(dt);
     }
 
     // ---- Grid -----------------------------------------------------------
@@ -355,6 +356,10 @@ public sealed partial class Simulation
         {
             Add(refund, type, amount);
         }
+        foreach (ResourceAmount truck in TruckRefund(building))
+        {
+            Add(refund, truck.Type, truck.Amount);
+        }
         var list = new List<ResourceAmount>();
         foreach ((ResourceType type, float amount) in refund)
         {
@@ -405,6 +410,7 @@ public sealed partial class Simulation
             }
         }
         RecomputeNetwork();
+        TrucksOnBuildingsChanged(building, added: false);
     }
 
     /// <summary>
@@ -421,6 +427,10 @@ public sealed partial class Simulation
         if (CapacityBlock(building) is string blocked)
         {
             return new BuildingStatus(BuildingState.Idle, blocked);
+        }
+        if (building.Def.TruckSlots > 0 && !building.Online)
+        {
+            return new BuildingStatus(BuildingState.Idle, "Offline: trucks stay parked");
         }
         if (building.Def.IsProvider)
         {
@@ -495,6 +505,7 @@ public sealed partial class Simulation
             }
         }
         RecomputeNetwork();
+        TrucksOnBuildingsChanged(building, added: true);
         return building;
     }
 

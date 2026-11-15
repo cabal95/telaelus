@@ -1,0 +1,30 @@
+newmtl stone_dark
+Kd 0.360 0.340 0.330
+
+newmtl stone_dark_115
+Kd 0.414 0.391 0.380
+
+newmtl ceramic
+Kd 0.900 0.880 0.840
+
+newmtl stone
+Kd 0.500 0.470 0.440
+
+newmtl metal
+Kd 0.580 0.600 0.630
+
+newmtl depot_accent
+Kd 0.920 0.200 0.240
+
+newmtl metal_dark
+Kd 0.300 0.310 0.340
+
+newmtl panel_dark
+Kd 0.240 0.260 0.300
+
+newmtl rubber
+Kd 0.300 0.300 0.320
+
+newmtl rubber_light
+Kd 0.480 0.480 0.520
+

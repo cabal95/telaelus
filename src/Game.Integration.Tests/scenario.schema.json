@@ -37,7 +37,7 @@
     "biome": { "enum": ["Grassland", "Forest", "Highlands", "Desert", "Swamp", "Tundra", "Volcanic", "Ocean"] },
     "feature": { "enum": ["None", "Mountain", "River"] },
     "resource": { "enum": ["Wood", "Stone", "IronOre", "CopperOre", "Coal", "CrudeOil", "Bauxite", "Limestone", "Quartz", "TitaniumOre", "Sulfur", "RareEarths", "UraniumOre", "Crystals", "Sand", "Water", "Lithium", "Iron", "RocketFuel", "Copper", "Steel", "Glass", "Lumber", "Charcoal", "Cement", "Concrete", "Kerosene", "Plastic", "Hydrogen", "LiquidOxygen", "Aluminum", "Silicon", "SulfuricAcid", "Rubber", "Titanium", "CarbonFiber", "EnrichedUranium", "HullPlate", "SteelBeam", "CopperWire", "Circuit", "InsulatedCable", "MachineParts", "SiliconWafer", "Processor", "Magnet", "ElectricMotor", "Battery", "SolarCell", "CompositePanel", "CeramicTile", "AluminumFrame", "ArmorPlate", "ControlModule", "Computer", "ThrusterAssembly", "FuelTank", "HeatShield", "FuelRod", "LifeSupportUnit", "SensorArray", "HullSection", "Engine"] },
-    "building": { "enum": ["Mine", "LumberCamp", "Smelter", "Refinery", "OilWell", "Hq", "Silo", "Stockyard", "TankFarm", "Warehouse", "Vault", "SmallHub", "Relay", "WaterWheel", "BurnerGenerator", "LumberMill", "DrillRig", "WaterPump", "PumpingStation", "SandCollector", "SandDredge", "Glassworks"] },
+    "building": { "enum": ["Mine", "LumberCamp", "Smelter", "Refinery", "OilWell", "Hq", "Silo", "Stockyard", "TankFarm", "Warehouse", "Vault", "SmallHub", "Relay", "WaterWheel", "BurnerGenerator", "LumberMill", "DrillRig", "WaterPump", "PumpingStation", "SandCollector", "SandDredge", "Glassworks", "Depot"] },
     "facing": { "enum": ["North", "East", "South", "West"] },
     "comment": { "type": "string", "description": "Ignored; documents the step." },
     "scenarioStep": {
@@ -52,6 +52,7 @@
         { "$ref": "#/definitions/placeBuilding" },
         { "$ref": "#/definitions/teleportPlayer" },
         { "$ref": "#/definitions/seedStockpile" },
+        { "$ref": "#/definitions/fillBuffer" },
         { "$ref": "#/definitions/cameraZoom" },
         { "$ref": "#/definitions/press" },
         { "$ref": "#/definitions/keyDown" },
@@ -221,6 +222,25 @@
           "properties": {
             "x": { "type": "number" },
             "z": { "type": "number" }
+          }
+        },
+        "comment": { "$ref": "#/definitions/comment" }
+      }
+    },
+    "fillBuffer": {
+      "description": "Set one resource's amount in the output buffer of the building anchored at a fine cell (0 removes it).",
+      "type": "object",
+      "required": ["fillBuffer"],
+      "additionalProperties": false,
+      "properties": {
+        "fillBuffer": {
+          "type": "object",
+          "required": ["anchor", "type", "amount"],
+          "additionalProperties": false,
+          "properties": {
+            "anchor": { "$ref": "#/definitions/pair" },
+            "type": { "$ref": "#/definitions/resource" },
+            "amount": { "type": "number", "minimum": 0 }
           }
         },
         "comment": { "$ref": "#/definitions/comment" }

@@ -53,7 +53,9 @@ planned multiplayer feasible.
   changes stage, and freed with the terrain tile; it reports each field's visible model count, its
   stage while its tile is built; fields in unexplored cells are left out),
   `BuildingViews` (footprint-sized building boxes, created and freed as buildings appear and are
-  removed; `GameRoot` passes only the buildings on explored cells), `PlayerView` (the character), `CameraRig` (the orthographic follow camera, with
+  removed; `GameRoot` passes only the buildings on explored cells), `TruckViews` (a truck model
+  per truck, placed at its sim position each frame and turned smoothly toward its heading, with the
+  carried resource's item model on its bed, at 0.7 scale, while loaded), `PlayerView` (the character), `CameraRig` (the orthographic follow camera, with
   `ZoomTo` for a direct size; attached it follows the player, a drag detaches it, and
   `ReturnToPlayer` slides or jumps it back; see player.md),
   `BuildController` (build-mode selection and rotation, the footprint ghost, the extractor
@@ -135,7 +137,13 @@ ui-style.md. There is no text HUD; the screen holds:
   first; choosing calls `SetFuelChoice`) with a dim note naming what it burns ("Best: burns Coal
   (40 s per unit)"). The progress bar shows only for extractors and processors. An extractor or
   processor a Buffer row ("Iron Ore 12 / 20", or "Iron 4 / 10; in: Iron Ore 3 / 5"); a hub Links
-  (how many hubs it links to) and Reach ("covers 8, links 12") and no State or progress. A storage
+  (how many hubs it links to) and Reach ("covers 8, links 12") and no State or progress. An
+  extractor has a Truck row while a truck is on its way ("On its way") or loading ("Loading"), or
+  "No truck can reach". A Depot shows Trucks ("2 / 4") and a row per truck
+  (Truck 1 to Truck 4) with its state (`TruckText`: "Parked", "To Mine: Iron Ore", "Loading", "To
+  HQ: 20 Iron Ore", "Unloading", "Waiting: storage full (Iron Ore)", "Heading home"), then a "Buy
+  truck (15 Iron, 10 Wood)" button, disabled unless `CanBuyTruck`, over a note of what is short
+  ("15 Iron (have 3)" in `Short`) or "Every bay is full" (dim). A storage
   building shows no Power, State, or progress; instead a Silo shows
   "Holds" and a picker of the Bulk resources (choosing one calls `SetSiloResource`), and every
   storage building lists "Adds to storage": one line per resource it adds to, with the amount
@@ -159,7 +167,8 @@ ui-style.md. There is no text HUD; the screen holds:
   "Online" or "Offline (no hub in reach)" in `Warning` for the spot (`WouldBeOnline`), for each
   capacity type the building draws or supplies, that and the network's figure with it added when
   the spot is online ("Draws 2 Sand: Sand 4 / 2", "Supplies 16 Water: Water 2 / 20", colored by the
-  state that would give), and the dim hint "R rotate   Esc cancel". The ghost itself shows the facing (the model is
+  state that would give), and the dim hint "R rotate   Esc cancel". Outside build mode the same tooltip names the truck nearest the
+  pointer (within 28 pixels of its middle): "Truck" in the accent color over its state. The ghost itself shows the facing (the model is
   turned) and whether the spot is open and affordable (green or red).
 
 ### Asset and model pipeline

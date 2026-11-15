@@ -100,6 +100,9 @@ public sealed record BuildingDef(
 
     public Placement Placement { get; init; } = Placement.Standard;
 
+    /// <summary>How many trucks it holds (a Depot); its first comes with it.</summary>
+    public int TruckSlots { get; init; }
+
     /// <summary>How many units of fuel a fuel slot holds.</summary>
     public const float FuelSlotSize = 5f;
 
@@ -391,6 +394,15 @@ public static class BuildingDefs
         Placement = Placement.OnSand
     };
 
+    private static readonly BuildingDef Depot = new("Depot", 4, 4, new ResourceAmount[]
+    {
+        new(ResourceType.Wood, 40f),
+        new(ResourceType.Stone, 20f)
+    }, Array.Empty<ResourceType>(), 0f)
+    {
+        TruckSlots = 4
+    };
+
     public static BuildingDef For(BuildingType type)
     {
         return type switch
@@ -417,6 +429,7 @@ public static class BuildingDefs
             BuildingType.SandCollector => SandCollector,
             BuildingType.SandDredge => SandDredge,
             BuildingType.Glassworks => Glassworks,
+            BuildingType.Depot => Depot,
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, "no building definition")
         };
     }

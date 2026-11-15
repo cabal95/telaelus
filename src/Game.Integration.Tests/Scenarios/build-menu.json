@@ -19,6 +19,7 @@
       { "type": "SmallHub", "state": "affordable", "label": "Small Hub" },
       { "type": "WaterPump", "state": "unaffordable", "label": "Water Pump" },
       { "type": "BurnerGenerator", "state": "undiscovered", "label": "Undiscovered" },
+      { "type": "Depot", "state": "undiscovered", "label": "Undiscovered" },
       { "type": "DrillRig", "state": "undiscovered", "label": "Undiscovered" },
       { "type": "Glassworks", "state": "undiscovered", "label": "Undiscovered" },
       { "type": "LumberMill", "state": "undiscovered", "label": "Undiscovered" },
