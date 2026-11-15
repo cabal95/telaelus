@@ -1,0 +1,9 @@
+newmtl oil_earth
+Kd 0.300 0.250 0.190
+
+newmtl oil_earth_62
+Kd 0.186 0.155 0.118
+
+newmtl oil_earth_110
+Kd 0.330 0.275 0.209
+

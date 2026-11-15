@@ -69,6 +69,27 @@ public sealed class Building
     public bool Crafting { get; set; }
     public float Progress { get; set; }
 
+    /// <summary>What a collector with a choice yields (the Quarry, a motherlode's Deep Mine or Deep Well); see Simulation.OutputChoices.</summary>
+    public ResourceType? OutputChoice { get; set; }
+
+    /// <summary>The motherlode a Deep Mine or Deep Well stands on, or null.</summary>
+    public ResourceField? SiteMotherlode { get; set; }
+
+    /// <summary>The worked-out deposit a Deep Mine or Deep Well stands over, or null.</summary>
+    public ResourceType? SiteDeposit { get; set; }
+
+    /// <summary>A Forester's field while it has one (growing or grown); null while the plot stands bare.</summary>
+    public ResourceField? Plot { get; set; }
+
+    /// <summary>Seconds left before a bare Forester plot plants again.</summary>
+    public float PlotWait { get; set; }
+
+    /// <summary>Seconds left on the unit a provider that eats (the Rock Crusher) is working through.</summary>
+    public float FeedLeft { get; set; }
+
+    /// <summary>Whether a provider that eats had nothing to eat this tick.</summary>
+    public bool Starved { get; set; }
+
     public Building(int id, BuildingType type, int anchorX, int anchorZ, Facing facing, Recipe? recipe)
     {
         Id = id;

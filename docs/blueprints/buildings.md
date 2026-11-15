@@ -10,12 +10,13 @@ loop.
 
 ### Building types and definitions
 
-- `BuildingType` has twenty-three values: **Mine**, **Lumber Camp**, **Smelter**, **Refinery**,
+- `BuildingType` has twenty-nine values: **Mine**, **Lumber Camp**, **Smelter**, **Refinery**,
   **Oil Well**, the **HQ**, the storage buildings **Silo**, **Stockyard**, **Tank Farm**,
   **Warehouse**, and **Vault**, the hubs **Small Hub** and **Relay**, the generators **Water
   Wheel** and **Burner Generator**, the powered extractors **Lumber Mill** and **Drill Rig**, the
   Water and Sand providers **Water Pump**, **Pumping Station**, **Sand Collector**, and **Sand
-  Dredge**, the **Glassworks**, and the **Depot**.
+  Dredge**, the **Glassworks**, the **Depot**, and the renewables **Forester**, **Quarry**,
+  **Charcoal Kiln**, **Rock Crusher**, **Deep Well**, and **Deep Mine**.
 - Each type has a `BuildingDef` (in `BuildingDefs`): a display name, a footprint in fine cells
   (width along X, depth along Z when facing North), a cost, a speed, and for an extractor, the
   deposit types it works (`Works`; a building is an extractor when the list is not empty) and its
@@ -66,6 +67,7 @@ loop.
   - Smelter: 1 Iron Ore to 1 Iron, cycle 16 s.
   - Refinery: 1 Crude Oil to 1 Rocket Fuel, cycle 8 s.
   - Glassworks: no inputs to 1 Glass, cycle 12 s (its Sand is capacity, below).
+  - Charcoal Kiln: 3 Wood to 1 Charcoal, cycle 15 s (no fuel slot: part of the wood burns).
   Processors run at half the pace of one base extractor, so one Mine keeps two Smelters busy and
   one Oil Well two Refineries.
   These are placeholders until the production chain toward a ship (Steel Mill, ship parts; see
@@ -93,7 +95,13 @@ loop.
   may sit on a resource. The rule is the definition's `Placement`: Standard is the rule above;
   BesideWater adds that at least one footprint cell is edge-adjacent (not corner) to ShallowWater,
   DeepWater, or river channel; OnSand adds that every footprint cell is Sand terrain; and
-  AcrossStraightRiver is the Water Wheel's own rule (Capacity, below).
+  AcrossStraightRiver is the Water Wheel's own rule (Capacity, below). The renewables add three
+  (Renewables, below): BesideMountain (the standard rule, with a cell edge-adjacent to a mountain),
+  OpenGrassCell (the footprint is exactly one map cell, all Grass), and OverSite (the footprint is
+  exactly a worked-out map cell of a deposit in the definition's `Sites`, or exactly a motherlode's
+  center 4 x 4 when the motherlode's kind is worked by this type; on a motherlode the cells need
+  only be walkable). `SnapAnchor` gives the ghost's anchor for the last two: the map cell's
+  corner, or a motherlode's center.
 - An extractor may be placed with no matching field in its work area; it idles until one is in
   range. This allows planning ahead and later lets resources be created around a building.
 - **Unlocking**: a building is unlocked (`IsUnlocked`) once the stockpile has held its whole cost
@@ -161,6 +169,7 @@ loop.
 | Pumping Station | 3 x 3 | 40 Iron, 20 Stone | 16 Water | 10 Power | BesideWater |
 | Sand Collector | 2 x 2 | 20 Wood, 10 Stone | 2 Sand | | OnSand |
 | Sand Dredge | 3 x 3 | 40 Iron, 20 Stone | 8 Sand | 10 Power | OnSand |
+| Rock Crusher | 3 x 3 | 40 Iron, 20 Stone | 4 Sand | 15 Power | Standard; eats 1 Stone every 10 s (`Eats`) |
 
 | Consumer | Footprint | Cost | Draws | Speed | Works | Buffer |
 |---|---|---|---|---|---|---|
@@ -194,7 +203,8 @@ loop.
   (`TruckState`):
   - **Parked** or **ToDepot** (heading home): while its Depot is switched on and online, it
     **dispatches**:
-    among extractors (online or offline) whose buffer holds at least `TruckDefs.DispatchAt` (10)
+    among collectors (`IsCollector`: extractors and the Quarry, Deep Well, and Deep Mine; online
+    or offline) whose buffer holds at least `TruckDefs.DispatchAt` (10)
     in all, or is full, that no truck targets (`TruckFor`) and that it has not found unreachable,
     it takes the one holding the most, nearest on a tie, and the first a path reaches.
   - **ToCollector:** it drives beside the collector; if the collector is destroyed or its buffer
@@ -225,6 +235,41 @@ loop.
   leaving a collector or the HQ, and when the next cell of its path has become impassable (a
   building placed on it), when it searches again for the same end; a collector it then cannot
   reach is dropped and counted unreachable.
+
+### Renewables
+
+| Building | Footprint | Cost | Tier, draws | Placement | Does |
+|---|---|---|---|---|---|
+| Forester | 4 x 4 | 30 Wood, 20 Stone | 1; 2 Power, 5 Water | OpenGrassCell | Grows a 150-Wood field on its own cell (`Plot`) |
+| Quarry | 3 x 3 | 40 Iron, 30 Wood | 1; 10 Power | BesideMountain | 1 Stone (or Limestone) every 6 s; buffer 40 |
+| Charcoal Kiln | 2 x 2 | 30 Stone, 10 Wood | 0 | Standard | Its recipe above; buffer 10, inputs 5 cycles |
+| Rock Crusher | 3 x 3 | 40 Iron, 20 Stone | 1; 15 Power | Standard | A Sand provider (Capacity, above) |
+| Deep Well | 4 x 4 | 60 Iron, 30 Stone | 1; 15 Power | OverSite: worked-out Crude Oil, or a Salt Dome | 1 Crude Oil every 26.7 s on a worked-out cell; buffer 20 |
+| Deep Mine | 4 x 4 | 80 Iron, 40 Stone | 2; 30 Power | OverSite: worked-out Iron Ore, Copper Ore, Bauxite, Titanium Ore, Quartz, or Limestone, or a solid motherlode | 1 unit every 20 s on a worked-out cell; buffer 40 |
+
+- **The Forester's plot:** placed, it plants a Wood field of 150 on its own map cell
+  (`ResourceField.Owner` is the Forester, `Growing` with `GrowLeft` 180 s). Growth advances at its
+  work speed while it is switched on (the slower of its Power and Water speeds, 0 offline); a
+  growing field cannot be worked or harvested (`Workable`). Grown, it is an ordinary Wood field for
+  Lumber Camps, Lumber Mills, and the player. When it is cut down the plot stands bare
+  (`PlotWait`, 30 s at the same speed) and then plants again. Destroying the Forester removes its
+  field. A Forester's field leaves no worked-out record.
+- **Collectors without a field** (`ProduceSeconds` above 0: the Quarry, Deep Well, and Deep Mine)
+  step their progress at their work speed and put one unit of their output (`OutputOf`) into their
+  buffer every `UnitSeconds`; a whole unit waits while the buffer is full ("Full: waiting for
+  pickup"), like an extractor. `OutputChoices` lists what one may yield, the default first: the
+  Quarry Stone, and Limestone too beside a Highlands mountain; a building over a worked-out cell
+  that deposit; a building on a motherlode its yields (resources.md). `SetOutputChoice` picks one;
+  it takes effect on the next unit, and what is in the buffer stays.
+- **On a motherlode** a building's rate is the motherlode's for the chosen yield (5 s for its
+  largest share, longer in proportion for a smaller one). Its **reach** (`ReachOf`, where trucks
+  stop and the player collects with E) is the whole motherlode, since nobody walks on the ring
+  around it; any other building's reach is its footprint.
+- A placed Deep Well or Deep Mine records its site (`SiteMotherlode` or `SiteDeposit`). Only one
+  building fits on a motherlode's center, so a motherlode yields one resource at a time.
+- **The Rock Crusher** eats (`Eats`): while switched on, each tick it works through its current
+  Stone at its work speed and, when that is used up, takes the next from storage (online only).
+  With none it supplies nothing ("Waiting for Stone").
 
 ### Fuel
 
@@ -300,7 +345,9 @@ loop.
   A consumer that is offline is idle "No Power: offline" (naming the first type it draws, in
   `CapacityType` order), and in a blackout of a type it draws "Blackout: Water" (checked first). A
   fuel burner with no fuel at hand is idle "Waiting for fuel" (offline "Waiting for fuel (load by
-  hand)"); an offline provider is idle "Offline: supplies nothing". Storage
+  hand)"); an offline provider is idle "Offline: supplies nothing", and an eating provider with
+  nothing to eat "Waiting for Stone". A collector without a field works until its buffer is full
+  ("Full: waiting for pickup"); a Forester always reports Working. Storage
   buildings and hubs report Working (they do no work).
 - A permanent building (the HQ) cannot be switched off or destroyed: `SetBuildingEnabled` and
   `TryDestroyBuilding` return false for it.

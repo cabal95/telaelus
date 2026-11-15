@@ -60,7 +60,7 @@ public partial class FieldDetail : Dialog
         };
         frame.AddChild(_picture);
 
-        _rows = new StatusRows("Remaining", "Worked by");
+        _rows = new StatusRows("Yields", "Growing", "Remaining", "Worked by");
         Body.AddChild(_rows);
         _remaining = StatusRows.MakeProgressBar();
         Body.AddChild(_remaining);
@@ -70,7 +70,9 @@ public partial class FieldDetail : Dialog
     public void ShowField(ResourceField field)
     {
         Field = field;
-        TitleLabel.Text = ResourceDefs.For(field.Type).Name;
+        TitleLabel.Text = field.Motherlode is MotherlodeType kind
+            ? MotherlodeDefs.For(kind).Name + " motherlode"
+            : ResourceDefs.For(field.Type).Name;
         _picture.Texture = null;
         Host.Open(this);
         Refresh();
@@ -92,6 +94,32 @@ public partial class FieldDetail : Dialog
 
         // The picture may arrive after the panel opens (it is drawn once at startup).
         _picture.Texture ??= _pictures.For(field.Type, _sim.MapBiomeAt(field.MapX, field.MapZ));
+        if (field.Motherlode is MotherlodeType kind)
+        {
+            // A motherlode: its yields with their rates, endless, and its one building and what it is set to.
+            MotherlodeDef def = MotherlodeDefs.For(kind);
+            _rows.Set("Yields", string.Join(", ", def.Yields.Select(y =>
+                $"{ResourceDefs.For(y.Type).Name} {y.Share * 100f:0}% (every {def.UnitSeconds(y.Type):0.##} s)")));
+            _rows.Set("Growing", null);
+            _rows.Set("Remaining", "Endless");
+            Building? worker = _sim.Buildings.FirstOrDefault(b => ReferenceEquals(b.SiteMotherlode, field));
+            _rows.Set("Worked by", worker is null
+                ? "nothing (a " + BuildingDefs.For(def.WorkedBy).Name + " on its center)"
+                : $"1 {worker.Def.Name}, on {ResourceDefs.For(_sim.OutputOf(worker)!.Value).Name}");
+            _remaining.Visible = false;
+            return;
+        }
+        _rows.Set("Yields", null);
+        _remaining.Visible = !field.Growing;
+        if (field.Growing)
+        {
+            int left = Mathf.CeilToInt(field.GrowLeft);
+            _rows.Set("Growing", $"{left / 60}:{left % 60:00} left");
+            _rows.Set("Remaining", null);
+            _rows.Set("Worked by", null);
+            return;
+        }
+        _rows.Set("Growing", null);
         _rows.Set("Remaining", $"{Mathf.CeilToInt(field.Amount)} / {Mathf.CeilToInt(field.InitialAmount)}");
         _rows.Set("Worked by", WorkedBy(_sim.ExtractorsWorking(field)));
         _remaining.Value = field.RemainingFraction;

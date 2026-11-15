@@ -82,7 +82,8 @@ public class FieldTests
             totals[field.Type] = sum + field.Amount;
         }
 
-        Assert.Equal(22, sim.Fields.Count);
+        // Twenty-two fields and the Laterite motherlode.
+        Assert.Equal(23, sim.Fields.Count);
         Assert.Equal(4600f, totals[ResourceType.IronOre]);
         Assert.Equal(1200f, totals[ResourceType.CopperOre]);
         Assert.Equal(1600f, totals[ResourceType.Coal]);

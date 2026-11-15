@@ -391,8 +391,72 @@ DEPOSITS = {
 }
 
 
+# ---------------------------------------------------------------- sites
+def worked_out_oil(seed=7):
+    """A worked-out seep: a flat dry stain filling most of the cell, cracked into patches."""
+    rnd = random.Random(seed)
+    m, mat = Mesh(), Materials()
+    n = 14
+    for r, y, shade in ((1.75, 0.008, 1.0), (1.2, 0.016, 0.62)):
+        pts = [(math.cos(2 * math.pi * k / n) * r * rnd.uniform(0.82, 1.05), y,
+                math.sin(2 * math.pi * k / n) * r * rnd.uniform(0.82, 1.05)) for k in range(n)]
+        for k in range(n):
+            m.tri(mat("oil_earth", shade), (0, y, 0), pts[(k + 1) % n], pts[k], centre=(0, -1, 0))
+    for _ in range(5):
+        x, z = rnd.uniform(-0.9, 0.9), rnd.uniform(-0.9, 0.9)
+        quad(m, mat("oil_earth", 1.1), (x - 0.12, 0.02, z - 0.03), (x + 0.12, 0.02, z - 0.03),
+             (x + 0.12, 0.02, z + 0.03), (x - 0.12, 0.02, z + 0.03), (0, 1, 0))
+    return m, mat.mats
+
+
+def worked_out_pit(seed=11):
+    """A worked-out deposit: a shallow pit with a low spoil rim."""
+    rnd = random.Random(seed)
+    m, mat = Mesh(), Materials()
+    n = 16
+    rim = [(math.cos(2 * math.pi * k / n) * 1.5 * rnd.uniform(0.9, 1.05), 0.0,
+            math.sin(2 * math.pi * k / n) * 1.5 * rnd.uniform(0.9, 1.05)) for k in range(n)]
+    crest = [(p[0] * 0.8, 0.18 + rnd.uniform(0.0, 0.05), p[2] * 0.8) for p in rim]
+    floor = [(p[0] * 0.55, 0.02, p[2] * 0.55) for p in rim]
+    for k in range(n):
+        j = (k + 1) % n
+        quad(m, mat("rock", 0.9), rim[k], rim[j], crest[j], crest[k], norm((rim[k][0], 0.6, rim[k][2])))
+        quad(m, mat("mud", 0.9), crest[k], crest[j], floor[j], floor[k], norm((-rim[k][0], 0.6, -rim[k][2])))
+        m.tri(mat("shadow", 1.6), (0, 0.02, 0), floor[k], floor[j], centre=(0, -1, 0))
+    for _ in range(6):
+        a = rnd.uniform(0, 2 * math.pi)
+        centre = (math.cos(a) * 1.2, 0.12, math.sin(a) * 1.2)
+        add_blob(m, blob(rnd, centre, (0.12, 0.1, 0.12), 0, 0.3, squash_base=False), centre, lambda t: mat("rock"))
+    return m, mat.mats
+
+
+def motherlode_base(seed=13):
+    """A motherlode's rock mound, 8 x 8: a broad dark rise, flatter in the middle where its building
+    stands; the game sets the yields' field models round its ring."""
+    rnd = random.Random(seed)
+    m, mat = Mesh(), Materials()
+    for k in range(10):
+        a = 2 * math.pi * k / 10 + rnd.uniform(-0.2, 0.2)
+        d = rnd.uniform(2.6, 3.2)
+        centre = (math.cos(a) * d, 0.0, math.sin(a) * d)
+        r = rnd.uniform(0.8, 1.1)
+        add_blob(m, blob(rnd, centre, (r, rnd.uniform(0.35, 0.55), r), 1, 0.18), centre,
+                 lambda t: mat("motherlode_rock", rnd.choice((1.0, 0.9, 1.1))))
+    for x in (-1, 1):
+        for z in (-1, 1):
+            quad(m, mat("motherlode_rock", 0.8), (x * 0.0, 0.03, z * 0.0), (x * 2.6, 0.03, 0.0),
+                 (x * 2.6, 0.03, z * 2.6), (0.0, 0.03, z * 2.6), (0, 1, 0))
+    return m, mat.mats
+
+
+SITES = {"worked_out_oil": worked_out_oil, "worked_out_pit": worked_out_pit, "motherlode_base": motherlode_base}
+
+
 def build_all():
     for name, (fn, seeds) in list(DEPOSITS.items()) + list(TREES.items()):
         for suffix, seed in zip("abc", seeds):
             m, mats = fn(seed)
             m.write("%s_%s" % (name, suffix), mats)
+    for name, fn in SITES.items():
+        m, mats = fn()
+        m.write(name, mats)

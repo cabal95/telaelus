@@ -21,6 +21,7 @@ public partial class GameRoot : Node3D
     private ResourceFieldViews _fieldViews = null!;
     private BuildingViews _buildingViews = null!;
     private TruckViews _truckViews = null!;
+    private SiteViews _siteViews = null!;
     private BuildController _buildController = null!;
     private DebugOverlay _debug = null!;
     private TopBar _topBar = null!;
@@ -103,6 +104,7 @@ public partial class GameRoot : Node3D
         _fieldViews.Sync(_sim, _terrainView);
         _buildingViews.Sync(ExploredBuildings());
         _truckViews.Sync(_sim, delta);
+        _siteViews.Sync(_sim);
         _topBar.Refresh(_sim, _dialogs.UiSize);
         _hint.Refresh(_sim, _dialogs.UiSize);
         _debug.Refresh(_sim, _perf);
@@ -250,6 +252,16 @@ public partial class GameRoot : Node3D
     }
 
     /// <summary>Shows the placement tooltip beside the pointer while a building is selected.</summary>
+    /// <summary>The deposit of the worked-out cell under the pointer, when nothing stands or lies on it.</summary>
+    private ResourceType? WorkedOutUnderPointer()
+    {
+        if (_buildController.PointedCell() is not (int x, int z) || _sim.FieldAt(x, z) is not null || _sim.BuildingAt(x, z) is not null)
+        {
+            return null;
+        }
+        return _sim.WorkedOut.TryGetValue((Simulation.MapCellOf(x), Simulation.MapCellOf(z)), out ResourceType deposit) ? deposit : null;
+    }
+
     /// <summary>How near (in screen pixels) the pointer must be to a truck to hover it.</summary>
     private const float TruckHoverPixels = 28f;
 
@@ -270,6 +282,14 @@ public partial class GameRoot : Node3D
                 {
                     new("Truck", UiTheme.Accent),
                     new(TruckText.State(truck))
+                };
+                _dialogs.PlacementTip.ShowAt(_dialogs.ToUi(screen) + new Vector2(28f, 28f), lines, _dialogs.UiSize);
+            }
+            else if (WorkedOutUnderPointer() is ResourceType deposit)
+            {
+                var lines = new List<TipLine>
+                {
+                    new("Worked-out " + ResourceDefs.For(deposit).Name, UiTheme.Accent)
                 };
                 _dialogs.PlacementTip.ShowAt(_dialogs.ToUi(screen) + new Vector2(28f, 28f), lines, _dialogs.UiSize);
             }
@@ -381,6 +401,12 @@ public partial class GameRoot : Node3D
             Name = "Trucks"
         };
         AddChild(_truckViews);
+
+        _siteViews = new SiteViews
+        {
+            Name = "Sites"
+        };
+        AddChild(_siteViews);
 
         _playerView = new PlayerView
         {

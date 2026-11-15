@@ -547,13 +547,160 @@ def depot():
     return m, mat.mats
 
 
+def forester():
+    """A tree plot, 4 x 4: a low fence round tilled ground, a potting shed with a green roof and a
+    water tank in one corner, and a power pole. The trees are the plot's field, drawn by the game."""
+    m, mat = Mesh(), Materials()
+    hx, hz = half(4), half(4)
+    box(m, mat("tilled"), -hx, 0, -hz, hx, 0.04, hz, mat_top=mat("tilled", 1.08))
+    for k in range(-3, 4):
+        box(m, mat("tilled", 0.85), k * 0.5 - 0.04, 0.04, -hz + 0.2, k * 0.5 + 0.04, 0.06, hz - 0.2)
+    # the fence: posts and two rails on each side
+    for (x0, z0, x1, z1) in ((-hx, -hz, hx, -hz), (-hx, hz, hx, hz), (-hx, -hz, -hx, hz), (hx, -hz, hx, hz)):
+        for y in (0.18, 0.34):
+            cylinder(m, mat("wood"), (x0, y, z0), (x1, y, z1), 0.025, segs=4)
+    for k in range(9):
+        t = -hx + k * (2 * hx / 8)
+        for (x, z) in ((t, -hz), (t, hz), (-hx, t), (hx, t)):
+            cylinder(m, mat("wood_dark"), (x, 0.0, z), (x, 0.42, z), 0.035, segs=4)
+    # the shed and tank in the back right corner
+    box(m, mat("wood"), 1.05, 0.04, 1.05, 1.8, 0.6, 1.8)
+    prism_roof(m, mat("forester_accent"), 1.0, 1.85, 1.0, 1.85, 0.6, 0.9, mat_gable=mat("wood"))
+    cylinder(m, mat("metal"), (1.45, 0.04, 0.55), (1.45, 0.55, 0.55), 0.22, segs=10, mat_cap=mat("water"))
+    cylinder(m, mat("forester_accent"), (1.45, 0.38, 0.55), (1.45, 0.45, 0.55), 0.23, segs=10, caps=False)
+    power_pole(m, mat, -1.7, 1.7, 1.2)
+    return m, mat.mats
+
+
+def quarry():
+    """A cut stone face on a squared block at the back (the side that meets the mountain), a small
+    derrick crane lifting a block, stacked cut blocks at the front, and a power pole."""
+    m, mat = Mesh(), Materials()
+    hx, hz = half(3), half(3)
+    box(m, mat("stone_dark"), -hx, 0, -hz, hx, 0.06, hz, mat_top=mat("rock"))
+    # the face: stepped benches cut into a block across the back
+    for k, (z0, top) in enumerate(((0.55, 1.5), (0.15, 0.95), (-0.2, 0.45))):
+        box(m, mat("rock", 1.0 - k * 0.04), -1.3, 0.06, z0, 1.3, top, hz, mat_top=mat("stone", 0.95))
+    box(m, mat("quarry_accent"), -1.32, 0.95, 0.13, 1.32, 1.02, 0.17)
+    # the derrick: a mast and a boom to the front, a block on its hook
+    cylinder(m, mat("wood_dark"), (-0.8, 0.06, -0.6), (-0.8, 1.9, -0.6), 0.06, segs=6)
+    cylinder(m, mat("wood_dark"), (-0.8, 0.4, -0.6), (0.4, 1.6, -0.9), 0.045, segs=5)
+    cylinder(m, mat("metal_dark"), (0.4, 1.6, -0.9), (0.4, 0.75, -0.9), 0.012, segs=3)
+    box(m, mat("stone"), 0.25, 0.5, -1.05, 0.55, 0.75, -0.75)
+    box(m, mat("quarry_accent"), -0.95, 0.06, -0.75, -0.65, 0.3, -0.45)
+    # cut blocks stacked at the front right
+    for (x, z, y) in ((0.7, -1.0, 0.06), (1.05, -1.0, 0.06), (0.88, -0.95, 0.32)):
+        box(m, mat("stone"), x - 0.16, y, z - 0.18, x + 0.16, y + 0.26, z + 0.18, mat_top=mat("stone", 1.06))
+    power_pole(m, mat, -1.2, -1.15, 1.3)
+    return m, mat.mats
+
+
+def charcoal_kiln():
+    """Two domed brick beehive kilns with dark doors and smoke vents, a stack of logs, and a heap of
+    charcoal."""
+    m, mat = Mesh(), Materials()
+    hx, hz = half(2), half(2)
+    box(m, mat("stone_dark"), -hx, 0, -hz, hx, 0.05, hz, mat_top=mat("mud"))
+    for x in (-0.38, 0.4):
+        cylinder(m, mat("kiln_accent"), (x, 0.05, 0.3), (x, 0.38, 0.3), 0.36, segs=12, caps=False)
+        spike(m, mat("kiln_accent", 0.9), (x, 0.38, 0.3), (x, 0.82, 0.3), 0.36, segs=12)
+        cylinder(m, mat("stone_dark"), (x, 0.78, 0.3), (x, 0.88, 0.3), 0.06, segs=6, mat_cap=mat("shadow"))
+        box(m, mat("shadow"), x - 0.12, 0.05, -0.07, x + 0.12, 0.3, -0.05)
+    # logs on the front left, charcoal heap on the front right
+    for y, z in ((0.14, -0.55), (0.14, -0.33), (0.32, -0.44)):
+        cylinder(m, mat("bark"), (-0.8, y, z), (-0.1, y, z), 0.09, segs=7, mat_cap=mat("log_end"))
+    spike(m, mat("charcoal"), (0.45, 0.05, -0.45), (0.45, 0.3, -0.45), 0.3, segs=7)
+    return m, mat.mats
+
+
+def rock_crusher():
+    """A hopper over a boxy jaw crusher, a short conveyor out to a sand pile, and a power pole."""
+    m, mat = Mesh(), Materials()
+    hx, hz = half(3), half(3)
+    box(m, mat("stone_dark"), -hx, 0, -hz, hx, 0.06, hz, mat_top=mat("stone", 0.85))
+    # the crusher body with a yellow band, and the hopper on top
+    box(m, mat("metal_dark"), -0.75, 0.06, 0.0, 0.45, 0.95, 1.1, mat_top=mat("metal"))
+    box(m, mat("power_accent"), -0.77, 0.7, -0.02, 0.47, 0.78, 1.12)
+    spike(m, mat("metal"), (-0.15, 1.6, 0.55), (-0.15, 0.95, 0.55), 0.62, segs=4)
+    box(m, mat("rock"), -0.45, 1.5, 0.3, 0.15, 1.62, 0.8)
+    # conveyor to the front and the sand pile it feeds
+    cylinder(m, mat("metal_dark"), (-0.15, 0.55, 0.0), (0.55, 0.3, -0.9), 0.08, segs=4)
+    for t in (0.2, 0.5, 0.8):
+        x, y, z = -0.15 + 0.7 * t, 0.55 - 0.25 * t, -0.9 * t
+        cylinder(m, mat("metal_dark"), (x, 0.06, z), (x, y, z), 0.03, segs=4)
+    spike(m, mat("sand"), (0.7, 0.06, -0.85), (0.7, 0.45, -0.85), 0.55, segs=8)
+    box(m, mat("sand_accent"), 0.47, 0.06, 0.2, 1.2, 0.5, 0.9, mat_top=mat("metal_dark"))
+    power_pole(m, mat, -1.2, -1.15, 1.4)
+    return m, mat.mats
+
+
+def deep_well():
+    """A tall derrick at the center over a capped wellhead on an oil-stained pad (the old seep), a
+    pump motor and a short tank to one side, a pipe rack, and a power pole."""
+    m, mat = Mesh(), Materials()
+    hx, hz = half(4), half(4)
+    box(m, mat("stone_dark"), -hx, 0, -hz, hx, 0.05, hz, mat_top=mat("stone", 0.85))
+    cylinder(m, mat("oil"), (0, 0.05, 0), (0, 0.055, 0), 1.0, segs=14, mat_cap=mat("oil"))
+    top = 3.0
+    legs = [(-0.7, -0.7), (0.7, -0.7), (0.7, 0.7), (-0.7, 0.7)]
+    for x, z in legs:
+        cylinder(m, mat("metal_dark"), (x, 0.05, z), (x * 0.25, top, z * 0.25), 0.05, segs=5)
+    for y in (0.8, 1.6, 2.3):
+        s = 0.7 - (y - 0.05) / (top - 0.05) * 0.525
+        for i in range(4):
+            (ax, az), (bx, bz) = legs[i], legs[(i + 1) % 4]
+            cylinder(m, mat("oil_well_accent"), (ax / 0.7 * s, y, az / 0.7 * s), (bx / 0.7 * s, y, bz / 0.7 * s), 0.03, segs=4)
+    box(m, mat("oil_well_accent"), -0.25, top - 0.05, -0.25, 0.25, top + 0.15, 0.25, mat_top=mat("metal_dark"))
+    cylinder(m, mat("metal"), (0, 0.05, 0), (0, 0.45, 0), 0.18, segs=8, mat_cap=mat("metal_dark"))
+    # pump motor and tank to the right, a pipe rack to them
+    box(m, mat("metal_dark"), 0.95, 0.05, -0.45, 1.6, 0.6, 0.25, mat_top=mat("power_accent"))
+    cylinder(m, mat("metal"), (1.3, 0.05, 1.05), (1.3, 0.9, 1.05), 0.42, segs=12)
+    cylinder(m, mat("oil_well_accent"), (1.3, 0.55, 1.05), (1.3, 0.68, 1.05), 0.43, segs=12, caps=False)
+    for z in (-0.1, 0.1):
+        cylinder(m, mat("metal_dark"), (0.2, 0.3, z), (0.95, 0.3, z), 0.04, segs=5)
+    cylinder(m, mat("metal_dark"), (1.3, 0.3, 0.25), (1.3, 0.3, 0.65), 0.04, segs=5)
+    power_pole(m, mat, -1.65, -1.65, 1.5)
+    return m, mat.mats
+
+
+def deep_mine():
+    """A steel headframe tower with a winding wheel over a shaft at the center, a winding house, an
+    ore skip on rails to a tipple at the front, and a power pole."""
+    m, mat = Mesh(), Materials()
+    hx, hz = half(4), half(4)
+    box(m, mat("stone_dark"), -hx, 0, -hz, hx, 0.06, hz, mat_top=mat("stone"))
+    box(m, mat("shadow"), -0.45, 0.06, -0.45, 0.45, 0.065, 0.45)
+    top = 2.8
+    for x in (-0.55, 0.55):
+        for z in (-0.5, 0.5):
+            cylinder(m, mat("metal_dark"), (x, 0.06, z), (x * 0.6, top, z * 0.6), 0.06, segs=5)
+        cylinder(m, mat("metal_dark"), (x, 0.06, 0.5), (x * 0.4, top - 0.4, 1.4), 0.05, segs=5)
+    for y in (0.9, 1.8):
+        cylinder(m, mat("mine_accent"), (-0.5, y, -0.45), (0.5, y, -0.45), 0.04, segs=4)
+        cylinder(m, mat("mine_accent"), (-0.5, y, 0.45), (0.5, y, 0.45), 0.04, segs=4)
+    cylinder(m, mat("metal"), (-0.4, top, 0), (0.4, top, 0), 0.06, segs=6)
+    cylinder(m, mat("mine_accent"), (-0.06, top + 0.05, 0), (0.06, top + 0.05, 0), 0.42, segs=12)
+    # the winding house at the back with a yellow band
+    box(m, mat("stone"), -0.9, 0.06, 1.2, 0.9, 1.0, 1.85, mat_top=mat("metal"))
+    box(m, mat("power_accent"), -0.92, 0.75, 1.18, 0.92, 0.83, 1.87)
+    # rails from the shaft to a tipple at the front, a skip on them
+    for x in (-0.15, 0.15):
+        box(m, mat("metal_dark"), x - 0.02, 0.06, -1.7, x + 0.02, 0.09, -0.45)
+    box(m, mat("mine_accent"), -0.25, 0.12, -1.1, 0.25, 0.42, -0.7, mat_top=mat("iron_rust"))
+    box(m, mat("wood_dark"), -0.6, 0.06, -1.85, 0.6, 0.7, -1.6, mat_top=mat("wood"))
+    spike(m, mat("iron_rust"), (1.1, 0.06, -1.2), (1.1, 0.5, -1.2), 0.5, segs=7)
+    power_pole(m, mat, -1.65, -1.6, 1.5)
+    return m, mat.mats
+
+
 BUILDINGS = {"mine": mine, "lumber_camp": lumber_camp, "smelter": smelter, "refinery": refinery,
              "oil_well": oil_well, "hq": hq, "silo": silo, "stockyard": stockyard, "tank_farm": tank_farm,
              "warehouse": warehouse, "vault": vault, "small_hub": small_hub, "relay": relay,
              "water_wheel": water_wheel, "burner_generator": burner_generator, "lumber_mill": lumber_mill,
              "drill_rig": drill_rig, "water_pump": water_pump, "pumping_station": pumping_station,
              "sand_collector": sand_collector, "sand_dredge": sand_dredge, "glassworks": glassworks,
-             "depot": depot}
+             "depot": depot, "forester": forester, "quarry": quarry, "charcoal_kiln": charcoal_kiln,
+             "rock_crusher": rock_crusher, "deep_well": deep_well, "deep_mine": deep_mine}
 
 
 def build_all():

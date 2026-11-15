@@ -151,6 +151,18 @@ public sealed class ScenarioCommand
                     float z = Number(Required(arg, "z"), "z");
                     return e => e.TeleportPlayer(x, z);
                 }
+            case "placeMotherlode":
+                {
+                    MotherlodeType kind = ParseEnum<MotherlodeType>(Required(arg, "kind"));
+                    (int x, int z) = Pair(Required(arg, "mapCell"), "mapCell");
+                    return e => e.PlaceMotherlode(kind, x, z);
+                }
+            case "setWorkedOut":
+                {
+                    (int x, int z) = Pair(Required(arg, "mapCell"), "mapCell");
+                    ResourceType deposit = ParseEnum<ResourceType>(Required(arg, "deposit"));
+                    return e => e.SetWorkedOut(x, z, deposit);
+                }
             case "fillBuffer":
                 {
                     (int x, int z) = Pair(Required(arg, "anchor"), "anchor");

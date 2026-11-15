@@ -1,0 +1,12 @@
+newmtl rock_90
+Kd 0.432 0.414 0.396
+
+newmtl mud_90
+Kd 0.342 0.288 0.198
+
+newmtl shadow_160
+Kd 0.128 0.112 0.112
+
+newmtl rock
+Kd 0.480 0.460 0.440
+

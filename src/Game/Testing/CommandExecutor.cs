@@ -272,6 +272,18 @@ public sealed class CommandExecutor
         return StepOutcome.Ok;
     }
 
+    public StepOutcome PlaceMotherlode(MotherlodeType kind, int mapX, int mapZ)
+    {
+        _root.Sim.Debug.PlaceMotherlode(kind, mapX, mapZ);
+        return StepOutcome.Ok;
+    }
+
+    public StepOutcome SetWorkedOut(int mapX, int mapZ, ResourceType deposit)
+    {
+        _root.Sim.Debug.SetWorkedOut(mapX, mapZ, deposit);
+        return StepOutcome.Ok;
+    }
+
     public StepOutcome FillBuffer(int anchorX, int anchorZ, ResourceType type, float amount)
     {
         _root.Sim.Debug.FillBuffer(anchorX, anchorZ, type, amount);

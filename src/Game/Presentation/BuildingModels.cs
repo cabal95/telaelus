@@ -34,6 +34,10 @@ public static class BuildingModels
             BuildingType.PumpingStation => "pumping_station",
             BuildingType.SandCollector => "sand_collector",
             BuildingType.SandDredge => "sand_dredge",
+            BuildingType.CharcoalKiln => "charcoal_kiln",
+            BuildingType.RockCrusher => "rock_crusher",
+            BuildingType.DeepWell => "deep_well",
+            BuildingType.DeepMine => "deep_mine",
             _ => type.ToString().ToLowerInvariant()
         };
     }

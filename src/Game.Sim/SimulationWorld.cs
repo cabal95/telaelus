@@ -58,6 +58,7 @@ public sealed partial class Simulation
         _fields.Clear();
         _fieldsByMapCell.Clear();
         _buildings.Clear();
+        _workedOut.Clear();
         _trucks.Clear();
         _unreachable.Clear();
         _occupied.Clear();
@@ -144,6 +145,10 @@ public sealed partial class Simulation
         foreach ((ResourceType type, int mapX, int mapZ) in generated.StarterFields)
         {
             AddField(type, mapX, mapZ, WorldGenerator.StarterFieldAmount);
+        }
+        foreach ((MotherlodeType kind, int mapX, int mapZ) in generated.Motherlodes)
+        {
+            AddMotherlode(kind, mapX, mapZ);
         }
         DiscoverChunkWithoutFog(generated.Chunk);
         ChunkGenerated?.Invoke(chunkX, chunkZ);

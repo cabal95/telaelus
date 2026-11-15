@@ -48,6 +48,7 @@ public static class StateSnapshot
             ["ui"] = Ui(root),
             ["buildings"] = Buildings(sim),
             ["trucks"] = Trucks(sim),
+            ["workedOut"] = WorkedOut(sim),
             ["fields"] = Fields(sim, root.FieldViews),
             ["stockpile"] = Stockpile(sim),
             ["capacity"] = Capacity(sim),
@@ -186,6 +187,7 @@ public static class StateSnapshot
             ui["rows"] = rows;
             ui["destroy"] = root.BuildingDetail.DestroyText;
             ui["fuel"] = root.BuildingDetail.FuelText;
+            ui["output"] = root.BuildingDetail.OutputText;
             ui["buyTruck"] = root.BuildingDetail.BuyTruck is (string text, bool enabled)
                 ? new JsonObject
                 {
@@ -317,6 +319,21 @@ public static class StateSnapshot
         return list;
     }
 
+    /// <summary>The worked-out map cells in cell order, each with its deposit.</summary>
+    private static JsonArray WorkedOut(Simulation sim)
+    {
+        var list = new JsonArray();
+        foreach (((int x, int z), ResourceType deposit) in sim.WorkedOut.OrderBy(e => e.Key.MapX).ThenBy(e => e.Key.MapZ))
+        {
+            list.Add(new JsonObject
+            {
+                ["mapCell"] = Pair(x, z),
+                ["deposit"] = deposit.ToString()
+            });
+        }
+        return list;
+    }
+
     private static JsonArray Trucks(Simulation sim)
     {
         var list = new JsonArray();
@@ -357,6 +374,7 @@ public static class StateSnapshot
                 ["input"] = Amounts(b.Input),
                 ["fuelSlot"] = Amounts(b.FuelSlot),
                 ["burning"] = b.BurnLeft > 0f ? b.Burning?.ToString() : null,
+                ["producing"] = b.Def.ProduceSeconds > 0f ? sim.OutputOf(b)?.ToString() : null,
                 ["status"] = Camel(sim.BuildingStatusOf(b).State.ToString()),
                 ["idleReason"] = sim.BuildingStatusOf(b).IdleReason
             });
@@ -377,7 +395,9 @@ public static class StateSnapshot
                 ["amount"] = Round(f.Amount),
                 ["stage"] = f.Stage,
                 ["visibleModels"] = views.VisibleModels(f.Id),
-                ["explored"] = sim.IsExplored(f.MapX, f.MapZ)
+                ["explored"] = sim.IsExplored(f.MapX, f.MapZ),
+                ["growing"] = f.Growing,
+                ["motherlode"] = f.Motherlode?.ToString()
             });
         }
         return list;

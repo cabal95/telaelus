@@ -22,11 +22,12 @@ public static class FieldTileView
         foreach (ResourceField field in fields)
         {
             int stage = field.Stage;
+            float grown = ResourceFieldViews.GrowthScale(field);
             for (int i = 0; i < stage; i++)
             {
                 Vector3 slot = ResourceFieldViews.SlotPosition(field, i) - origin;
                 (string path, Transform3D transform) = NodeModels.Slot(
-                    field.Type, sim.MapBiomeAt(field.MapX, field.MapZ), field.Id * ResourceField.StageCount + i, ResourceFieldViews.SlotFootprint, field.InitialAmount, slot);
+                    field.Type, sim.MapBiomeAt(field.MapX, field.MapZ), field.Id * ResourceField.StageCount + i, ResourceFieldViews.SlotFootprint, field.InitialAmount, slot, grown);
                 if (!groups.TryGetValue(path, out List<Transform3D>? group))
                 {
                     group = new List<Transform3D>();

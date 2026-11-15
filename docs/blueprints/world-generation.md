@@ -169,6 +169,13 @@ second hash picks the type by weight, and the field takes the biome's amount for
   taken in an order hashed from the seed (`SaltStarter`), none touching another starter field;
   each holds `StarterFieldAmount` (1000) whatever its biome. Rolled fields touching a starter field
   are dropped, so fields still never touch. The bounded maps have no starter set.
+- **Motherlodes:** each chunk has a `MotherlodeChance` (1 in 5, by a hash of the seed and the
+  chunk) of one motherlode (resources.md). It goes on the 2 x 2 block of map cells, with its ring
+  of cells around it inside the chunk, whose four cells are open (walkable, no feature) and of
+  biomes that host its kind, at least `MotherlodeSpawnDistance` (24) map cells from the spawn, with
+  the lowest cell hash; the kind is the block's biome's, a second hash picking where the biome hosts
+  two. Rolled fields on or touching the block are dropped. `GeneratedChunk.Motherlodes` carries
+  it to the world.
 
 ## Related
 

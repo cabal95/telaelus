@@ -217,6 +217,28 @@ public sealed partial class Simulation
             }
         }
 
+        /// <summary>Marks a map cell worked out, as if a field of the deposit had depleted there.</summary>
+        public void SetWorkedOut(int mapX, int mapZ, ResourceType deposit)
+        {
+            _sim._workedOut[(mapX, mapZ)] = deposit;
+        }
+
+        /// <summary>Places a motherlode on the 2 x 2 map cells from a corner; throws when any is taken.</summary>
+        public ResourceField PlaceMotherlode(MotherlodeType kind, int mapX, int mapZ)
+        {
+            for (int x = mapX; x < mapX + 2; x++)
+            {
+                for (int z = mapZ; z < mapZ + 2; z++)
+                {
+                    if (_sim._fieldsByMapCell.ContainsKey((x, z)))
+                    {
+                        throw new InvalidOperationException($"map cell ({x}, {z}) already has a field");
+                    }
+                }
+            }
+            return _sim.AddMotherlode(kind, mapX, mapZ);
+        }
+
         /// <summary>Moves the player to a world position on the ground.</summary>
         public void TeleportPlayer(float x, float z)
         {

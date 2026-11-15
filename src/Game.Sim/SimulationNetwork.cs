@@ -289,7 +289,7 @@ public sealed partial class Simulation
         float bestDistance = Math.Min(HarvestRange, fieldDistance);
         foreach (Building building in _buildings)
         {
-            float distance = DistanceToFootprint(Player.Position, building);
+            float distance = DistanceToReach(Player.Position, building);
             if (distance <= bestDistance && ActionAt(building) is InteractAction found)
             {
                 bestDistance = distance;

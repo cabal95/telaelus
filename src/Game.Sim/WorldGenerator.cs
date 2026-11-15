@@ -10,6 +10,9 @@ public sealed record GeneratedChunk(Chunk Chunk, IReadOnlyList<(ResourceType Typ
 {
     /// <summary>The starter set's fields in this chunk, each holding <see cref="WorldGenerator.StarterFieldAmount"/>.</summary>
     public IReadOnlyList<(ResourceType Type, int MapX, int MapZ)> StarterFields { get; init; } = Array.Empty<(ResourceType, int, int)>();
+
+    /// <summary>The motherlode in this chunk, if any: its kind and its minimum-corner map cell (it spans 2 x 2).</summary>
+    public IReadOnlyList<(MotherlodeType Kind, int MapX, int MapZ)> Motherlodes { get; init; } = Array.Empty<(MotherlodeType, int, int)>();
 }
 
 /// <summary>
@@ -64,6 +67,15 @@ public sealed class WorldGenerator
     private const int SaltDepositType = 18000;
     private const int SaltSpawn = 19000;
     private const int SaltStarter = 20000;
+    private const int SaltMotherlode = 21000;
+    private const int SaltMotherlodeCell = 22000;
+    private const int SaltMotherlodeKind = 23000;
+
+    /// <summary>The chance a chunk holds a motherlode.</summary>
+    public const float MotherlodeChance = 0.2f;
+
+    /// <summary>No motherlode lies closer than this many map cells to the spawn.</summary>
+    public const int MotherlodeSpawnDistance = 24;
 
     /// <summary>The fields every generated world gets near its spawn: building materials only.</summary>
     public static readonly IReadOnlyList<ResourceType> StarterSet = new[]
@@ -694,7 +706,17 @@ public sealed class WorldGenerator
             }
         }
 
-        return new GeneratedChunk(chunk, Deposits(ox, oz, biome, terrain, feature));
+        List<(ResourceType Type, int MapX, int MapZ)> fields = Deposits(ox, oz, biome, terrain, feature);
+        List<(MotherlodeType Kind, int MapX, int MapZ)> lodes = MotherlodeIn(chunkX, chunkZ, ox, oz, biome, terrain, feature);
+        foreach ((MotherlodeType _, int lx, int lz) in lodes)
+        {
+            // Rolled fields on or touching the block are dropped, so fields never touch.
+            fields.RemoveAll(f => f.MapX >= lx - 1 && f.MapX <= lx + 2 && f.MapZ >= lz - 1 && f.MapZ <= lz + 2);
+        }
+        return new GeneratedChunk(chunk, fields)
+        {
+            Motherlodes = lodes
+        };
     }
 
     /// <summary>
@@ -786,6 +808,66 @@ public sealed class WorldGenerator
             }
         }
         return fields;
+    }
+
+    /// <summary>
+    /// A chunk's motherlode, if its hash passes <see cref="MotherlodeChance"/>: the 2 x 2 block of
+    /// open map cells (walkable, no feature), all of biomes that host its kind, at least
+    /// <see cref="MotherlodeSpawnDistance"/> from the spawn, whose block and ring lie inside the chunk,
+    /// with the lowest cell hash. Where a biome hosts two kinds a second hash picks.
+    /// </summary>
+    private List<(MotherlodeType, int, int)> MotherlodeIn(int chunkX, int chunkZ, int ox, int oz, BiomeType[,] biome, TerrainType[,] terrain, MapFeature[,] feature)
+    {
+        var found = new List<(MotherlodeType, int, int)>();
+        if (Noise.Hash01(Seed, SaltMotherlode, chunkX, chunkZ) >= MotherlodeChance)
+        {
+            return found;
+        }
+
+        bool Open(int i, int j)
+        {
+            return TerrainDefs.For(terrain[i, j]).Walkable && feature[i, j] == MapFeature.None;
+        }
+
+        float best = float.MaxValue;
+        (MotherlodeType Kind, int X, int Z)? pick = null;
+        for (int i = Pad + 1; i <= Pad + Chunk.Size - 3; i++)
+        {
+            for (int j = Pad + 1; j <= Pad + Chunk.Size - 3; j++)
+            {
+                int x = ox + i;
+                int z = oz + j;
+                float dx = x + 1 - SpawnCell.X;
+                float dz = z + 1 - SpawnCell.Z;
+                if (dx * dx + dz * dz < MotherlodeSpawnDistance * MotherlodeSpawnDistance)
+                {
+                    continue;
+                }
+                float r = Noise.Hash01(Seed, SaltMotherlodeCell, x, z);
+                if (r >= best || !Open(i, j) || !Open(i + 1, j) || !Open(i, j + 1) || !Open(i + 1, j + 1))
+                {
+                    continue;
+                }
+                List<MotherlodeType> kinds = MotherlodeDefs.In(biome[i, j]);
+                if (kinds.Count == 0)
+                {
+                    continue;
+                }
+                MotherlodeType kind = kinds[Math.Min(kinds.Count - 1, (int)(Noise.Hash01(Seed, SaltMotherlodeKind, x, z) * kinds.Count))];
+                if (!MotherlodeDefs.In(biome[i + 1, j]).Contains(kind) || !MotherlodeDefs.In(biome[i, j + 1]).Contains(kind)
+                    || !MotherlodeDefs.In(biome[i + 1, j + 1]).Contains(kind))
+                {
+                    continue;
+                }
+                best = r;
+                pick = (kind, x, z);
+            }
+        }
+        if (pick is ({ } chosen))
+        {
+            found.Add((chosen.Kind, chosen.X, chosen.Z));
+        }
+        return found;
     }
 
     private static bool LowestAmongNeighbors(float[,] roll, int i, int j)

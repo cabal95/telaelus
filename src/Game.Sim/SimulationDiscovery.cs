@@ -27,7 +27,7 @@ public sealed partial class Simulation
     {
         if (_fieldsByMapCell.TryGetValue((mapX, mapZ), out ResourceField? field))
         {
-            Discover(field.Type);
+            DiscoverField(field);
         }
         TerrainType terrain = MapTerrainAt(mapX, mapZ);
         if (terrain == TerrainType.Sand)

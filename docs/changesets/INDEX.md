@@ -132,6 +132,11 @@ Newest last. One line each; open the file for the full spec.
   density, the Forest half); a starter set of two Wood and one Stone in sight of the spawn; fields
   and field models for Bauxite, Quartz, Limestone, Sulfur, Titanium Ore, Rare Earths, Uranium Ore,
   and Crystals, worked by the Mine and Drill Rig.
+- **2611150937-renewables** - Adds the renewable bypasses: the Forester (a tree plot that regrows its
+  own Wood field), the Quarry (endless Stone or Limestone beside a mountain), the Charcoal Kiln, the
+  Rock Crusher (Sand from Stone), and the Deep Well and Deep Mine over worked-out cells; depleted
+  fields leave worked-out markers; rare 8 x 8 motherlodes, endless, each worked by one centered Deep
+  Mine or Deep Well yielding one chosen resource at its share's rate.
 
 ## Adding a changeset
 

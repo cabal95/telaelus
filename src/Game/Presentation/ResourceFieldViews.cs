@@ -49,7 +49,8 @@ public partial class ResourceFieldViews : Node3D
         foreach (ResourceField field in fields)
         {
             (int, int) key = (FloorDiv(field.MapX, TerrainView.TileSize), FloorDiv(field.MapZ, TerrainView.TileSize));
-            if (!terrain.HasTile(key) || !sim.IsExplored(field.MapX, field.MapZ))
+            // Motherlodes have their own view (SiteViews).
+            if (field.IsMotherlode || !terrain.HasTile(key) || !sim.IsExplored(field.MapX, field.MapZ))
             {
                 continue;
             }
@@ -68,7 +69,9 @@ public partial class ResourceFieldViews : Node3D
             var shown = new List<(int, int)>(inTile.Count);
             foreach (ResourceField field in inTile)
             {
-                shown.Add((field.Id, field.Stage));
+                // A growing field's batch is rebuilt each tenth of its growth, so its trees rise.
+                int growthStep = Mathf.FloorToInt(GrowthScale(field) * 10f);
+                shown.Add((field.Id, field.Stage * 100 + growthStep));
                 _visibleModels[field.Id] = field.Stage;
             }
 
@@ -102,6 +105,16 @@ public partial class ResourceFieldViews : Node3D
             _batches[key].Node.QueueFree();
             _batches.Remove(key);
         }
+    }
+
+    /// <summary>A field's model scale for its growth: a third of full height at planting, rising to full (1 for a field that is not growing).</summary>
+    public static float GrowthScale(ResourceField field)
+    {
+        if (!field.Growing || field.Owner?.Def.Plot is not ({ } plot))
+        {
+            return 1f;
+        }
+        return 1f / 3f + 2f / 3f * field.Growth(plot.GrowSeconds);
     }
 
     /// <summary>The world position of a field's slot <paramref name="index"/> (0 to StageCount - 1).</summary>

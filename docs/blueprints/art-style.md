@@ -139,6 +139,11 @@ or 1.05 for facet variation). A new material extends the table.
 | sand_accent | 0.90, 0.72, 0.42 | Sand Collector and Sand Dredge identity color (tan bands, chute, scoops) |
 | glass_accent | 0.66, 0.94, 0.96 | Glassworks identity color (pale cyan band, roof ties, pane rack) |
 | depot_accent | 0.92, 0.20, 0.24 | Depot trim and its trucks' cabs (a bright red) |
+| forester_accent | 0.36, 0.72, 0.30 | Forester shed roof and water-tank band (a leaf green) |
+| quarry_accent | 0.44, 0.54, 0.66 | Quarry face band and crane hoist (a slate blue-grey) |
+| kiln_accent | 0.68, 0.34, 0.22 | Charcoal Kiln's brick domes |
+| tilled | 0.42, 0.30, 0.20 | The Forester's tilled plot |
+| motherlode_rock | 0.30, 0.28, 0.27 | A motherlode's dark rock mound |
 
 Crown greens are mid tones with no near-black shade: a crown's shaded side would otherwise read
 as black under the dark ambient light. Crowns shade light on upward faces and dark underneath.
@@ -157,8 +162,16 @@ Emissive materials glow at half their base color. Mountains keep their own stone
   glowing tips (`crystal_light`).
 - Size targets: the player about 1.4 tall, deposits (Iron Ore and Copper Ore about 0.8, Coal 0.6,
   Stone 0.9; Crude Oil is a flat pool about 0.05 high), trees 2.5 to 3.5 (by field size),
-  mountains 3.2 to 3.5, buildings 1.2 to 2.2 (see buildings.md), a truck 1.6 long, 0.8 wide, and
-  about 0.85 tall.
+  mountains 3.2 to 3.5, buildings 1.2 to 2.2 (see buildings.md; the Deep Well's derrick about
+  3.1 and the Deep Mine's headframe about 3.3), a truck 1.6 long, 0.8 wide, and about 0.85 tall.
+- The renewables: Forester (a fenced tilled plot with a potting shed, a water tank, and a power
+  pole; the trees are its field), Quarry (stepped benches cut into a block at the back, a derrick
+  crane, cut blocks at the front), Charcoal Kiln (two domed brick kilns, logs, a charcoal heap),
+  Rock Crusher (a hopper over a jaw crusher, a conveyor to a sand pile), Deep Well (a tall derrick
+  over a capped wellhead on an oil-stained pad, a pump motor, a tank), Deep Mine (a steel headframe
+  with a winding wheel over a shaft, a winding house, an ore skip to a tipple). Sites:
+  `worked_out_oil` (a flat dry brown stain), `worked_out_pit` (a shallow pit with a spoil rim),
+  `motherlode_base` (a ring of dark boulders round a flatter middle, 8 x 8).
 
 ### Ground levels
 

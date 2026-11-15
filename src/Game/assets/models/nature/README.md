@@ -21,6 +21,9 @@ Every file is required: the game throws if one is missing.
 | Rare Earths | `rare_earths_a.glb` to `rare_earths_c.glb` | about 0.7 | generated |
 | Uranium Ore | `uranium_ore_a.glb` to `uranium_ore_c.glb` | about 0.7 | generated |
 | Crystals | `crystals_a.glb` to `crystals_c.glb` | about 1.1 | generated |
+| Worked-out Crude Oil | `worked_out_oil.glb` | flat (about 0.02), filling most of the cell | generated (a site marker, `SiteViews`) |
+| Worked-out solid deposit | `worked_out_pit.glb` | about 0.2 | generated (a site marker) |
+| Motherlode | `motherlode_base.glb` | about 0.55, 8 x 8 | generated (`SiteViews` sets its yields' models round it) |
 | Wood in Forest | `tree_conifer_a.glb` to `tree_conifer_c.glb` | 2.5 to 3.5 (by field size) | generated |
 | Wood in Grassland (and anywhere else) | `tree_broadleaf_a.glb` to `tree_broadleaf_c.glb` | 2.5 to 3.5 (by field size) | generated |
 | Wood in Swamp | `tree_swamp_a.glb` to `tree_swamp_c.glb` | 2.5 to 3.5 (by field size) | generated |

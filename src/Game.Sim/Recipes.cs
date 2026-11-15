@@ -35,6 +35,17 @@ public static class Recipes
         },
         12f);
 
+    private static readonly Recipe CharcoalKilnRecipe = new(
+        new ResourceAmount[]
+        {
+            new(ResourceType.Wood, 3f)
+        },
+        new ResourceAmount[]
+        {
+            new(ResourceType.Charcoal, 1f)
+        },
+        15f);
+
     /// <summary>The recipe for a processing building, or null for non-processors.</summary>
     public static Recipe? For(BuildingType type)
     {
@@ -43,6 +54,7 @@ public static class Recipes
             BuildingType.Smelter => SmelterRecipe,
             BuildingType.Refinery => RefineryRecipe,
             BuildingType.Glassworks => GlassworksRecipe,
+            BuildingType.CharcoalKiln => CharcoalKilnRecipe,
             _ => null
         };
     }

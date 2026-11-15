@@ -69,6 +69,16 @@ pausing it and stepping frame by frame.
   Stone in the ring, on open cells, touching no other field, 1000 each); every newer deposit
   generating on some seed. `ExtractorTests`: a Mine working Limestone and a Drill Rig Crystals.
   `ResourceTests`: the new amounts and densities, and every deposit offered by some biome.
+- `RenewablesTests`: a depleted Iron Ore field leaving a worked-out record and Wood none; a
+  Forester only on an open Grass cell, its field unworkable while growing, cut by a Lumber Camp,
+  regrowing 30 s after, stopping in a Water blackout, gone with the building; a Quarry only beside a
+  mountain, Stone every 6 s, Limestone only in the Highlands, served by a truck; the Charcoal
+  Kiln's recipe; the Rock Crusher supplying Sand while it has Stone; the deep buildings only exactly
+  over a worked-out cell they work, at their rates; a Deep Mine on a Laterite's center (snapping,
+  refused off-center or twice), yielding its chosen resource at its share's rate, collected from
+  beside the motherlode by the player and a truck; one on walkable Swamp mud; a motherlode not
+  worked by a Mine or by hand, and discovered with its yields. `WorldGenTests` adds motherlodes
+  being rare, one a chunk at most, and far from the spawn.
 - `PathTests`: a straight path on open ground; a path round a building ending beside its target;
   no path to a collector on an island; a path round slow ground when that is cheaper.
 - `TruckTests`: a new Depot's one truck and buying up to four; a truck hauling an offline Mine's
@@ -144,7 +154,8 @@ pausing it and stepping frame by frame.
     `{ anchor }`.
   - Other setup: `placeBuilding` `{ type, anchor, facing? }` (the spatial placement rule, free
     and whether or not unlocked), `teleportPlayer` `{ x, z }`, `seedStockpile` `{ type, amount }`, `fillBuffer` `{ anchor, type, amount }` (sets one
-    resource in the output buffer of the building at that anchor; 0 removes it)
+    resource in the output buffer of the building at that anchor; 0 removes it), `placeMotherlode`
+    `{ kind, mapCell }`, `setWorkedOut` `{ mapCell, deposit }`
     (unlocks any building whose whole cost is then held; scenarios that place through the menu and a click seed first), `cameraZoom` `{ size }` (the camera's zoom: world units across 720 pixels
     of window height, so at the 1280 x 720 scenario resolution it is the visible world height).
   - Input: `press` (key down now, up at the start of the next frame), `keyDown`, `keyUp`, `hold`
@@ -200,8 +211,9 @@ pausing it and stepping frame by frame.
   `type`, `state` (`affordable`, `unaffordable`, or `undiscovered`), and `label`; while the
   detail panel is open, `building` (its id), `rows` (each shown status row, keyed in camel case:
   `network`, `switch`, `power`, `water`, `sand`, `state`, `inRange`, `workingOn`, `recipe`, `buffer`,
-  `truck`, `burning`, `links`, `reach`, `trucks`, `truck1` to `truck4`), `fuel` (the fuel picker's
-  choice, or null), `buyTruck` (a Depot's button: `text` and `enabled`, or null), `adds` (what a storage building adds, by
+  `truck`, `burning`, `links`, `reach`, `trucks`, `truck1` to `truck4`, `site`, `plot`, `eats`),
+  `fuel` (the fuel picker's choice, or null), `output` (the Output picker's choice as shown, or
+  null), `buyTruck` (a Depot's button: `text` and `enabled`, or null), `adds` (what a storage building adds, by
   resource name, as "+300"), `destroy` (the Destroy button's text, or null when hidden), and
   `turnDegrees`; while the field detail panel is open, `field` (its id), `title`, and `rows`
   (`remaining`, `workedBy`); while the inventory is open, `inventory`: its rows in display order,
@@ -212,12 +224,15 @@ pausing it and stepping frame by frame.
   (`working`, `idle`, or `off`), and `idleReason` or null);
   `trucks` (`id`, `depot`, `bay`, `state` (`parked`, `toCollector`, `loading`, `toHq`, `unloading`,
   `waitingForRoom`, `toDepot`), `position` [x, z], `cargo` or null, `amount`, and `target` or null);
+  `workedOut` (each worked-out map cell's `mapCell` and `deposit`); each building also has
+  `producing` (a collector without a field's output, or null);
   `hoveredBuilding` (the id of the building under the pointer outside build mode, or null);
   `focusedBuilding` (the id of the building the detail panel shows and outlines, or null);
   `hoveredField` and `focusedField` (the same for resource fields);
   `camera` (`zoom`: world units across 720 pixels, `target` [x, z]: the ground point at the view's
   center, `detached`: whether a drag has moved it off the player);
-  `fields` (`id`, `type`, `mapCell`, `amount`, `stage`, `visibleModels`, `explored`);
+  `fields` (`id`, `type`, `mapCell`, `amount`, `stage`, `visibleModels`, `explored`, `growing`,
+  `motherlode` or null);
   `stockpile` (every resource); `capacity` (`power`, `water`, and `sand`, each with `supply`,
   `demand`, `speed`, and `state`: `normal`, `brownout`, or `blackout`); `discovered` (the discovered resources' type names, in enum
   order); `unlockedBuildings` (type names, in enum order); and
@@ -328,6 +343,10 @@ pausing it and stepping frame by frame.
   `power` (a Drill Rig with no supply is in a blackout; a Burner Generator on Coal powers it; four
   then five Refineries push demand into a brownout at 80% and a blackout, on the top bar; the
   generator's panel shows its supply and Best fuel),
+  `renewables` (a Forester on Water and Power growing its trees, a Lumber Camp idle until they are
+  grown and then cutting; a Quarry beside a mountain; a Deep Mine on a Laterite producing Iron Ore,
+  its panel's Site row and Output picker; a worked-out Crude Oil marker named on hover; a Rock
+  Crusher supplying 4 Sand),
   `trucks` (a new Depot online beside the HQ with one truck, buying a second from its panel, a Mine off the network
   filled to 12 getting a truck that loads, carries, and unloads it into storage and parks, the
   Mine's Truck row, hovering a parked truck),

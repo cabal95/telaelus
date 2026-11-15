@@ -355,6 +355,12 @@ public partial class BuildController : Node3D
         return _sim.FieldAt(x, z);
     }
 
+    /// <summary>The explored fine cell under the pointer outside build mode and off the UI, or null.</summary>
+    public (int X, int Z)? PointedCell()
+    {
+        return PointingAtWorld && TryGetExploredPointerCell(out int x, out int z) ? (x, z) : null;
+    }
+
     /// <summary>The fine cell under the pointer, when its map cell is explored.</summary>
     private bool TryGetExploredPointerCell(out int x, out int z)
     {
@@ -416,7 +422,7 @@ public partial class BuildController : Node3D
 
     private static (Vector3 Center, float Width, float Depth) Footprint(ResourceField field)
     {
-        return (field.Center, Simulation.FineCellsPerMapCell, Simulation.FineCellsPerMapCell);
+        return (field.Center, field.Width, field.Width);
     }
 
     /// <summary>
@@ -555,6 +561,13 @@ public partial class BuildController : Node3D
             return false;
         }
 
+        // A Forester or a building over a site snaps to map cells (or a motherlode's center).
+        if (_sim.SnapAnchor(type, hit.X, hit.Z) is (int snapX, int snapZ))
+        {
+            anchorX = snapX;
+            anchorZ = snapZ;
+            return true;
+        }
         (int width, int depth) = BuildingDefs.For(type).Footprint(Facing);
         anchorX = Mathf.RoundToInt(hit.X - width * 0.5f);
         anchorZ = Mathf.RoundToInt(hit.Z - depth * 0.5f);

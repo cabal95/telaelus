@@ -1,0 +1,27 @@
+newmtl tilled
+Kd 0.420 0.300 0.200
+
+newmtl tilled_108
+Kd 0.454 0.324 0.216
+
+newmtl tilled_85
+Kd 0.357 0.255 0.170
+
+newmtl wood
+Kd 0.580 0.410 0.240
+
+newmtl wood_dark
+Kd 0.400 0.280 0.170
+
+newmtl forester_accent
+Kd 0.360 0.720 0.300
+
+newmtl metal
+Kd 0.580 0.600 0.630
+
+newmtl water
+Kd 0.260 0.520 0.860
+
+newmtl power_accent
+Kd 1.000 0.860 0.120
+

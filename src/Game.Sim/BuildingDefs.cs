@@ -103,6 +103,21 @@ public sealed record BuildingDef(
     /// <summary>How many trucks it holds (a Depot); its first comes with it.</summary>
     public int TruckSlots { get; init; }
 
+    /// <summary>Seconds per unit for a collector with no field (the Quarry; the Deep Well and Deep Mine on a worked-out cell).</summary>
+    public float ProduceSeconds { get; init; }
+
+    /// <summary>The worked-out deposits an <see cref="Placement.OverSite"/> building may stand over.</summary>
+    public IReadOnlyList<ResourceType> Sites { get; init; } = Array.Empty<ResourceType>();
+
+    /// <summary>What a provider eats from storage while it runs: one unit of the type every so many seconds (the Rock Crusher).</summary>
+    public (ResourceType Type, float Seconds)? Eats { get; init; }
+
+    /// <summary>A Forester's plot: the Wood its field grows to, the seconds it grows, and the seconds it stands bare after it is cut.</summary>
+    public (float Amount, float GrowSeconds, float RegrowSeconds)? Plot { get; init; }
+
+    /// <summary>A collector: it fills its output buffer, from fields (an extractor) or on its own.</summary>
+    public bool IsCollector => IsExtractor || ProduceSeconds > 0f;
+
     /// <summary>How many units of fuel a fuel slot holds.</summary>
     public const float FuelSlotSize = 5f;
 
@@ -416,6 +431,106 @@ public static class BuildingDefs
         TruckSlots = 4
     };
 
+    private static readonly BuildingDef Forester = new("Forester", 4, 4, new ResourceAmount[]
+    {
+        new(ResourceType.Wood, 30f),
+        new(ResourceType.Stone, 20f)
+    }, Array.Empty<ResourceType>(), 0f)
+    {
+        Tier = 1,
+        Placement = Placement.OpenGrassCell,
+        Draws = new Dictionary<CapacityType, float>
+        {
+            [CapacityType.Power] = 2f,
+            [CapacityType.Water] = 5f
+        },
+        Plot = (150f, 180f, 30f)
+    };
+    private static readonly BuildingDef Quarry = new("Quarry", 3, 3, new ResourceAmount[]
+    {
+        new(ResourceType.Iron, 40f),
+        new(ResourceType.Wood, 30f)
+    }, Array.Empty<ResourceType>(), 0f)
+    {
+        Tier = 1,
+        Placement = Placement.BesideMountain,
+        Draws = new Dictionary<CapacityType, float>
+        {
+            [CapacityType.Power] = 10f
+        },
+        ProduceSeconds = 6f,
+        OutputBuffer = 40f
+    };
+    private static readonly BuildingDef CharcoalKiln = new("Charcoal Kiln", 2, 2, new ResourceAmount[]
+    {
+        new(ResourceType.Stone, 30f),
+        new(ResourceType.Wood, 10f)
+    }, Array.Empty<ResourceType>(), 0f)
+    {
+        OutputBuffer = 10f,
+        InputCycles = 5
+    };
+    private static readonly BuildingDef RockCrusher = new("Rock Crusher", 3, 3, new ResourceAmount[]
+    {
+        new(ResourceType.Iron, 40f),
+        new(ResourceType.Stone, 20f)
+    }, Array.Empty<ResourceType>(), 0f)
+    {
+        Tier = 1,
+        Draws = new Dictionary<CapacityType, float>
+        {
+            [CapacityType.Power] = 15f
+        },
+        Supplies = new Dictionary<CapacityType, float>
+        {
+            [CapacityType.Sand] = 4f
+        },
+        Eats = (ResourceType.Stone, 10f)
+    };
+    private static readonly BuildingDef DeepWell = new("Deep Well", 4, 4, new ResourceAmount[]
+    {
+        new(ResourceType.Iron, 60f),
+        new(ResourceType.Stone, 30f)
+    }, Array.Empty<ResourceType>(), 0f)
+    {
+        Tier = 1,
+        Placement = Placement.OverSite,
+        Sites = new[]
+        {
+            ResourceType.CrudeOil
+        },
+        Draws = new Dictionary<CapacityType, float>
+        {
+            [CapacityType.Power] = 15f
+        },
+        ProduceSeconds = 80f / 3f,
+        OutputBuffer = 20f
+    };
+    private static readonly BuildingDef DeepMine = new("Deep Mine", 4, 4, new ResourceAmount[]
+    {
+        new(ResourceType.Iron, 80f),
+        new(ResourceType.Stone, 40f)
+    }, Array.Empty<ResourceType>(), 0f)
+    {
+        Tier = 2,
+        Placement = Placement.OverSite,
+        Sites = new[]
+        {
+            ResourceType.IronOre,
+            ResourceType.CopperOre,
+            ResourceType.Bauxite,
+            ResourceType.TitaniumOre,
+            ResourceType.Quartz,
+            ResourceType.Limestone
+        },
+        Draws = new Dictionary<CapacityType, float>
+        {
+            [CapacityType.Power] = 30f
+        },
+        ProduceSeconds = 20f,
+        OutputBuffer = 40f
+    };
+
     public static BuildingDef For(BuildingType type)
     {
         return type switch
@@ -443,6 +558,12 @@ public static class BuildingDefs
             BuildingType.SandDredge => SandDredge,
             BuildingType.Glassworks => Glassworks,
             BuildingType.Depot => Depot,
+            BuildingType.Forester => Forester,
+            BuildingType.Quarry => Quarry,
+            BuildingType.CharcoalKiln => CharcoalKiln,
+            BuildingType.RockCrusher => RockCrusher,
+            BuildingType.DeepWell => DeepWell,
+            BuildingType.DeepMine => DeepMine,
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, "no building definition")
         };
     }

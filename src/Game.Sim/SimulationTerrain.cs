@@ -306,7 +306,8 @@ public sealed partial class Simulation
     /// <summary>
     /// The test map's fields; each takes its biome's amount. In all: 4600 Iron Ore, 1200 Copper Ore,
     /// 1600 Coal, 2600 Stone, 7000 Wood, and 4000 Crude Oil, and one field of each deposit no early
-    /// building uses (Crystals on the Highlands, as the map has no Volcanic biome).
+    /// building uses (Crystals on the Highlands, as the map has no Volcanic biome), and a Laterite
+    /// motherlode.
     /// </summary>
     private void SpawnInitialFields()
     {
@@ -326,19 +327,22 @@ public sealed partial class Simulation
             (ResourceType.Stone, 7, 10),
             (ResourceType.CrudeOil, 14, 6),
             (ResourceType.CrudeOil, 15, 7),
-            (ResourceType.Limestone, 12, 14),
+            (ResourceType.Limestone, 6, 12),
             (ResourceType.Sulfur, 6, 1),
             (ResourceType.Crystals, 0, 11),
             (ResourceType.Quartz, 13, 0),
             (ResourceType.RareEarths, 13, 2),
             (ResourceType.UraniumOre, 15, 3),
             (ResourceType.Bauxite, 15, 12),
-            (ResourceType.TitaniumOre, 13, 12)
+            (ResourceType.TitaniumOre, 13, 11)
         };
 
         foreach ((ResourceType type, int mapX, int mapZ) in placements)
         {
             AddField(type, mapX, mapZ);
         }
+
+        // A Laterite motherlode on the Grassland south of the lone mountain, map cells (11..12, 13..14).
+        AddMotherlode(MotherlodeType.Laterite, 11, 13);
     }
 }

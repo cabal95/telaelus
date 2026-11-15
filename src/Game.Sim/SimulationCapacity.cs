@@ -52,6 +52,10 @@ public sealed partial class Simulation
             {
                 unfueled.Add(building);
             }
+            if (building.Enabled && building.Def.Eats is not null && !Feed(building, dt))
+            {
+                unfueled.Add(building);
+            }
         }
         foreach (CapacityType type in CapacityTypes)
         {

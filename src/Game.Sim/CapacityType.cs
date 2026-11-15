@@ -59,5 +59,17 @@ public enum Placement
     BesideWater,
 
     /// <summary>The standard rule, with every cell on Sand terrain.</summary>
-    OnSand
+    OnSand,
+
+    /// <summary>The standard rule, with at least one cell edge-adjacent to a mountain (the Quarry).</summary>
+    BesideMountain,
+
+    /// <summary>The footprint is exactly one map cell, every fine cell Grass, by the standard rule (the Forester).</summary>
+    OpenGrassCell,
+
+    /// <summary>
+    /// The footprint is exactly a worked-out map cell of a deposit in <see cref="BuildingDef.Sites"/>,
+    /// or exactly the center 4 x 4 of a motherlode the building works (the Deep Well, the Deep Mine).
+    /// </summary>
+    OverSite
 }

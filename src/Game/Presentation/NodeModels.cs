@@ -183,17 +183,17 @@ public static class NodeModels
     /// within its model, so it can be used directly as a multimesh instance transform.
     /// </summary>
     public static (string Path, Transform3D Transform) Slot(
-        ResourceType type, BiomeType biome, int seedId, float maxFootprint, float initialAmount, Vector3 slotPosition)
+        ResourceType type, BiomeType biome, int seedId, float maxFootprint, float initialAmount, Vector3 slotPosition, float extraScale = 1f)
     {
         if (type == ResourceType.Wood)
         {
-            return Place(TreeFamilies[TreeFamilyOf(biome)], type, seedId, maxFootprint, initialAmount, slotPosition);
+            return Place(TreeFamilies[TreeFamilyOf(biome)], type, seedId, maxFootprint, initialAmount, slotPosition, extraScale);
         }
-        return Place(Specs.GetValueOrDefault(type) ?? ItemStandIn(type), type, seedId, maxFootprint, initialAmount, slotPosition);
+        return Place(Specs.GetValueOrDefault(type) ?? ItemStandIn(type), type, seedId, maxFootprint, initialAmount, slotPosition, extraScale);
     }
 
     private static (string Path, Transform3D Transform) Place(
-        ModelSpec spec, ResourceType type, int seedId, float maxFootprint, float initialAmount, Vector3 slotPosition)
+        ModelSpec spec, ResourceType type, int seedId, float maxFootprint, float initialAmount, Vector3 slotPosition, float extraScale)
     {
         float targetHeight = type == ResourceType.Wood ? WoodHeight(initialAmount) : spec.TargetHeight;
         string path = spec.Paths[seedId % spec.Paths.Length];
@@ -204,7 +204,8 @@ public static class NodeModels
         float footprint = Mathf.Max(bounds.Size.X, bounds.Size.Z);
         float heightScale = height > 0.0001f ? targetHeight / height : 1f;
         float footprintScale = footprint > 0.0001f ? maxFootprint / footprint : heightScale;
-        float scale = Mathf.Min(heightScale, footprintScale);
+        // A growing tree (or a motherlode's ring) scales on top of its fit.
+        float scale = Mathf.Min(heightScale, footprintScale) * extraScale;
 
         // Seat: center the bounds on the slot in x and z, and rest the bottom on the ground.
         Vector3 center = bounds.Position + bounds.Size * 0.5f;

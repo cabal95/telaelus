@@ -94,16 +94,43 @@ buildings.md). A single global stockpile holds all amounts, within storage limit
   | Stone | (3, 9); (7, 10) | Highlands (1600); Grassland (1000) | 2600 |
   | Wood | (3, 4), (4, 3), (2, 5); (12, 3) | Forest (2000 each); Grassland (1000) | 7000 |
   | Crude Oil | (14, 6), (15, 7) | Desert | 4000 |
-  | Limestone | (12, 14) | Grassland | 1000 |
+  | Limestone | (6, 12) | Grassland | 1000 |
   | Sulfur | (6, 1) | Swamp | 1000 |
   | Crystals | (0, 11) | Highlands (the map has no Volcanic; the default) | 1000 |
   | Quartz | (13, 0) | Tundra | 1000 |
   | Rare Earths, Uranium Ore | (13, 2); (15, 3) | Tundra | 600 each |
-  | Bauxite, Titanium Ore | (15, 12); (13, 12) | Desert | 1000 each |
+  | Bauxite, Titanium Ore | (15, 12); (13, 11) | Desert | 1000 each |
+
+  It also has a Laterite motherlode on map cells (11..12, 13..14), so it holds twenty-three fields
+  in all.
 
   That is enough for a ship launch: 100 Iron from Iron Ore and 500 Rocket Fuel from Crude Oil.
 - A field blocks movement and placement on all its fine cells until it depletes and is removed,
   which reopens them.
+- **Worked-out records:** when a field of any deposit but Wood depletes (and is not a Forester's),
+  its map cell keeps the deposit it held (`WorkedOut`). A record blocks nothing; the Deep Well and
+  Deep Mine stand over one (buildings.md). The world shows a marker there (presentation.md).
+- **Growing fields:** a Forester's field (`Owner`) is `Growing` until its `GrowLeft` runs out; a
+  field is `Workable` (extractors take it, the player harvests it) only when grown, not a
+  motherlode, and not depleted.
+- **Motherlodes** (`MotherlodeDefs`): a field of `Size` 2 (2 x 2 map cells, 8 x 8 units) with a
+  `Motherlode` kind instead of an amount. It never depletes; nothing but the one Deep Mine or Deep
+  Well on its center works it. Its `Type` is its largest yield. The field index lists it under all
+  four of its map cells, so `FieldAt`, walking, and placement treat its 64 fine cells as the field.
+  Seeing it discovers every resource it yields.
+
+  | Kind | Biomes | Yields (share) | Worked by |
+  |---|---|---|---|
+  | Laterite | Grassland, Desert | Iron Ore 60%, Bauxite 40% | Deep Mine |
+  | Porphyry | Highlands | Copper Ore 55%, Iron Ore 25%, Quartz 20% | Deep Mine |
+  | Coal Measures | Highlands, Forest | Coal 50%, Iron Ore 30%, Limestone 20% | Deep Mine |
+  | Salt Dome | Desert | Crude Oil 75%, Sulfur 25% | Deep Well |
+  | Mineral Sands | Tundra | Titanium Ore 50%, Quartz 40%, Rare Earths 10% | Deep Mine |
+  | Massive Sulfide | Volcanic, Swamp | Sulfur 45%, Copper Ore 35%, Iron Ore 20% | Deep Mine |
+
+  A unit of the largest share takes 5 s (`MotherlodeDef.BaseSeconds`); a smaller share takes 5 s
+  times the largest share over its own (Laterite Bauxite 7.5 s, Mineral Sands Rare Earths 25 s).
+- **Charcoal** comes from the Charcoal Kiln (3 Wood to 1).
 
 ### Range to a field
 

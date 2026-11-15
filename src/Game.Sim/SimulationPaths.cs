@@ -52,9 +52,16 @@ public sealed partial class Simulation
     /// </summary>
     public List<Vector3>? FindPathBeside(Vector3 from, Building building, Building? home = null)
     {
-        return FindPath(from, (x, z) => IsBeside(building, x, z),
-            (x, z) => OctileToRect(x, z, building.AnchorX - 1, building.AnchorZ - 1,
-                building.AnchorX + building.Width, building.AnchorZ + building.Depth), home);
+        (int ax, int az, int width, int depth) = ReachOf(building);
+        return FindPath(from, (x, z) => IsBesideRect(ax, az, width, depth, x, z),
+            (x, z) => OctileToRect(x, z, ax - 1, az - 1, ax + width, az + depth), home);
+    }
+
+    private static bool IsBesideRect(int ax, int az, int width, int depth, int x, int z)
+    {
+        bool alongX = x >= ax && x < ax + width;
+        bool alongZ = z >= az && z < az + depth;
+        return (alongX && (z == az - 1 || z == az + depth)) || (alongZ && (x == ax - 1 || x == ax + width));
     }
 
     /// <summary>The cheapest path from a world point to one fine cell, or null when it cannot be reached.</summary>

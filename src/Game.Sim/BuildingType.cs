@@ -25,5 +25,11 @@ public enum BuildingType
     SandCollector,
     SandDredge,
     Glassworks,
-    Depot
+    Depot,
+    Forester,
+    Quarry,
+    CharcoalKiln,
+    RockCrusher,
+    DeepWell,
+    DeepMine
 }

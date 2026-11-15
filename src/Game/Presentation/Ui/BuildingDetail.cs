@@ -34,6 +34,10 @@ public partial class BuildingDetail : Dialog
     private OptionButton _fuel = null!;
     private Label _fuelNote = null!;
     private Button _buyTruck = null!;
+    private Label _outputLabel = null!;
+    private OptionButton _output = null!;
+    private string _outputSignature = "";
+    private List<ResourceType> _outputChoices = new();
     private Label _buyNote = null!;
     private string _addsSignature = "";
 
@@ -60,6 +64,9 @@ public partial class BuildingDetail : Dialog
     public string? DestroyText => _destroy.Visible ? _destroy.Text : null;
 
     /// <summary>The Buy truck button's text and whether it can be pressed, or null when hidden (not a Depot).</summary>
+    /// <summary>The Output picker's choice as shown ("Iron Ore, every 5 s"), or null when hidden.</summary>
+    public string? OutputText => _output.Visible && _output.Selected >= 0 ? _output.GetItemText(_output.Selected) : null;
+
     public (string Text, bool Enabled)? BuyTruck => _buyTruck.Visible ? (_buyTruck.Text, !_buyTruck.Disabled) : null;
 
     /// <summary>What a storage building adds, as shown ("Wood", "+200"), for the snapshot.</summary>
@@ -84,7 +91,7 @@ public partial class BuildingDetail : Dialog
         _turntable = new TurntableView();
         center.AddChild(_turntable);
 
-        _rows = new StatusRows("Network", "Switch", "Power", "Water", "Sand", "State", "In range", "Working on", "Recipe", "Buffer", "Truck", "Burning", "Links", "Reach",
+        _rows = new StatusRows("Network", "Switch", "Power", "Water", "Sand", "State", "Site", "Plot", "Eats", "In range", "Working on", "Recipe", "Buffer", "Truck", "Burning", "Links", "Reach",
             "Trucks", "Truck 1", "Truck 2", "Truck 3", "Truck 4");
         Body.AddChild(_rows);
 
@@ -125,6 +132,17 @@ public partial class BuildingDetail : Dialog
         Host.Register(Id + "/fuel", _fuel);
         _fuelNote = UiTheme.MakeLabel("", UiTheme.SmallSize, UiTheme.TextDim);
         Body.AddChild(_fuelNote);
+
+        _outputLabel = UiTheme.MakeLabel("Output", UiTheme.SmallSize, UiTheme.TextDim);
+        Body.AddChild(_outputLabel);
+        _output = new OptionButton
+        {
+            Name = "Output",
+            FocusMode = FocusModeEnum.None
+        };
+        _output.ItemSelected += OnOutputSelected;
+        Body.AddChild(_output);
+        Host.Register(Id + "/output", _output);
 
         _buyTruck = new Button
         {
@@ -224,6 +242,7 @@ public partial class BuildingDetail : Dialog
         _rows.Set("Buffer", BufferText(building));
         _rows.Set("Truck", TruckText.CollectorRow(_sim, building));
         RefreshTrucks(building);
+        RefreshRenewables(building);
         _rows.Set("Links", def.IsHub ? _sim.LinkedHubs(building).Count.ToString() : null);
         _rows.Set("Reach", def.IsHub ? $"covers {def.CoverageRadius:0}, links {def.LinkRadius:0}" : null);
 
@@ -263,8 +282,12 @@ public partial class BuildingDetail : Dialog
                 progress = building.Progress / recipe.CycleTime;
             }
         }
+        if (def.ProduceSeconds > 0f)
+        {
+            progress = building.Progress / _sim.UnitSeconds(building);
+        }
         _progress.Value = Mathf.Clamp(progress, 0f, 1f);
-        bool hasProgress = works && (def.IsExtractor || building.Recipe is not null);
+        bool hasProgress = works && (def.IsCollector || building.Recipe is not null);
         _progressLabel.Visible = hasProgress;
         _progress.Visible = hasProgress;
 
@@ -279,6 +302,83 @@ public partial class BuildingDetail : Dialog
         if (_confirmLeft > 0)
         {
             _confirmLeft -= delta;
+        }
+    }
+
+    /// <summary>
+    /// The renewables' rows and picker: a Forester's Plot ("Growing: 2:10 left", "Grown: 112 / 150
+    /// Wood", "Replanting in 18 s"), a deep building's Site, what an eating provider Eats, and the
+    /// Output picker of a collector with a choice (the Quarry, a building on a motherlode).
+    /// </summary>
+    private void RefreshRenewables(Building building)
+    {
+        BuildingDef def = building.Def;
+        _rows.Set("Plot", def.Plot is ({ } plot) ? PlotText(building, plot.Amount) : null);
+        _rows.Set("Site", building.SiteMotherlode is { Motherlode: MotherlodeType kind }
+            ? MotherlodeDefs.For(kind).Name + " motherlode"
+            : building.SiteDeposit is ResourceType deposit ? "Worked-out " + ResourceDefs.For(deposit).Name : null);
+        if (def.Eats is (ResourceType food, float seconds))
+        {
+            _sim.Stockpile.TryGetValue(food, out float stock);
+            _rows.Set("Eats", $"1 {ResourceDefs.For(food).Name} every {seconds:0} s; {Mathf.FloorToInt(stock)} in storage");
+        }
+        else
+        {
+            _rows.Set("Eats", null);
+        }
+
+        _outputChoices = def.ProduceSeconds > 0f ? _sim.OutputChoices(building).ToList() : new List<ResourceType>();
+        bool show = _outputChoices.Count > 0;
+        _outputLabel.Visible = show;
+        _output.Visible = show;
+        if (!show)
+        {
+            _outputSignature = "";
+            return;
+        }
+        var labels = _outputChoices.Select(type => $"{ResourceDefs.For(type).Name}, every {RateSeconds(building, type)} s").ToList();
+        string signature = string.Join("|", labels);
+        if (signature != _outputSignature)
+        {
+            _outputSignature = signature;
+            _output.Clear();
+            foreach (string label in labels)
+            {
+                _output.AddItem(label);
+            }
+        }
+        _output.Selected = _sim.OutputOf(building) is ResourceType current ? _outputChoices.IndexOf(current) : 0;
+        _output.Disabled = _outputChoices.Count < 2;
+    }
+
+    /// <summary>Seconds a unit of one output takes at a collector, as shown ("5", "7.5", "26.7").</summary>
+    private string RateSeconds(Building building, ResourceType type)
+    {
+        float seconds = building.SiteMotherlode is { Motherlode: MotherlodeType kind }
+            ? MotherlodeDefs.For(kind).UnitSeconds(type)
+            : building.Def.ProduceSeconds;
+        return seconds.ToString("0.##");
+    }
+
+    private static string PlotText(Building forester, float amount)
+    {
+        if (forester.Plot is not ResourceField field)
+        {
+            return $"Replanting in {Mathf.CeilToInt(forester.PlotWait)} s";
+        }
+        if (field.Growing)
+        {
+            int left = Mathf.CeilToInt(field.GrowLeft);
+            return $"Growing: {left / 60}:{left % 60:00} left";
+        }
+        return $"Grown: {Mathf.CeilToInt(field.Amount)} / {amount:0} Wood";
+    }
+
+    private void OnOutputSelected(long index)
+    {
+        if (Building is Building building && index >= 0 && index < _outputChoices.Count)
+        {
+            _sim.SetOutputChoice(building.Id, _outputChoices[(int)index]);
         }
     }
 

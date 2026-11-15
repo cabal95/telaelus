@@ -237,7 +237,7 @@ public sealed partial class Simulation
             float held = building.OutputCount;
             bool worthIt = held >= TruckDefs.DispatchAt - RoomTolerance
                 || (building.Def.OutputBuffer > 0f && held >= building.Def.OutputBuffer - RoomTolerance);
-            if (building.Def.IsExtractor && worthIt && TruckFor(building) is null && !_unreachable.Contains((building.Id, truck.Id)))
+            if (building.Def.IsCollector && worthIt && TruckFor(building) is null && !_unreachable.Contains((building.Id, truck.Id)))
             {
                 candidates.Add(building);
             }

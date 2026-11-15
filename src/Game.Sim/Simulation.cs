@@ -157,6 +157,10 @@ public sealed partial class Simulation
         {
             return CanPlaceAcrossRiver(type, anchorX, anchorZ, facing);
         }
+        if (CanPlaceRenewable(type, def, anchorX, anchorZ, facing) is bool special)
+        {
+            return special;
+        }
 
         // The player's cell, by the same point test movement collision uses.
         (int playerX, int playerZ) = CellAt(Player.Position.X, Player.Position.Z);
@@ -411,6 +415,7 @@ public sealed partial class Simulation
         }
         RecomputeNetwork();
         TrucksOnBuildingsChanged(building, added: false);
+        RenewablesOnBuildingRemoved(building);
     }
 
     /// <summary>
@@ -434,6 +439,12 @@ public sealed partial class Simulation
         }
         if (building.Def.IsProvider)
         {
+            if (building.Def.Eats is (ResourceType food, float _) && building.Starved)
+            {
+                return new BuildingStatus(BuildingState.Idle, building.Online
+                    ? $"Waiting for {ResourceDefs.For(food).Name}"
+                    : "Offline: supplies nothing");
+            }
             if (building.Def.BurnsFuel && !HasFuel(building))
             {
                 return new BuildingStatus(BuildingState.Idle, building.Online ? "Waiting for fuel" : "Waiting for fuel (load by hand)");
@@ -441,6 +452,12 @@ public sealed partial class Simulation
             return building.Online
                 ? new BuildingStatus(BuildingState.Working, null)
                 : new BuildingStatus(BuildingState.Idle, "Offline: supplies nothing");
+        }
+        if (building.Def.ProduceSeconds > 0f)
+        {
+            return BufferHasRoom(building, 1f)
+                ? new BuildingStatus(BuildingState.Working, null)
+                : new BuildingStatus(BuildingState.Idle, "Full: waiting for pickup");
         }
         if (building.Def.IsExtractor)
         {
@@ -506,6 +523,7 @@ public sealed partial class Simulation
         }
         RecomputeNetwork();
         TrucksOnBuildingsChanged(building, added: true);
+        RenewablesOnBuildingAdded(building);
         return building;
     }
 
@@ -541,10 +559,10 @@ public sealed partial class Simulation
         return field;
     }
 
-    /// <summary>Distance from a point to the nearest point of a field's map-cell square (0 inside).</summary>
+    /// <summary>Distance from a point to the nearest point of a field's square (0 inside).</summary>
     public static float DistanceToField(Vector3 point, ResourceField field)
     {
-        float size = FineCellsPerMapCell;
+        float size = field.Width;
         float dx = Mathf.Max(Mathf.Max(field.MinX - point.X, 0f), point.X - (field.MinX + size));
         float dz = Mathf.Max(Mathf.Max(field.MinZ - point.Z, 0f), point.Z - (field.MinZ + size));
         return Mathf.Sqrt(dx * dx + dz * dz);
@@ -562,7 +580,7 @@ public sealed partial class Simulation
         var result = new List<ResourceField>();
         foreach (ResourceField field in _fields)
         {
-            if (Contains(types, field.Type) && !field.Depleted && DistanceToField(point, field) <= radius)
+            if (Contains(types, field.Type) && field.Workable && DistanceToField(point, field) <= radius)
             {
                 result.Add(field);
             }
@@ -575,22 +593,52 @@ public sealed partial class Simulation
     {
         float initial = amount ?? BiomeDefs.For(MapBiomeAt(mapX, mapZ)).FieldAmount(type);
         var field = new ResourceField(_nextFieldId++, type, mapX, mapZ, initial);
-        _fields.Add(field);
-        _fieldsByMapCell[(mapX, mapZ)] = field;
-        if (IsExplored(mapX, mapZ))
-        {
-            Discover(type);
-        }
+        RegisterField(field);
         return field;
+    }
+
+    /// <summary>Adds a field to the list and indexes it under every map cell it covers; discovers it when any is explored.</summary>
+    private void RegisterField(ResourceField field)
+    {
+        _fields.Add(field);
+        bool seen = false;
+        for (int x = field.MapX; x < field.MapX + field.Size; x++)
+        {
+            for (int z = field.MapZ; z < field.MapZ + field.Size; z++)
+            {
+                _fieldsByMapCell[(x, z)] = field;
+                seen |= IsExplored(x, z);
+            }
+        }
+        if (seen)
+        {
+            DiscoverField(field);
+        }
+    }
+
+    private void UnregisterField(ResourceField field)
+    {
+        _fields.Remove(field);
+        for (int x = field.MapX; x < field.MapX + field.Size; x++)
+        {
+            for (int z = field.MapZ; z < field.MapZ + field.Size; z++)
+            {
+                _fieldsByMapCell.Remove((x, z));
+            }
+        }
+        if (ReferenceEquals(HarvestTarget, field))
+        {
+            HarvestTarget = null;
+        }
     }
 
     private void RemoveField(ResourceField field)
     {
-        _fields.Remove(field);
-        _fieldsByMapCell.Remove((field.MapX, field.MapZ));
-        if (ReferenceEquals(HarvestTarget, field))
+        UnregisterField(field);
+        if (field.Owner is Building owner && ReferenceEquals(owner.Plot, field))
         {
-            HarvestTarget = null;
+            owner.Plot = null;
+            owner.PlotWait = owner.Def.Plot!.Value.RegrowSeconds;
         }
     }
 
@@ -650,7 +698,7 @@ public sealed partial class Simulation
         float bestDistance = HarvestRange;
         foreach (ResourceField field in _fields)
         {
-            if (!ResourceDefs.For(field.Type).HandHarvestable)
+            if (!ResourceDefs.For(field.Type).HandHarvestable || !field.Workable)
             {
                 continue;
             }
@@ -704,6 +752,7 @@ public sealed partial class Simulation
         field.Amount -= take;
         if (field.Depleted)
         {
+            OnFieldDepleted(field);
             RemoveField(field);
         }
         return take;
@@ -718,6 +767,16 @@ public sealed partial class Simulation
         {
             if (!building.Enabled)
             {
+                continue;
+            }
+            if (building.Def.Plot is not null)
+            {
+                StepForester(building, dt);
+                continue;
+            }
+            if (building.Def.ProduceSeconds > 0f)
+            {
+                StepProducer(building, dt);
                 continue;
             }
             if (building.Def.IsExtractor)

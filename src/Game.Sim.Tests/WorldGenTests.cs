@@ -128,26 +128,45 @@ public class WorldGenTests
     public void Deposits_SitOnFreeWalkableCells_ApartAndFromTheirBiome(int seed)
     {
         Simulation sim = Generated(seed);
-        var fieldCells = new HashSet<(int, int)>();
+        var fieldCells = new Dictionary<(int, int), ResourceField>();
         foreach (ResourceField field in sim.Fields)
         {
-            fieldCells.Add((field.MapX, field.MapZ));
+            for (int x = field.MapX; x < field.MapX + field.Size; x++)
+            {
+                for (int z = field.MapZ; z < field.MapZ + field.Size; z++)
+                {
+                    fieldCells[(x, z)] = field;
+                }
+            }
         }
         Assert.NotEmpty(fieldCells);
         foreach (ResourceField field in sim.Fields)
         {
-            Assert.Equal(MapFeature.None, sim.MapFeatureAt(field.MapX, field.MapZ));
-            Assert.True(TerrainDefs.For(sim.MapTerrainAt(field.MapX, field.MapZ)).Walkable);
-            BiomeType biome = sim.MapBiomeAt(field.MapX, field.MapZ);
-            Assert.True(BiomeDefs.For(biome).FieldWeights.ContainsKey(field.Type), $"{field.Type} in {biome}");
-            Assert.Equal(BiomeDefs.For(biome).FieldAmount(field.Type), field.InitialAmount);
-            for (int dx = -1; dx <= 1; dx++)
+            for (int x = field.MapX; x < field.MapX + field.Size; x++)
             {
-                for (int dz = -1; dz <= 1; dz++)
+                for (int z = field.MapZ; z < field.MapZ + field.Size; z++)
                 {
-                    if ((dx, dz) != (0, 0))
+                    Assert.Equal(MapFeature.None, sim.MapFeatureAt(x, z));
+                    Assert.True(TerrainDefs.For(sim.MapTerrainAt(x, z)).Walkable);
+                    BiomeType biome = sim.MapBiomeAt(x, z);
+                    if (field.Motherlode is MotherlodeType kind)
                     {
-                        Assert.DoesNotContain((field.MapX + dx, field.MapZ + dz), fieldCells);
+                        Assert.Contains(biome, MotherlodeDefs.For(kind).Biomes);
+                    }
+                    else
+                    {
+                        Assert.True(BiomeDefs.For(biome).FieldWeights.ContainsKey(field.Type), $"{field.Type} in {biome}");
+                        Assert.Equal(BiomeDefs.For(biome).FieldAmount(field.Type), field.InitialAmount);
+                    }
+                }
+            }
+            for (int x = field.MapX - 1; x <= field.MapX + field.Size; x++)
+            {
+                for (int z = field.MapZ - 1; z <= field.MapZ + field.Size; z++)
+                {
+                    if (fieldCells.TryGetValue((x, z), out ResourceField? other))
+                    {
+                        Assert.Same(field, other);
                     }
                 }
             }
@@ -211,6 +230,39 @@ public class WorldGenTests
             ResourceType.TitaniumOre, ResourceType.RareEarths, ResourceType.UraniumOre, ResourceType.Crystals
         };
         Assert.All(newer, type => Assert.Contains(type, found));
+    }
+
+    [Fact]
+    public void Motherlodes_AreRare_FarFromTheSpawn_AndOneAChunkAtMost()
+    {
+        int chunks = 0;
+        int lodes = 0;
+        for (int seed = 1; seed <= 8; seed++)
+        {
+            Simulation sim = Generated(seed);
+            (int sx, int sz) = sim.Generator!.SpawnCell;
+            for (int cx = Chunk.Of(sx) - 2; cx <= Chunk.Of(sx) + 2; cx++)
+            {
+                for (int cz = Chunk.Of(sz) - 2; cz <= Chunk.Of(sz) + 2; cz++)
+                {
+                    sim.MapTerrainAt(Chunk.Origin(cx), Chunk.Origin(cz));
+                    chunks++;
+                }
+            }
+            var perChunk = new HashSet<(int, int)>();
+            foreach (ResourceField lode in sim.Fields.Where(f => f.IsMotherlode))
+            {
+                lodes++;
+                Assert.Equal(2, lode.Size);
+                float dx = lode.MapX + 1 - sx;
+                float dz = lode.MapZ + 1 - sz;
+                Assert.True(dx * dx + dz * dz >= WorldGenerator.MotherlodeSpawnDistance * WorldGenerator.MotherlodeSpawnDistance);
+                Assert.True(perChunk.Add((Chunk.Of(lode.MapX), Chunk.Of(lode.MapZ))), "two motherlodes in one chunk");
+                Assert.True(sim.IsDiscovered(lode.Type) || !sim.IsExplored(lode.MapX, lode.MapZ));
+            }
+        }
+        // A 1 in 5 chance a chunk, less where no biome hosts one.
+        Assert.InRange(lodes, 1, chunks / 4);
     }
 
     [Fact]

@@ -78,7 +78,7 @@ public class DebugTests
         sim.Debug.RemoveField(10, 9);
 
         Assert.Null(sim.FieldAt(40, 36));
-        Assert.Equal(21, sim.Fields.Count);
+        Assert.Equal(22, sim.Fields.Count);
         Assert.Throws<InvalidOperationException>(() => sim.Debug.RemoveField(10, 9));
     }
 

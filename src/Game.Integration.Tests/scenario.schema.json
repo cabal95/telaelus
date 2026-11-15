@@ -37,7 +37,7 @@
     "biome": { "enum": ["Grassland", "Forest", "Highlands", "Desert", "Swamp", "Tundra", "Volcanic", "Ocean"] },
     "feature": { "enum": ["None", "Mountain", "River"] },
     "resource": { "enum": ["Wood", "Stone", "IronOre", "CopperOre", "Coal", "CrudeOil", "Bauxite", "Limestone", "Quartz", "TitaniumOre", "Sulfur", "RareEarths", "UraniumOre", "Crystals", "Sand", "Water", "Lithium", "Iron", "RocketFuel", "Copper", "Steel", "Glass", "Lumber", "Charcoal", "Cement", "Concrete", "Kerosene", "Plastic", "Hydrogen", "LiquidOxygen", "Aluminum", "Silicon", "SulfuricAcid", "Rubber", "Titanium", "CarbonFiber", "EnrichedUranium", "HullPlate", "SteelBeam", "CopperWire", "Circuit", "InsulatedCable", "MachineParts", "SiliconWafer", "Processor", "Magnet", "ElectricMotor", "Battery", "SolarCell", "CompositePanel", "CeramicTile", "AluminumFrame", "ArmorPlate", "ControlModule", "Computer", "ThrusterAssembly", "FuelTank", "HeatShield", "FuelRod", "LifeSupportUnit", "SensorArray", "HullSection", "Engine"] },
-    "building": { "enum": ["Mine", "LumberCamp", "Smelter", "Refinery", "OilWell", "Hq", "Silo", "Stockyard", "TankFarm", "Warehouse", "Vault", "SmallHub", "Relay", "WaterWheel", "BurnerGenerator", "LumberMill", "DrillRig", "WaterPump", "PumpingStation", "SandCollector", "SandDredge", "Glassworks", "Depot"] },
+    "building": { "enum": ["Mine", "LumberCamp", "Smelter", "Refinery", "OilWell", "Hq", "Silo", "Stockyard", "TankFarm", "Warehouse", "Vault", "SmallHub", "Relay", "WaterWheel", "BurnerGenerator", "LumberMill", "DrillRig", "WaterPump", "PumpingStation", "SandCollector", "SandDredge", "Glassworks", "Depot", "Forester", "Quarry", "CharcoalKiln", "RockCrusher", "DeepWell", "DeepMine"] },
     "facing": { "enum": ["North", "East", "South", "West"] },
     "comment": { "type": "string", "description": "Ignored; documents the step." },
     "scenarioStep": {
@@ -53,6 +53,8 @@
         { "$ref": "#/definitions/teleportPlayer" },
         { "$ref": "#/definitions/seedStockpile" },
         { "$ref": "#/definitions/fillBuffer" },
+        { "$ref": "#/definitions/placeMotherlode" },
+        { "$ref": "#/definitions/setWorkedOut" },
         { "$ref": "#/definitions/cameraZoom" },
         { "$ref": "#/definitions/press" },
         { "$ref": "#/definitions/keyDown" },
@@ -222,6 +224,42 @@
           "properties": {
             "x": { "type": "number" },
             "z": { "type": "number" }
+          }
+        },
+        "comment": { "$ref": "#/definitions/comment" }
+      }
+    },
+    "placeMotherlode": {
+      "description": "Place a motherlode (8 x 8: the 2 x 2 map cells from mapCell); fails when any of them has a field.",
+      "type": "object",
+      "required": ["placeMotherlode"],
+      "additionalProperties": false,
+      "properties": {
+        "placeMotherlode": {
+          "type": "object",
+          "required": ["kind", "mapCell"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": { "enum": ["Laterite", "Porphyry", "CoalMeasures", "SaltDome", "MineralSands", "MassiveSulfide"] },
+            "mapCell": { "$ref": "#/definitions/pair" }
+          }
+        },
+        "comment": { "$ref": "#/definitions/comment" }
+      }
+    },
+    "setWorkedOut": {
+      "description": "Mark a map cell worked out, as if a field of the deposit had depleted there.",
+      "type": "object",
+      "required": ["setWorkedOut"],
+      "additionalProperties": false,
+      "properties": {
+        "setWorkedOut": {
+          "type": "object",
+          "required": ["mapCell", "deposit"],
+          "additionalProperties": false,
+          "properties": {
+            "mapCell": { "$ref": "#/definitions/pair" },
+            "deposit": { "$ref": "#/definitions/resource" }
           }
         },
         "comment": { "$ref": "#/definitions/comment" }

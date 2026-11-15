@@ -55,7 +55,10 @@ planned multiplayer feasible.
   `BuildingViews` (footprint-sized building boxes, created and freed as buildings appear and are
   removed; `GameRoot` passes only the buildings on explored cells), `TruckViews` (a truck model
   per truck, placed at its sim position each frame and turned smoothly toward its heading, with the
-  carried resource's item model on its bed, at 0.7 scale, while loaded), `PlayerView` (the character), `CameraRig` (the orthographic follow camera, with
+  carried resource's item model on its bed, at 0.7 scale, while loaded), `SiteViews` (a marker on
+  each explored worked-out cell with no field or building on it, `worked_out_oil` for Crude Oil and
+  `worked_out_pit` otherwise; and each explored motherlode as `motherlode_base` with twelve of its
+  yields' field models round its ring, shared out by its shares, at 1.3 scale), `PlayerView` (the character), `CameraRig` (the orthographic follow camera, with
   `ZoomTo` for a direct size; attached it follows the player, a drag detaches it, and
   `ReturnToPlayer` slides or jumps it back; see player.md),
   `BuildController` (build-mode selection and rotation, the footprint ghost, the extractor
@@ -93,6 +96,11 @@ ui-style.md. There is no text HUD; the screen holds:
   bar of the fraction left) and Worked by (the switched-on extractors working it now, as
   "2 Mines", or "nothing"). The UI shows no biome and no gather speeds. The panel closes itself
   when its field depletes. Its field keeps the hover outline while it is open.
+- **Field panel** additions: a growing field shows a Growing row ("2:10 left") instead of
+  Remaining and Worked by; a motherlode is titled by its kind ("Laterite motherlode") with a Yields
+  row (each share and rate), Remaining "Endless", and Worked by its one building and what it is set
+  to, or what would work it. A growing Forester field's trees stand at a third of full height when
+  planted and rise to full (its batch rebuilds each tenth of its growth).
 - **Inventory** (`InventoryPanel`, a panel titled "Inventory"): I opens and closes it. First the
   Cargo pool, "Cargo (40 / 150)" (in `Warning` when full); then every resource, under tier headings
   in `TextDim` (Raw, then Tier 1 to Tier 4), each over a thin rule. Within a heading the
@@ -139,7 +147,12 @@ ui-style.md. There is no text HUD; the screen holds:
   processor a Buffer row ("Iron Ore 12 / 20", or "Iron 4 / 10; in: Iron Ore 3 / 5"); a hub Links
   (how many hubs it links to) and Reach ("covers 8, links 12") and no State or progress. An
   extractor has a Truck row while a truck is on its way ("On its way") or loading ("Loading"), or
-  "No truck can reach". A Depot shows Trucks ("2 / 4") and a row per truck
+  "No truck can reach". A Forester has a Plot row ("Growing: 2:10 left", "Grown: 112 / 150 Wood",
+  or "Replanting in 18 s"); a Deep Well or Deep Mine a Site row ("Worked-out Iron Ore", "Laterite
+  motherlode"); the Rock Crusher an Eats row ("1 Stone every 10 s; 230 in storage"); a collector
+  without a field a progress bar and, below the rows, an Output picker of its `OutputChoices` with
+  each rate ("Iron Ore, every 5 s"; disabled with one choice; choosing calls `SetOutputChoice`). A
+  Depot shows Trucks ("2 / 4") and a row per truck
   (Truck 1 to Truck 4) with its state (`TruckText`: "Parked", "To Mine: Iron Ore", "Loading", "To
   HQ: 20 Iron Ore", "Unloading", "Waiting: storage full (Iron Ore)", "Heading home"), then a "Buy
   truck (15 Iron, 10 Wood)" button, disabled unless `CanBuyTruck`, over a note of what is short
@@ -168,7 +181,11 @@ ui-style.md. There is no text HUD; the screen holds:
   capacity type the building draws or supplies, that and the network's figure with it added when
   the spot is online ("Draws 2 Sand: Sand 4 / 2", "Supplies 16 Water: Water 2 / 20", colored by the
   state that would give), and the dim hint "R rotate   Esc cancel". Outside build mode the same tooltip names the truck nearest the
-  pointer (within 28 pixels of its middle): "Truck" in the accent color over its state. The ghost itself shows the facing (the model is
+  pointer (within 28 pixels of its middle): "Truck" in the accent color over its state, or, with
+  no truck there, an empty worked-out cell under the pointer ("Worked-out Crude Oil"). The ghost of
+  a Forester, Deep Well, or Deep Mine snaps (`SnapAnchor`) to map cells, and a deep building's to a
+  motherlode's center when the pointer is over one. Field outlines and the hover outline fit a
+  motherlode's 8 x 8. The ghost itself shows the facing (the model is
   turned) and whether the spot is open and affordable (green or red).
 
 ### Asset and model pipeline
