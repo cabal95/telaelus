@@ -101,6 +101,10 @@ Newest last. One line each; open the file for the full spec.
 - **2611141406-mobile-renderer** - Switches to the Mobile renderer on Direct3D 12 (about 3 times
   faster fullscreen on the laptop's integrated GPU), keeping the look with no ambient light and
   hard shadows; the debug line's frame figure becomes the larger of CPU and GPU time.
+- **2611141757-resource-tree** - Plans the resource tree (raw to first ship, with a Mermaid
+  chart) and the economy around it: Stored and Capacity supply, fuel and input pickers, storage
+  limits, brownout, the HQ hub network, Depot trucks, motherlodes, and renewable sources; a
+  planning changeset that updates game-plan.md and orders the follow-on changesets.
 
 ## Adding a changeset
 

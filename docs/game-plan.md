@@ -35,42 +35,44 @@ Core loop:
 - A **player-controlled character** explores and reveals the map.
 - The player builds **extraction facilities** (ore mines, tree harvesters, and similar) on
   resource sites to gather raw resources, and **processing facilities** to refine them.
-- **Vehicle worker units** haul resources between facilities (see Logistics below).
+- **Depot trucks** carry raw resources from collectors to the HQ, and a **hub network** rooted at
+  the HQ carries power and supplies to the buildings on it (see Logistics below).
 - Refined goods (fuel and other outputs) are loaded back onto the ship.
 
 Think of it as a focused extraction, logistics, and production game (Factorio and
-Satisfactory in spirit, plus vehicle hauling in the vein of Captain of Industry), scoped
+Satisfactory in spirit, plus truck hauling in the vein of Captain of Industry), scoped
 down, that feeds the space game.
 
 **Control model (hybrid):**
 
 - A **player character** you drive directly. Its primary early job is exploration (the map is
-  dark until explored) and placing buildings.
+  dark until explored) and placing buildings, and it is the first hauler: it collects from
+  buildings by hand.
 - **Facilities** are placed by the player: extraction facilities on resource sites, and
   processing facilities to refine raw resources into intermediates and fuel.
-- **Vehicle worker units** are the RTS-flavored part. They are not micromanaged moment to
-  moment; they run hauling loops. Vehicles are buildable (build more for more throughput) and
-  upgradeable (more capacity, more speed).
+- **Trucks** are the RTS-flavored part. They are not micromanaged: a Depot's trucks dispatch
+  themselves to whichever collector needs emptying. Trucks are buildable (build more for more
+  throughput) and upgradeable (more capacity, more speed).
 
-**Logistics model (two transport types):**
+**Logistics model:**
 
-- **Vehicles** haul over distance, especially from extraction to processing. A vehicle has a
-  weight capacity and a load / unload time. A typical loop: drive to the mine, load ore,
-  pathfind to the refinery, unload, drive back, repeat. Throughput scales with vehicle count,
-  capacity, and speed.
-- **Belts** explicitly link two fixed processing facilities that sit close together (for
-  example refinery to a downstream production facility). Belts are for tight, fixed factory
-  interconnects; vehicles are for the longer, more distributed hauls.
+- **The HQ network.** Hubs link buildings to the HQ; everything linked is online and shares the
+  one storage and the network's Power, Water, and Sand. Anything not linked is offline, even with
+  its own power. Online processors take inputs from storage and put outputs into it directly.
+- **Trucks** move raw resources: each truck loops collector to HQ, loading from the collector's
+  local buffer and unloading into storage. They serve every collector, online or offline.
+- **By hand**: the player can empty any building's buffer into storage, quickly but not
+  instantly.
+- **Material Transfer** (later research) lets the network carry raw resources from online
+  collectors too, so trucks are then needed only for offline outposts and motherlodes.
+- There are no belts: the network links buildings that sit close together.
 
 **Decided early specifics:**
 
-- Vehicles use **free navmesh pathfinding** (Godot NavigationServer) over walkable terrain,
-  avoiding water and obstacles. No road building to start; roads can be added later as a
-  speed bonus.
-- Vehicles start with **explicit player-assigned routes** (a source and a destination it
-  loops). Demand-based auto-dispatch is a later upgrade.
-- Buildings are placed on a **tile grid** (belts want alignment, and grids simplify
-  pathfinding and saves). Finer placement can come later if needed.
+- Trucks use **free navmesh pathfinding** (Godot NavigationServer) over walkable terrain,
+  avoiding water and obstacles. Roads are a later truck speed bonus.
+- Buildings are placed on a **tile grid** (grids simplify pathfinding, network coverage, and
+  saves). Finer placement can come later if needed.
 
 **Later layers:** procedural terrain and resource distribution (varied planets) sit cleanly on
 top of this once the core loop works, so they remain a later layer rather than a day-one need.
@@ -92,61 +94,228 @@ The current model (terrain types, biomes, mountain and river features) is in
 
   | Biome | Signature resources |
   |---|---|
-  | Grassland | wood, stone, iron (starting biome) |
+  | Grassland | wood, stone, iron, limestone (starting biome) |
   | Forest | wood in quantity |
-  | Highlands | iron, copper, coal |
-  | Desert | oil, sand, copper (the fuel chain) |
-  | Swamp | biomass, sulfur |
-  | Tundra | rare metals, uranium |
+  | Highlands | iron, copper, coal, bauxite, limestone, quartz |
+  | Desert | oil, sand, copper, bauxite, lithium (the fuel chain) |
+  | Swamp | sulfur |
+  | Tundra | rare earths, uranium, titanium, quartz |
   | Volcanic | sulfur, crystals, geothermal (end game) |
-  | Ocean | water, later offshore oil |
+  | Ocean | water, titanium on the shore, later offshore oil |
 
 - **Two kinds of extraction.** Finite deposits (resource fields) deplete. Terrain-sourced
   resources never run out but need a building on or beside the right terrain: water from a pump
   on ShallowWater, sand from a collector on Sand, power from a geothermal tap at Lava, and a
   water wheel on a river channel (flowing water).
 - **Infrastructure reads terrain and features.** Roads go on any walkable land (costlier on Sand,
-  Snow, and Mud) and are the only paving. Pipes go on land, ShallowWater, and river channels.
-  Bridges cross ShallowWater, and river cells only where the river is Straight, at right angles to
-  its flow. DeepWater, Lava, and mountains block all three.
+  Snow, and Mud) and are the only paving; they speed up trucks. Bridges cross ShallowWater, and
+  river cells only where the river is Straight, at right angles to its flow. DeepWater, Lava, and
+  mountains block both. There are no pipes: the network carries Water.
 - **Fixed decisions:** the world is flat (a mountain range is the only hard land barrier); terrain
   is permanent once generated (no landfill); clearing a forest means depleting its Wood fields;
   decorative trees, when they come, never block and are never harvested.
 
-#### Production tree: toward the first ship
+#### Resource tree and economy
 
-The raw resources are chosen by working backward from the first ship launch. The eight raw
-resources exist now (see [blueprints/resources.md](blueprints/resources.md)); the intermediate
-buildings, ship parts, and power are the plan for later changesets. Counts are placeholders for
+The full plan, with the options weighed and the reasons, is
+[changesets/completed/2611141757-resource-tree.md](changesets/completed/2611141757-resource-tree.md).
+The eight raw resources that exist now are in [blueprints/resources.md](blueprints/resources.md);
+everything else here is the plan for later changesets, and every number is a placeholder for
 tuning.
 
-```
-Ship launch = Hull Section x10 + Engine x1 + Control Module x1 + Rocket Fuel x200
+**Supply models.** Every resource is **Stored** (counted units in storage, used up per cycle) or
+**Capacity** (Power, Water, and Sand: an amount providers put on the network, drawn while a
+building runs, never stockpiled). Finite or infinite describes the source, not the model.
 
-Hull Section ── Hull Plate x4 ── Steel ──┬── Iron ── Iron Ore
-             └─ Steel Beam x2 ── Steel   └── Coal
-Engine ──────── Steel, Copper Wire ── Copper ── Copper Ore
-             └─ Circuit ──┬── Copper Wire
-                          └── Plastic ── Crude Oil (refinery by-product)
-Control Module ─ Circuit, Hull Plate
-             └─ Glass ── Sand
-Rocket Fuel ──── Crude Oil + Water (refinery)
+**Catalog.** A tier is a stage of the game, not chain depth: items inside a tier can feed each
+other in chains of any length. Every recipe has exactly one output.
+
+- **Raw, finite (14):** Wood, Stone, Iron Ore, Copper Ore, Coal, Crude Oil, Bauxite, Limestone,
+  Quartz, Titanium Ore, Sulfur, Rare Earths, Uranium Ore, Crystals.
+- **Raw, infinite:** Water, Sand, and Power (Capacity); Lithium (Brine Well); air (Air
+  Separator).
+- **Tier 1, refined:** Iron, Copper, Steel, Glass, Lumber, Charcoal, Cement, Concrete, Kerosene,
+  Plastic, Hydrogen, Liquid Oxygen, Aluminum, Silicon, Sulfuric Acid, Rubber, Titanium, Carbon
+  Fiber, Rocket Fuel, Enriched Uranium.
+- **Tier 2, materials and components:** Hull Plate, Steel Beam, Copper Wire, Circuit, Insulated
+  Cable, Machine Parts, Silicon Wafer, Processor, Magnet, Electric Motor, Battery, Solar Cell,
+  Composite Panel, Ceramic Tile, Aluminum Frame, Armor Plate.
+- **Tier 3, advanced components:** Control Module, Computer, Thruster Assembly, Fuel Tank, Heat
+  Shield, Fuel Rod, Life Support Unit, Sensor Array.
+- **Tier 4, first ship:** Hull Section, Engine; the launch takes Hull Sections, an Engine, a
+  Control Module, Rocket Fuel, and Liquid Oxygen. Lumber and Concrete are building materials.
+  Part B's ship parts (and the Laser Lens and Shield Emitter as optional upgrades) wait for its
+  style to be chosen.
+- **Rocket fuel** is refined kerosene: the Refinery makes Kerosene from Crude Oil, and the Fuel
+  Plant treats it with Hydrogen (from water by electrolysis). Liquid Oxygen is a separate launch
+  item, from the Electrolyzer early and the Air Separator later. Power is what limits fuel.
+- **Travel:** Rocket Fuel engines within a solar system, a later Jump Drive (Crystals and more
+  exotic materials) between systems.
+
+```mermaid
+flowchart LR
+    subgraph Raw["Raw"]
+        Wood; Stone; IronOre[Iron Ore]; CopperOre[Copper Ore]; Coal; CrudeOil[Crude Oil]
+        Bauxite; Limestone; Quartz; TitaniumOre[Titanium Ore]; Sulfur; RareEarths[Rare Earths]
+        UraniumOre[Uranium Ore]; Crystals; Lithium; Water([Water]); Sand([Sand]); Air([Air])
+    end
+    subgraph T1["Tier 1: refined"]
+        Iron; Copper; Steel; Glass; Lumber; Charcoal; Cement; Concrete; Kerosene; Plastic
+        Hydrogen; LOX[Liquid Oxygen]; Aluminum; Silicon; SulfuricAcid[Sulfuric Acid]; Rubber
+        Titanium; CarbonFiber[Carbon Fiber]; RocketFuel[Rocket Fuel]; EnrichedUranium[Enriched Uranium]
+    end
+    subgraph T2["Tier 2: materials and components"]
+        HullPlate[Hull Plate]; SteelBeam[Steel Beam]; CopperWire[Copper Wire]; Circuit
+        InsulatedCable[Insulated Cable]; MachineParts[Machine Parts]; SiliconWafer[Silicon Wafer]
+        Processor; Magnet; ElectricMotor[Electric Motor]; Battery; SolarCell[Solar Cell]
+        CompositePanel[Composite Panel]; CeramicTile[Ceramic Tile]; AluminumFrame[Aluminum Frame]
+        ArmorPlate[Armor Plate]
+    end
+    subgraph T3["Tier 3: advanced components"]
+        ControlModule[Control Module]; Computer; ThrusterAssembly[Thruster Assembly]
+        FuelTank[Fuel Tank]; HeatShield[Heat Shield]; FuelRod[Fuel Rod]
+        LifeSupportUnit[Life Support Unit]; SensorArray[Sensor Array]
+    end
+    subgraph T4["Tier 4: first ship"]
+        HullSection[Hull Section]; Engine; Launch{{Ship launch}}
+    end
+
+    IronOre --> Iron
+    CopperOre --> Copper
+    Iron --> Steel
+    Coal --> Steel
+    Charcoal --> Steel
+    Limestone --> Steel
+    Sand -.-> Glass
+    Wood --> Lumber
+    Wood --> Charcoal
+    Limestone --> Cement
+    Cement --> Concrete
+    Sand -.-> Concrete
+    Water -.-> Concrete
+    CrudeOil --> Kerosene
+    CrudeOil --> Plastic
+    Water -.-> Hydrogen
+    Water -.-> LOX
+    Air -.-> LOX
+    Bauxite --> Aluminum
+    Quartz --> Silicon
+    Coal --> Silicon
+    Charcoal --> Silicon
+    Sulfur --> SulfuricAcid
+    Water -.-> SulfuricAcid
+    CrudeOil --> Rubber
+    Sulfur --> Rubber
+    TitaniumOre --> Titanium
+    Plastic --> CarbonFiber
+    Kerosene --> RocketFuel
+    Hydrogen --> RocketFuel
+    UraniumOre --> EnrichedUranium
+    SulfuricAcid --> EnrichedUranium
+
+    Steel --> HullPlate
+    Steel --> SteelBeam
+    Copper --> CopperWire
+    CopperWire --> Circuit
+    Plastic --> Circuit
+    CopperWire --> InsulatedCable
+    Rubber --> InsulatedCable
+    Steel --> MachineParts
+    Rubber --> MachineParts
+    Silicon --> SiliconWafer
+    SiliconWafer --> Processor
+    Circuit --> Processor
+    SulfuricAcid --> Processor
+    RareEarths --> Magnet
+    Iron --> Magnet
+    Steel --> ElectricMotor
+    CopperWire --> ElectricMotor
+    Magnet --> ElectricMotor
+    Lithium --> Battery
+    Copper --> Battery
+    Plastic --> Battery
+    SiliconWafer --> SolarCell
+    Glass --> SolarCell
+    CopperWire --> SolarCell
+    CarbonFiber --> CompositePanel
+    Aluminum --> CompositePanel
+    Silicon --> CeramicTile
+    Aluminum --> CeramicTile
+    Aluminum --> AluminumFrame
+    Steel --> ArmorPlate
+    Titanium --> ArmorPlate
+
+    Circuit --> ControlModule
+    HullPlate --> ControlModule
+    Glass --> ControlModule
+    Processor --> Computer
+    Circuit --> Computer
+    InsulatedCable --> Computer
+    Titanium --> ThrusterAssembly
+    MachineParts --> ThrusterAssembly
+    CeramicTile --> ThrusterAssembly
+    AluminumFrame --> FuelTank
+    CompositePanel --> FuelTank
+    CeramicTile --> HeatShield
+    CompositePanel --> HeatShield
+    EnrichedUranium --> FuelRod
+    Steel --> FuelRod
+    ElectricMotor --> LifeSupportUnit
+    MachineParts --> LifeSupportUnit
+    Glass --> LifeSupportUnit
+    Processor --> SensorArray
+    Magnet --> SensorArray
+    Glass --> SensorArray
+
+    HullPlate --> HullSection
+    SteelBeam --> HullSection
+    ThrusterAssembly --> Engine
+    FuelTank --> Engine
+    MachineParts --> Engine
+    HullSection --> Launch
+    Engine --> Launch
+    ControlModule --> Launch
+    RocketFuel --> Launch
+    LOX --> Launch
 ```
 
-- **Raw resources (8):** Wood, Stone, Iron Ore, Copper Ore, Coal, and Crude Oil as deposits; Sand
-  and Water as terrain-sourced. Wood and Stone do not feed the ship: they are construction
-  materials (see blueprints/buildings.md for building costs).
-- **Buildings in the chain:** Smelter (Iron Ore to Iron, Copper Ore to Copper, Sand to Glass),
-  Steel Mill (Iron and Coal to Steel), Press (Steel to Hull Plate or Steel Beam), Wire Mill
-  (Copper to Copper Wire), Refinery (Crude Oil and Water to Rocket Fuel, with Plastic as a
-  by-product), and Assembler (Circuits and the ship parts). Until they exist, a placeholder
-  Smelter (Iron Ore to Iron) and Refinery (Crude Oil to Rocket Fuel) keep the loop playable.
-- **Power:** processors draw power; extractors stay unpowered at first. Sources, roughly in order:
-  a Burner Generator (burns Coal or Wood), a Water Wheel (on a Straight river cell, small and
-  free), an Oil Generator (burns a refinery product), and later a geothermal tap at Lava, solar,
-  and nuclear.
-- **Left for later ships and planets:** sulfur, biomass, crystals, rare metals, and uranium (the
-  Swamp, Volcanic, and Tundra signatures).
+Rounded nodes are Capacity resources and dashed arrows Capacity requirements; Steel and Silicon
+take Coal or Charcoal.
+
+**Fuel and input pickers.** Fuel is burned in a fuel slot for its own burn time (Coal longest,
+then Charcoal, then Wood), separate from recipe inputs. A fuel slot's picker defaults to **Best**
+(longest burn in storage); an input with alternatives defaults to **Auto** (whichever storage
+holds more of); either can be pinned to one item.
+
+**Storage.** Raw resources have per-type limits, raised by class buildings (Stockyard for solids,
+Tank Farm for fluids, Vault for radioactive and precious) and by the Silo, which boosts one chosen
+resource and comes first. Manufactured solids share a Warehouse pool measured in **Cargo**. The
+HQ gives base capacity in every class. The top bar shows pinned resources.
+
+**Power, Water, and Sand.** Tier-0 buildings need no power; tier 1 and up do, except storage,
+hubs, and generators. When demand passes supply, every consumer slows by twice the overload (10%
+over is 80% speed) up to 25% over, and past that everything on that resource stops (a blackout)
+until the player adds supply or switches buildings off. Readouts show demand over supply: normal
+up to supply, yellow in brownout, red in blackout.
+
+**Buffers.** Producing buildings have a small local buffer. Collectors fill it until a truck or
+the player empties it; online processors use storage directly; offline ones fill their buffer.
+Collecting by hand runs at 10x hand-harvest speed.
+
+**Fields and bypasses.** Fields become fewer and larger (about 4x the amount, a third of the
+density). Late-game sources keep the near map useful: a Forester replants Wood, a Quarry beside a
+mountain gives Stone and Limestone, Charcoal replaces Coal, a Deep Well keeps a depleted oil seep
+pumping slowly, and a Deep Mine works a worked-out ore field forever at a slow rate. **Motherlodes**
+are rare, large fields that only these infinite collectors can work, each yielding several
+resources by biome (Laterite: Iron Ore and Bauxite; Porphyry: Copper Ore, Iron Ore, Quartz; Coal
+Measures: Coal, Iron Ore, Limestone; Salt Dome: Crude Oil and Sulfur; Mineral Sands: Titanium Ore,
+Quartz, a little Rare Earths; Massive Sulfide: Sulfur, Copper Ore, Iron Ore). Uranium Ore and
+Crystals stay finite on the planet; asteroid mining and other planets supply them later.
+
+**Build order** (one changeset each): storage limits, the HQ network, power, Water and Sand
+capacity, Depot trucks, research (with Material Transfer), field rebalance, renewables, then the
+production tiers in chain order toward the first ship. Until those land, the placeholder Smelter
+(Iron Ore to Iron) and Refinery (Crude Oil to Rocket Fuel) keep the loop playable.
 
 ### Part B: In-Space (build this second)
 
@@ -224,7 +393,7 @@ proves the core loop is fun.
 - **Live debug UI:** imgui-godot (Dear ImGui for Godot) for inspecting and tweaking a
   systems-heavy game at runtime. Add once the factory has enough knobs to be worth it.
 - **Entity scaling:** Godot models entities as scene-tree nodes. A factory game can grow to
-  thousands of items on belts. If node overhead becomes a bottleneck, consider a C# ECS (for
+  thousands of buildings and trucks. If node overhead becomes a bottleneck, consider a C# ECS (for
   example Arch or Flecs.NET) for the high-count simulation while keeping nodes for
   presentation. This is a known decision point, revisited when counts actually hurt.
 - **Saves:** start with Godot's Resource system or System.Text.Json; revisit if state grows
@@ -245,7 +414,7 @@ structure below now and write no actual networking code yet.
   both run in one process (a local server plus a local client). This also makes the sim testable
   without a window and keeps saves clean.
 - **Player actions are explicit commands** applied to the sim (for example "build refinery at
-  tile X" or "assign vehicle V the route mine A to refinery B"), not direct state mutation from
+  tile X" or "set the Smelter's fuel to Charcoal"), not direct state mutation from
   input handlers. Commands are the natural network message unit later and improve testing and
   replay now.
 - **Fixed-timestep simulation tick** (target around 20 to 30 Hz) decoupled from the render
@@ -269,8 +438,6 @@ multiplayer actually arrives, on top of the structure above.
 ## Open Questions
 
 - Space game genre (turn-based / RTS / action).
-- Resource / production chain: which raw resources, intermediates, and final outputs (fuel
-  and others), and the recipes between them.
 - Fog of war: how the map is hidden and what reveals it (character proximity, sensor
   buildings).
 
