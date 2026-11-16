@@ -1,0 +1,77 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          # net8.0 for the projects; 9.0 to read Telaelus.slnx.
+          dotnet-version: |
+            8.0.x
+            9.0.x
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/cache@v4
+        with:
+          path: .ci-cache
+          key: godot-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('ci/godot-version.txt', 'ci/export.py') }}
+      - name: Set up Godot
+        run: python ci/export.py setup
+      - name: Build
+        run: dotnet build Telaelus.slnx -c Debug
+      - name: Import the project
+        run: python ci/export.py import
+      - name: Sim tests
+        run: dotnet test src/Telaelus.Sim.Tests --no-build
+      - name: Integration tests
+        run: dotnet test src/Telaelus.Integration.Tests --no-build
+
+  export:
+    needs: test
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            9.0.x
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/cache@v4
+        with:
+          path: .ci-cache
+          key: godot-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('ci/godot-version.txt', 'ci/export.py') }}
+      - name: Set up Godot
+        run: python ci/export.py setup
+      - name: Export Windows and macOS builds
+        run: python ci/export.py export --platform all
+      # Each build is uploaded as its own zip; GitHub wraps it in a second zip on download. The
+      # macOS zip must stay ours: GitHub's artifact zip drops the app's executable flag.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Telaelus-windows-x64
+          path: dist/*-windows-x64.zip
+          retention-days: 14
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Telaelus-windows-arm64
+          path: dist/*-windows-arm64.zip
+          retention-days: 14
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Telaelus-macos
+          path: dist/*-macos.zip
+          retention-days: 14

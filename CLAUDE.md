@@ -75,6 +75,11 @@ simulation is a separate class library in `src/Telaelus.Sim`, referenced by `Tel
   src/Telaelus -- --render-splash` (windowed; writes `src/Telaelus/assets/ui/splash.png`)
 - Headless runtime check: `<godot.editor> --headless --path src/Telaelus --quit-after 20` (stderr
   should be empty on success)
+- Export builds: `python ci/export.py setup` once (downloads the Godot editor and templates into
+  `.ci-cache/`), then `python ci/export.py export [--platform windows|macos|all]` (zips in
+  `dist/`). The GitHub workflow runs the same script; run it in Docker with `act push -j test`
+  or `act push -j export` (the repo's `.actrc` sets the image). See
+  [docs/blueprints/builds.md](docs/blueprints/builds.md) and `ci/README.md`.
 
 Avoid the headless editor `--build-solutions --quit` flow; it can hang after building. Prefer
 `dotnet build` for compile checks.

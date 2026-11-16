@@ -29,3 +29,7 @@ test-output/
 
 # Asset factory Python environment (recreate with: python src/asset-factory/setup_env.py)
 .venv/
+
+# CI builds (ci/export.py)
+dist/
+.ci-cache/

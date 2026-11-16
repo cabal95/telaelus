@@ -184,6 +184,10 @@ Newest last. One line each; open the file for the full spec.
 - **2611151521-telaelus-rename** - Names the game Telaelus: the window title, main menu, C#
   namespaces and assemblies, project folders (`src/Telaelus*`), solution (`Telaelus.slnx`), and
   docs, plus a root README that introduces the game, its name and pronunciation, and how it is built.
+- **2611151728-ci-builds** - Exports Windows (x64, arm64) and macOS (universal) builds with one
+  script, `ci/export.py`, that sets up Godot and runs the same locally and on GitHub; a GitHub
+  Actions workflow that tests every push and pull request and uploads the builds as artifacts;
+  `act` support for running the workflow in Docker; Godot pointed at the repo's solution.
 
 ## Adding a changeset
 

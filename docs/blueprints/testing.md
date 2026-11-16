@@ -440,6 +440,8 @@ pausing it and stepping frame by frame.
 - **Godot path:** the `GODOT_EDITOR` environment variable, else `godot.editor` in `tools.json` at
   the repo root (found by walking up to `Telaelus.slnx`); with neither, the test fails with setup
   instructions.
+- **In CI:** the GitHub workflow's test job runs the sim tests and these on Linux, with
+  `GODOT_EDITOR` set to the editor `ci/export.py setup` downloads (builds.md).
 - **Schema checks:** `ScenarioSchemaTests`, in the same project but without launching Godot,
   checks that `scenario.schema.json` has no duplicate keys (JSON lets a later key silently replace
   an earlier one) and validates every scenario file against it with JsonSchema.Net, one test per

@@ -40,6 +40,8 @@ Read this index to find the right area, then open that blueprint for the detail.
 - **[testing.md](testing.md)** - The engine-free sim unit tests and the seam check, JSON
   scenarios (commands, snapshot, running, output), the headless integration tests, and the live
   control channel with pause and frame stepping.
+- **[builds.md](builds.md)** - Exported builds: the Windows and macOS presets, signing, the
+  `ci/export.py` script, the GitHub Actions workflow and its artifacts, and running it locally.
 
 ## Adding a blueprint
 
