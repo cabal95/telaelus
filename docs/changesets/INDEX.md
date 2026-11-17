@@ -204,6 +204,11 @@ Newest last. One line each; open the file for the full spec.
   over explored cells round what is in the way (to the nearest reachable cell when the target is
   blocked, on into the fog as it clears), and a ring marks the destination. The road and bridge
   tools remove with Shift alone.
+- **2611162030-truck-balance** - Trucks drive at 3 (from 8) and load and unload at 0.25 s a unit, so
+  one keeps up with about three collectors 40 units from the HQ (from eight); they load only what
+  storage has room for once other trucks' loads are counted, and unload everything (past the limit
+  if room was taken on the way), so a truck never waits at the HQ. A Depot sells trucks for half a
+  bought one's cost back. The demo save is rewritten.
 
 ## Adding a changeset
 

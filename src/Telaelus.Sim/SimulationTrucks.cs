@@ -6,12 +6,13 @@ namespace Telaelus.Sim;
 
 /// <summary>
 /// Depot trucks. Each tick, after buildings work, every truck steps through its trip: an idle
-/// truck of a switched-on, online Depot takes the collector whose buffer holds the most (at least
-/// <see cref="TruckDefs.DispatchAt"/> or full) that no other truck is heading to and that it can
-/// reach, nearest first on a tie; it drives beside it, loads the buffer's most-held resource (up
-/// to <see cref="TruckDefs.Capacity"/>), drives beside the HQ, unloads what storage has room for
-/// (waiting with the rest), and is idle again. With nothing to do it drives home and parks. A
-/// collector is any extractor, online or offline.
+/// truck of a switched-on, online Depot takes the collector with the biggest load storage can take
+/// (at least <see cref="TruckDefs.DispatchAt"/>, or a full buffer's) that no other truck is heading
+/// to and that it can reach, nearest first on a tie; it drives beside it, loads that resource (up
+/// to <see cref="TruckDefs.Capacity"/>, and only what storage has room for once the other trucks'
+/// loads on the way are counted), drives beside the HQ, unloads all of it, and is idle again.
+/// Loading and unloading take <see cref="TruckDefs.LoadSecondsPerUnit"/> a unit. With nothing to do
+/// it drives home and parks. A collector is any extractor, online or offline.
 /// </summary>
 public sealed partial class Simulation
 {
@@ -54,6 +55,52 @@ public sealed partial class Simulation
     }
 
     /// <summary>The truck heading to or loading from a collector, or null.</summary>
+    /// <summary>
+    /// The truck selling one from a Depot takes: a parked one before one out on a trip, the highest
+    /// bay first; null with none.
+    /// </summary>
+    public Truck? TruckToSell(Building depot)
+    {
+        List<Truck> trucks = TrucksOf(depot);
+        Truck? parked = trucks.FindLast(t => t.State == TruckState.Parked);
+        return parked ?? (trucks.Count > 0 ? trucks[^1] : null);
+    }
+
+    /// <summary>
+    /// Sells a Depot's truck (<see cref="TruckToSell"/>): half a bought truck's cost back, rounded
+    /// up (the truck the Depot came with gives nothing), and any load it carries in full. A Depot may
+    /// sell every truck. False when it has none.
+    /// </summary>
+    public bool TrySellTruck(int depotId)
+    {
+        if (BuildingById(depotId) is not Building depot || TruckToSell(depot) is not Truck truck)
+        {
+            return false;
+        }
+        foreach (ResourceAmount back in RefundOf(truck))
+        {
+            AddToStockpile(back.Type, back.Amount);
+        }
+        _trucks.Remove(truck);
+        return true;
+    }
+
+    /// <summary>What a truck gives back when sold or its Depot destroyed: half a bought truck's cost, rounded up, and its load.</summary>
+    public static IEnumerable<ResourceAmount> RefundOf(Truck truck)
+    {
+        if (!truck.CameWithDepot)
+        {
+            foreach (ResourceAmount cost in TruckDefs.Cost)
+            {
+                yield return new ResourceAmount(cost.Type, Mathf.Ceil(cost.Amount * 0.5f));
+            }
+        }
+        if (truck.Cargo is ResourceType cargo && truck.Amount > 0f)
+        {
+            yield return new ResourceAmount(cargo, truck.Amount);
+        }
+    }
+
     public Truck? TruckFor(Building collector)
     {
         return _trucks.Find(t => ReferenceEquals(t.Target, collector));
@@ -125,16 +172,9 @@ public sealed partial class Simulation
     {
         foreach (Truck truck in TrucksOf(depot))
         {
-            if (!truck.CameWithDepot)
+            foreach (ResourceAmount back in RefundOf(truck))
             {
-                foreach (ResourceAmount cost in TruckDefs.Cost)
-                {
-                    yield return new ResourceAmount(cost.Type, Mathf.Ceil(cost.Amount * 0.5f));
-                }
-            }
-            if (truck.Cargo is ResourceType cargo && truck.Amount > 0f)
-            {
-                yield return new ResourceAmount(cargo, truck.Amount);
+                yield return back;
             }
         }
     }
@@ -197,7 +237,7 @@ public sealed partial class Simulation
                 if (Drive(truck, dt))
                 {
                     truck.State = TruckState.Loading;
-                    truck.Timer = TruckDefs.LoadSeconds;
+                    truck.Timer = LoadFor(target, truck).Amount * TruckDefs.LoadSecondsPerUnit;
                 }
                 break;
             case TruckState.Loading:
@@ -211,14 +251,13 @@ public sealed partial class Simulation
                 if (Drive(truck, dt))
                 {
                     truck.State = TruckState.Unloading;
-                    truck.Timer = TruckDefs.LoadSeconds;
+                    truck.Timer = truck.Amount * TruckDefs.LoadSecondsPerUnit;
                 }
                 break;
             case TruckState.Unloading:
                 truck.Timer -= dt;
                 if (truck.Timer <= 0f)
                 {
-                    truck.State = TruckState.WaitingForRoom;
                     Unload(truck);
                 }
                 break;
@@ -231,23 +270,26 @@ public sealed partial class Simulation
     /// <summary>Gives an idle truck the best collector it can reach; false when there is none.</summary>
     private bool TryDispatch(Truck truck)
     {
-        var candidates = new List<Building>();
+        var candidates = new List<(Building Building, float Load)>();
         foreach (Building building in _buildings)
         {
-            float held = building.OutputCount;
-            bool worthIt = held >= TruckDefs.DispatchAt - RoomTolerance
-                || (building.Def.OutputBuffer > 0f && held >= building.Def.OutputBuffer - RoomTolerance);
-            if (building.Def.IsCollector && worthIt && TruckFor(building) is null && !_unreachable.Contains((building.Id, truck.Id)))
+            if (!building.Def.IsCollector || TruckFor(building) is not null || _unreachable.Contains((building.Id, truck.Id)))
             {
-                candidates.Add(building);
+                continue;
+            }
+            float load = LoadFor(building, truck).Amount;
+            bool full = building.Def.OutputBuffer > 0f && building.OutputCount >= building.Def.OutputBuffer - RoomTolerance;
+            if (load >= TruckDefs.DispatchAt - RoomTolerance || (full && load >= 1f))
+            {
+                candidates.Add((building, load));
             }
         }
         candidates.Sort((a, b) =>
         {
-            int byAmount = b.OutputCount.CompareTo(a.OutputCount);
-            return byAmount != 0 ? byAmount : truck.Position.DistanceTo(a.Position).CompareTo(truck.Position.DistanceTo(b.Position));
+            int byLoad = b.Load.CompareTo(a.Load);
+            return byLoad != 0 ? byLoad : truck.Position.DistanceTo(a.Building.Position).CompareTo(truck.Position.DistanceTo(b.Building.Position));
         });
-        foreach (Building candidate in candidates)
+        foreach ((Building candidate, _) in candidates)
         {
             List<Vector3>? path = FindPathBeside(truck.Position, candidate, truck.Depot);
             if (path is null)
@@ -279,24 +321,48 @@ public sealed partial class Simulation
         SetPath(truck, path ?? new List<Vector3>());
     }
 
+    /// <summary>
+    /// What a truck would load from a collector: the resource giving the biggest load, in whole units
+    /// up to its capacity and to what storage has room for once the loads other trucks are carrying
+    /// there are counted (the most-held first on a tie); none (0) when storage can take none of it.
+    /// </summary>
+    private (ResourceType? Type, float Amount) LoadFor(Building collector, Truck truck)
+    {
+        ResourceType? best = null;
+        float bestLoad = 0f;
+        float bestHeld = 0f;
+        foreach ((ResourceType type, float held) in collector.Output)
+        {
+            float load = MathF.Floor(Math.Min(Math.Min(held, TruckDefs.Capacity), RoomForTruck(type, truck)) + RoomTolerance);
+            if (load > bestLoad || (load == bestLoad && load > 0f && held > bestHeld))
+            {
+                best = type;
+                bestLoad = load;
+                bestHeld = held;
+            }
+        }
+        return (best, bestLoad);
+    }
+
+    /// <summary>Storage's room for a resource, less what the other loaded trucks are taking there.</summary>
+    private float RoomForTruck(ResourceType type, Truck truck)
+    {
+        float room = RoomFor(type);
+        foreach (Truck other in _trucks)
+        {
+            if (!ReferenceEquals(other, truck) && other.Cargo == type && other.State is TruckState.ToHq or TruckState.Unloading)
+            {
+                room -= other.Amount;
+            }
+        }
+        return Math.Max(0f, room);
+    }
+
     private void Load(Truck truck)
     {
         Building? target = truck.Target;
         truck.Target = null;
-        ResourceType? type = null;
-        float most = 0f;
-        if (target is not null)
-        {
-            foreach ((ResourceType held, float amount) in target.Output)
-            {
-                if (amount > most)
-                {
-                    most = amount;
-                    type = held;
-                }
-            }
-        }
-        float take = MathF.Floor(Math.Min(most, TruckDefs.Capacity) + RoomTolerance);
+        (ResourceType? type, float take) = target is null ? (null, 0f) : LoadFor(target, truck);
         if (target is null || type is not ResourceType cargo || take < 1f || Hq is not Building hq)
         {
             GoHome(truck);
@@ -316,21 +382,16 @@ public sealed partial class Simulation
         SetPath(truck, path);
     }
 
-    /// <summary>Unloads what storage has room for; empty, the truck is idle (it heads home and dispatches from the way).</summary>
+    /// <summary>
+    /// Unloads the whole load, even past the storage limit when room taken away on the way left too
+    /// little (as a destroy refund does), so a truck never waits; then the truck is idle (it heads
+    /// home and dispatches from the way).
+    /// </summary>
     private void Unload(Truck truck)
     {
-        if (truck.Cargo is ResourceType cargo)
+        if (truck.Cargo is ResourceType cargo && truck.Amount > 0f)
         {
-            float move = Math.Min(truck.Amount, MathF.Floor(RoomFor(cargo) + RoomTolerance));
-            if (move > 0f)
-            {
-                AddToStockpile(cargo, move);
-                truck.Amount -= move;
-            }
-            if (truck.Amount > RoomTolerance)
-            {
-                return;
-            }
+            AddToStockpile(cargo, truck.Amount);
         }
         truck.Cargo = null;
         truck.Amount = 0f;

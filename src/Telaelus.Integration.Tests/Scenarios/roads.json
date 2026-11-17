@@ -64,7 +64,7 @@
     { "comment": "Now the truck finds its way across.", "wait": 60 },
     { "expect": "trucks[0].state", "equals": "toCollector" },
     { "screenshot": "bridge" },
-    { "wait": 900 },
+    { "comment": "About 14 s out over the bridge, 4 s loading, 15 s back, and 4 s unloading.", "wait": 1500 },
     { "expect": "stockpile.IronOre", "gte": 15 }
   ]
 }

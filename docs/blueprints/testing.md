@@ -84,10 +84,17 @@ pausing it and stepping frame by frame.
   being rare, one a chunk at most, and far from the spawn.
 - `PathTests`: a straight path on open ground; a path round a building ending beside its target;
   no path to a collector on an island; a path round slow ground when that is cheaper.
-- `TruckTests`: a new Depot's one truck and buying up to four; a truck hauling an offline Mine's
+- `TruckBalanceTests`: Stone Mines about 40 units from the HQ hauled for ten minutes: one truck
+  keeps up with three, falls behind four, and two keep up with six (each run writes what it
+  delivered).
+- `TruckTests`: a new Depot's one truck and buying up to four; selling trucks for half a bought
+  one's cost back (the free one for nothing) down to none, and buying again; selling a parked
+  truck first, and a loaded one's load coming back; a truck hauling an offline Mine's
   buffer to the HQ and parking; waiting for 10 units; dispatch taking the fullest, then one no
   other truck is on; loading one resource up to 20 (and parking when what is left is under a
-  trip); waiting at the HQ for room; dropping a job when the collector is destroyed or emptied;
+  trip); loading only what storage has room for (no job for less than a trip unless the buffer is
+  full); room counting the loads other trucks carry; unloading everything when the room was taken
+  on the way; dropping a job when the collector is destroyed or emptied;
   finding a way round a building placed in its path; skipping a collector no truck can reach; a
   switched-off Depot's truck finishing its trip and parking; an offline Depot's truck staying
   parked; a destroyed Depot refunding its bought
@@ -290,7 +297,7 @@ pausing it and stepping frame by frame.
   `charge`, `research`),
   `fuel` (the fuel picker's choice, or null), `output` (the Output picker's choice as shown, or
   null), `recipe` (the Recipe picker's choice, or null), `input` (the input picker's `choice` and
-  `note`, or null), `buyTruck` (a Depot's button: `text` and `enabled`, or null), `adds` (what a storage building adds, by
+  `note`, or null), `buyTruck` and `sellTruck` (a Depot's buttons: `text` and `enabled`, or null), `adds` (what a storage building adds, by
   resource name, as "+300"), `destroy` (the Destroy button's text, or null when hidden), and
   `turnDegrees`; while the field detail panel is open, `field` (its id), `title`, and `rows`
   (`remaining`, `workedBy`); while the inventory is open, `inventory`: its rows in display order,
@@ -300,7 +307,7 @@ pausing it and stepping frame by frame.
   `burning` (the fuel burning, or null), `status`
   (`working`, `idle`, or `off`), and `idleReason` or null);
   `trucks` (`id`, `depot`, `bay`, `state` (`parked`, `toCollector`, `loading`, `toHq`, `unloading`,
-  `waitingForRoom`, `toDepot`), `position` [x, z], `cargo` or null, `amount`, and `target` or null);
+  `waitingForRoom` (older saves only), `toDepot`), `position` [x, z], `cargo` or null, `amount`, and `target` or null);
   `workedOut` (each worked-out map cell's `mapCell` and `deposit`); each building also has
   `producing` (a collector without a field's output, or null), `recipe` (the name of the
   recipe a processor runs, or null), `display` (the item its display stand shows, or null), and
@@ -514,7 +521,9 @@ pausing it and stepping frame by frame.
   grown and then cutting; a Quarry beside a mountain; a Deep Mine on a Laterite producing Iron Ore,
   its panel's Site row and Output picker; a worked-out Crude Oil marker named on hover; a Rock
   Crusher supplying 4 Sand),
-  `trucks` (a new Depot online beside the HQ with one truck, buying a second from its panel, a Mine off the network
+  `trucks` (a new Depot online beside the HQ with one truck, buying a second from its panel,
+  selling it for 8 Iron and 5 Wood back (the first then selling for nothing) and buying it again, a
+  Mine off the network
   filled to 12 getting a truck that loads, carries, and unloads it into storage and parks, the
   Mine's Truck row, hovering a parked truck),
   `capacity` (a Glassworks with no Sand is in a blackout, in `Danger` on the Sand pin; a Sand

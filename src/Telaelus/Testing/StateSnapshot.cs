@@ -323,6 +323,13 @@ public static class StateSnapshot
                     ["enabled"] = enabled
                 }
                 : null;
+            ui["sellTruck"] = root.BuildingDetail.SellTruck is (string sellText, bool sellEnabled)
+                ? new JsonObject
+                {
+                    ["text"] = sellText,
+                    ["enabled"] = sellEnabled
+                }
+                : null;
             var adds = new JsonObject();
             foreach ((string resource, string amount) in root.BuildingDetail.Adds)
             {

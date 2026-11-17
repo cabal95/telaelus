@@ -1,7 +1,7 @@
 {
   "$schema": "../scenario.schema.json",
   "name": "trucks",
-  "description": "Depot trucks: a new Depot, online beside the HQ, comes with one truck; the panel buys a second; a Mine off the network with 12 Iron Ore in its buffer gets a truck, which loads it, carries it to the HQ, unloads it into storage, and parks; the collector's panel shows the truck on its way; hovering a parked truck names its state.",
+  "description": "Depot trucks: a new Depot, online beside the HQ, comes with one truck; the panel buys a second, sells it for half its cost back, and buys it again; a Mine off the network with 12 Iron Ore in its buffer gets a truck, which loads it, carries it to the HQ, unloads it into storage, and parks; the collector's panel shows the truck on its way; hovering a parked truck names its state.",
   "steps": [
     { "newGame": {} },
     { "initMap": {} },
@@ -32,6 +32,19 @@
     { "expect": "ui.rows.truck2", "equals": "Parked" },
     { "expect": "stockpile.Iron", "equals": 0 },
     { "screenshot": "depot-panel" },
+    { "comment": "Selling the bought truck gives half its cost back.", "expect": "ui.sellTruck", "equals": { "text": "Sell truck (8 Iron, 5 Wood back)", "enabled": true } },
+    { "clickUi": { "id": "buildingDetail/sellTruck" } },
+    { "wait": 2 },
+    { "expect": "ui.rows.trucks", "equals": "1 / 4" },
+    { "expect": "stockpile.Iron", "equals": 8 },
+    { "expect": "stockpile.Wood", "equals": 5 },
+    { "comment": "The one the Depot came with sells for nothing.", "expect": "ui.sellTruck", "equals": { "text": "Sell truck (nothing back)", "enabled": true } },
+    { "seedStockpile": { "type": "Iron", "amount": 7 } },
+    { "seedStockpile": { "type": "Wood", "amount": 5 } },
+    { "wait": 2 },
+    { "clickUi": { "id": "buildingDetail/buyTruck" } },
+    { "wait": 2 },
+    { "expect": "ui.rows.trucks", "equals": "2 / 4" },
     { "press": "Escape" },
     { "wait": 2 },
 
@@ -52,7 +65,7 @@
     { "expect": "ui.rows.truck", "equals": "On its way" },
     { "press": "Escape" },
 
-    { "comment": "About 2.5 s to the Mine and 2 s loading: on its way to the HQ with the load.", "wait": 150 },
+    { "comment": "About 7 s to the Mine and 3 s loading 12 units: on its way to the HQ with the load.", "wait": 330 },
     { "expect": "trucks[0].state", "equals": "toHq" },
     { "expect": "trucks[0].cargo", "equals": "IronOre" },
     { "expect": "trucks[0].amount", "equals": 12 },
@@ -60,7 +73,7 @@
     { "wait": 15 },
     { "screenshot": "loaded" },
 
-    { "wait": 300 },
+    { "comment": "About 8 s to the HQ and 3 s unloading.", "wait": 450 },
     { "expect": "stockpile.IronOre", "equals": 12 },
     { "wait": 300 },
     { "expect": "trucks[0].state", "equals": "parked" },

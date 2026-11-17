@@ -203,31 +203,45 @@ ship from a Shipyard, which closes the on-planet loop.
 - **The Depot** (4 x 4, 40 Wood and 20 Stone, tier 0) holds up to 4 trucks (`TruckSlots`), parked
   in bays across the apron at its front (`BayPosition`), nose out. A new Depot comes with 1;
   `TryBuyTruck` buys another into the next free bay for `TruckDefs.Cost` (15 Iron, 10 Wood) while
-  a bay is free (`CanBuyTruck`). It draws nothing, but its trucks take work only while it is
+  a bay is free (`CanBuyTruck`). `TrySellTruck` sells one (`TruckToSell`: a parked truck before
+  one out on a trip, the highest bay first) for what `RefundOf` gives: half a bought truck's cost,
+  rounded up (8 Iron, 5 Wood; the truck the Depot came with gives nothing), and any load it
+  carries, in full. A Depot may sell every truck and buy again. It draws nothing, but its trucks take work only while it is
   **online**: offline it is idle "Offline: trucks stay parked".
 - **A truck** (`Truck`, in `Trucks`) carries one resource at a time, up to `TruckDefs.Capacity`
-  (20), at `TruckDefs.Speed` (8 units per second, faster than the player's 6) times the terrain
-  speed under it. Trucks occupy no cells and pass through the player and each other.
+  (20), at `TruckDefs.Speed` (3 units per second, half the player's 6; 4.5 on a road) times the
+  terrain speed under it, and loads and unloads at `TruckDefs.LoadSecondsPerUnit` (0.25 s a unit:
+  5 s for a full load). Trucks occupy no cells and pass through the player and each other.
+- **Balance:** one truck keeps up with about three base collectors 40 units from the HQ (four at
+  20, two at 80); a Depot's four trucks serve about twelve near the HQ. Upgrades that raise the
+  capacity are partly offset by the time each unit takes to load. `TruckBalanceTests` measures it.
+- **Room:** a truck's room for a resource is storage's room (`RoomFor`) less what every other
+  loaded truck is carrying of it to the HQ (`ToHq` or `Unloading`). A truck's load from a
+  collector (`LoadFor`) is the resource giving the biggest load, in whole units up to its capacity
+  and that room (the most-held on a tie), or none when storage can take none of what it holds.
 - **Each tick, after buildings** (`StepTrucks`), a truck steps through its trip
   (`TruckState`):
   - **Parked** or **ToDepot** (heading home): while its Depot is switched on and online, it
     **dispatches**:
     among collectors (`IsCollector`: extractors and the Quarry, Deep Well, and Deep Mine; online
-    or offline) whose buffer holds at least `TruckDefs.DispatchAt` (10)
-    in all, or is full, that no truck targets (`TruckFor`) and that it has not found unreachable,
-    it takes the one holding the most, nearest on a tie, and the first a path reaches.
+    or offline) whose load is at least `TruckDefs.DispatchAt` (10), or at least 1 when the
+    buffer is full, that no truck targets (`TruckFor`) and that it has not found unreachable, it
+    takes the one with the biggest load, nearest on a tie, and the first a path reaches. A
+    collector full of what storage cannot take is no job; it stays full until room appears.
   - **ToCollector:** it drives beside the collector; if the collector is destroyed or its buffer
     falls under 1 unit first, it drops the job and heads home (dispatching again on the way).
-  - **Loading** (`TruckDefs.LoadSeconds`, 2 s): then it takes the buffer's most-held resource, up
-    to 20 whole units, and drives beside the HQ (**ToHq**). With nothing left to take it heads
-    home; with no path to the HQ it takes nothing and counts the collector unreachable.
-  - **Unloading** (2 s): it puts what storage has room for into the stockpile; the rest waits
-    (**WaitingForRoom**, unloading as room appears). Empty, it heads home.
+  - **Loading** (0.25 s for each unit of its load on arrival): then it takes its load as it
+    stands then and drives beside the HQ (**ToHq**). With nothing left to take it heads home; with
+    no path to the HQ it takes nothing and counts the collector unreachable.
+  - **Unloading** (0.25 s a unit): it puts the whole load into the stockpile, even past the limit
+    when room it counted on was taken on the way (the player collecting by hand, a store
+    destroyed), as a destroy refund does, so a truck never waits at the HQ. Empty, it heads home.
+    (**WaitingForRoom** is only in older saves, where a truck waited for room; it unloads at once.)
   - **ToDepot:** on arrival it parks in its bay, facing out.
 - A switched-off or offline Depot's trucks finish the trip they are on, then park; they dispatch
   again when it is switched back on and online.
-- **Destroying a Depot** removes its trucks; its refund (`DestroyRefund`) adds half each bought
-  truck's cost, rounded up (the truck it came with refunds nothing), and every load in full.
+- **Destroying a Depot** removes its trucks; its refund (`DestroyRefund`) adds each truck's
+  `RefundOf`, as selling it would.
 - `NoTruckCanReach(collector)` is true when every truck has found no path to it; the unreachable
   set clears whenever a building is placed or removed.
 

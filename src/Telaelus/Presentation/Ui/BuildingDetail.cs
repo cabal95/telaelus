@@ -35,6 +35,7 @@ public partial class BuildingDetail : Dialog
     private OptionButton _fuel = null!;
     private Label _fuelNote = null!;
     private Button _buyTruck = null!;
+    private Button _sellTruck = null!;
     private Button _openResearch = null!;
 
     /// <summary>Raised when the lab's button asks for the research tree.</summary>
@@ -87,6 +88,9 @@ public partial class BuildingDetail : Dialog
     public string? OutputText => _output.Visible && _output.Selected >= 0 ? _output.GetItemText(_output.Selected) : null;
 
     public (string Text, bool Enabled)? BuyTruck => _buyTruck.Visible ? (_buyTruck.Text, !_buyTruck.Disabled) : null;
+
+    /// <summary>The Sell truck button as shown (a Depot's panel only), for the snapshot.</summary>
+    public (string Text, bool Enabled)? SellTruck => _sellTruck.Visible ? (_sellTruck.Text, !_sellTruck.Disabled) : null;
 
     /// <summary>What a storage building adds, as shown ("Wood", "+200"), for the snapshot.</summary>
     public IEnumerable<(string Resource, string Amount)> Adds => _adds.GetChildren().OfType<Label>()
@@ -201,6 +205,14 @@ public partial class BuildingDetail : Dialog
         Host.Register(Id + "/openResearch", _openResearch);
         _buyNote = UiTheme.MakeLabel("", UiTheme.SmallSize, UiTheme.Short);
         Body.AddChild(_buyNote);
+        _sellTruck = new Button
+        {
+            Name = "SellTruck",
+            FocusMode = FocusModeEnum.None
+        };
+        _sellTruck.Pressed += OnSellTruck;
+        Body.AddChild(_sellTruck);
+        Host.Register(Id + "/sellTruck", _sellTruck);
 
         _addsLabel = UiTheme.MakeLabel("Adds to storage", UiTheme.SmallSize, UiTheme.TextDim);
         Body.AddChild(_addsLabel);
@@ -526,7 +538,10 @@ public partial class BuildingDetail : Dialog
         }
     }
 
-    /// <summary>A Depot's Trucks row, a row per truck with its state, and the Buy truck button with what it is short of.</summary>
+    /// <summary>
+    /// A Depot's Trucks row, a row per truck with its state, the Buy truck button with what it is
+    /// short of, and the Sell truck button with what selling gives back.
+    /// </summary>
     private void RefreshTrucks(Building building)
     {
         int slots = building.Def.TruckSlots;
@@ -537,11 +552,18 @@ public partial class BuildingDetail : Dialog
             _rows.Set($"Truck {i + 1}", i < trucks.Count ? TruckText.State(trucks[i]) : null);
         }
         _buyTruck.Visible = slots > 0;
+        _sellTruck.Visible = slots > 0;
         _buyNote.Visible = false;
         if (slots <= 0)
         {
             return;
         }
+        Truck? toSell = _sim.TruckToSell(building);
+        var back = toSell is null ? new List<ResourceAmount>() : Simulation.RefundOf(toSell).ToList();
+        _sellTruck.Text = toSell is null ? "Sell truck"
+            : back.Count == 0 ? "Sell truck (nothing back)"
+            : "Sell truck (" + string.Join(", ", back.Select(c => $"{(int)c.Amount} {ResourceDefs.For(c.Type).Name}")) + " back)";
+        _sellTruck.Disabled = toSell is null;
         _buyTruck.Text = "Buy truck (" + string.Join(", ", TruckDefs.Cost.Select(c => $"{(int)c.Amount} {ResourceDefs.For(c.Type).Name}")) + ")";
         _buyTruck.Disabled = !_sim.CanBuyTruck(building);
         string? note = trucks.Count >= slots
@@ -559,6 +581,14 @@ public partial class BuildingDetail : Dialog
         if (Building is Building building)
         {
             _sim.TryBuyTruck(building.Id);
+        }
+    }
+
+    private void OnSellTruck()
+    {
+        if (Building is Building building)
+        {
+            _sim.TrySellTruck(building.Id);
         }
     }
 

@@ -231,9 +231,11 @@ ui-style.md. There is no text HUD; the screen holds:
   each rate ("Iron Ore, every 5 s"; disabled with one choice; choosing calls `SetOutputChoice`). A
   Depot shows Trucks ("2 / 4") and a row per truck
   (Truck 1 to Truck 4) with its state (`TruckText`: "Parked", "To Mine: Iron Ore", "Loading", "To
-  HQ: 20 Iron Ore", "Unloading", "Waiting: storage full (Iron Ore)", "Heading home"), then a "Buy
-  truck (15 Iron, 10 Wood)" button, disabled unless `CanBuyTruck`, over a note of what is short
-  ("15 Iron (have 3)" in `Short`) or "Every bay is full" (dim). A storage
+  HQ: 20 Iron Ore", "Unloading", "Waiting: storage full (Iron Ore)" (older saves only), "Heading
+  home"), then a "Buy truck (15 Iron, 10 Wood)" button, disabled unless `CanBuyTruck`, over a note
+  of what is short ("15 Iron (have 3)" in `Short`) or "Every bay is full" (dim), then a "Sell truck
+  (8 Iron, 5 Wood back)" button naming what selling the next truck (`TruckToSell`) gives back
+  ("Sell truck (nothing back)" for the one the Depot came with), disabled with no trucks. A storage
   building shows no Power, State, or progress; instead a Silo shows
   "Holds" and a picker of the Bulk resources (choosing one calls `SetSiloResource`), and every
   storage building lists "Adds to storage": one line per resource it adds to, with the amount

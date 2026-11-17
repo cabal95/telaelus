@@ -21,7 +21,10 @@ public enum TruckState
     /// <summary>Unloading into storage at the HQ.</summary>
     Unloading,
 
-    /// <summary>At the HQ with cargo that storage has no room for yet.</summary>
+    /// <summary>
+    /// Only in saves from before trucks unloaded everything (a truck waited at the HQ with cargo
+    /// storage had no room for); such a truck unloads at once.
+    /// </summary>
     WaitingForRoom,
 
     /// <summary>Driving home to park.</summary>
@@ -35,10 +38,10 @@ public static class TruckDefs
     public const float Capacity = 20f;
 
     /// <summary>World units per second on terrain of speed 1 (the player walks at 6).</summary>
-    public const float Speed = 8f;
+    public const float Speed = 3f;
 
-    /// <summary>Seconds to load at a collector, and again to unload at the HQ.</summary>
-    public const float LoadSeconds = 2f;
+    /// <summary>Seconds per unit to load at a collector, and again to unload at the HQ (5 s for a full load).</summary>
+    public const float LoadSecondsPerUnit = 0.25f;
 
     /// <summary>A collector's buffer is worth a trip at this many units (or when full).</summary>
     public const float DispatchAt = 10f;

@@ -51,8 +51,9 @@ down, that feeds the space game.
 - **Facilities** are placed by the player: extraction facilities on resource sites, and
   processing facilities to refine raw resources into intermediates and fuel.
 - **Trucks** are the RTS-flavored part. They are not micromanaged: a Depot's trucks dispatch
-  themselves to whichever collector needs emptying. Trucks are cheap and faster than the player on
-  foot, bought at a Depot (build more for more throughput) and later upgradeable (more capacity,
+  themselves to whichever collector needs emptying. Trucks are cheap and slow (slower than the
+  player on foot, though they carry far more), bought at a Depot (build more for more throughput:
+  one keeps up with about three collectors near the HQ) and later upgradeable (more capacity,
   more speed).
 
 **Logistics model:**

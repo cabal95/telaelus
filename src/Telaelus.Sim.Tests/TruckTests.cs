@@ -48,6 +48,59 @@ public class TruckTests
     }
 
     [Fact]
+    public void SellingATruck_GivesHalfABoughtOnesCostBack_AndTheFreeOneNothing()
+    {
+        Simulation sim = EmptyMap();
+        Building depot = sim.Debug.PlaceBuilding(BuildingType.Depot, DepotX, DepotZ, Facing.North);
+        sim.Debug.SeedStockpile(ResourceType.Iron, 30f);
+        sim.Debug.SeedStockpile(ResourceType.Wood, 20f);
+        Assert.True(sim.TryBuyTruck(depot.Id));
+        Assert.True(sim.TryBuyTruck(depot.Id));
+        Assert.Equal(0f, SimTestHelpers.Stock(sim, ResourceType.Iron));
+
+        // Bought trucks go first (the highest bays): 8 Iron and 5 Wood back each.
+        Assert.True(sim.TrySellTruck(depot.Id));
+        Assert.True(sim.TrySellTruck(depot.Id));
+        Assert.Equal(16f, SimTestHelpers.Stock(sim, ResourceType.Iron));
+        Assert.Equal(10f, SimTestHelpers.Stock(sim, ResourceType.Wood));
+
+        // The truck the Depot came with sells for nothing, leaving none.
+        Assert.True(sim.TrySellTruck(depot.Id));
+        Assert.Empty(sim.TrucksOf(depot));
+        Assert.Equal(16f, SimTestHelpers.Stock(sim, ResourceType.Iron));
+        Assert.False(sim.TrySellTruck(depot.Id));
+
+        // A Depot with none can buy again, into its first bay.
+        Assert.True(sim.TryBuyTruck(depot.Id));
+        Assert.Equal(0, Assert.Single(sim.TrucksOf(depot)).Bay);
+    }
+
+    [Fact]
+    public void SellingATruck_TakesAParkedOneFirst_AndALoadComesBack()
+    {
+        (Simulation sim, Building depot, Building mine) = Haul(12f);
+        sim.Debug.SeedStockpile(ResourceType.Iron, 15f);
+        sim.Debug.SeedStockpile(ResourceType.Wood, 10f);
+        Assert.True(sim.TryBuyTruck(depot.Id));
+        Truck working = sim.TrucksOf(depot)[0];
+        Truck parked = sim.TrucksOf(depot)[1];
+        while (working.State != TruckState.ToHq)
+        {
+            SimTestHelpers.Ticks(sim, 1);
+        }
+        Assert.Equal(TruckState.Parked, parked.State);
+
+        Assert.Same(parked, sim.TruckToSell(depot));
+        Assert.True(sim.TrySellTruck(depot.Id));
+        Assert.Same(working, Assert.Single(sim.TrucksOf(depot)));
+
+        // The loaded one sells next: its 12 Iron Ore go into storage (it came with the Depot).
+        Assert.True(sim.TrySellTruck(depot.Id));
+        Assert.Equal(12f, SimTestHelpers.Stock(sim, ResourceType.IronOre));
+        Assert.Equal(0f, mine.OutputCount);
+    }
+
+    [Fact]
     public void ATruck_HaulsAnOfflineCollectorsBufferToTheHq_AndParks()
     {
         (Simulation sim, Building depot, Building mine) = Haul(12f);
@@ -102,7 +155,7 @@ public class TruckTests
         mine.Output[ResourceType.Coal] = 4f;
         Truck truck = Assert.Single(sim.TrucksOf(depot));
 
-        SimTestHelpers.Seconds(sim, 40.0);
+        SimTestHelpers.Seconds(sim, 60.0);
 
         // What is left (9 in all) is under a trip's worth, so the truck parks.
         Assert.Equal(20f, SimTestHelpers.Stock(sim, ResourceType.IronOre));
@@ -113,24 +166,62 @@ public class TruckTests
     }
 
     [Fact]
-    public void ATruck_WaitsAtTheHqForRoom_ThenUnloadsTheRest()
+    public void ATruck_LoadsOnlyWhatStorageHasRoomFor()
     {
         (Simulation sim, Building depot, Building mine) = Haul(12f);
         float limit = sim.StorageLimit(ResourceType.IronOre);
         sim.Debug.SeedStockpile(ResourceType.IronOre, limit - 5f);
         Truck truck = Assert.Single(sim.TrucksOf(depot));
 
-        SimTestHelpers.Seconds(sim, 30.0);
-        Assert.Equal(TruckState.WaitingForRoom, truck.State);
-        Assert.Equal(ResourceType.IronOre, truck.Cargo);
-        Assert.Equal(7f, truck.Amount);
-        Assert.Equal(limit, SimTestHelpers.Stock(sim, ResourceType.IronOre));
+        // Room for 5 is under a trip's worth: no job, though the buffer holds 12.
+        SimTestHelpers.Seconds(sim, 5.0);
+        Assert.Equal(TruckState.Parked, truck.State);
 
-        sim.Debug.SeedStockpile(ResourceType.IronOre, -10f);
-        SimTestHelpers.Ticks(sim, 1);
+        // A full buffer is a job for what fits.
+        mine.Output[ResourceType.IronOre] = 20f;
+        SimTestHelpers.Seconds(sim, 60.0);
+        Assert.Equal(limit, SimTestHelpers.Stock(sim, ResourceType.IronOre));
+        Assert.Equal(15f, mine.Output[ResourceType.IronOre]);
+        Assert.Equal(TruckState.Parked, truck.State);
+    }
+
+    [Fact]
+    public void Room_CountsTheLoadsOtherTrucksAreCarrying()
+    {
+        (Simulation sim, Building depot, Building first) = Haul(10f);
+        Building second = sim.Debug.PlaceBuilding(BuildingType.Mine, 20, 50, Facing.North);
+        second.Output[ResourceType.IronOre] = 10f;
+        float limit = sim.StorageLimit(ResourceType.IronOre);
+        sim.Debug.SeedStockpile(ResourceType.IronOre, limit - 15f);
+        sim.Debug.SeedStockpile(ResourceType.Iron, 15f);
+        sim.Debug.SeedStockpile(ResourceType.Wood, 10f);
+        Assert.True(sim.TryBuyTruck(depot.Id));
+
+        SimTestHelpers.Seconds(sim, 80.0);
+
+        // The first truck's 10 left room for 5 from the second Mine, never more than storage holds.
+        Assert.Equal(limit, SimTestHelpers.Stock(sim, ResourceType.IronOre));
+        Assert.Equal(5f, first.OutputCount + second.OutputCount);
+    }
+
+    [Fact]
+    public void ATruck_UnloadsItAll_WhenItsRoomWasTakenOnTheWay()
+    {
+        (Simulation sim, Building depot, Building mine) = Haul(12f);
+        float limit = sim.StorageLimit(ResourceType.IronOre);
+        Truck truck = Assert.Single(sim.TrucksOf(depot));
+        while (truck.State != TruckState.ToHq)
+        {
+            SimTestHelpers.Ticks(sim, 1);
+        }
+
+        // The player fills storage by hand while the truck drives.
+        sim.Debug.SeedStockpile(ResourceType.IronOre, limit - SimTestHelpers.Stock(sim, ResourceType.IronOre));
+        SimTestHelpers.Seconds(sim, 40.0);
+
+        Assert.Equal(limit + 12f, SimTestHelpers.Stock(sim, ResourceType.IronOre));
         Assert.Null(truck.Cargo);
-        Assert.Equal(TruckState.ToDepot, truck.State);
-        Assert.Equal(limit - 3f, SimTestHelpers.Stock(sim, ResourceType.IronOre));
+        Assert.Equal(TruckState.Parked, truck.State);
     }
 
     [Fact]
