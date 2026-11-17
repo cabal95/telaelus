@@ -209,6 +209,11 @@ Newest last. One line each; open the file for the full spec.
   storage has room for once other trucks' loads are counted, and unload everything (past the limit
   if room was taken on the way), so a truck never waits at the HQ. A Depot sells trucks for half a
   bought one's cost back. The demo save is rewritten.
+- **2611162105-top-bar-cleanup** - The ship bill and launch leave the top bar for a Ship launch
+  section in the Shipyard's panel with a Launch ship button (no L key); Water and Sand move beside
+  Power as capacity readouts, and all three show only once the network has any; Sand and Water can
+  no longer be pinned. Pins show their amount alone (red when full, dim with no storage, the limit
+  in the tooltip), and the bar's entries sit twice as far apart.
 
 ## Adding a changeset
 

@@ -330,6 +330,16 @@ public static class StateSnapshot
                     ["enabled"] = sellEnabled
                 }
                 : null;
+            ui["launch"] = root.BuildingDetail.Launch is var (bill, button, launchEnabled, launchNote, ships)
+                ? new JsonObject
+                {
+                    ["bill"] = new JsonArray(bill.Select(b => (JsonNode)b).ToArray()),
+                    ["button"] = button,
+                    ["enabled"] = launchEnabled,
+                    ["note"] = launchNote,
+                    ["ships"] = ships
+                }
+                : null;
             var adds = new JsonObject();
             foreach ((string resource, string amount) in root.BuildingDetail.Adds)
             {
@@ -385,10 +395,14 @@ public static class StateSnapshot
         return new JsonObject
         {
             ["items"] = items,
-            ["power"] = bar.PowerText,
+            ["power"] = bar.CapacityText(CapacityType.Power),
+            ["powerTone"] = bar.CapacityTone(CapacityType.Power),
+            ["water"] = bar.CapacityText(CapacityType.Water),
+            ["waterTone"] = bar.CapacityTone(CapacityType.Water),
+            ["sand"] = bar.CapacityText(CapacityType.Sand),
+            ["sandTone"] = bar.CapacityTone(CapacityType.Sand),
             ["clock"] = bar.ClockText,
-            ["store"] = bar.StoreText,
-            ["launch"] = bar.LaunchText
+            ["store"] = bar.StoreText
         };
     }
 

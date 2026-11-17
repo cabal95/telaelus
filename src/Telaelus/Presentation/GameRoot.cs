@@ -361,10 +361,6 @@ public partial class GameRoot : Node3D
                 _camera.Zoom(1f); // zoom out
             }
         }
-        else if (@event is InputEventKey key && key.Pressed && !key.Echo && key.PhysicalKeycode == Key.L)
-        {
-            _sim.TryLaunchShip();
-        }
         else if (@event is InputEventKey f3 && f3.Pressed && !f3.Echo && f3.PhysicalKeycode == Key.F3)
         {
             _debug.Shown = !_debug.Shown;
@@ -610,7 +606,7 @@ public partial class GameRoot : Node3D
         {
             Name = "BuildingDetail"
         };
-        _buildingDetail.Initialize(_sim);
+        _buildingDetail.Initialize(_sim, _icons);
         _dialogs.Add(_buildingDetail, "");
         _buildController.BuildingClicked += _buildingDetail.ShowBuilding;
 

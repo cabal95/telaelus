@@ -514,7 +514,8 @@ And seven buildings, all processors (output buffer 10, 5 cycles of each input):
   Rocket Fuel, and 200 Liquid Oxygen. `LaunchBillMet` is true when storage holds all of it.
 - A ship launches from a Shipyard: `LaunchShipyard` is the first switched-on, online Shipyard, or
   null. `CanLaunchShip` is true when the bill is met and there is one. `TryLaunchShip` consumes the
-  bill and increments `ShipsLaunched`. This is the current win that closes the initial loop.
+  bill and increments `ShipsLaunched`. The player launches with the Launch ship button in a Shipyard's panel
+  (presentation.md), enabled while that Shipyard is switched on and online and the bill is met. This is the current win that closes the initial loop.
 
 ### Rendering and interaction
 

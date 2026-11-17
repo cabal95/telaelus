@@ -278,9 +278,10 @@ pausing it and stepping frame by frame.
   `network`: `overlay` (whether N has it on), `shownHubs` (the ids of the hubs whose coverage is
   drawn), and `offlineMarkers` (how many offline markers are drawn),
   `topBar`: its `items` (each pinned resource's `type`, `amount`, `limit` (null for a Cargo or
-  unlimited resource), `full`, the `text` shown, and its `tone`: `normal`, `warning`, or
-  `danger`), its `power` readout ("45 / 100", "Blackout: 140 / 100"), its `clock` ("14:00"), its
-  `store` (the Battery Banks' readout, or null with none), and its `launch` text, `hint`: the hint's `text`, `progress`,
+  unlimited resource), `full`, the `text` shown (the amount), and its `tone`: `normal`,
+  `danger` when full, or `dim` with no storage), its `power`, `water`, and `sand` readouts ("45 / 100", "Blackout: 140 / 100", or null
+  while hidden) and their `powerTone`, `waterTone`, and `sandTone`, its `clock` ("14:00"), and its
+  `store` (the Battery Banks' readout, or null with none), `hint`: the hint's `text`, `progress`,
   and `storageFull` or null, `tooltip`: the hover
   tooltip's lines or null, `worldTip`: the truck tooltip's lines outside build mode, or null,
   `playTime` (game seconds played) and `unsaved` (unsaved progress), while the game menu is open
@@ -297,7 +298,10 @@ pausing it and stepping frame by frame.
   `charge`, `research`),
   `fuel` (the fuel picker's choice, or null), `output` (the Output picker's choice as shown, or
   null), `recipe` (the Recipe picker's choice, or null), `input` (the input picker's `choice` and
-  `note`, or null), `buyTruck` and `sellTruck` (a Depot's buttons: `text` and `enabled`, or null), `adds` (what a storage building adds, by
+  `note`, or null), `buyTruck` and `sellTruck` (a Depot's buttons: `text` and `enabled`, or null), `launch` (a
+  Shipyard's Ship launch section: its `bill` ("have / need" per entry), the `button` text,
+  `enabled`, the `note` saying why not or null, and `ships` ("Ships launched: n") or null; null for
+  other buildings), `adds` (what a storage building adds, by
   resource name, as "+300"), `destroy` (the Destroy button's text, or null when hidden), and
   `turnDegrees`; while the field detail panel is open, `field` (its id), `title`, and `rows`
   (`remaining`, `workedBy`); while the inventory is open, `inventory`: its rows in display order,
@@ -480,15 +484,15 @@ pausing it and stepping frame by frame.
   left drag in build mode places nothing),
   `fog` (on the empty map with fog, a field beyond sight is not drawn and cannot be hovered;
   coming into sight reveals it, and it stays revealed after the player leaves),
-  `hud` (the debug overlay starts hidden and F3 toggles it; the top bar shows all eight raw
-  resources with name tooltips and the launch progress; the hint overlay shows the harvest hint
+  `hud` (the debug overlay starts hidden and F3 toggles it; the top bar shows the six starting
+  deposits as amounts, Crude Oil dim with no storage, with tooltips of name, amount, and limit, and no Power, Water, Sand, or ship bill with none on the network; the hint overlay shows the harvest hint
   and its bar; I opens and closes the inventory, grouped by tier with discovered resources first;
   the inventory and a building's detail replace each other; a panel covers the debug overlay),
   `power` (a Drill Rig with no supply is in a blackout; a Burner Generator on Coal powers it; four
   then five Refineries push demand into a brownout at 80% and a blackout, on the top bar; the
   generator's panel shows its supply and Best fuel),
   `refining` (a Steel Mill's Auto input picker and its note and recipe text; an Electrolyzer on
-  Hydrogen feeding a Fuel Plant to Rocket Fuel; the launch progress with Liquid Oxygen),
+  Hydrogen feeding a Fuel Plant to Rocket Fuel; no ship bill on the top bar),
   `menu` (the loading screen done and the menu showing its title and New Game, Demo, and Quit; `newGame`
   going into a game, and a second replacing it with a fresh world; windowed screenshots of the menu
   and the game),
@@ -514,9 +518,9 @@ pausing it and stepping frame by frame.
   Mixer on Sand and Water; a Brine Well on Desert Sand pumping Lithium into a Stockyard; a
   Semiconductor Fab's display stand and recipe changing to Processor),
   `first-ship` (a Fabricator making Hull Plate, its display stand showing the part and changing
-  at once when Steel Beam is chosen; with the ship bill seeded, the top bar asking for a Shipyard;
-  a Shipyard placed, the ship on its pad and "[L] Launch ship"; L launching it and the bill
-  resetting with "Ships: 1"),
+  at once when Steel Beam is chosen; a Shipyard's panel showing the bill short and Launch ship
+  disabled with why; with the bill seeded, the ship on its pad and the button enabled; L doing
+  nothing; the button launching it, the bill counting down again, and "Ships launched: 1"),
   `renewables` (a Forester on Water and Power growing its trees, a Lumber Camp idle until they are
   grown and then cutting; a Quarry beside a mountain; a Deep Mine on a Laterite producing Iron Ore,
   its panel's Site row and Output picker; a worked-out Crude Oil marker named on hover; a Rock
@@ -526,13 +530,13 @@ pausing it and stepping frame by frame.
   Mine off the network
   filled to 12 getting a truck that loads, carries, and unloads it into storage and parks, the
   Mine's Truck row, hovering a parked truck),
-  `capacity` (a Glassworks with no Sand is in a blackout, in `Danger` on the Sand pin; a Sand
+  `capacity` (a Glassworks with no Sand is in a blackout, in `Danger` on the Sand readout beside Power; a Sand
   Collector on Sand supplies it and Glass is made; five Glassworks on four Collectors are a Sand
   brownout at half speed, in `Warning`, shown in the Glassworks panel's Sand row and its recipe),
   `network` (a Mine out of reach is offline with the warning marker and fills its buffer; E collects
   from it; N shows the overlay; a chain of Small Hubs brings it online; the placement tooltip's
   online line; a selected hub shows only its own coverage),
-  `storage` (Wood at the HQ's 100 shows full on the top bar and the harvest hint says Storage
+  `storage` (Wood at the HQ's 100 shows full, in red, on the top bar and the harvest hint says Storage
   full; a Silo raises the limit to 400 and harvesting resumes; the inventory's Cargo row, and
   pinning and unpinning from it, which reorders the top bar; the Silo's detail lists what it adds),
   `inventory` (on the empty map nothing is discovered and every row is darkened, through the last

@@ -55,7 +55,7 @@ planned multiplayer feasible.
 - `GameRoot` (one per game) builds the world in code and owns the `Simulation` and `SimClock`.
 - Each `_Process(delta)`: read input into `PlayerIntent` (camera-relative move, held `E` harvest),
   advance the clock and step the simulation, then sync the views from read-only simulation state.
-  `_UnhandledInput` handles mouse-wheel zoom and the `L` launch command.
+  `_UnhandledInput` handles mouse-wheel zoom.
 - `GameRoot` exposes the sim, camera, build controller, and field views read-only for the testing
   code. `AppRoot` attaches a `ScenarioRunner` when the command line has `--scenario`, or a
   `ControlChannel` when it has `--control-port` (debug builds only, processed after the game each
@@ -125,19 +125,19 @@ The kinds of UI (modals, panels, overlays), their look, layers, and input rules 
 ui-style.md. There is no text HUD; the screen holds:
 
 - **Top bar** (`TopBar`, always shown): the pinned resources (`ResourcePins`, presentation state
-  for the session; the six starting deposits and Sand and Water at start, kept in table order),
-  each as its icon and "amount / limit" (the amount alone for a Cargo or unlimited resource), in
-  `Warning` when storage has no room for another unit, with name tooltips; a capacity resource
-  (Sand, Water) shows demand over supply instead ("2 / 4", or "Blackout: 6 / 4"), in normal text,
-  `Warning` in a brownout, or `Danger` in a blackout (`HudOverlay.StorageText` and `AmountColor`).
-  Then the launch progress: each entry of the ship bill (`Simulation.LaunchCost`: Hull Section,
-  Engine, Control Module, Rocket Fuel, Liquid Oxygen) as "have / need" until the bill is met, then
-  "[L] Launch ship" once it can launch, or "Build a Shipyard to launch" with the bill met and no
-  online Shipyard, and "Ships: n" once one has launched; all preceded by the clock (the `icon_sun`
-  icon while there is daylight, else `icon_moon`, and the hour of a 24-hour day, "14:00"), the
-  network's power (the `icon_power` bolt and "45 / 100", or "Blackout:" before the bolt, colored
-  the same way), and, once there is a Battery Bank, what the banks hold (the Battery item's icon and
-  "3200 / 6000", `Warning` while discharging). Pinning or unpinning rebuilds the entries.
+  for the session; the six starting deposits at start, kept in table order; Sand and Water can
+  never be pinned, `ResourcePins.CanPin`, and a loaded save's pins drop them), each as its icon and
+  its amount alone (`TopBar.PinText`), in `Danger` when storage has no room for another unit and
+  dim while it has no storage at all (`TopBar.PinColor`), with a tooltip of its name, amount, and
+  limit ("Wood 45 / 100", `HudOverlay.StorageText`). Then the clock
+  (the `icon_sun` icon while there is daylight, else `icon_moon`, and the hour of a 24-hour day,
+  "14:00"), then each capacity in `CapacityType` order (Power, Water, Sand), shown only once the
+  network has any supply or demand of it (or, for Power, a Battery Bank): its icon (the
+  `icon_power` bolt, or the Water or Sand item's icon) and demand over supply ("45 / 100", or
+  "Blackout:" before the icon), in normal text, `Warning` in a brownout, or `Danger` in a blackout,
+  with a name tooltip; and once there is a Battery Bank, what the banks hold (the Battery item's
+  icon and "3200 / 6000", `Warning` while discharging). Pinning or unpinning rebuilds the pins. The
+  ship launch is not on the bar: it is the Shipyard's panel's.
 - **Hint overlay** (`HintOverlay`): below the top bar, the E key's action with the resource's
   icon and a progress bar toward the next unit: "[E] Harvest Wood" while a hand-harvestable field is
   the target, "[E] Collect Iron Ore (12)" (units left in the output buffer) or "[E] Load Iron Ore
@@ -169,7 +169,7 @@ ui-style.md. There is no text HUD; the screen holds:
   a Cargo or unlimited resource, as "Iron (23)"; demand over supply for Sand and Water, as "Water
   (2 / 4)", colored by its state), including those at 0, in `Warning` when storage has no room for
   another unit, and a Pin toggle at the right ("Pin", or "Pinned" when on the top
-  bar) that pins or unpins it; an undiscovered row is darkened like an undiscovered building in the build
+  bar) that pins or unpins it (none for Sand and Water, which have their own top bar readouts); an undiscovered row is darkened like an undiscovered building in the build
   menu: its icon tinted `Silhouette` and "Undiscovered" in `TextDim`, with no name, amount, or
   pin. The
   body scrolls. Like every panel, opening it closes a building's detail panel and the other way
@@ -235,7 +235,13 @@ ui-style.md. There is no text HUD; the screen holds:
   home"), then a "Buy truck (15 Iron, 10 Wood)" button, disabled unless `CanBuyTruck`, over a note
   of what is short ("15 Iron (have 3)" in `Short`) or "Every bay is full" (dim), then a "Sell truck
   (8 Iron, 5 Wood back)" button naming what selling the next truck (`TruckToSell`) gives back
-  ("Sell truck (nothing back)" for the one the Depot came with), disabled with no trucks. A storage
+  ("Sell truck (nothing back)" for the one the Depot came with), disabled with no trucks. A Shipyard
+  shows a Ship launch section under its progress bar (above the recipe picker, so it shows without
+  scrolling): a Launch ship button, enabled only while this Shipyard is switched on and online and
+  the whole ship bill (`Simulation.LaunchCost`) is in storage, calling `TryLaunchShip`; under it
+  why not ("Needs the whole bill in storage", "This Shipyard is offline", "This Shipyard is
+  switched off"); "Ships launched: n" once one has; then a row per bill entry with its icon, name,
+  and "have / need", in `Short` until met. There is no key for it. A storage
   building shows no Power, State, or progress; instead a Silo shows
   "Holds" and a picker of the Bulk resources (choosing one calls `SetSiloResource`), and every
   storage building lists "Adds to storage": one line per resource it adds to, with the amount

@@ -36,6 +36,13 @@ public partial class BuildingDetail : Dialog
     private Label _fuelNote = null!;
     private Button _buyTruck = null!;
     private Button _sellTruck = null!;
+    private ResourceIcons _icons = null!;
+    // The Shipyard's Ship launch section: its heading, a row per bill entry, the button, why it is off, and the ships launched.
+    private VBoxContainer _launchBox = null!;
+    private readonly List<(ResourceType Type, float Need, TextureRect Icon, Label Amount)> _billRows = new();
+    private Button _launch = null!;
+    private Label _launchNote = null!;
+    private Label _shipsLaunched = null!;
     private Button _openResearch = null!;
 
     /// <summary>Raised when the lab's button asks for the research tree.</summary>
@@ -89,6 +96,16 @@ public partial class BuildingDetail : Dialog
 
     public (string Text, bool Enabled)? BuyTruck => _buyTruck.Visible ? (_buyTruck.Text, !_buyTruck.Disabled) : null;
 
+    /// <summary>
+    /// The Shipyard's Ship launch section as shown: each bill entry's "have / need", the button's text
+    /// and whether it can be pressed, why it cannot (or null), and the ships launched (or null before
+    /// the first); null for any other building. For the snapshot.
+    /// </summary>
+    public (IReadOnlyList<string> Bill, string Button, bool Enabled, string? Note, string? Ships)? Launch => _launchBox.Visible
+        ? (_billRows.Select(r => r.Amount.Text).ToList(), _launch.Text, !_launch.Disabled,
+            _launchNote.Visible ? _launchNote.Text : null, _shipsLaunched.Visible ? _shipsLaunched.Text : null)
+        : null;
+
     /// <summary>The Sell truck button as shown (a Depot's panel only), for the snapshot.</summary>
     public (string Text, bool Enabled)? SellTruck => _sellTruck.Visible ? (_sellTruck.Text, !_sellTruck.Disabled) : null;
 
@@ -99,9 +116,10 @@ public partial class BuildingDetail : Dialog
 
     public float TurnDegrees => _turntable.TurnDegrees;
 
-    public void Initialize(Simulation sim)
+    public void Initialize(Simulation sim, ResourceIcons icons)
     {
         _sim = sim;
+        _icons = icons;
     }
 
     protected override void Build()
@@ -214,6 +232,49 @@ public partial class BuildingDetail : Dialog
         Body.AddChild(_sellTruck);
         Host.Register(Id + "/sellTruck", _sellTruck);
 
+        _launchBox = new VBoxContainer
+        {
+            Name = "Launch",
+            MouseFilter = MouseFilterEnum.Ignore
+        };
+        _launchBox.AddThemeConstantOverride("separation", UiTheme.Gap / 2);
+        _launchBox.AddChild(UiTheme.MakeLabel("Ship launch", UiTheme.SmallSize, UiTheme.TextDim));
+        // The button first, then the bill, so Launch ship shows (disabled until it can launch) without scrolling.
+        _launch = new Button
+        {
+            Name = "LaunchShip",
+            Text = "Launch ship",
+            FocusMode = FocusModeEnum.None
+        };
+        _launch.Pressed += OnLaunch;
+        _launchBox.AddChild(_launch);
+        Host.Register(Id + "/launch", _launch);
+        _launchNote = UiTheme.MakeLabel("", UiTheme.SmallSize, UiTheme.TextDim);
+        _launchBox.AddChild(_launchNote);
+        _shipsLaunched = UiTheme.MakeLabel("", UiTheme.BodySize);
+        _launchBox.AddChild(_shipsLaunched);
+        foreach (ResourceAmount cost in Simulation.LaunchCost)
+        {
+            var line = new HBoxContainer
+            {
+                MouseFilter = MouseFilterEnum.Ignore
+            };
+            line.AddThemeConstantOverride("separation", 6);
+            TextureRect icon = HudOverlay.MakeIcon(20f);
+            icon.SizeFlagsVertical = SizeFlags.ShrinkCenter;
+            line.AddChild(icon);
+            Label name = UiTheme.MakeLabel(ResourceDefs.For(cost.Type).Name, UiTheme.BodySize);
+            name.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+            line.AddChild(name);
+            Label amount = UiTheme.MakeLabel("", UiTheme.BodySize);
+            line.AddChild(amount);
+            _launchBox.AddChild(line);
+            _billRows.Add((cost.Type, cost.Amount, icon, amount));
+        }
+        Body.AddChild(_launchBox);
+        // Right under the progress bar, above the recipe picker, so Launch ship shows without scrolling.
+        Body.MoveChild(_launchBox, _progress.GetIndex() + 1);
+
         _addsLabel = UiTheme.MakeLabel("Adds to storage", UiTheme.SmallSize, UiTheme.TextDim);
         Body.AddChild(_addsLabel);
         _adds = new GridContainer
@@ -304,6 +365,7 @@ public partial class BuildingDetail : Dialog
         _rows.Set("Buffer", BufferText(building));
         _rows.Set("Truck", TruckText.CollectorRow(_sim, building));
         RefreshTrucks(building);
+        RefreshLaunch(building);
         RefreshRenewables(building);
         RefreshRecipePickers(building);
         _rows.Set("Links", def.IsHub ? _sim.LinkedHubs(building).Count.ToString() : null);
@@ -581,6 +643,44 @@ public partial class BuildingDetail : Dialog
         if (Building is Building building)
         {
             _sim.TryBuyTruck(building.Id);
+        }
+    }
+
+    /// <summary>
+    /// The Shipyard's Ship launch section: the bill (have / need, short amounts in the short color),
+    /// the Launch ship button, enabled only while this Shipyard is switched on and online and the
+    /// whole bill is in storage, with why not under it, and the ships launched once there is one.
+    /// </summary>
+    private void RefreshLaunch(Building building)
+    {
+        _launchBox.Visible = building.Type == BuildingType.Shipyard;
+        if (!_launchBox.Visible)
+        {
+            return;
+        }
+        foreach ((ResourceType type, float need, TextureRect icon, Label amount) in _billRows)
+        {
+            icon.Texture ??= _icons.For(type);
+            int have = HudOverlay.Whole(_sim, type);
+            amount.Text = $"{have} / {(int)need}";
+            amount.AddThemeColorOverride("font_color", have < need ? UiTheme.Short : UiTheme.Text);
+        }
+        string? why = !building.Enabled ? "This Shipyard is switched off"
+            : !building.Online ? "This Shipyard is offline"
+            : !_sim.LaunchBillMet ? "Needs the whole bill in storage"
+            : null;
+        _launch.Disabled = why is not null;
+        _launchNote.Visible = why is not null;
+        _launchNote.Text = why ?? "";
+        _shipsLaunched.Visible = _sim.ShipsLaunched > 0;
+        _shipsLaunched.Text = "Ships launched: " + _sim.ShipsLaunched;
+    }
+
+    private void OnLaunch()
+    {
+        if (Building is Building building && building.Enabled && building.Online)
+        {
+            _sim.TryLaunchShip();
         }
     }
 

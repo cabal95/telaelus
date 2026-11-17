@@ -170,7 +170,7 @@ public partial class InventoryPanel : Dialog
         row.Icon.Texture ??= _icons.For(type);
         bool discovered = _sim.IsDiscovered(type);
         bool pinned = _pins.IsPinned(type);
-        row.Pin.Visible = discovered;
+        row.Pin.Visible = discovered && ResourcePins.CanPin(type);
         row.Pin.SetPressedNoSignal(pinned);
         row.Pin.Text = pinned ? "Pinned" : "Pin";
         if (discovered)

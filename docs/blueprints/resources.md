@@ -279,7 +279,8 @@ buildings.md). A single global stockpile holds all amounts, within storage limit
   every deposit has its own today. The
   models are required: a missing file throws (see presentation.md). Assets and conventions live in
   `src/Telaelus/assets/models/nature/README.md`.
-- The top bar shows the pinned resources' amounts and limits, and the inventory panel (I) the
+- The top bar shows the pinned resources' amounts and limits (Sand and Water are never pinned:
+  they read as capacity beside Power once the network has any), and the inventory panel (I) the
   Cargo pool and every resource by tier, discovered or not;
   the hint overlay shows "[E] Harvest" with the resource's icon, name, and a progress bar toward
   the next unit when a hand-harvestable field is in range (see presentation.md).

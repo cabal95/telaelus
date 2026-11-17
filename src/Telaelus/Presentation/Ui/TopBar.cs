@@ -9,13 +9,12 @@ namespace Telaelus.Presentation.Ui;
 /// <summary>
 /// The top bar: a full-width strip across the top of the window in the panel style.
 /// Left, the pinned resources (see <see cref="ResourcePins"/>) in table order, each as an icon and
-/// "amount / limit" (the amount alone for a Cargo or unlimited resource), in the warning color
-/// when storage is full, each with a tooltip naming it. Right, the clock (a sun icon by day, a
-/// moon icon by night, and "14:00"), the network's power (a lightning-bolt icon and "45 / 100", colored by its state,
-/// "Blackout:" before it in a blackout), what Battery Banks hold (the Battery icon and "3200 / 6000",
-/// in the warning color while discharging) once there is one, then the launch progress (the ship
-/// bill, short amounts in the short color), "[L] Launch ship" once it can launch, and the ships
-/// launched once there is one. It takes the mouse but no keys.
+/// its amount, in the danger color when storage has no room for another unit (dim while it has no
+/// storage at all), each with a tooltip naming it with its amount and limit ("Wood 45 / 100"). Right, the clock (a sun icon by day, a moon icon by night,
+/// and "14:00"), then each capacity (Power, Water, Sand) once the network has any supply or demand
+/// of it: its icon and demand over supply ("45 / 100"), colored by its state, "Blackout:" before it
+/// in a blackout; then what Battery Banks hold (the Battery icon and "3200 / 6000", in the warning
+/// color while discharging) once there is one. It takes the mouse but no keys.
 /// </summary>
 public partial class TopBar : HudOverlay
 {
@@ -28,27 +27,32 @@ public partial class TopBar : HudOverlay
     private Simulation? _sim;
     private HBoxContainer _pinRow = null!;
     private readonly Dictionary<ResourceType, (TextureRect Icon, Label Amount)> _entries = new();
-    // The ship bill's entries, in bill order.
-    private readonly List<(ResourceType Type, float Need, TextureRect Icon, Label Amount)> _bill = new();
-    private Label _shipyardNote = null!;
-    private Label _launch = null!;
-    private Label _power = null!;
-    private Label _powerState = null!;
-    private TextureRect _powerIcon = null!;
+    // Each capacity's readout, in CapacityType order.
+    private readonly Dictionary<CapacityType, (HBoxContainer Entry, Label State, TextureRect Icon, Label Amount)> _capacities = new();
     private TextureRect _clockIcon = null!;
     private Label _clock = null!;
     private HBoxContainer _storeEntry = null!;
     private TextureRect _storeIcon = null!;
     private Label _store = null!;
-    private Label _ships = null!;
 
     /// <summary>The entries as shown (type, amount, its own limit or null, whether storage is full, the text, and its tone), for the snapshot.</summary>
     public IEnumerable<(ResourceType Type, int Amount, int? Limit, bool Full, string Text, string Tone)> Entries => _sim is Simulation sim
-        ? _pins.Pinned.Select(type => (type, Whole(sim, type), WholeLimit(sim, type), IsFull(sim, type), StorageText(sim, type), ToneOf(AmountColor(sim, type))))
+        ? _pins.Pinned.Select(type => (type, Whole(sim, type), WholeLimit(sim, type), IsFull(sim, type), PinText(sim, type), ToneOf(PinColor(sim, type))))
         : Enumerable.Empty<(ResourceType, int, int?, bool, string, string)>();
 
-    /// <summary>The power readout as shown ("45 / 100", "Blackout: 140 / 100"), for the snapshot.</summary>
-    public string PowerText => (_powerState.Visible ? _powerState.Text + " " : "") + _power.Text;
+    /// <summary>A capacity's readout as shown ("45 / 100", "Blackout: 140 / 100"), or null while hidden, for the snapshot.</summary>
+    public string? CapacityText(CapacityType type)
+    {
+        (HBoxContainer entry, Label state, _, Label amount) = _capacities[type];
+        return entry.Visible ? (state.Visible ? state.Text + " " : "") + amount.Text : null;
+    }
+
+    /// <summary>A capacity readout's tone ("normal", "warning", "danger"), or null while hidden, for the snapshot.</summary>
+    public string? CapacityTone(CapacityType type)
+    {
+        (HBoxContainer entry, _, _, Label amount) = _capacities[type];
+        return entry.Visible ? ToneOf(amount.GetThemeColor("font_color")) : null;
+    }
 
     /// <summary>The clock as shown ("14:00"), for the snapshot.</summary>
     public string ClockText => _clock.Text;
@@ -56,17 +60,38 @@ public partial class TopBar : HudOverlay
     /// <summary>What Battery Banks hold as shown ("3200 / 6000"), or null with no bank, for the snapshot.</summary>
     public string? StoreText => _storeEntry.Visible ? _store.Text : null;
 
+    /// <summary>A pin's text: the amount alone; its limit is in the tooltip.</summary>
+    public static string PinText(Simulation sim, ResourceType type)
+    {
+        return Whole(sim, type).ToString();
+    }
+
+    /// <summary>
+    /// A pin's color: dim while it has no storage at all (Crude Oil before a Tank Farm), the danger
+    /// color when the storage it has is full, else normal.
+    /// </summary>
+    public static Color PinColor(Simulation sim, ResourceType type)
+    {
+        if (WholeLimit(sim, type) == 0)
+        {
+            return UiTheme.TextDim;
+        }
+        return IsFull(sim, type) ? UiTheme.Danger : UiTheme.Text;
+    }
+
+    /// <summary>A pin's tooltip: its name and amount, with the limit when it has one of its own ("Wood 45 / 100").</summary>
+    private string PinTip(ResourceType type)
+    {
+        string name = ResourceDefs.For(type).Name;
+        return _sim is Simulation sim ? $"{name} {StorageText(sim, type)}" : name;
+    }
+
     /// <summary>The clock's text for a time of day: the hour of a 24-hour day ("14:00"); its sun or moon icon says day or night.</summary>
     public static string ClockFor(float timeOfDay)
     {
         int minutes = (int)(timeOfDay * 24f * 60f) % (24 * 60);
         return $"{minutes / 60:00}:{minutes % 60:00}";
     }
-
-    /// <summary>The launch progress as shown, for the snapshot.</summary>
-    public string LaunchText => string.Join("   ", _bill.Where(e => e.Amount.IsVisibleInTree()).Select(e => e.Amount.Text)
-        .Concat(new[] { _launch.Visible ? _launch.Text : "", _shipyardNote.Visible ? _shipyardNote.Text : "", _ships.Visible ? _ships.Text : "" })
-        .Where(text => text.Length > 0));
 
     public void Initialize(DialogHost host, ResourceIcons icons, ResourcePins pins)
     {
@@ -99,15 +124,15 @@ public partial class TopBar : HudOverlay
         {
             MouseFilter = MouseFilterEnum.Ignore
         };
-        // Sections sit a Gap apart so the pins, clock, power, store, and ship bill fit at 1280 wide.
-        row.AddThemeConstantOverride("separation", UiTheme.Gap);
+        // Entries sit two Gaps apart, so the amounts (with no limits beside them) stay easy to tell apart.
+        row.AddThemeConstantOverride("separation", UiTheme.Gap * 2);
         bar.AddChild(row);
 
         _pinRow = new HBoxContainer
         {
             MouseFilter = MouseFilterEnum.Ignore
         };
-        _pinRow.AddThemeConstantOverride("separation", UiTheme.Gap);
+        _pinRow.AddThemeConstantOverride("separation", UiTheme.Gap * 2);
         row.AddChild(_pinRow);
         RebuildPins();
 
@@ -130,20 +155,28 @@ public partial class TopBar : HudOverlay
         clockEntry.AddChild(_clock);
         row.AddChild(clockEntry);
 
-        var powerEntry = new HBoxContainer
+        foreach (CapacityType type in Simulation.CapacityTypes)
         {
-            Name = "Power",
-            MouseFilter = MouseFilterEnum.Ignore
-        };
-        powerEntry.AddThemeConstantOverride("separation", 3);
-        _powerState = UiTheme.MakeLabel("Blackout:", UiTheme.BodySize, UiTheme.Danger);
-        powerEntry.AddChild(_powerState);
-        _powerIcon = MakeIcon(IconSize);
-        _powerIcon.SizeFlagsVertical = SizeFlags.ShrinkCenter;
-        powerEntry.AddChild(_powerIcon);
-        _power = UiTheme.MakeLabel("", UiTheme.BodySize);
-        powerEntry.AddChild(_power);
-        row.AddChild(powerEntry);
+            var entry = new HBoxContainer
+            {
+                Name = type.ToString(),
+                MouseFilter = MouseFilterEnum.Stop
+            };
+            entry.AddThemeConstantOverride("separation", 3);
+            Label state = UiTheme.MakeLabel("Blackout:", UiTheme.BodySize, UiTheme.Danger);
+            entry.AddChild(state);
+            TextureRect icon = MakeIcon(IconSize);
+            icon.SizeFlagsVertical = SizeFlags.ShrinkCenter;
+            entry.AddChild(icon);
+            Label amount = UiTheme.MakeLabel("", UiTheme.BodySize);
+            amount.MouseFilter = MouseFilterEnum.Ignore;
+            entry.AddChild(amount);
+            var lines = new[] { new TipLine(type.ToString()) };
+            entry.MouseEntered += () => _host.ShowHover(entry, lines, below: true);
+            entry.MouseExited += () => _host.HideHover(entry);
+            row.AddChild(entry);
+            _capacities[type] = (entry, state, icon, amount);
+        }
 
         _storeEntry = new HBoxContainer
         {
@@ -157,25 +190,6 @@ public partial class TopBar : HudOverlay
         _store = UiTheme.MakeLabel("", UiTheme.BodySize);
         _storeEntry.AddChild(_store);
         row.AddChild(_storeEntry);
-        // The ship bill sits closer together than the gaps between sections, so the bar fits it.
-        var billRow = new HBoxContainer
-        {
-            MouseFilter = MouseFilterEnum.Ignore
-        };
-        billRow.AddThemeConstantOverride("separation", UiTheme.Gap);
-        row.AddChild(billRow);
-        foreach (ResourceAmount cost in Simulation.LaunchCost)
-        {
-            (HBoxContainer entry, TextureRect icon, Label amount) = MakeEntry(cost.Type, ResourceDefs.For(cost.Type).Name + " for a launch");
-            billRow.AddChild(entry);
-            _bill.Add((cost.Type, cost.Amount, icon, amount));
-        }
-        _launch = UiTheme.MakeLabel("[L] Launch ship", UiTheme.BodySize, UiTheme.Accent);
-        row.AddChild(_launch);
-        _shipyardNote = UiTheme.MakeLabel("Build a Shipyard to launch", UiTheme.BodySize, UiTheme.Warning);
-        row.AddChild(_shipyardNote);
-        _ships = UiTheme.MakeLabel("", UiTheme.BodySize);
-        row.AddChild(_ships);
     }
 
     private void RebuildPins()
@@ -192,14 +206,14 @@ public partial class TopBar : HudOverlay
         _entries.Clear();
         foreach (ResourceType type in _pins.Pinned)
         {
-            (HBoxContainer entry, TextureRect icon, Label amount) = MakeEntry(type, ResourceDefs.For(type).Name);
+            (HBoxContainer entry, TextureRect icon, Label amount) = MakeEntry(type);
             _pinRow.AddChild(entry);
             _entries[type] = (icon, amount);
             _host.Register("topBar/" + type, entry);
         }
     }
 
-    private (HBoxContainer Entry, TextureRect Icon, Label Amount) MakeEntry(ResourceType type, string tooltip)
+    private (HBoxContainer Entry, TextureRect Icon, Label Amount) MakeEntry(ResourceType type)
     {
         var entry = new HBoxContainer
         {
@@ -213,8 +227,7 @@ public partial class TopBar : HudOverlay
         Label amount = UiTheme.MakeLabel("0", UiTheme.BodySize);
         amount.MouseFilter = MouseFilterEnum.Ignore;
         entry.AddChild(amount);
-        var lines = new[] { new TipLine(tooltip) };
-        entry.MouseEntered += () => _host.ShowHover(entry, lines, below: true);
+        entry.MouseEntered += () => _host.ShowHover(entry, new[] { new TipLine(PinTip(type)) }, below: true);
         entry.MouseExited += () => _host.HideHover(entry);
         return (entry, icon, amount);
     }
@@ -228,8 +241,8 @@ public partial class TopBar : HudOverlay
         foreach ((ResourceType type, (TextureRect icon, Label amount)) in _entries)
         {
             icon.Texture ??= _icons.For(type);
-            amount.Text = StorageText(sim, type);
-            amount.AddThemeColorOverride("font_color", AmountColor(sim, type));
+            amount.Text = PinText(sim, type);
+            amount.AddThemeColorOverride("font_color", PinColor(sim, type));
         }
 
         bool day = sim.Daylight > 0f;
@@ -237,33 +250,20 @@ public partial class TopBar : HudOverlay
         _clock.Text = ClockFor(sim.TimeOfDay);
 
         CapacityReading power = sim.Capacity(CapacityType.Power);
-        _powerIcon.Texture ??= _icons.Icon("icon_power");
-        _powerState.Visible = power.State == CapacityState.Blackout;
-        _power.Text = $"{Mathf.CeilToInt(power.Demand)} / {Mathf.FloorToInt(power.Supply)}";
-        _power.AddThemeColorOverride("font_color", CapacityColor(power.Demand, power.Supply));
+        foreach ((CapacityType type, (HBoxContainer entry, Label state, TextureRect icon, Label amount)) in _capacities)
+        {
+            CapacityReading reading = sim.Capacity(type);
+            // Off the bar until the network has something to say about it (a Battery Bank counts for Power).
+            entry.Visible = reading.Supply > 0f || reading.Demand > 0f || reading.StoreCapacity > 0f;
+            icon.Texture ??= type == CapacityType.Power ? _icons.Icon("icon_power") : _icons.For(type == CapacityType.Water ? ResourceType.Water : ResourceType.Sand);
+            state.Visible = reading.State == CapacityState.Blackout;
+            amount.Text = $"{Mathf.CeilToInt(reading.Demand)} / {Mathf.FloorToInt(reading.Supply)}";
+            amount.AddThemeColorOverride("font_color", CapacityColor(reading.Demand, reading.Supply));
+        }
 
         _storeEntry.Visible = power.StoreCapacity > 0f;
         _storeIcon.Texture ??= _icons.For(ResourceType.Battery);
         _store.Text = $"{Mathf.FloorToInt(power.Stored)} / {Mathf.FloorToInt(power.StoreCapacity)}";
         _store.AddThemeColorOverride("font_color", power.StoreFlow < 0f ? UiTheme.Warning : UiTheme.Text);
-        // Once the whole bill is met its entries give way to the launch (or the Shipyard note), so
-        // the bar never has to fit both.
-        bool met = sim.LaunchBillMet;
-        foreach ((ResourceType type, float need, TextureRect icon, Label amount) in _bill)
-        {
-            icon.Texture ??= _icons.For(type);
-            SetProgress(amount, Whole(sim, type), (int)need);
-            ((Control)amount.GetParent()).Visible = !met;
-        }
-        _launch.Visible = sim.CanLaunchShip();
-        _shipyardNote.Visible = sim.LaunchBillMet && sim.LaunchShipyard is null;
-        _ships.Visible = sim.ShipsLaunched > 0;
-        _ships.Text = "Ships: " + sim.ShipsLaunched;
-    }
-
-    private static void SetProgress(Label label, int have, int need)
-    {
-        label.Text = $"{have} / {need}";
-        label.AddThemeColorOverride("font_color", have < need ? UiTheme.Short : UiTheme.Text);
     }
 }

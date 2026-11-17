@@ -57,8 +57,8 @@ were not there, and they may cover it.
 | `TextDim` | 0.60, 0.64, 0.61 | Secondary text, hints, "Undiscovered" |
 | `Accent` | 0.98, 0.80, 0.35 | Hover outline, title rule, tooltip headings |
 | `Short` | 1.00, 0.42, 0.38 | A cost amount the player lacks |
-| `Danger` | 0.85, 0.30, 0.25 | Destructive buttons; a capacity blackout (Power, Water, Sand) |
-| `Warning` | 0.98, 0.66, 0.18 | Storage full (top bar, inventory, the harvest hint); a capacity brownout |
+| `Danger` | 0.85, 0.30, 0.25 | Destructive buttons; a capacity blackout (Power, Water, Sand); a full pin on the top bar |
+| `Warning` | 0.98, 0.66, 0.18 | Storage full (inventory, the harvest hint); a capacity brownout |
 | `Backdrop` | black at 35% | Behind a modal |
 | `Silhouette` | 0.06, 0.07, 0.06 | Undiscovered building pictures |
 
@@ -135,18 +135,17 @@ The two kinds place themselves:
   save's thumbnail in place of the splash.
 - **Top bar** (`TopBar`): a full-width strip across the top of the window, 36 UI units tall, in
   the panel color with a 1 px `PanelEdge` bottom border and no rounded corners. Left: every
-  pinned resource as a 22-unit icon and "amount / limit" in whole numbers (the amount alone for a
-  Cargo or unlimited resource), in `Warning` when full, 16 units apart, each with a tooltip naming it (opening below the entry, so it never
-  covers its neighbors). Right: the clock (a sun or moon icon and "14:00"), the power readout (the
-  power bolt icon and demand over supply, in normal text, `Warning`, or `Danger` by state, with
-  "Blackout:" in `Danger` before the icon in a blackout), the Battery Banks' store (the Battery
-  icon and "stored / capacity", `Warning` while discharging) once there is a bank, then the launch
-  progress, an icon and "have / need" for each entry of
-  the ship bill (in `Short` until met, `Gap` apart), hidden once the whole bill is met, then "[L]
-  Launch ship" in `Accent` once it can launch, or "Build a Shipyard to launch" in `Warning` with
-  the bill met and no online Shipyard, and "Ships: n" once a ship has launched. Every section sits
-  `Gap` apart and each icon 3 units from its text, so the pins, clock, power, store, and five bill
-  entries fit at 1280 wide (with a Battery Bank, "Ships: n" after a launch can run past the edge). It takes the mouse (so hovering it shows no building outline and
+  pinned resource as a 22-unit icon and its amount in whole numbers (no limit), in `Danger` when
+  its storage is full and in `TextDim` while it has no storage at all (a limit of 0, as Crude Oil
+  before a Tank Farm), each with a tooltip naming it with its amount and limit ("Wood 45 / 100";
+  opening below the entry, so it never covers its neighbors). Right: the clock (a sun or moon icon and "14:00"), then Power, Water,
+  and Sand, each only once the network has supply or demand of it (its icon and demand over
+  supply, in normal text, `Warning`, or `Danger` by state, with "Blackout:" in `Danger` before the
+  icon in a blackout, and a name tooltip), then the Battery Banks' store (the Battery icon and
+  "stored / capacity", `Warning` while discharging) once there is a bank. Every entry (each pin,
+  and each section on the right) sits two `Gap`s (16 units) apart, and each icon 3 units from its
+  text. The ship bill and the launch live in the Shipyard's
+  panel, not on the bar. It takes the mouse (so hovering it shows no building outline and
   clicks on it never reach the world) but no keys.
 - **Hint overlay** (`HintOverlay`): centered, 8 units below the top bar, a small panel-style box
   shown only while a hint applies, never taking the mouse. Today the one hint is harvesting:

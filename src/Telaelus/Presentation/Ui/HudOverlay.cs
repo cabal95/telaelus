@@ -86,10 +86,10 @@ public abstract partial class HudOverlay : Control
         };
     }
 
-    /// <summary>The snapshot's name for a color: "normal", "warning", or "danger".</summary>
+    /// <summary>The snapshot's name for a color: "normal", "warning", "danger", or "dim".</summary>
     public static string ToneOf(Color color)
     {
-        return color == UiTheme.Danger ? "danger" : color == UiTheme.Warning ? "warning" : "normal";
+        return color == UiTheme.Danger ? "danger" : color == UiTheme.Warning ? "warning" : color == UiTheme.TextDim ? "dim" : "normal";
     }
 
     /// <summary>Whether storage has no room for another unit of a limited resource (shown in the warning color).</summary>

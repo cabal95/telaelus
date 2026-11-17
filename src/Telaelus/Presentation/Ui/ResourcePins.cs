@@ -11,7 +11,7 @@ namespace Telaelus.Presentation.Ui;
 /// </summary>
 public sealed class ResourcePins
 {
-    /// <summary>The pins at start: the six starting deposits, then Sand and Water.</summary>
+    /// <summary>The pins at start: the six starting deposits.</summary>
     public static readonly IReadOnlyList<ResourceType> Defaults = new[]
     {
         ResourceType.Wood,
@@ -19,10 +19,17 @@ public sealed class ResourcePins
         ResourceType.IronOre,
         ResourceType.CopperOre,
         ResourceType.Coal,
-        ResourceType.CrudeOil,
-        ResourceType.Sand,
-        ResourceType.Water
+        ResourceType.CrudeOil
     };
+
+    /// <summary>
+    /// Whether a resource can be pinned: not Sand or Water, which are capacity with their own
+    /// readouts on the top bar beside Power.
+    /// </summary>
+    public static bool CanPin(ResourceType type)
+    {
+        return CapacityResources.CapacityOf(type) is null;
+    }
 
     private readonly SortedSet<ResourceType> _pinned = new(Defaults);
 
@@ -42,13 +49,20 @@ public sealed class ResourcePins
         _pinned.Clear();
         foreach (ResourceType type in types)
         {
-            _pinned.Add(type);
+            if (CanPin(type))
+            {
+                _pinned.Add(type);
+            }
         }
         Changed?.Invoke();
     }
 
     public void Toggle(ResourceType type)
     {
+        if (!CanPin(type))
+        {
+            return;
+        }
         if (!_pinned.Remove(type))
         {
             _pinned.Add(type);
