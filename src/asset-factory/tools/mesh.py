@@ -202,6 +202,11 @@ PALETTE = {
     "nozzle_hot": (0.90, 0.48, 0.20),
     "hull": (0.80, 0.82, 0.84),
     "hull_dark": (0.58, 0.60, 0.64),
+    # the player character
+    "suit": (0.90, 0.46, 0.14),
+    "skin": (0.88, 0.68, 0.52),
+    "hair": (0.32, 0.22, 0.14),
+    "boot": (0.24, 0.22, 0.21),
     # building accents (each building's identity color)
     "mine_accent": (0.85, 0.55, 0.20),
     "lumber_accent": (0.62, 0.40, 0.20),

@@ -1,0 +1,33 @@
+newmtl suit
+Kd 0.900 0.460 0.140
+
+newmtl suit_78
+Kd 0.702 0.359 0.109
+
+newmtl suit_108
+Kd 0.972 0.497 0.151
+
+newmtl boot
+Kd 0.240 0.220 0.210
+
+newmtl metal
+Kd 0.580 0.600 0.630
+
+newmtl canister
+Kd 0.880 0.880 0.860
+
+newmtl suit_90
+Kd 0.810 0.414 0.126
+
+newmtl skin
+Kd 0.880 0.680 0.520
+
+newmtl hair
+Kd 0.320 0.220 0.140
+
+newmtl shadow
+Kd 0.080 0.070 0.070
+
+newmtl skin_90
+Kd 0.792 0.612 0.468
+

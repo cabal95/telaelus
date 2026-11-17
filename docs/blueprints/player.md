@@ -56,8 +56,9 @@ on-screen character and camera.
 
 ### Character and camera (presentation)
 
-- `PlayerView` renders the player from the assembled character scene
-  (`src/Telaelus/assets/models/character/character.tscn`): it loads the scene, finds its `AnimationPlayer`,
+- `PlayerView` renders the player from the character scene
+  (`src/Telaelus/assets/models/character/character.tscn`, the generated low-poly colonist; see
+  art-style.md): it loads the scene, finds its `AnimationPlayer`,
   and plays an idle or walk clip based on whether the player is moving (clips are matched by their
   leaf name containing "idle" or "walk"/"run"), walking while the sim's `Player.Heading` is not
   zero. It faces the movement direction by rotating its own

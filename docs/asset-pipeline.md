@@ -23,11 +23,12 @@ src/asset-factory/
     terrain_gen.py   ground tiles, transition pieces, river pieces
     building_gen.py  building models
     unit_gen.py      unit models (the truck), exported to assets/models/units/
+    character_gen.py the animated player character, exported straight to assets/models/character/
     resource_gen.py  resource field models (the deposits), and site models (worked-out markers, the motherlode base)
     item_gen.py      resource item models (the UI's resource icons) and icon models, exported to assets/models/icons/
     town_layout.py   the town scene's starting layout (src/Telaelus/scenes/Town.tscn); plain Python, run once
     arrange.py       composes test maps from terrain models (for previews)
-    export_glb.py    OBJ to .glb exporter
+    export_glb.py    OBJ to .glb exporter, and the animated-model writer
     preview.py       preview renderer (no window)
     preview/         Godot preview renderer (render.gd + a minimal project.godot)
 ```
@@ -203,6 +204,26 @@ and takes milliseconds.
 - Materials are matte (metallic 0, roughness 1, specular 0) and double-sided; `Ke` becomes the
   emissive color and `d` below 1 turns on alpha blending.
 
+## Animated models
+
+The character is the one animated model. `character_gen.py` builds it as a tree of joints, each
+carrying a rigid part, and its clips as pose functions of the loop's phase, sampled into
+keyframes:
+
+```bash
+<py> src/asset-factory/tools/character_gen.py src/Telaelus/assets/models/character
+```
+
+- It writes `models/character.obj` (the rest pose) and `models/character_pose_0..5.obj` (poses
+  from the clips) for previews, and with an out dir `character.glb`: a node per joint, the part's
+  mesh relative to its pivot, and a glTF animation per clip keying each joint's rotation and the
+  hips' translation.
+- Its kept previews are `previews/character.png` (the rest pose, default sheet) and
+  `previews/character_poses.png` (the poses, `--each 6 --size 160 --colors 256`).
+- Godot imports the clips into an `AnimationPlayer`; their looping is set in
+  `character.glb.import` (`_subresources`), which survives regenerating the `.glb`.
+- Judge the motion in a windowed run; the previews show only still poses.
+
 ## Updating an existing asset
 
 1. Change the generator (parameters, seed, or logic) and rerun it.
@@ -236,7 +257,8 @@ Shipping below).
 ## Limits
 
 - Procedural low-poly suits props, rocks, buildings, and terrain. Organic shapes come out chunky.
-- OBJ has no rigging or animation. Rigged or animated assets need a different source (authoring
-  in a 3D tool or a CC0 pack).
+- OBJ has no rigging or animation. Rigid animated models (parts that pivot whole on joints, like
+  the character) are written straight to `.glb` by their generator through
+  `export_glb.export_rig`; models that bend (a skinned mesh) still need a 3D tool or a CC0 pack.
 - Previews are static stills at fixed angles. They show silhouette, color, and scale, not
   animation or in-game readability at zoom.

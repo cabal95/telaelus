@@ -214,6 +214,9 @@ Newest last. One line each; open the file for the full spec.
   Power as capacity readouts, and all three show only once the network has any; Sand and Water can
   no longer be pinned. Pins show their amount alone (red when full, dim with no storage, the limit
   in the tooltip), and the bar's entries sit twice as far apart.
+- **2611162133-low-poly-character** - The player character is a generated low-poly colonist in an
+  orange work suit: rigid parts on joints, with looping idle and run clips, replacing the textured
+  CC0 import. The asset factory's exporter writes animated models.
 
 ## Adding a changeset
 
