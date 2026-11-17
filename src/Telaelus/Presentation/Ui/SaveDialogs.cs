@@ -118,12 +118,6 @@ public partial class SaveDialog : Dialog
         }
     }
 
-    /// <summary>Sets the name field (a scenario's typed name).</summary>
-    public void SetName(string name)
-    {
-        _name.Text = name;
-    }
-
     private void TrySave()
     {
         string name = _name.Text.Trim();

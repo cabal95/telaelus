@@ -61,25 +61,32 @@ and manual runs.
 
 ### The workflow
 
-`.github/workflows/build.yml` uses standard GitHub actions (checkout, setup-dotnet 8 and 9,
-setup-python, cache of `.ci-cache/` keyed on the Godot version and the script, upload-artifact)
-and the script for everything Godot; no third-party Godot actions.
+`.github/workflows/build.yml` uses standard GitHub actions (checkout v7, setup-dotnet v6 with
+.NET 8 and 9, setup-python v7, cache v6 of `.ci-cache/` keyed on the Godot version and the script,
+upload-artifact v7), all on Node.js 24, and the script for everything Godot; no third-party Godot
+actions.
 
 - **test** (`ubuntu-latest`), on pushes to `main`, `v*` tags, pull requests, and by hand: set up
   Godot, `dotnet build Telaelus.slnx`, import, then the sim tests and the integration tests (with
   `GODOT_EDITOR` from setup).
 - **export** (after test, only on `v*` tags and manual runs from the Actions tab, so pushes to
-  `main` and pull requests only test): `export.py export --platform all`, then one
-  artifact per build (`Telaelus-windows-x64`, `Telaelus-windows-arm64`, `Telaelus-macos`), kept
-  14 days. GitHub wraps each zip in its own on download.
+  `main` and pull requests only test): `export.py export --platform all`, then each build's zip
+  uploaded as is (`archive: false`), so the artifact is named after the zip
+  (`Telaelus-<version>-<commit>-<platform>.zip`) and a download is that zip itself, kept 14 days.
+  The macOS zip must be ours: a zip GitHub makes drops the app's executable flag.
+- The build has no warnings. `.editorconfig` sets `end_of_line = lf` for C#, matching
+  `.gitattributes`; without it the formatter expects CRLF on Windows and warns on Windows only.
 
 ### Running it locally
 
 - The script directly: `python ci/export.py setup`, then `python ci/export.py export`.
-- The workflow in Docker with `act`: `act push -j test` or `-j export` (with
-  `--artifact-server-path` for the export's zips). The repo's `.actrc` sets the runner image
+- The workflow in Docker with `act`: `act push -j test`, or `act workflow_dispatch -j export`
+  (a manual run, since a push to `main` skips the export job). Under `act` (which sets `ACT`) the
+  export job skips its uploads: `act`'s artifact server cannot take `upload-artifact@v7` yet
+  (nektos/act#6022). The repo's `.actrc` sets the runner image
   (`catthehacker/ubuntu:act-latest`) and `DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1`, since that
-  image has no ICU library. `act` keeps its own cache, so only its first run downloads Godot. On
+  image has no ICU library (so the test projects' build prints `NETSDK1188` locale warnings
+  there only). `act` keeps its own cache, so only its first run downloads Godot. On
   an ARM64 machine the container is arm64 Linux and the script takes the arm64 Linux editor.
 
 ## Related

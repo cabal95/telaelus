@@ -192,6 +192,9 @@ Newest last. One line each; open the file for the full spec.
   runs; pushes to `main` and pull requests only test.
 - **2611161741-etc2-astc-import** - Turns on ETC2/ASTC texture import explicitly so the macOS export
   works on GitHub's x64 runner (Godot's default is on only for ARM64 editors).
+- **2611161830-ci-cleanup** - Clears the C# build warnings (formatting, a null recipe list, an
+  unused `SaveDialog.SetName`, and `end_of_line = lf` for C#), moves the workflow's actions to their
+  Node.js 24 versions, and uploads each build's zip as is (`archive: false`), skipped under `act`.
 
 ## Adding a changeset
 

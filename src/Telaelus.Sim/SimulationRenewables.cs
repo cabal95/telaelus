@@ -93,14 +93,14 @@ public sealed partial class Simulation
                 return FloorMod(anchorX, FineCellsPerMapCell) == 0 && FloorMod(anchorZ, FineCellsPerMapCell) == 0
                     && CellsFree(def, anchorX, anchorZ, facing, null, (x, z) => TerrainAt(x, z) == TerrainType.Grass);
             case Placement.BesideMountain:
-            {
-                if (!CellsFree(def, anchorX, anchorZ, facing, null))
                 {
-                    return false;
+                    if (!CellsFree(def, anchorX, anchorZ, facing, null))
+                    {
+                        return false;
+                    }
+                    (int width, int depth) = def.Footprint(facing);
+                    return MountainBeside(anchorX, anchorZ, width, depth, highlandsOnly: false);
                 }
-                (int width, int depth) = def.Footprint(facing);
-                return MountainBeside(anchorX, anchorZ, width, depth, highlandsOnly: false);
-            }
             default:
                 return null;
         }

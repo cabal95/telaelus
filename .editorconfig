@@ -3,6 +3,9 @@
 root = true
 
 [*.cs]
+# LF, as .gitattributes checks files out; without it the formatter expects CRLF on Windows.
+end_of_line = lf
+
 # Require braces on all control-flow blocks, even single-line bodies.
 csharp_prefer_braces = true
 dotnet_diagnostic.IDE0011.severity = warning

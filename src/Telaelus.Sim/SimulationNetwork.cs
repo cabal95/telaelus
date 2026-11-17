@@ -150,7 +150,7 @@ public sealed partial class Simulation
     /// </summary>
     public bool WouldBeOnline(BuildingType type, int anchorX, int anchorZ, Facing facing)
     {
-        var probe = new Building(-1, type, anchorX, anchorZ, facing, null);
+        var probe = new Building(-1, type, anchorX, anchorZ, facing, Array.Empty<Recipe>());
         return _buildings.Exists(hub => hub.Online && hub.Enabled && hub.Def.IsHub
             && (Covers(hub, probe) || (probe.Def.IsHub && Links(hub, probe))));
     }

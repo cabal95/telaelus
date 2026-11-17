@@ -24,13 +24,18 @@ With [act](https://nektosact.com) and Docker Desktop running, from the repo root
 
 ```bash
 act push -j test
-act push -j export --artifact-server-path test-output/act-artifacts
+act workflow_dispatch -j export
 ```
 
-`-j test` runs the test job and `-j export` the test job then the export job, in a container like
+The first runs the test job as a push to `main` does. The second is a manual run, which runs the
+test job then the export job (a push to `main` skips the export). Both run in a container like
 GitHub's Ubuntu runner. The repo's `.actrc` picks the runner image
 (`catthehacker/ubuntu:act-latest`) and runs .NET without ICU
 (`DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1`), which that image lacks and GitHub's runner has. The
 first run downloads Godot inside the container; `act` caches it for later runs as GitHub does. On
 an ARM64 machine the container is arm64 Linux, so the script takes the arm64 Linux editor;
-GitHub's runner is x64. The export job's zips land under `test-output/act-artifacts`.
+GitHub's runner is x64. The export job skips its uploads under `act`, whose artifact server cannot
+take `upload-artifact@v7` yet ([nektos/act#6022](https://github.com/nektos/act/issues/6022)); the
+export step's `built ...` lines and its `Telaelus.dll` check show the builds were made. Without
+ICU, the test projects' build also prints about 130 `NETSDK1188` locale warnings that GitHub's
+runner does not.
