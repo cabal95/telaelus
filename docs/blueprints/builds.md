@@ -4,7 +4,8 @@
 
 Playable builds are exported for Windows (x64 and arm64) and macOS (universal) by one script,
 `ci/export.py`, which runs the same on a developer machine and in GitHub Actions. The workflow
-tests every push and pull request and exports builds as downloadable artifacts.
+tests every push and pull request and exports builds as downloadable artifacts for release tags
+and manual runs.
 
 ## Current state
 
@@ -64,7 +65,8 @@ and the script for everything Godot; no third-party Godot actions.
 - **test** (`ubuntu-latest`), on pushes to `main`, `v*` tags, pull requests, and by hand: set up
   Godot, `dotnet build Telaelus.slnx`, import, then the sim tests and the integration tests (with
   `GODOT_EDITOR` from setup).
-- **export** (after test, not on pull requests): `export.py export --platform all`, then one
+- **export** (after test, only on `v*` tags and manual runs from the Actions tab, so pushes to
+  `main` and pull requests only test): `export.py export --platform all`, then one
   artifact per build (`Telaelus-windows-x64`, `Telaelus-windows-arm64`, `Telaelus-macos`), kept
   14 days. GitHub wraps each zip in its own on download.
 

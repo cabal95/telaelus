@@ -188,6 +188,8 @@ Newest last. One line each; open the file for the full spec.
   script, `ci/export.py`, that sets up Godot and runs the same locally and on GitHub; a GitHub
   Actions workflow that tests every push and pull request and uploads the builds as artifacts;
   `act` support for running the workflow in Docker; Godot pointed at the repo's solution.
+- **2611161735-export-on-tags** - Runs the workflow's export job only for `v*` tags and manual
+  runs; pushes to `main` and pull requests only test.
 
 ## Adding a changeset
 
