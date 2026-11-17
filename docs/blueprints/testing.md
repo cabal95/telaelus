@@ -158,6 +158,10 @@ pausing it and stepping frame by frame.
   fuel, choices, trucks mid-trip, roads and bridges, research, the clock, Battery charge) surviving;
   a generated fog world round trip that keeps exploring the same; and the file format's round
   trip, a newer version refused, and a damaged file refused.
+- `DemoTownTests`: the demo town (saving.md) built and run as the demo save is: every building
+  online and working, power normal, four trucks, Material Transfer running; every collector on a
+  field and the Smelters fed by truck; no truck waiting on storage and every Smelter working 15
+  minutes later; and every building it has unlocked.
 - `PowerStoreTests`: the clock starting mid-morning, advancing, and wrapping; daylight through the
   day; the Solar Array's supply by daylight and its night status; a Battery Bank charging at its
   rate up to its capacity, covering a shortage at Normal until it runs dry, giving at most its rate
@@ -200,7 +204,8 @@ pausing it and stepping frame by frame.
     `{ anchor, index }` (chooses the recipe of the building at that anchor, as its picker does),
     `newGame` `{ seed? }` (see above), `saveGame` `{ name }` (saves the game in play, as the save
     dialog does), `loadGame` `{ name }` (loads a save whatever the state; the next command runs
-    once the loaded game is in play; fails when the save cannot be loaded), `setTimeOfDay` (a number from 0 up to 1, 0.5 midday), `placeRoad` and `placeBridge`
+    once the loaded game is in play; fails when the save cannot be loaded), `loadDemo` (`{}`;
+    loads the demo save, as the menu's Demo does), `setTimeOfDay` (a number from 0 up to 1, 0.5 midday), `placeRoad` and `placeBridge`
     `{ from: [x, z], to: [x, z] }` (lay a road line or bridge span free, as `placeBuilding` places;
     fail when nothing can be laid), `removeRoad` and `removeBridge` (the same, with the refund), `startResearch` (a project name; fails
     when it cannot start), `pauseResearch` (`{}`), `setResearchProgress` `{ project, seconds }` (at
@@ -473,13 +478,16 @@ pausing it and stepping frame by frame.
   generator's panel shows its supply and Best fuel),
   `refining` (a Steel Mill's Auto input picker and its note and recipe text; an Electrolyzer on
   Hydrogen feeding a Fuel Plant to Rocket Fuel; the launch progress with Liquid Oxygen),
-  `menu` (the loading screen done and the menu showing its title and New Game and Quit; `newGame`
+  `menu` (the loading screen done and the menu showing its title and New Game, Demo, and Quit; `newGame`
   going into a game, and a second replacing it with a fresh world; windowed screenshots of the menu
   and the game),
   `save-load` (Escape opening the game menu and standing the game still; Save Game saving "Save
   1" through the dialog; Load Game asking first with unsaved progress and bringing the saved
   stockpile back; `saveGame` and `loadGame`; Main Menu asking first, and the menu then showing
   Continue and Load Game; windowed screenshots of the game menu, the dialogs, and the menu),
+  `demo` (the menu offering Demo; `loadDemo` opening the town at the widest zoom, powered, with
+  Material Transfer running and four trucks, and its Iron still rising a minute later; windowed
+  screenshots),
   `roads` (the menu's Road tool laying an L of tiles by drag and taking their Stone, a right drag
   removing three for half back, Escape leaving build mode; a Mine across a strip of ShallowWater out
   of a truck's reach until the Bridge tool spans it, then the truck hauling its ore home over it),

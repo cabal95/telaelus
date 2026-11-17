@@ -29,8 +29,8 @@ planned multiplayer feasible.
     buttons, 44 units tall, left aligned, `BodySize` + 4: **Continue** (shown when there is a
     loadable save; it loads the newest), **New Game** (Enter does the same), **Load Game**
     (disabled with no saves; it shows the save list (`SaveList`, as in the load dialog) under a
-    "Load Game" title in place of the buttons, with Back), and **Quit**. Options is planned before
-    Quit. Escape does nothing on the menu.
+    "Load Game" title in place of the buttons, with Back), **Demo** (shown when the demo save is in
+    the game; it loads it, saving.md), and **Quit**. Options is planned before Quit. Escape does nothing on the menu.
   - **Game:** New Game (`AppRoot.NewGame(seed)`) frees the menu, or a game already in play, and
     creates a `GameRoot` with a new world (`--seed=<n>`, else the scenario seed for a scenario run,
     else random; `AppRoot.ReadSeed`), handing it the shared pictures (`GameRoot.Initialize`), and
@@ -49,6 +49,9 @@ planned multiplayer feasible.
 - **The splash image:** `<godot.editor> --path src/Telaelus -- --render-splash` (windowed) renders the
   town, not alive, in a 1920 x 1080 viewport, waits six frames, saves `assets/ui/splash.png`, and
   quits (`SplashRenderer`). Re-run it after changing the town; the image is committed.
+- **The demo save:** `<godot.editor> --path src/Telaelus -- --write-demo-save` (windowed) loads as
+  usual, then opens the demo town as a game, lets it draw for 30 frames, writes
+  `assets/saves/demo.save` and its thumbnail, and quits (`DemoSaveWriter`; saving.md).
 - `GameRoot` (one per game) builds the world in code and owns the `Simulation` and `SimClock`.
 - Each `_Process(delta)`: read input into `PlayerIntent` (camera-relative move, held `E` harvest),
   advance the clock and step the simulation, then sync the views from read-only simulation state.

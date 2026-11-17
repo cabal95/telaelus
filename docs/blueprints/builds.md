@@ -24,6 +24,8 @@ and manual runs.
 - The Windows presets do not edit the executable's resources (no `rcedit`), so the exe has
   Godot's icon and version info.
 - The macOS bundle identifier is `com.telaelus.game`, version 0.1.0.
+- Every preset includes `assets/saves/*.save` (`include_filter`): the demo save (saving.md), a file
+  Godot does not import and would otherwise leave out.
 - The project imports both S3TC/BPTC textures (`rendering/textures/vram_compression/import_s3tc_bptc`,
   which x86_64 macOS needs) and ETC2/ASTC textures (`import_etc2_astc`, which arm64 macOS needs).
   Both are set explicitly: Godot's defaults follow the machine running the editor (an x64 editor

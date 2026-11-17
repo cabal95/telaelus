@@ -1,0 +1,24 @@
+{
+  "$schema": "../scenario.schema.json",
+  "name": "demo",
+  "description": "The demo save: the main menu offers Demo, and loading it opens the mining town at the widest zoom with its pins, everything powered, Material Transfer under way, four trucks, and its Smelters still making Iron a minute later.",
+  "steps": [
+    { "expect": "ui.menu.buttons", "equals": ["New Game", "Demo", "Quit"] },
+    { "loadDemo": {} },
+    { "expect": "app", "equals": "game" },
+    { "expect": "ui.unsaved", "equals": false },
+    { "expect": "ui.playTime", "gte": 300 },
+    { "expect": "camera.zoom", "equals": 40 },
+    { "expect": "buildings[0].type", "equals": "Hq" },
+    { "expect": "trucks[3].depot", "exists": true },
+    { "expect": "capacity.power.state", "equals": "normal" },
+    { "expect": "research.active", "equals": "MaterialTransfer" },
+    { "expect": "stockpile.Iron", "gte": 90 },
+    { "screenshot": "demo" },
+
+    { "comment": "A minute on, the Smelters have made more Iron from the ore the trucks bring.", "wait": 1800 },
+    { "expect": "stockpile.Iron", "gte": 110 },
+    { "expect": "capacity.power.state", "equals": "normal" },
+    { "screenshot": "demo-later" }
+  ]
+}

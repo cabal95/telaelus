@@ -12,7 +12,9 @@ namespace Telaelus.Presentation;
 /// runs the one-time startup work (every model loaded once, then the resource icons, building and
 /// field pictures, and UI icons drawn on the picture stage, all shared by every game), then shows the
 /// main menu; New Game frees the menu and creates a <see cref="GameRoot"/> with a new world. With
-/// <c>--render-splash</c> it renders the town scene to the splash image instead and quits.
+/// <c>--render-splash</c> it renders the town scene to the splash image instead and quits; with
+/// <c>--write-demo-save</c> it builds the demo town (<see cref="DemoTown"/>) once loading is done,
+/// writes it as the demo save, and quits.
 /// </summary>
 public partial class AppRoot : Node
 {
@@ -24,6 +26,13 @@ public partial class AppRoot : Node
 
     /// <summary>Frames the loading screen shows (over the save's thumbnail) before a loaded game is built.</summary>
     public const int LoadFrames = 2;
+
+    /// <summary>The demo save and its thumbnail, shipped inside the game (the main menu's Demo).</summary>
+    public const string DemoSavePath = "res://assets/saves/demo.save";
+    public const string DemoThumbnailPath = "res://assets/saves/demo.png";
+
+    // Set by --write-demo-save: once loading is done, the demo is written instead of the menu shown.
+    private bool _writeDemo;
 
     // A load waiting for its loading screen to be drawn.
     private (SaveFile Save, int Frames)? _pendingLoad;
@@ -89,6 +98,7 @@ public partial class AppRoot : Node
         };
         AddChild(FieldPictures);
 
+        _writeDemo = Array.IndexOf(OS.GetCmdlineUserArgs(), "--write-demo-save") >= 0;
         CollectModels(ModelLibrary.Root.TrimEnd('/'));
         _loading = new LoadingScreen
         {
@@ -131,6 +141,16 @@ public partial class AppRoot : Node
         if (_modelsLoaded >= _models.Count && pictures == 3)
         {
             LoadingProgress = 1f;
+            if (_writeDemo)
+            {
+                _writeDemo = false;
+                AddChild(new DemoSaveWriter
+                {
+                    Name = "DemoSaveWriter",
+                    Game = StartGame(null, DemoSaveWriter.DemoStart())
+                });
+                return;
+            }
             ShowMenu();
         }
     }
@@ -151,6 +171,13 @@ public partial class AppRoot : Node
         _menu.LoadRequested += name =>
         {
             if (LoadGame(name) is string problem)
+            {
+                _menu?.ShowProblem(problem);
+            }
+        };
+        _menu.DemoRequested += () =>
+        {
+            if (LoadDemo() is string problem)
             {
                 _menu?.ShowProblem(problem);
             }
@@ -219,17 +246,45 @@ public partial class AppRoot : Node
         {
             return ex.Message;
         }
+        BeginLoad(save, SaveStore.Thumbnail(name));
+        return null;
+    }
+
+    /// <summary>
+    /// Loads the demo save shipped inside the game, as <see cref="LoadGame"/> loads a save. Saving it
+    /// later makes a new save; the demo itself never changes.
+    /// </summary>
+    public string? LoadDemo()
+    {
+        if (!Godot.FileAccess.FileExists(DemoSavePath))
+        {
+            return "No demo save";
+        }
+        SaveFile save;
+        try
+        {
+            save = SaveFormat.Read(Godot.FileAccess.GetFileAsBytes(DemoSavePath));
+        }
+        catch (SaveFormatException ex)
+        {
+            return ex.Message;
+        }
+        BeginLoad(save, ResourceLoader.Exists(DemoThumbnailPath) ? GD.Load<Texture2D>(DemoThumbnailPath) : null);
+        return null;
+    }
+
+    private void BeginLoad(SaveFile save, Texture2D? thumbnail)
+    {
         ClearStage();
         _loading = new LoadingScreen
         {
             Name = "LoadingScreen",
-            Image = SaveStore.Thumbnail(name)
+            Image = thumbnail
         };
         AddChild(_loading);
         _loading.SetProgress(1f);
         Current = Stage.Loading;
         _pendingLoad = (save, LoadFrames);
-        return null;
     }
 
     /// <summary>Saves the game in play under a name (its thumbnail from when the game menu opened).</summary>

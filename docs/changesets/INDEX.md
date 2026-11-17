@@ -195,6 +195,10 @@ Newest last. One line each; open the file for the full spec.
 - **2611161830-ci-cleanup** - Clears the C# build warnings (formatting, a null recipe list, an
   unused `SaveDialog.SetName`, and `end_of_line = lf` for C#), moves the workflow's actions to their
   Node.js 24 versions, and uploads each build's zip as is (`archive: false`), skipped under `act`.
+- **2611161851-demo-save** - Adds a demo save shipped with the game and loaded from the main menu's
+  Demo: a working mining town (`DemoTown`, built in code and run 5 game minutes, balanced so its
+  trucks keep running) written with its thumbnail by `--write-demo-save`; the `loadDemo` command
+  and the `demo` scenario.
 
 ## Adding a changeset
 

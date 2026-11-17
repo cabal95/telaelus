@@ -9,8 +9,8 @@ namespace Telaelus.Presentation.Ui;
 /// The main menu: the town scene, gently alive, seen through its own camera, blurred and darkened a
 /// little over the whole window, with the menu at the left: the title and the buttons, Continue (when
 /// there is a save; it loads the newest), New Game, Load Game (disabled with no saves; it shows the
-/// saves to load in place of the buttons), and Quit (Options is planned before it). Enter starts a new
-/// game.
+/// saves to load in place of the buttons), Demo (the demo save shipped with the game, when it is
+/// there), and Quit (Options is planned before it). Enter starts a new game.
 /// </summary>
 public partial class MainMenu : Node
 {
@@ -20,6 +20,7 @@ public partial class MainMenu : Node
     private readonly List<Button> _buttons = new();
 
     public event Action? NewGameRequested;
+    public event Action? DemoRequested;
     public event Action? QuitRequested;
 
     /// <summary>Raised with a save's name to load (Continue loads the newest).</summary>
@@ -97,6 +98,8 @@ public partial class MainMenu : Node
         AddButton(column, "New Game", () => NewGameRequested?.Invoke());
         Button load = AddButton(column, "Load Game", ShowLoad);
         load.Disabled = saves.Count == 0;
+        Button demo = AddButton(column, "Demo", () => DemoRequested?.Invoke());
+        demo.Visible = Godot.FileAccess.FileExists(AppRoot.DemoSavePath);
         // Options will sit here.
         AddButton(column, "Quit", () => QuitRequested?.Invoke());
 

@@ -396,6 +396,18 @@ public sealed class CommandExecutor
         return StepOutcome.Ok;
     }
 
+    /// <summary>Loads the demo save, as the main menu's Demo does; the next command runs once it is in play.</summary>
+    public StepOutcome LoadDemo()
+    {
+        ClearInput();
+        if (_app.LoadDemo() is string problem)
+        {
+            return new StepOutcome(false, $"loadDemo: {problem}");
+        }
+        _waitFrames = AppRoot.LoadFrames + 2;
+        return StepOutcome.Ok;
+    }
+
     private void ClearInput()
     {
         _pendingReleases.Clear();

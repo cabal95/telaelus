@@ -59,6 +59,7 @@
         { "$ref": "#/definitions/newGame" },
         { "$ref": "#/definitions/saveGame" },
         { "$ref": "#/definitions/loadGame" },
+        { "$ref": "#/definitions/loadDemo" },
         { "$ref": "#/definitions/placeRoad" },
         { "$ref": "#/definitions/removeRoad" },
         { "$ref": "#/definitions/placeBridge" },
@@ -327,6 +328,19 @@
           "properties": {
             "name": { "type": "string", "minLength": 1 }
           }
+        },
+        "comment": { "$ref": "#/definitions/comment" }
+      }
+    },
+    "loadDemo": {
+      "description": "Load the demo save shipped with the game, as the main menu's Demo does; the next command runs once it is in play. Fails when the demo save is missing or damaged.",
+      "type": "object",
+      "required": ["loadDemo"],
+      "additionalProperties": false,
+      "properties": {
+        "loadDemo": {
+          "type": "object",
+          "additionalProperties": false
         },
         "comment": { "$ref": "#/definitions/comment" }
       }

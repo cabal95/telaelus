@@ -183,6 +183,8 @@ public sealed class ScenarioCommand
                     string load = Label(Required(arg, "name"), "loadGame");
                     return e => e.LoadGame(load);
                 }
+            case "loadDemo":
+                return e => e.LoadDemo();
             case "placeRoad":
             case "removeRoad":
             case "placeBridge":

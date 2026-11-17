@@ -1,13 +1,13 @@
 {
   "$schema": "../scenario.schema.json",
   "name": "menu",
-  "description": "The app's start: the loading screen runs to the end and gives way to the main menu over the town (New Game and Quit); newGame goes into a game, and a second newGame replaces it with a fresh world.",
+  "description": "The app's start: the loading screen runs to the end and gives way to the main menu over the town (New Game, Demo, and Quit); newGame goes into a game, and a second newGame replaces it with a fresh world.",
   "steps": [
     { "comment": "A scenario's first command runs once loading is done.", "expect": "app", "equals": "menu" },
     { "expect": "loading", "equals": 1 },
     { "expect": "ui.open", "equals": "mainMenu" },
     { "expect": "ui.menu.title", "equals": "Telaelus" },
-    { "expect": "ui.menu.buttons", "equals": ["New Game", "Quit"] },
+    { "expect": "ui.menu.buttons", "equals": ["New Game", "Demo", "Quit"] },
     { "wait": 30 },
     { "screenshot": "menu" },
 

@@ -74,6 +74,33 @@ Game; in a game, Escape opens the game menu (Resume, Save Game, Load Game, Main 
   carried on.
 - A failed load shows its reason: on the main menu's save list, or on the game menu's status line.
 
+### The demo save
+
+- **What it is:** a working mining town shipped inside the game (`AppRoot.DemoSavePath`,
+  `res://assets/saves/demo.save`, with `demo.png` as its thumbnail). The main menu's **Demo** loads
+  it (`AppRoot.LoadDemo`) the way Load Game loads a save. Saving it makes a named save, so the demo
+  never changes. The export presets include `assets/saves/*.save`, since Godot leaves out files it
+  does not import.
+- **The town** (`DemoTown`, in the sim): on generated world `DemoTown.Seed`, the world's fields
+  within 12 map cells of the spawn are cleared and the town's own placed, then its buildings are
+  bought and placed as a player would (each cost put in the stockpile first, so each unlocks as in
+  play). It has:
+  - a Drill Rig on Iron Ore, powered by a Burner Generator;
+  - Mines on Copper Ore and Coal, and a Lumber Camp;
+  - five Smelters (four on Iron, one on Copper) and a Charcoal Kiln;
+  - a Depot with its four trucks, a Stockyard and three Warehouses, a Research Lab on Material
+    Transfer, eleven Small Hubs, and a road along the spawn's row.
+
+  A Wood field out of the Lumber Camp's reach and a Stone field are left for gathering by hand.
+  The builder explores the ground by walking the player over it first.
+- **Balanced to keep running:** each hauled resource is used about as fast as it is mined, so the
+  trucks never wait on full storage. Material Transfer finishes about 15 minutes after loading; the
+  Smelters' Iron and Copper fill storage at about 35 minutes.
+- **Made by running** `DemoTown.Create()` (built, then run `DemoTown.RunSeconds`, 300 game seconds,
+  from a time of day that ends near midday). `--write-demo-save` (presentation.md) opens that as a
+  game with the town's resources pinned and the camera at its widest, and saves it. Re-run it
+  when the town should change; a newer save format migrates it like any save.
+
 ### Unsaved progress
 
 - `GameRoot.PlayTime` counts game seconds played (it stops while the game stands still);
@@ -85,4 +112,5 @@ Game; in a game, Escape opens the game menu (Resume, Save Game, Load Game, Main 
 
 - simulation.md (the sim the save captures), presentation.md (the app's stages, the main menu),
   ui-style.md (the game menu and the save and load dialogs), testing.md (`SaveTests`, the
-  `saveGame` and `loadGame` commands, the `save-load` scenario).
+  `saveGame`, `loadGame`, and `loadDemo` commands, the `save-load` and `demo` scenarios,
+  `DemoTownTests`).

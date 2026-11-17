@@ -3,7 +3,7 @@
   "name": "save-load",
   "description": "Saving and loading: Escape opens the game menu and stands the game still; Save Game saves under a name; Load Game asks first with unsaved progress and brings the saved game back; leaving for the main menu asks first, and the menu then offers Continue and Load Game.",
   "steps": [
-    { "comment": "A run's saves live in its own folder, so the menu starts with none.", "expect": "ui.menu.buttons", "equals": ["New Game", "Quit"] },
+    { "comment": "A run's saves live in its own folder, so the menu starts with none.", "expect": "ui.menu.buttons", "equals": ["New Game", "Demo", "Quit"] },
     { "newGame": {} },
     { "seedStockpile": { "type": "Wood", "amount": 30 } },
     { "expect": "ui.unsaved", "equals": false },
@@ -65,7 +65,7 @@
     { "clickUi": { "id": "gameMenu/Confirm" } },
     { "wait": 2 },
     { "expect": "app", "equals": "menu" },
-    { "expect": "ui.menu.buttons", "equals": ["Continue", "New Game", "Load Game", "Quit"] },
+    { "expect": "ui.menu.buttons", "equals": ["Continue", "New Game", "Load Game", "Demo", "Quit"] },
     { "screenshot": "menu-with-saves" }
   ]
 }

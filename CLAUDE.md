@@ -73,6 +73,9 @@ simulation is a separate class library in `src/Telaelus.Sim`, referenced by `Tel
 - Run the game: `<godot.editor> --path src/Telaelus` (it opens on the loading screen, then the main menu)
 - Re-render the splash image after changing `src/Telaelus/scenes/Town.tscn`: `<godot.editor> --path
   src/Telaelus -- --render-splash` (windowed; writes `src/Telaelus/assets/ui/splash.png`)
+- Rewrite the demo save after changing `src/Telaelus.Sim/DemoTown.cs`: `<godot.editor> --path
+  src/Telaelus --resolution 1280x720 -- --write-demo-save` (windowed; writes
+  `src/Telaelus/assets/saves/demo.save` and `demo.png`)
 - Headless runtime check: `<godot.editor> --headless --path src/Telaelus --quit-after 20` (stderr
   should be empty on success)
 - Export builds: `python ci/export.py setup` once (downloads the Godot editor and templates into
