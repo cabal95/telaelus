@@ -24,8 +24,11 @@ and manual runs.
 - The Windows presets do not edit the executable's resources (no `rcedit`), so the exe has
   Godot's icon and version info.
 - The macOS bundle identifier is `com.telaelus.game`, version 0.1.0.
-- The project imports S3TC/BPTC textures (`rendering/textures/vram_compression/import_s3tc_bptc`),
-  which x86_64 macOS needs.
+- The project imports both S3TC/BPTC textures (`rendering/textures/vram_compression/import_s3tc_bptc`,
+  which x86_64 macOS needs) and ETC2/ASTC textures (`import_etc2_astc`, which arm64 macOS needs).
+  Both are set explicitly: Godot's defaults follow the machine running the editor (an x64 editor
+  leaves ETC2/ASTC off, an ARM64 one turns it on), so an unset value passes on an ARM64 machine
+  and fails on GitHub's x64 runner.
 - Godot finds the C# solution at the repo root (`dotnet/project/solution_directory="../.."`, where
   `Telaelus.slnx` is); without it an export skips the C# build and still exits 0.
 

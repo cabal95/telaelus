@@ -190,6 +190,8 @@ Newest last. One line each; open the file for the full spec.
   `act` support for running the workflow in Docker; Godot pointed at the repo's solution.
 - **2611161735-export-on-tags** - Runs the workflow's export job only for `v*` tags and manual
   runs; pushes to `main` and pull requests only test.
+- **2611161741-etc2-astc-import** - Turns on ETC2/ASTC texture import explicitly so the macOS export
+  works on GitHub's x64 runner (Godot's default is on only for ARM64 editors).
 
 ## Adding a changeset
 
