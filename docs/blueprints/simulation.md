@@ -65,9 +65,9 @@ and mirrors it onto nodes.
 ### Input: intent and commands
 
 - Continuous, per-tick input is a `PlayerIntent` struct the presentation sets before each step:
-  `Move` (a world-space ground direction, X to world X and Y to world Z) and `Harvest` (held).
+  `Harvest` (held).
 - Discrete actions are command methods on the simulation that the presentation calls on an event:
-  `TryPlaceBuilding`, `TryLaunchShip`. They validate and apply, returning success.
+  `TryPlaceBuilding`, `TryLaunchShip`, `WalkTo` and `StopWalking` (player.md). They validate and apply, returning success.
 - The simulation never reads devices; it only reads intent and receives commands. This seam is what
   makes the planned co-op multiplayer feasible.
 

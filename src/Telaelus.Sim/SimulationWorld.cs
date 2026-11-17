@@ -89,6 +89,7 @@ public sealed partial class Simulation
 
         (int hqX, int hqZ) = HqAnchor;
         AddBuilding(BuildingType.Hq, hqX, hqZ, Facing.South);
+        StopWalking();
         Player.Position = SpawnPoint;
         EnsureChunksAroundPlayer();
         RevealAroundPlayer();

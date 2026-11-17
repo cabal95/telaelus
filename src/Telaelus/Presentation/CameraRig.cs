@@ -183,6 +183,9 @@ public partial class CameraRig : Camera3D
         Place();
     }
 
+    /// <summary>Whether the press has moved past <see cref="DragThreshold"/> and is panning (else it is still a click).</summary>
+    public bool Dragging => _dragging;
+
     /// <summary>The press ended (or was cancelled).</summary>
     public void CancelDrag()
     {

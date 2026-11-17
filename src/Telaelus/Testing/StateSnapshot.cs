@@ -125,6 +125,8 @@ public static class StateSnapshot
         return new JsonObject
         {
             ["position"] = Pair(sim.Player.Position.X, sim.Player.Position.Z),
+            ["walking"] = sim.Player.Walking,
+            ["destination"] = sim.Player.Destination is Vector3 destination ? Pair(destination.X, destination.Z) : null,
             ["harvestTarget"] = sim.HarvestTarget?.Id,
             ["harvestProgress"] = Math.Round(sim.HarvestProgress, 3),
             ["interactTarget"] = sim.InteractTarget?.Id,

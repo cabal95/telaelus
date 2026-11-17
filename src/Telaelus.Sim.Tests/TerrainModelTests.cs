@@ -50,10 +50,7 @@ public class TerrainModelTests
         sim.Debug.ResetToEmptyMap();
         sim.Debug.SetTerrain(8, 8, terrain);
         sim.Debug.TeleportPlayer(32.5f, 33.5f);
-        sim.Intent = new PlayerIntent
-        {
-            Move = new Vector2(1f, 0f)
-        };
+        sim.WalkTo(40.5f, 33.5f);
 
         SimTestHelpers.Ticks(sim, 15);
 

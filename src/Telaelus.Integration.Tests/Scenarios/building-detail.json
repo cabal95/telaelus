@@ -1,7 +1,7 @@
 {
   "$schema": "../scenario.schema.json",
   "name": "building-detail",
-  "description": "Clicking a placed building opens its detail side panel: status rows, walking with it open, turning it off and on, switching to another building, closing by empty ground, B, and Escape, and destroying with a confirming second click for half the cost back.",
+  "description": "Clicking a placed building opens its detail side panel: status rows, the world keeping its hover with it open, turning it off and on, switching to another building, closing by empty ground, B, and Escape, and destroying with a confirming second click for half the cost back.",
   "steps": [
     { "newGame": {} },
     { "initMap": {} },
@@ -32,10 +32,9 @@
     { "expect": "camera.zoom", "approx": 28 },
     { "screenshot": "detail" },
 
-    { "comment": "A side panel leaves the world its input: the player walks with it open.", "keyDown": "D" },
-    { "wait": 10 },
-    { "keyUp": "D" },
-    { "expect": "player.position[0]", "gte": 33 },
+    { "comment": "A side panel leaves the world its input: the Lumber Camp outlines under the pointer with it open.", "aimAt": { "world": [29, 29] } },
+    { "wait": 2 },
+    { "expect": "hoveredBuilding", "notEquals": null },
     { "expect": "ui.open", "equals": "buildingDetail" },
     { "wait": 60 },
     { "screenshot": "detail-turned" },

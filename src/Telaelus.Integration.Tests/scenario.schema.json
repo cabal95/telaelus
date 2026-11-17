@@ -418,7 +418,7 @@
       }
     },
     "aimDrag": {
-      "description": "A drag with the pointer over the ground (world x, z): aim at from and press now, aim at to, release at the start of the next frame. Fails if either end is outside the window. The line tools lay (left) or remove (right, or left with shift).",
+      "description": "A drag with the pointer over the ground (world x, z): aim at from and press now, aim at to, release at the start of the next frame. Fails if either end is outside the window. The line tools lay (left) or remove (left with shift).",
       "type": "object",
       "required": ["aimDrag"],
       "additionalProperties": false,
@@ -622,12 +622,19 @@
       }
     },
     "click": {
-      "description": "Left button down at the current aim, released at the start of the next frame.",
+      "description": "A mouse button (left unless given, with Ctrl if asked) down at the current aim, released at the start of the next frame. A right click, or a left one with Ctrl, on the world walks there.",
       "type": "object",
       "required": ["click"],
       "additionalProperties": false,
       "properties": {
-        "click": { "type": "object", "maxProperties": 0 },
+        "click": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "button": { "enum": ["left", "right"] },
+            "ctrl": { "type": "boolean" }
+          }
+        },
         "comment": { "$ref": "#/definitions/comment" }
       }
     },

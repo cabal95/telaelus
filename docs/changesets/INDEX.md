@@ -199,6 +199,11 @@ Newest last. One line each; open the file for the full spec.
   Demo: a working mining town (`DemoTown`, built in code and run 5 game minutes, balanced so its
   trucks keep running) written with its thumbnail by `--write-demo-save`; the `loadDemo` command
   and the `demo` scenario.
+- **2611161940-click-to-move** - The character walks where the player right-clicks (or Ctrl +
+  left-clicks), in place of WASD and the arrows; the same press dragged still pans. `WalkTo` paths
+  over explored cells round what is in the way (to the nearest reachable cell when the target is
+  blocked, on into the fog as it clears), and a ring marks the destination. The road and bridge
+  tools remove with Shift alone.
 
 ## Adding a changeset
 

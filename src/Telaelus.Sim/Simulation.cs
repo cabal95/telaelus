@@ -122,7 +122,7 @@ public sealed partial class Simulation
     public void Step(double dt)
     {
         EnsureChunksAroundPlayer();
-        MovePlayer(dt);
+        WalkPlayer(dt);
         RevealAroundPlayer();
         UpdateInteraction();
         if (Intent.Harvest && InteractTarget is not null)
@@ -721,38 +721,6 @@ public sealed partial class Simulation
     }
 
     // ---- Player hand-harvest --------------------------------------------
-
-    private void MovePlayer(double dt)
-    {
-        Vector2 move = Intent.Move;
-        if (move.LengthSquared() > 1f)
-        {
-            move = move.Normalized();
-        }
-
-        Vector3 p = Player.Position;
-        Vector3 step = new Vector3(move.X, 0f, move.Y) * Player.Speed * TerrainSpeedAt(p.X, p.Z) * (float)dt;
-
-        // Move each axis independently so the player slides along impassable
-        // terrain instead of sticking on it.
-        float nextX = p.X + step.X;
-        if (IsWalkableAt(nextX, p.Z))
-        {
-            p.X = nextX;
-        }
-        float nextZ = p.Z + step.Z;
-        if (IsWalkableAt(p.X, nextZ))
-        {
-            p.Z = nextZ;
-        }
-
-        if (World.IsBounded)
-        {
-            p.X = Mathf.Clamp(p.X, 0f, GridWidth);
-            p.Z = Mathf.Clamp(p.Z, 0f, GridHeight);
-        }
-        Player.Position = p;
-    }
 
     private static bool Contains(IReadOnlyList<ResourceType> types, ResourceType type)
     {

@@ -2,8 +2,8 @@
 
 ## Overview
 
-The player is a character the user drives around the planet surface to explore, harvest by hand, and
-place buildings. This blueprint covers the player's simulation state, movement, input, and its
+The player is a character the user walks around the planet surface, by clicking where to go, to
+explore, harvest by hand, and place buildings. This blueprint covers the player's simulation state, movement, input, and its
 on-screen character and camera.
 
 ## Current state
@@ -13,25 +13,45 @@ on-screen character and camera.
 - The simulation holds a `Player` with a world `Position` and a `Speed` (6 units per second). The
   player spawns at the bounded map's center, `(32, 0, 32)`, or at a generated world's spawn point
   (see world-generation.md).
-- Movement is applied each tick from `PlayerIntent.Move` (a world-space ground direction). Each axis
-  is moved independently and only if the target fine cell is walkable, so the player slides along
-  obstacles rather than sticking. In a bounded world the result is clamped to its extent; a
-  generated world has no edge.
-- The speed each tick is `Speed` times the speed multiplier of the cell under the player: the
-  road speed 1.5 on a road or bridge, else the terrain's (Sand and Snow 0.75, Mud 0.6, others 1;
-  see terrain.md). A river bank moves at its terrain's speed.
+- **Walking** is a command: `Simulation.WalkTo(x, z)` sends the player to a world point and
+  `StopWalking()` stops them (`SimulationWalking.cs`). The player holds the `Target` asked for, the
+  `Path` still to walk (the last point is the `Destination`), `Walking`, and the `Heading` moved this
+  tick (zero when standing).
+- **The path** is the trucks' A* (buildings.md, Paths) with the player's rule: a cell is passable
+  when it is in bounds, its chunk exists, it is **explored**, and it is walkable. So a path never
+  crosses the fog and never shows what lies under it. A target in a reachable cell ends on the
+  point itself; a blocked one (water, a mountain, a building, a field, beyond the map's edge, or
+  under the fog) ends on the reachable cell nearest it (by the search's distance estimate). With
+  no step to take, `WalkTo` returns false and the player stays.
+- **Each tick** (before revealing, see simulation.md) the player moves along the path at `Speed`
+  times the speed multiplier of the cell under them at the tick's start: the road speed 1.5 on a
+  road or bridge, else the terrain's (Sand and Snow 0.75, Mud 0.6, others 1; see terrain.md). A
+  river bank moves at its terrain's speed. When the next point's cell is no longer walkable (a
+  building placed across the path), the path is planned again once that tick.
+- **On arriving** the walk ends, unless it ended short of a target under the fog and the walk has
+  explored more since it was planned: then it is planned again, so a click into the fog keeps
+  the player walking into it as it clears.
+- Teleporting (`Debug.TeleportPlayer`), a world reset, and loading a save stop a walk; a walk is
+  not saved.
 - Walkability (see terrain.md) blocks water, lava, mountains, river channels, resource fields (all
   their fine cells, until depleted), and buildings.
 
 ### Input
 
-- `GameRoot` reads WASD and the arrow keys as screen-relative input and rotates it into world space
-  using the camera's orientation, so "up" always moves away from the camera regardless of the fixed
-  view angle. The result is written to `PlayerIntent.Move`.
+- **A right click, or a left click with Ctrl, over the world walks** the player to the ground
+  under the pointer. It is the same press that pans the camera: released before the pointer has
+  moved more than 4 pixels it is a click and walks (`GameRoot._Input`, through
+  `BuildController.PointerGround`); past that it is a drag and pans. On a building, a field, or
+  water it walks to the nearest reachable ground. It walks in build mode too, and leaves an open
+  panel open. A press over a panel, a modal, or the top bar never walks.
+- A left click (no Ctrl) never walks: on a building or field it opens its panel, on open ground
+  it closes an open side panel, and in build mode it places.
+- There are no movement keys.
 - Holding `E` sets `PlayerIntent.Harvest`, which drives hand-harvesting a field, or collecting from
   or loading a building when one is the interaction target (see resources.md).
 - Dragging the map with the right mouse button, or the left with Ctrl held, pans the camera
-  without moving the character; Space brings it back (see the camera below). A Ctrl + left press
+  without moving the character (a click with either walks, above); Space brings it back (see the
+  camera below). A Ctrl + left press
   never selects, clicks, or places.
 
 ### Character and camera (presentation)
@@ -39,7 +59,8 @@ on-screen character and camera.
 - `PlayerView` renders the player from the assembled character scene
   (`src/Telaelus/assets/models/character/character.tscn`): it loads the scene, finds its `AnimationPlayer`,
   and plays an idle or walk clip based on whether the player is moving (clips are matched by their
-  leaf name containing "idle" or "walk"/"run"). It faces the movement direction by rotating its own
+  leaf name containing "idle" or "walk"/"run"), walking while the sim's `Player.Heading` is not
+  zero. It faces the movement direction by rotating its own
   wrapper node, which preserves the character scene's baked orientation and scale. If the scene is
   absent it falls back to a capsule. All model-specific wiring lives in the scene, so swapping the
   character is an asset change, not a code change.
@@ -58,13 +79,15 @@ on-screen character and camera.
 - **Free camera.** The camera looks at a ground point (`GroundCenter`). While **attached** that
   point glides after the player. A drag over the world (right button, or left with Ctrl; a press
   over a panel, a modal, or the top bar never starts one) **detaches** it once the pointer has
-  moved more than 4 pixels (less is a click): the ground point grabbed at the press stays under
+  moved more than 4 pixels (less is a click, which walks): the ground point grabbed at the press stays under
   the pointer at any zoom, the character does not move, and the view's center is kept inside the
   explored area's bounding box (`Simulation.ExploredBounds`: the whole map on a bounded map
   without fog), so panning never shows ground beyond the fog's edge. The drag's motion and release
   are followed before the UI, so it keeps going over a panel. A detached camera stays put.
-- **Coming back.** Move input (WASD or the arrows, even when the character is blocked) or Space
-  brings a detached camera back: if the character is on screen (inside the view and not under an
+- **The destination ring** (`WalkMarker`): a thin accent ring on the ground at the walk's
+  `Destination` while the player walks, fading out over 0.3 s once they stop.
+- **Coming back.** Space brings a detached camera back (a click to walk leaves it where it is: the
+  player is looking at where they clicked): if the character is on screen (inside the view and not under an
   open panel), it slides back over 0.25 s with an ease-out and then follows; if not, it jumps
   straight to them. Harvesting, building, and opening dialogs leave it where it is. Hover, clicks,
   the panels, and placement all work wherever the camera looks; harvesting still needs the
@@ -72,4 +95,5 @@ on-screen character and camera.
 
 ## Related
 
-- simulation.md (intent, the loop), terrain.md (walkability), resources.md (harvest), presentation.md.
+- simulation.md (intent and commands, the loop), terrain.md (walkability), buildings.md (paths),
+  resources.md (harvest), presentation.md.

@@ -102,12 +102,9 @@ public class SaveTests
     {
         var sim = new Simulation();
         sim.Debug.ResetToGeneratedWorld(42);
-        sim.Intent = new PlayerIntent
-        {
-            Move = new Godot.Vector2(1f, 0f)
-        };
+        sim.WalkTo(sim.Player.Position.X + 60f, sim.Player.Position.Z);
         SimTestHelpers.Seconds(sim, 10.0);
-        sim.Intent = new PlayerIntent();
+        sim.StopWalking();
         string saved = Json(sim);
 
         Simulation loaded = Simulation.FromSave(sim.Save());
@@ -118,10 +115,7 @@ public class SaveTests
         // Walking on generates the same new chunks in both.
         foreach (Simulation s in new[] { sim, loaded })
         {
-            s.Intent = new PlayerIntent
-            {
-                Move = new Godot.Vector2(0f, 1f)
-            };
+            s.WalkTo(s.Player.Position.X, s.Player.Position.Z + 120f);
             SimTestHelpers.Seconds(s, 20.0);
         }
         Assert.Equal(Json(sim), Json(loaded));

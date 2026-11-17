@@ -93,16 +93,13 @@ public class RoadTests
         sim.Debug.SetTerrain(4, 8, TerrainType.Mud);
         sim.Debug.SetTerrain(5, 8, TerrainType.Mud);
         sim.Debug.PlaceRoad(8, 32, 22, 32);
-        SimTestHelpers.Teleport(sim, 9f, 33f);
-        sim.Intent = new PlayerIntent
-        {
-            Move = new Vector2(1f, 0f)
-        };
+        SimTestHelpers.Teleport(sim, 9.5f, 33.5f);
+        sim.WalkTo(30.5f, 33.5f);
 
         SimTestHelpers.Seconds(sim, 1.0);
 
         // 6 units/s times the road's 1.5, not Mud's 0.6.
-        Assert.Equal(18f, sim.Player.Position.X, 0);
+        Assert.Equal(18.5f, sim.Player.Position.X, 1);
     }
 
     [Fact]

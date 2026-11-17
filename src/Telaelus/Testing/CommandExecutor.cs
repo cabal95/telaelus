@@ -495,7 +495,7 @@ public sealed class CommandExecutor
     }
 
     /// <summary>Left button down now at the current aim; up at the start of the next frame.</summary>
-    public StepOutcome Click()
+    public StepOutcome Click(MouseButton button = MouseButton.Left, bool ctrl = false)
     {
         Vector2 screen = _root.Builder.PointerOverride is Vector3 world
             ? _root.Camera.UnprojectPosition(world)
@@ -505,8 +505,8 @@ public sealed class CommandExecutor
         {
             return new StepOutcome(false, $"click at ({screen.X:0}, {screen.Y:0}) is outside the window");
         }
-        Inject(MouseEvent(screen, true));
-        Release(MouseEvent(screen, false));
+        Inject(MouseEvent(screen, true, button, ctrl));
+        Release(MouseEvent(screen, false, button, ctrl));
         return StepOutcome.Ok;
     }
 
@@ -851,12 +851,13 @@ public sealed class CommandExecutor
         };
     }
 
-    private static InputEventMouseButton MouseEvent(Vector2 screen, bool pressed)
+    private static InputEventMouseButton MouseEvent(Vector2 screen, bool pressed, MouseButton button = MouseButton.Left, bool ctrl = false)
     {
         return new InputEventMouseButton
         {
-            ButtonIndex = MouseButton.Left,
+            ButtonIndex = button,
             Pressed = pressed,
+            CtrlPressed = ctrl,
             Position = screen,
             GlobalPosition = screen
         };

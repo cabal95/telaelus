@@ -284,7 +284,15 @@ public sealed class ScenarioCommand
             case "click":
                 {
                     RequireObject(arg, name);
-                    return e => e.Click();
+                    string clickButton = arg.TryGetProperty("button", out JsonElement cb) ? Label(cb, "button") : "left";
+                    MouseButton clickMouse = clickButton switch
+                    {
+                        "right" => MouseButton.Right,
+                        "left" => MouseButton.Left,
+                        _ => throw new FormatException("'button' must be \"right\" or \"left\"")
+                    };
+                    bool clickCtrl = arg.TryGetProperty("ctrl", out JsonElement cc) && cc.GetBoolean();
+                    return e => e.Click(clickMouse, clickCtrl);
                 }
             case "drag":
                 {

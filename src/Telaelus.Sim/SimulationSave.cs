@@ -302,6 +302,7 @@ public sealed partial class Simulation
                 }
             }
         }
+        StopWalking();
         Player.Position = Vector(data.Player);
         _revealedFrom = data.RevealedFrom is { Length: 2 } from ? (from[0], from[1]) : null;
         _nextBuildingId = data.NextBuildingId;

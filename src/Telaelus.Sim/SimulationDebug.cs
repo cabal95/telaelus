@@ -284,6 +284,7 @@ public sealed partial class Simulation
         /// <summary>Moves the player to a world position on the ground.</summary>
         public void TeleportPlayer(float x, float z)
         {
+            _sim.StopWalking();
             _sim.Player.Position = new Vector3(x, 0f, z);
         }
 

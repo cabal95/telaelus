@@ -19,7 +19,8 @@ namespace Telaelus.Presentation;
 /// Outside build mode, a placed building or resource field under the pointer gets a
 /// thin accent outline, and a left click on the world reports the building
 /// (<see cref="BuildingClicked"/>) or field (<see cref="FieldClicked"/>) clicked, or
-/// that nothing was (<see cref="EmptyClicked"/>).
+/// that nothing was (<see cref="EmptyClicked"/>). A right click, or Ctrl with the left, walks
+/// (<see cref="GameRoot"/>, through <see cref="PointerGround"/>).
 /// The pointer is the viewport mouse position, unless a scenario sets
 /// <see cref="PointerOverride"/> to a world point; that point is projected to the
 /// screen each frame and then goes through the same screen-to-ground ray.
@@ -50,7 +51,6 @@ public partial class BuildController : Node3D
     // A line drag in progress: its start cell and whether it removes.
     private (int X, int Z)? _lineStart;
     private bool _lineRemoves;
-    private MouseButton _lineButton;
     private readonly List<MeshInstance3D> _linePlates = new();
     private StandardMaterial3D _lineReady = null!;
     private StandardMaterial3D _lineShort = null!;
@@ -266,8 +266,7 @@ public partial class BuildController : Node3D
     {
         if (Line is not null && @event is InputEventMouseButton line && HandleLineInput(line))
         {
-            // The line tool owns the left and right buttons, so a right drag removes paving
-            // instead of panning the camera.
+            // The line tool owns the left button (Shift to remove).
             GetViewport().SetInputAsHandled();
             return;
         }
@@ -529,6 +528,12 @@ public partial class BuildController : Node3D
         }
     }
 
+    /// <summary>The ground point under the pointer (the aim, for scenarios), or null when the ray misses the ground.</summary>
+    public Vector3? PointerGround()
+    {
+        return TryGetMouseGround(out Vector3 ground) ? ground : null;
+    }
+
     /// <summary>Selects a building for placement; a locked building cannot be selected.</summary>
     public void Select(BuildingType type)
     {
@@ -557,13 +562,14 @@ public partial class BuildController : Node3D
     }
 
     /// <summary>
-    /// A mouse button with a line tool: the left button (or the right, or Shift with the left, to
-    /// remove) starts a drag at the cell under the pointer; its release lays or removes the line.
-    /// The other button cancels a drag. True when the event was the line tool's.
+    /// The left button with a line tool: a press (with Shift, to remove) starts a drag at the cell
+    /// under the pointer; its release lays or removes the line; a press during a drag cancels it.
+    /// The right button and Ctrl are left to the camera and walking. True when the event was the
+    /// line tool's.
     /// </summary>
     private bool HandleLineInput(InputEventMouseButton mb)
     {
-        if (mb.ButtonIndex is not (MouseButton.Left or MouseButton.Right) || mb.CtrlPressed)
+        if (mb.ButtonIndex != MouseButton.Left || mb.CtrlPressed)
         {
             return false;
         }
@@ -579,11 +585,10 @@ public partial class BuildController : Node3D
                 return true;
             }
             _lineStart = (x, z);
-            _lineButton = mb.ButtonIndex;
-            _lineRemoves = mb.ButtonIndex == MouseButton.Right || mb.ShiftPressed;
+            _lineRemoves = mb.ShiftPressed;
             return true;
         }
-        if (_lineStart is not (int sx, int sz) || mb.ButtonIndex != _lineButton)
+        if (_lineStart is not (int sx, int sz))
         {
             return true;
         }
@@ -745,7 +750,7 @@ public partial class BuildController : Node3D
                 ? new TipLine("1 Stone a cell, 2 on Sand, Snow, and Mud")
                 : new TipLine("3 Wood and 1 Stone a cell; straight over water"));
         }
-        lines.Add(new TipLine("Drag to lay   Shift or right-drag to remove   Esc cancel", UiTheme.TextDim));
+        lines.Add(new TipLine("Drag to lay   Shift-drag to remove   Esc cancel", UiTheme.TextDim));
         return lines;
     }
 

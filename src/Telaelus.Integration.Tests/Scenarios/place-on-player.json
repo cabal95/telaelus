@@ -1,7 +1,7 @@
 {
   "$schema": "../scenario.schema.json",
   "name": "place-on-player",
-  "description": "A building cannot be placed with the player inside its footprint; the ghost shows it, a click does nothing, and the player can still walk. Placing right next to the player works.",
+  "description": "A building cannot be placed with the player inside its footprint; the ghost shows it, a click does nothing, and the player can still walk away. Placing right next to the player works.",
   "steps": [
     { "newGame": {} },
     { "initMap": {} },
@@ -28,7 +28,10 @@
     { "screenshot": "placed-beside-player" },
     { "expect": "buildings[1].anchor", "equals": [34, 31] },
     { "press": "Escape" },
-    { "hold": { "key": "A", "frames": 15 } },
-    { "comment": "The player walked away (screen-left is world -X, +Z).", "expect": "player.position[0]", "lte": 31.5 }
+    { "wait": 1 },
+    { "comment": "A right click on open ground walks the player away.", "aimAt": { "cell": [28, 33] } },
+    { "click": { "button": "right" } },
+    { "wait": 15 },
+    { "expect": "player.position[0]", "lte": 31.5 }
   ]
 }

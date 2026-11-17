@@ -67,9 +67,10 @@
       { "type": "WaterWheel", "state": "undiscovered", "label": "Undiscovered" }
     ] },
 
-    { "comment": "The modal menu takes all input: holding D moves nothing.", "keyDown": "D" },
+    { "comment": "The modal menu takes all input: a right click on the world behind it walks nowhere.", "aimAt": { "world": [40.5, 32.5] } },
+    { "click": { "button": "right" } },
     { "wait": 10 },
-    { "keyUp": "D" },
+    { "expect": "player.walking", "equals": false },
     { "expect": "player.position[0]", "approx": 32 },
 
     { "hoverUi": { "id": "buildMenu/Mine" } },

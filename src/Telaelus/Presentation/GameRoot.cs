@@ -19,6 +19,7 @@ public partial class GameRoot : Node3D
     private readonly SimClock _clock = new(30.0); // 30 Hz simulation tick
 
     private PlayerView _playerView = null!;
+    private WalkMarker _walkMarker = null!;
     private CameraRig _camera = null!;
     private ResourceFieldViews _fieldViews = null!;
     private BuildingViews _buildingViews = null!;
@@ -221,16 +222,8 @@ public partial class GameRoot : Node3D
     {
         // A modal takes all input, so the world reads none.
         bool worldInput = !_dialogs.CapturesWorldInput;
-        Vector2 moveDir = worldInput ? ReadWorldMoveInput() : Vector2.Zero;
-        if (moveDir != Vector2.Zero && _camera.Detached)
-        {
-            // Moving brings a dragged-away camera back to the player.
-            _dragButton = null;
-            _camera.ReturnToPlayer(PlayerOnScreen());
-        }
         _sim.Intent = new PlayerIntent
         {
-            Move = moveDir,
             Harvest = worldInput && Input.IsPhysicalKeyPressed(Key.E)
         };
 
@@ -250,7 +243,8 @@ public partial class GameRoot : Node3D
         }
         _perf.SimMs = _simWatch.Elapsed.TotalMilliseconds;
 
-        _playerView.UpdateFrom(_sim.Player.Position, moveDir, delta);
+        _playerView.UpdateFrom(_sim.Player.Position, _sim.Player.Heading, delta);
+        _walkMarker.Sync(_sim.Player, delta);
         _camera.SetTarget(_sim.Player.Position);
         // Shadows are drawn only up to this distance from the camera, which moves back as the
         // view grows (see CameraRig.ViewDistance), so the range follows it.
@@ -288,7 +282,8 @@ public partial class GameRoot : Node3D
 
     /// <summary>
     /// While a camera drag is held, its motion and release are followed from here, before the UI,
-    /// so the drag keeps going when the pointer crosses a panel.
+    /// so the drag keeps going when the pointer crosses a panel. A press that never moved past the
+    /// drag threshold is a click: the player walks to the ground under the pointer.
     /// </summary>
     public override void _Input(InputEvent @event)
     {
@@ -302,8 +297,13 @@ public partial class GameRoot : Node3D
         }
         else if (@event is InputEventMouseButton mb && !mb.Pressed && mb.ButtonIndex == button)
         {
+            bool click = !_camera.Dragging;
             _camera.CancelDrag();
             _dragButton = null;
+            if (click && !_dialogs.CapturesWorldInput && _buildController.PointerGround() is Vector3 ground)
+            {
+                _sim.WalkTo(ground.X, ground.Z);
+            }
         }
     }
 
@@ -335,7 +335,8 @@ public partial class GameRoot : Node3D
             GetViewport().SetInputAsHandled();
             return;
         }
-        // A press over the world with the right button, or the left with Ctrl, may drag the map.
+        // A press over the world with the right button, or the left with Ctrl, drags the map, or
+        // released where it was pressed, walks there (see _Input).
         if (@event is InputEventMouseButton press && press.Pressed && _dragButton is null
             && (press.ButtonIndex == MouseButton.Right || (press.ButtonIndex == MouseButton.Left && press.CtrlPressed)))
         {
@@ -466,42 +467,6 @@ public partial class GameRoot : Node3D
         _dialogs.PlacementTip.ShowAt(point, _buildController.PlacementLines(), _dialogs.UiSize);
     }
 
-    /// <summary>
-    /// Reads WASD / arrows as screen-relative input and rotates it into world
-    /// space using the camera's orientation, so "up" moves away from the camera
-    /// regardless of the fixed view angle.
-    /// </summary>
-    private Vector2 ReadWorldMoveInput()
-    {
-        var raw = Vector2.Zero; // x = screen right, y = screen up (forward)
-        if (Input.IsPhysicalKeyPressed(Key.W) || Input.IsPhysicalKeyPressed(Key.Up))
-        {
-            raw.Y += 1;
-        }
-        if (Input.IsPhysicalKeyPressed(Key.S) || Input.IsPhysicalKeyPressed(Key.Down))
-        {
-            raw.Y -= 1;
-        }
-        if (Input.IsPhysicalKeyPressed(Key.D) || Input.IsPhysicalKeyPressed(Key.Right))
-        {
-            raw.X += 1;
-        }
-        if (Input.IsPhysicalKeyPressed(Key.A) || Input.IsPhysicalKeyPressed(Key.Left))
-        {
-            raw.X -= 1;
-        }
-
-        Basis b = _camera.GlobalTransform.Basis;
-        Vector3 forward = -b.Z;
-        forward.Y = 0;
-        forward = forward.Normalized();
-        Vector3 right = b.X;
-        right.Y = 0;
-        right = right.Normalized();
-        Vector3 world = right * raw.X + forward * raw.Y;
-        return new Vector2(world.X, world.Z);
-    }
-
     private void BuildWorld()
     {
         _perf = new PerfMonitor
@@ -587,6 +552,12 @@ public partial class GameRoot : Node3D
             Name = "Player"
         };
         AddChild(_playerView);
+
+        _walkMarker = new WalkMarker
+        {
+            Name = "WalkMarker"
+        };
+        AddChild(_walkMarker);
 
         _camera = new CameraRig
         {

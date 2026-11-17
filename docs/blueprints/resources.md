@@ -161,8 +161,9 @@ buildings.md). A single global stockpile holds all amounts, within storage limit
 
 - Outside build mode, the field under the pointer (when no building is) gets the thin accent
   outline, a thin frame around its map cell (the same frame buildings get), and a left click opens its field detail panel (see
-  presentation.md); the field keeps the outline while the panel is open. Clicking never starts
-  or stops hand-harvesting.
+  presentation.md); the field keeps the outline while the panel is open. A left click never
+  starts or stops hand-harvesting; a right click on a field walks to the ground beside it
+  (player.md).
 - `ExtractorsWorking(field)` lists the switched-on extractors whose current field it is (display
   only; it changes no rule).
 

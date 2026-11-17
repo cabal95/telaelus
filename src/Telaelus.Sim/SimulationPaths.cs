@@ -5,10 +5,11 @@ using Godot;
 namespace Telaelus.Sim;
 
 /// <summary>
-/// Paths for trucks over fine cells: A* in 8 directions without cutting corners, each step costing
-/// its length over the terrain speed of the cell it enters, so a slower cell costs more. A cell is
-/// passable when it is walkable and its chunk already exists (a search never generates the world);
-/// the cells of a truck's own Depot are passable to it, so it can leave and reach its bay.
+/// Paths over fine cells for trucks and the player: A* in 8 directions without cutting corners, each
+/// step costing its length over the terrain speed of the cell it enters, so a slower cell costs more.
+/// For a truck a cell is passable when it is walkable and its chunk already exists (a search never
+/// generates the world), and the cells of its own Depot are passable to it, so it can leave and reach
+/// its bay; for the player it must also be explored (<see cref="Simulation.WalkTo"/>).
 /// </summary>
 public sealed partial class Simulation
 {
@@ -54,7 +55,7 @@ public sealed partial class Simulation
     {
         (int ax, int az, int width, int depth) = ReachOf(building);
         return FindPath(from, (x, z) => IsBesideRect(ax, az, width, depth, x, z),
-            (x, z) => OctileToRect(x, z, ax - 1, az - 1, ax + width, az + depth), home);
+            (x, z) => OctileToRect(x, z, ax - 1, az - 1, ax + width, az + depth), (x, z) => IsPassable(x, z, home)).Path;
     }
 
     private static bool IsBesideRect(int ax, int az, int width, int depth, int x, int z)
@@ -67,46 +68,63 @@ public sealed partial class Simulation
     /// <summary>The cheapest path from a world point to one fine cell, or null when it cannot be reached.</summary>
     public List<Vector3>? FindPathTo(Vector3 from, int goalX, int goalZ, Building? home = null)
     {
-        return FindPath(from, (x, z) => x == goalX && z == goalZ, (x, z) => Octile(Math.Abs(x - goalX), Math.Abs(z - goalZ)), home);
+        return FindPath(from, (x, z) => x == goalX && z == goalZ, (x, z) => Octile(Math.Abs(x - goalX), Math.Abs(z - goalZ)),
+            (x, z) => IsPassable(x, z, home)).Path;
     }
 
-    private List<Vector3>? FindPath(Vector3 from, Func<int, int, bool> isGoal, Func<int, int, float> estimate, Building? home)
+    /// <summary>
+    /// A search's result: the path (the cell centers to go through, the start cell left out), or null
+    /// when no goal was reached. With <c>closest</c>, an unreached goal gives the path to the cell the
+    /// search found nearest it instead (empty when that is the start), and <see cref="Reached"/> is false.
+    /// </summary>
+    private readonly record struct PathResult(List<Vector3>? Path, bool Reached);
+
+    private PathResult FindPath(Vector3 from, Func<int, int, bool> isGoal, Func<int, int, float> estimate,
+        Func<int, int, bool> passable, bool closest = false)
     {
         (int sx, int sz) = CellAt(from.X, from.Z);
-        if (isGoal(sx, sz) && IsPassable(sx, sz, home))
+        if (isGoal(sx, sz) && passable(sx, sz))
         {
-            return new List<Vector3>();
+            return new PathResult(new List<Vector3>(), true);
         }
         var open = new PriorityQueue<(int X, int Z), float>();
         var cost = new Dictionary<(int, int), float> { [(sx, sz)] = 0f };
         var came = new Dictionary<(int, int), (int, int)>();
         open.Enqueue((sx, sz), estimate(sx, sz));
         int expansions = 0;
+        (int X, int Z) nearest = (sx, sz);
+        float nearestLeft = estimate(sx, sz);
         while (open.TryDequeue(out (int X, int Z) cell, out float priority))
         {
             float here = cost[cell];
-            if (priority - estimate(cell.X, cell.Z) > here + 1e-4f)
+            float left = estimate(cell.X, cell.Z);
+            if (priority - left > here + 1e-4f)
             {
                 continue;
             }
             if (isGoal(cell.X, cell.Z) && cell != (sx, sz))
             {
-                return Rebuild(came, cell, (sx, sz));
+                return new PathResult(Rebuild(came, cell, (sx, sz)), true);
+            }
+            if (left < nearestLeft)
+            {
+                nearest = cell;
+                nearestLeft = left;
             }
             if (++expansions > MaxPathExpansions)
             {
-                return null;
+                break;
             }
             foreach ((int dx, int dz) in PathSteps)
             {
                 int nx = cell.X + dx;
                 int nz = cell.Z + dz;
-                if (!IsPassable(nx, nz, home))
+                if (!passable(nx, nz))
                 {
                     continue;
                 }
                 bool diagonal = dx != 0 && dz != 0;
-                if (diagonal && (!IsPassable(cell.X + dx, cell.Z, home) || !IsPassable(cell.X, cell.Z + dz, home)))
+                if (diagonal && (!passable(cell.X + dx, cell.Z) || !passable(cell.X, cell.Z + dz)))
                 {
                     continue;
                 }
@@ -121,7 +139,7 @@ public sealed partial class Simulation
                 open.Enqueue((nx, nz), next + estimate(nx, nz));
             }
         }
-        return null;
+        return closest ? new PathResult(Rebuild(came, nearest, (sx, sz)), false) : new PathResult(null, false);
     }
 
     private static List<Vector3> Rebuild(Dictionary<(int, int), (int, int)> came, (int X, int Z) goal, (int X, int Z) start)

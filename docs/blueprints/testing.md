@@ -54,7 +54,10 @@ pausing it and stepping frame by frame.
 - `PlacementTests`: footprints by facing, each `CanPlace` rejection (water, mountain, field,
   occupied, out of bounds, rotated footprint), extractors placeable with no field in range,
   occupancy, and derived size and center.
-- `MovementTests`: speed, blocking by water, fields, and buildings, sliding, and map clamping.
+- `MovementTests`: walking at the player's speed and stopping on the point; round a building;
+  a click on water ending on the nearest ground; no walk with no way out; paths never crossing the
+  fog while the walk keeps going into it; walking round a building placed across the path;
+  teleporting stopping a walk; and the map's edge.
 - `WorldGenTests`: the same seed gives identical chunks and generation order changes nothing; chunk
   biomes match the generator; rivers flow into rivers or water across chunk borders; the spawn is
   open Grassland at the center of chunk (0, 0) for seed 1; the spawn moves when the center has no
@@ -219,7 +222,8 @@ pausing it and stepping frame by frame.
     shift? }` (world points: aims at `from` and presses now, aims at `to`, releases at the start
     of the next frame; fails if either end is outside the window; drives the line tools),
     `aimAt` `{ cell: [x, z] }` (a fine cell's center) or
-    `{ world: [x, z] }`, `click` `{}` (left button at the aim, up the next frame; it fails, "click at
+    `{ world: [x, z] }`, `click` `{ button?: left|right, ctrl? }` (that button, left unless given, at the aim, up the
+    next frame; a right click or Ctrl + left on the world walks; it fails, "click at
     (x, y) is outside the window", when the aim projects outside the window, since a player cannot
     click there), `drag`
     `{ button: right|left, ctrl?, from: [x, y], to: [x, y], frames? }` (screen pixels: pressed at
@@ -257,7 +261,7 @@ pausing it and stepping frame by frame.
   `perf` (`headlineMs` (the larger of the CPU and GPU times), `workMs`, `scriptMs`, `renderCpuMs`, `gpuMs` or null, `simMs`, `frameMs` (wall time
   since the last frame), `worstMs`, `fps`, `draws`, `objects`, as of that frame; see
   presentation.md); `player` (`position`
-  [x, z], `harvestTarget` field id or null, `harvestProgress` (0 to 1), `interactTarget` building
+  [x, z], `walking`, `destination` [x, z] (where the walk ends) or null, `harvestTarget` field id or null, `harvestProgress` (0 to 1), `interactTarget` building
   id or null, `interactAction` (`collect` or `load`, or null), `interactProgress`, the `terrain`, `biome`, and `feature` under the player,
   and their `chunk` [x, z]); `build` (null when not in build
   mode, else `selected`, `facing`, `fieldsInRange`, and `ghost`: `anchor`, `width`, `depth`,
@@ -373,7 +377,7 @@ pausing it and stepping frame by frame.
 - `--fixed-fps 30` matches the sim's 30 Hz tick, so every frame advances exactly one sim tick:
   frame counts in `wait` and `hold` are tick counts, and runs repeat exactly. It also guarantees
   that input held for a single frame (a `press`) overlaps a sim tick; at 60 fps the sim ticks only
-  every other frame, so a one-frame press of a polled key (movement, E) could be missed. If the
+  every other frame, so a one-frame press of a polled key (E) could be missed. If the
   sim tick rate changes, this value changes with it.
 - `AppRoot` attaches the `ScenarioRunner` only with `--scenario` and only in debug builds. The
   runner processes with `ProcessMode.Always`, so scenarios can use `pause` and `step`, and with a
@@ -464,8 +468,8 @@ pausing it and stepping frame by frame.
   `free-camera` (a right drag pans the camera and not the player, keeping the grabbed ground under
   the pointer, and a 2-pixel drag does not; Space slides it back; Ctrl + left drags the same; a
   building can be clicked while panned; Space after clicking a button does not press it again;
-  with the player under an open panel, moving jumps the camera back, and with them on screen it
-  slides; the camera stops at the map's edge; a drag over the build menu does nothing; a Ctrl +
+  with the player under an open panel, Space jumps the camera back; a 2-pixel drag is a click that
+  walks; a right click to walk leaves a panned camera where it is, and Space then slides it back; the camera stops at the map's edge; a drag over the build menu does nothing; a Ctrl +
   left drag in build mode places nothing),
   `fog` (on the empty map with fog, a field beyond sight is not drawn and cannot be hovered;
   coming into sight reveals it, and it stays revealed after the player leaves),
@@ -488,8 +492,8 @@ pausing it and stepping frame by frame.
   `demo` (the menu offering Demo; `loadDemo` opening the town at the widest zoom, powered, with
   Material Transfer running and four trucks, and its Iron still rising a minute later; windowed
   screenshots),
-  `roads` (the menu's Road tool laying an L of tiles by drag and taking their Stone, a right drag
-  removing three for half back, Escape leaving build mode; a Mine across a strip of ShallowWater out
+  `roads` (the menu's Road tool laying an L of tiles by drag and taking their Stone, a Shift drag
+  removing three for half back, a right drag panning instead, Escape leaving build mode; a Mine across a strip of ShallowWater out
   of a truck's reach until the Bridge tool spans it, then the truck hauling its ore home over it),
   `research` (a Research Lab; T opening the tree on Material Transfer with Advanced Material
   Transfer locked, selecting its card showing it disabled in the drawer; starting Material
@@ -524,8 +528,8 @@ pausing it and stepping frame by frame.
   pinning and unpinning from it, which reorders the top bar; the Silo's detail lists what it adds),
   `inventory` (on the empty map nothing is discovered and every row is darkened, through the last
   tier; a field in sight and a held resource are discovered and move to the top of their tier),
-  `building-detail` (clicking a building opens its panel with the right status rows; the
-  player walks with it open; it turns the building off and on; clicking another building
+  `building-detail` (clicking a building opens its panel with the right status rows; the world
+  keeps its hover with it open; it turns the building off and on; clicking another building
   switches it; empty ground, B, and Escape close it; Destroy asks once, then refunds half the
   cost),
   `build-menu` (B opens the menu with discovered buildings first, affordable in color and short
@@ -534,11 +538,16 @@ pausing it and stepping frame by frame.
   unaffordable discovered cell selects it with the placement tooltip),
   `build-rotate` (R rotates the Refinery ghost 2 x 3 to 3 x 2 and back), `place-at-mouse` (aim and
   click places a Mine at the expected anchor; the ghost counts an Iron Ore field in range),
+  `walk` (a right click walks there with the destination ring, and Ctrl + left the same; a left
+  click on ground does not walk; a right click with a building's panel open walks and keeps it
+  open; a right click on the building walks beside it, and on a pond to its nearest shore; a right
+  drag pans without walking; in build mode a left click places and a right click walks),
   `harvest-input` (holding E fills the progress bar and harvests one Wood at 3 s, which does
   not yet unlock the Lumber Camp), `field-stage-views` (visible models track the stage and
-  vanish with the field), `pause-step` (paused input waits for `step`, and steps advance exact
-  ticks), `place-on-player` (a building cannot be placed on the player; right beside them it can,
-  and the player can still walk), `terrain-types` (every terrain, a mountain on each ground that
+  vanish with the field), `pause-step` (a right click and a key, while paused, wait for `step`, the walk starting
+  with the release,
+  and steps advance exact ticks), `place-on-player` (a building cannot be placed on the player;
+  right beside them it can, and a click still walks the player away), `terrain-types` (every terrain, a mountain on each ground that
   takes one, and rivers in every shape on several bank terrains render; the ghost is blocked on a
   river channel and allowed on its bank; the snapshot reports the terrain, biome, and feature under
   the player), `building-models` (every building model in every facing, the tinted ghost for each
@@ -549,7 +558,8 @@ pausing it and stepping frame by frame.
   and tiles drawn; crossing into chunk (1, 0) generates the chunks around it and the tiles
   follow), `field-batches` (every built terrain tile has a field batch, and batches follow the
   tiles into another chunk), `perf-walk` (the standing performance benchmark: seed 2 at the widest
-  zoom, about 30 seconds of walking; in the suite it is a smoke test of a long walk across chunks).
+  zoom, nine clicks of walking for about 30 seconds; in the suite it is a smoke test of a long walk
+  across chunks that checks the walk ended where it should).
 
 ### Live control channel
 
