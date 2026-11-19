@@ -454,6 +454,20 @@ public sealed class CommandExecutor
         return StepOutcome.Ok;
     }
 
+    /// <summary>Starts the trainer at a step (0-based here; 1-based in the scenario).</summary>
+    public StepOutcome StartTrainer(int step)
+    {
+        _root.Trainer.Start(step);
+        return StepOutcome.Ok;
+    }
+
+    /// <summary>Opens the first New Game's "Learn to play?" question (test runs never ask on their own).</summary>
+    public StepOutcome AskTrainer()
+    {
+        _root.AskStartTrainer();
+        return StepOutcome.Ok;
+    }
+
     public StepOutcome CameraZoom(float size)
     {
         _root.Camera.ZoomTo(size);

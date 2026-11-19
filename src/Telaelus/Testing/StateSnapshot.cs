@@ -219,6 +219,19 @@ public static class StateSnapshot
             });
         }
         ui["toasts"] = toasts;
+        ui["trainer"] = root.Trainer.Step is int step && root.Notifications.Step is StepCardInfo card
+            ? new JsonObject
+            {
+                ["step"] = step + 1,
+                ["total"] = root.Trainer.Total,
+                ["header"] = card.Header,
+                ["text"] = card.Text,
+                ["hint"] = card.Hint,
+                ["done"] = root.Trainer.ShowingDone,
+                ["pointer"] = root.Pointer.Target is Vector3 at ? new JsonArray(Math.Round(at.X, 1), Math.Round(at.Z, 1)) : null
+            }
+            : null;
+        ui["choice"] = root.Dialogs.Current == root.Choice ? root.Choice.Text : null;
         ui["playTime"] = Math.Round(root.PlayTime, 1);
         ui["unsaved"] = root.HasUnsavedProgress;
         if (root.Dialogs.Current == root.GameMenu)

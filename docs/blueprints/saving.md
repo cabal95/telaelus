@@ -5,7 +5,7 @@
 A game can be saved and loaded. The sim writes its whole state to a versioned save and reads one
 back, so a loaded game continues exactly as the saved one would have. Saves live in the player's
 data folder as named saves plus two rotating autosaves. The main menu offers Continue and Load
-Game; in a game, Escape opens the game menu (Resume, Save Game, Load Game, Main Menu, Quit).
+Game; in a game, Escape opens the game menu (Resume, Save Game, Load Game, Trainer, Main Menu, Quit).
 
 ## Current state
 
@@ -35,8 +35,9 @@ Game; in a game, Escape opens the game menu (Resume, Save Game, Load Game, Main 
 - **Not saved:** the player's held actions (harvesting, collecting by hand), which stop on load.
 - **Chunks are saved in full,** not regenerated from the seed, so a save survives changes to the
   world generator.
-- **The presentation's part:** the pinned resources and the camera's zoom, as a JSON object beside
-  the sim's.
+- **The presentation's part:** the pinned resources, the camera's zoom, and the trainer's step
+  (0-based, or null with the trainer off; a loaded save resumes it), as a JSON object beside the
+  sim's.
 
 ### The format
 

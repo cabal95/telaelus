@@ -201,6 +201,7 @@ public partial class AppRoot : Node
             Name = "GameRoot"
         };
         game.Initialize(this, seed ?? 0, save, Icons, BuildingPictures, FieldPictures);
+        game.AskTrainer = save is null && !UserSettings.TestRun && !UserSettings.TrainerAsked;
         AddChild(game);
         Game = game;
         Current = Stage.Game;

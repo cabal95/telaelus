@@ -46,7 +46,7 @@ on-screen character and camera.
   panel open. A press over a panel, a modal, or the top bar never walks.
 - A left click (no Ctrl) never walks: on a building or field it opens its panel, on open ground
   it closes an open side panel, and in build mode it places.
-- There are no movement keys.
+- There are no movement keys. The trainer (presentation.md) teaches these controls in play.
 - Holding `E` sets `PlayerIntent.Harvest`, which drives hand-harvesting a field, or collecting from
   or loading a building when one is the interaction target (see resources.md).
 - Dragging the map with the right mouse button, or the left with Ctrl held, pans the camera

@@ -221,7 +221,7 @@ pausing it and stepping frame by frame.
     loads the demo save, as the menu's Demo does), `setTimeOfDay` (a number from 0 up to 1, 0.5 midday), `placeRoad` and `placeBridge`
     `{ from: [x, z], to: [x, z] }` (lay a road line or bridge span free, as `placeBuilding` places;
     fail when nothing can be laid), `removeRoad` and `removeBridge` (the same, with the refund), `startResearch` (a project name; fails
-    when it cannot start), `pauseResearch` (`{}`), `setResearchProgress` `{ project, seconds }` (at
+    when it cannot start), `pauseResearch` (`{}`), `startTrainer` (`{}`, or `{ step }` 1-based: start or restart the trainer there), `askTrainer` (`{}`: open the first New Game's question, which test runs never ask on their own), `setResearchProgress` `{ project, seconds }` (at
     full work it completes),
     `placeMotherlode`
     `{ kind, mapCell }`, `setWorkedOut` `{ mapCell, deposit }`
@@ -248,7 +248,7 @@ pausing it and stepping frame by frame.
     `buildingDetail/destroy` for the detail panel's actions, `buildingDetail/siloResource` for the
     Silo picker, `inventory/<ResourceType>` for an inventory row, `inventory/pin/<ResourceType>`
     for a row's Pin toggle (shown only on discovered rows, and only clickable while the row is
-    scrolled into view), `toast/<n>` for a notification (0 is the newest) and `toast/<n>/close` for its X, `topBar/<ResourceType>` for a top bar entry (top bar ids work while no dialog is
+    scrolled into view), `trainer` and `trainer/close` for the step card and its X, `choice/yes` and `choice/no` for the choice dialog's answers, `toast/<n>` for a notification (0 is the newest) and `toast/<n>/close` for its X, `topBar/<ResourceType>` for a top bar entry (top bar ids work while no dialog is
     open), and `<dialog>/close` for the Close button. Buttons act on release, the frame after a `clickUi`, so check their effect after
     `wait` 2. UI pointer events go straight to the viewport (`PushInput`), so they reach the GUI in
     headless runs too.
@@ -286,7 +286,10 @@ pausing it and stepping frame by frame.
   while hidden) and their `powerTone`, `waterTone`, and `sandTone`, its `clock` ("14:00"), and its
   `store` (the Battery Banks' readout, or null with none), `hint`: the hint's `text`, `progress`,
   and `storageFull` or null, `toasts`: the notifications shown, newest first, each `style`
-  (`brief` or `lasting`), `title`, `detail` (or null), and `remaining` seconds (one decimal), `tooltip`: the hover
+  (`brief` or `lasting`), `title`, `detail` (or null), and `remaining` seconds (one decimal),
+  `trainer`: the trainer's `step` (1-based) and `total`, its card's `header`, `text`, and `hint`,
+  `done` (the card reads Done), and the pointer ring's `pointer` [x, z] or null; or null with the
+  trainer off, `choice`: the choice dialog's question while it is open, or null, `tooltip`: the hover
   tooltip's lines or null, `worldTip`: the truck tooltip's lines outside build mode, or null,
   `playTime` (game seconds played) and `unsaved` (unsaved progress), while the game menu is open
   its `buttons`, `confirm` (the question shown, or null), and `status`, while the save dialog is
@@ -525,6 +528,10 @@ pausing it and stepping frame by frame.
   at once when Steel Beam is chosen; a Shipyard's panel showing the bill short and Launch ship
   disabled with why; with the bill seeded, the ship on its pad and the button enabled; L doing
   nothing; the button launching it, the bill counting down again, and "Ships launched: 1"),
+  `trainer` (a generated world: the question starting it; all 13 steps done by doing them, each
+  reading Done before the next; the ring on the nearest Wood and on the camp; a step already done
+  completing at once; the "Trainer complete" toast; the card's X asking to stop, Keep going and
+  Stop; a save resuming the step; the game menu's Trainer starting it again),
   `notifications` (no toasts in a new world; seeding Wood showing "New building: Lumber Camp"
   above "Discovered: Wood", both gone after 5 s; a finished project's lasting toast held while
   hovered and closed by its X; a Water blackout and a ship launch each a lasting toast; a burst of

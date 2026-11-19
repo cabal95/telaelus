@@ -69,6 +69,8 @@
         { "$ref": "#/definitions/pauseResearch" },
         { "$ref": "#/definitions/setResearchProgress" },
         { "$ref": "#/definitions/setWorkedOut" },
+        { "$ref": "#/definitions/startTrainer" },
+        { "$ref": "#/definitions/askTrainer" },
         { "$ref": "#/definitions/cameraZoom" },
         { "$ref": "#/definitions/press" },
         { "$ref": "#/definitions/keyDown" },
@@ -534,6 +536,32 @@
             "amount": { "type": "number" }
           }
         },
+        "comment": { "$ref": "#/definitions/comment" }
+      }
+    },
+    "startTrainer": {
+      "description": "Start (or restart) the trainer, at its first step or at the 1-based step given.",
+      "type": "object",
+      "required": ["startTrainer"],
+      "additionalProperties": false,
+      "properties": {
+        "startTrainer": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "step": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "comment": { "$ref": "#/definitions/comment" }
+      }
+    },
+    "askTrainer": {
+      "description": "Open the first New Game's \"Learn to play?\" question (test runs never ask on their own). The value is ignored.",
+      "type": "object",
+      "required": ["askTrainer"],
+      "additionalProperties": false,
+      "properties": {
+        "askTrainer": { "type": "object", "additionalProperties": false },
         "comment": { "$ref": "#/definitions/comment" }
       }
     },

@@ -109,7 +109,7 @@ The two kinds place themselves:
 - **Game menu** (`GameMenu`, a modal titled "Paused", id `gameMenu`): Escape opens it when nothing
   else takes Escape (no open dialog, not in build mode), and the frame behind it is kept as the
   thumbnail for a save made from it. Buttons, 240 x 40 and centered: Resume, Save Game, Load Game,
-  Main Menu, and Quit; Resume takes the place of the Close button. Main Menu and Quit with unsaved
+  Trainer (starts the trainer from its first step and closes the menu), Main Menu, and Quit; Resume takes the place of the Close button. Main Menu and Quit with unsaved
   progress swap the buttons for "Unsaved progress will be lost." in `Warning` with Leave without
   saving and Cancel. A status line under them in `TextDim` says what just happened ("Saved as
   Save 1", or why a load failed).
@@ -124,6 +124,10 @@ The two kinds place themselves:
   with its reason. The selected row has an `Accent` outline; a double-click loads it. Under the
   list, Load and Delete; Delete asks first. With unsaved progress, Load asks "Unsaved progress will
   be lost." with Load anyway and Cancel.
+
+- **Choice dialog** (`ChoiceDialog`, a modal, id `choice`): a question with two answers, 150 x 40
+  buttons side by side, no Close button (the second answer and Escape do what Close would); it
+  stands the game still. The trainer's "Learn to play?" and "Stop the trainer?" use it.
 
 ### Overlays
 
@@ -166,6 +170,13 @@ The two kinds place themselves:
   fourth pushes out the oldest brief one, or the oldest of all when every one is lasting. The
   cards take the mouse (so clicks on them never reach the world); the space around them does not.
   A modal covers them; a panel docks left, so they never cover it.
+  - **Step card** (the trainer's): the lasting card's strip and X, no icon and no countdown bar,
+    and three lines: "Trainer 3 / 13" (or "Done" once the step is done) in `SmallSize` `Accent`,
+    the instruction in `BodySize` `Text`, and an optional hint in `SmallSize` `TextDim`. It sits
+    above every toast, never times out, never counts toward the 4, and is never pushed out; its X
+    (tooltip "Stop the trainer") asks to stop the trainer.
+- **Pointer ring** (`PointerRing`): the trainer's marker on the ground, an `Accent` ring 2.4
+  units across that pulses (its size by 8% and its opacity between 0.45 and 0.85, every 1.2 s).
 - **Debug overlay** (`DebugOverlay`): F3 toggles it; it starts hidden. Two lines of outlined text
   (readable over bright ground) in the top-left corner below the top bar: the world line (the
   seed or the bounded map's name, the biome and terrain under the player, their chunk and map

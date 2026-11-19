@@ -245,6 +245,17 @@ public sealed class ScenarioCommand
                     float amount = Number(Required(arg, "amount"), "amount");
                     return e => e.SeedStockpile(type, amount);
                 }
+            case "startTrainer":
+                {
+                    int step = arg.ValueKind == System.Text.Json.JsonValueKind.Object && arg.TryGetProperty("step", out var at)
+                        ? (int)Number(at, "step") - 1
+                        : 0;
+                    return e => e.StartTrainer(step);
+                }
+            case "askTrainer":
+                {
+                    return e => e.AskTrainer();
+                }
             case "cameraZoom":
                 {
                     float size = Number(Required(arg, "size"), "size");

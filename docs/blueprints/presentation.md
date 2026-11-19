@@ -154,6 +154,37 @@ ui-style.md. There is no text HUD; the screen holds:
   discoveries merge into one toast ("Discovered: Coal, Sulfur", the first one's icon, no detail),
   and so do its unlocks ("New buildings: Mine, Smelter"), shown above the discoveries. A new
   world and a load notify nothing.
+- **Trainer** (`Trainer`): teaches the controls and the opening, one step at a time on the step
+  card (ui-style.md). Each step is done by doing it and reads "Done" for a second before the next;
+  a step already done when it comes up completes at once. The steps (`TrainerStep`: text, hint,
+  when it is done, where the pointer ring goes) are one table:
+  1. "Right-click the ground to walk there." (the player has walked 4 units)
+  2. "Drag with the right mouse button to look around." (the camera is detached 8 units from the
+     player)
+  3. "Scroll the mouse wheel to zoom in and out." (the zoom has gone both ways)
+  4. "Press [Space] to bring the view back to you." (the camera follows again)
+  5. "Walk to the trees and hold [E] to gather Wood." (the Lumber Camp is unlocked; the ring on the
+     nearest explored Wood field)
+  6. "Press [I] to see what you have." (the inventory is open)
+  7. "Press [B] and choose the Lumber Camp." (build mode with it)
+  8. "Press [R] to turn it." (its facing has changed)
+  9. "Left-click near the trees to place it." (a Lumber Camp stands; the ring on the Wood)
+  10. "Click the Lumber Camp to see what it is doing." (its panel is open; the ring on the camp)
+  11. "Its Wood waits in the camp. Stand by it and hold [E] to collect it." (Wood collected from a
+      Lumber Camp by hand; the ring on the camp)
+  12. "Press [N] to show the network." (the network overlay shows)
+  13. "Press [T] to see research, then [Esc] for the game menu." (the game menu opens after the
+      research tree has been open)
+
+  After the last it ends with a lasting toast, "Trainer complete". Its counters (distance walked,
+  zoom directions, the facing, Wood collected, research seen) start with each step and are not
+  saved. It is presentation only: it reads the sim, the camera, the build controller, the network
+  overlay, and the open dialog.
+- **Starting the trainer:** the first New Game on a machine asks "Learn to play?" (Start trainer /
+  Skip) once the game opens (`GameRoot.AskTrainer`, set by `AppRoot` when no save is loading and
+  `UserSettings.TrainerAsked` is false; asking sets it, in `user://settings.cfg`). Later, the game
+  menu's Trainer starts it from the first step. Test runs (`--scenario=` or `--control-port=`)
+  never ask and never read or write the settings file.
 - **Debug overlay** (`DebugOverlay`, F3, hidden at start): the world line for exploring (for
   example `seed 1234   Highlands / Rock   chunk (1, -2)   cell (87, -101)`) and the performance
   line (see Performance below), in the top-left corner below the top bar, behind everything else.

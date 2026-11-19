@@ -221,6 +221,11 @@ Newest last. One line each; open the file for the full spec.
   for a building unlocked and a resource first discovered, lasting ones (15 s, an X and a
   countdown bar) for research complete, a blackout, and a ship launched. Bursts merge, hover holds
   a toast, and a new world or load notifies nothing. The sim raises `Happened` events.
+- **2611191051-trainer** - An optional trainer teaches the controls and the opening in 13 steps on a
+  step card above the notifications (walk, pan, zoom, recenter, gather, the inventory, choose,
+  turn, and place a Lumber Camp, its panel, collect from it, the network, research and the game
+  menu), each done by doing it, with a pulsing ring on the place it means. The first New Game asks;
+  the game menu's Trainer starts it again; a save keeps the step.
 
 ## Adding a changeset
 

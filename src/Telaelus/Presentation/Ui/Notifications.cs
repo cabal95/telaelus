@@ -12,17 +12,24 @@ public enum ToastStyle
     Brief,
 
     /// <summary>Worth reading: an X to close it and a countdown bar, gone after 15 seconds.</summary>
-    Lasting
+    Lasting,
+
+    /// <summary>The trainer's step card: kept on top until its step is done; its X asks to stop the trainer.</summary>
+    Step
 }
 
 /// <summary>A toast as shown, for the snapshot.</summary>
 public sealed record ToastInfo(ToastStyle Style, string Title, string? Detail, double Remaining);
 
+/// <summary>The trainer's step card as shown: its header ("Trainer 3 / 13", or "Done"), instruction, and hint.</summary>
+public sealed record StepCardInfo(string Header, string Text, string? Hint);
+
 /// <summary>
 /// Toast notifications, stacked against the right edge below the top bar, newest on top. A toast
 /// slides in, counts down on game time (so it waits while the game is paused), holds while the
 /// pointer is over it, and fades out. At most <see cref="MaxShown"/> show: a new one pushes out the
-/// oldest brief toast, or the oldest of all when every one is lasting. Only the toasts take the
+/// oldest brief toast, or the oldest of all when every one is lasting. The trainer's step card
+/// (<see cref="ShowStep"/>) sits above them all, never times out, and is never pushed out. Only the toasts take the
 /// mouse, so the world around them keeps its clicks; like every overlay, they never take keys.
 /// </summary>
 public partial class Notifications : HudOverlay
@@ -43,11 +50,19 @@ public partial class Notifications : HudOverlay
     private DialogHost _host = null!;
     private Vector2 _uiSize;
 
-    /// <summary>The toasts on screen, newest first (closing ones excluded).</summary>
+    /// <summary>The toasts on screen, newest first (closing ones and the step card excluded).</summary>
     public IReadOnlyList<ToastInfo> Shown => _toasts
-        .Where(t => !t.Closing)
+        .Where(t => !t.Closing && t.Style != ToastStyle.Step)
         .Select(t => new ToastInfo(t.Style, t.Title, t.Detail, System.Math.Max(0.0, t.Remaining)))
         .ToList();
+
+    /// <summary>The trainer's step card, or null when none shows.</summary>
+    public StepCardInfo? Step => StepToast is Toast step ? new StepCardInfo(step.Header!, step.Title, step.Detail) : null;
+
+    /// <summary>Raised when the step card's X is pressed.</summary>
+    public event System.Action? StepCloseRequested;
+
+    private Toast? StepToast => _toasts.FirstOrDefault(t => t.Style == ToastStyle.Step && !t.Closing);
 
     public void Initialize(DialogHost host)
     {
@@ -68,8 +83,8 @@ public partial class Notifications : HudOverlay
         var toast = new Toast(style, icon, title, detail);
         toast.CloseRequested += () => toast.Remaining = 0.0;
         AddChild(toast);
-        _toasts.Insert(0, toast);
-        List<Toast> open = _toasts.Where(t => !t.Closing).ToList();
+        _toasts.Insert(StepToast is null ? 0 : 1, toast);
+        List<Toast> open = _toasts.Where(t => !t.Closing && t.Style != ToastStyle.Step).ToList();
         if (open.Count > MaxShown)
         {
             Toast oldest = open.LastOrDefault(t => t.Style == ToastStyle.Brief) ?? open[^1];
@@ -77,6 +92,34 @@ public partial class Notifications : HudOverlay
         }
         Layout(snap: false);
         toast.Position = toast.Position with { Y = toast.Target.Y };
+    }
+
+    /// <summary>Shows the trainer's step card on top, replacing the one before it.</summary>
+    public void ShowStep(string header, string text, string? hint)
+    {
+        HideStep();
+        var card = new Toast(ToastStyle.Step, null, text, hint, header);
+        card.CloseRequested += () => StepCloseRequested?.Invoke();
+        AddChild(card);
+        _toasts.Insert(0, card);
+        Layout(snap: false);
+        card.Position = card.Position with { Y = card.Target.Y };
+        RegisterControls();
+    }
+
+    /// <summary>Marks the step card done: its header reads "Done".</summary>
+    public void MarkStepDone()
+    {
+        StepToast?.SetHeader("Done");
+    }
+
+    /// <summary>Fades the step card out.</summary>
+    public void HideStep()
+    {
+        if (StepToast is Toast card)
+        {
+            card.Remaining = 0.0;
+        }
     }
 
     public override void Refresh(Simulation sim, Vector2 uiSize)
@@ -148,7 +191,14 @@ public partial class Notifications : HudOverlay
             _host.Unregister($"toast/{i}");
             _host.Unregister($"toast/{i}/close");
         }
-        List<Toast> open = _toasts.Where(t => !t.Closing).ToList();
+        _host.Unregister("trainer");
+        _host.Unregister("trainer/close");
+        if (StepToast is Toast step)
+        {
+            _host.Register("trainer", step);
+            _host.Register("trainer/close", step.Close!);
+        }
+        List<Toast> open = _toasts.Where(t => !t.Closing && t.Style != ToastStyle.Step).ToList();
         for (int i = 0; i < open.Count; i++)
         {
             _host.Register($"toast/{i}", open[i]);
@@ -163,6 +213,7 @@ public partial class Notifications : HudOverlay
     private sealed partial class Toast : Control
     {
         public readonly ToastStyle Style;
+        public string? Header { get; private set; }
         public readonly string Title;
         public readonly string? Detail;
         public readonly double Lifetime;
@@ -175,15 +226,22 @@ public partial class Notifications : HudOverlay
 
         private readonly PanelContainer _card;
         private readonly ColorRect? _bar;
+        private readonly Label? _header;
 
         public bool Closing => Remaining <= 0.0;
 
-        public Toast(ToastStyle style, Texture2D? icon, string title, string? detail)
+        public Toast(ToastStyle style, Texture2D? icon, string title, string? detail, string? header = null)
         {
             Style = style;
+            Header = header;
             Title = title;
             Detail = detail;
-            Lifetime = style == ToastStyle.Lasting ? LastingSeconds : BriefSeconds;
+            Lifetime = style switch
+            {
+                ToastStyle.Lasting => LastingSeconds,
+                ToastStyle.Step => double.PositiveInfinity,
+                _ => BriefSeconds
+            };
             Remaining = Lifetime;
             MouseFilter = MouseFilterEnum.Stop;
 
@@ -201,12 +259,17 @@ public partial class Notifications : HudOverlay
             row.AddThemeConstantOverride("separation", UiTheme.Gap);
             _card.AddChild(row);
 
-            TextureRect picture = MakeIcon(IconSize);
-            picture.Texture = icon;
-            picture.SizeFlagsVertical = SizeFlags.ShrinkCenter;
-            row.AddChild(picture);
+            bool pictured = style != ToastStyle.Step;
+            if (pictured)
+            {
+                TextureRect picture = MakeIcon(IconSize);
+                picture.Texture = icon;
+                picture.SizeFlagsVertical = SizeFlags.ShrinkCenter;
+                row.AddChild(picture);
+            }
 
-            float textWidth = Width - 2 * (UiTheme.Gap + 2) - IconSize - UiTheme.Gap - (style == ToastStyle.Lasting ? CloseSize : 0f);
+            bool closable = style != ToastStyle.Brief;
+            float textWidth = Width - 2 * (UiTheme.Gap + 2) - (pictured ? IconSize + UiTheme.Gap : StripWidth) - (closable ? CloseSize : 0f);
             var column = new VBoxContainer
             {
                 MouseFilter = MouseFilterEnum.Ignore,
@@ -215,13 +278,18 @@ public partial class Notifications : HudOverlay
             };
             column.AddThemeConstantOverride("separation", 2);
             row.AddChild(column);
+            if (header is not null)
+            {
+                _header = Wrapped(UiTheme.MakeLabel(header, UiTheme.SmallSize, UiTheme.Accent), textWidth);
+                column.AddChild(_header);
+            }
             column.AddChild(Wrapped(UiTheme.MakeLabel(title, UiTheme.BodySize, UiTheme.Text), textWidth));
             if (detail is not null)
             {
                 column.AddChild(Wrapped(UiTheme.MakeLabel(detail, UiTheme.SmallSize, UiTheme.TextDim), textWidth));
             }
 
-            if (style == ToastStyle.Lasting)
+            if (closable)
             {
                 AddChild(new ColorRect
                 {
@@ -230,21 +298,33 @@ public partial class Notifications : HudOverlay
                     Position = Vector2.Zero,
                     Name = "Strip"
                 });
-                _bar = new ColorRect
+                if (style == ToastStyle.Lasting)
                 {
-                    Color = UiTheme.Accent,
-                    MouseFilter = MouseFilterEnum.Ignore
-                };
-                AddChild(_bar);
+                    _bar = new ColorRect
+                    {
+                        Color = UiTheme.Accent,
+                        MouseFilter = MouseFilterEnum.Ignore
+                    };
+                    AddChild(_bar);
+                }
                 var close = new CloseButton
                 {
                     CustomMinimumSize = new Vector2(CloseSize, CloseSize),
                     Size = new Vector2(CloseSize, CloseSize),
-                    TooltipText = "Close"
+                    TooltipText = style == ToastStyle.Step ? "Stop the trainer" : "Close"
                 };
                 close.Pressed += () => CloseRequested?.Invoke();
                 AddChild(close);
                 Close = close;
+            }
+        }
+
+        public void SetHeader(string text)
+        {
+            Header = text;
+            if (_header is not null)
+            {
+                _header.Text = text;
             }
         }
 

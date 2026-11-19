@@ -20,6 +20,9 @@ public partial class GameRoot : Node3D
 
     private PlayerView _playerView = null!;
     private WalkMarker _walkMarker = null!;
+    private PointerRing _pointer = null!;
+    private ChoiceDialog _choice = null!;
+    private Trainer _trainer = null!;
     private CameraRig _camera = null!;
     private ResourceFieldViews _fieldViews = null!;
     private BuildingViews _buildingViews = null!;
@@ -69,6 +72,12 @@ public partial class GameRoot : Node3D
     public TopBar TopBar => _topBar;
     public HintOverlay Hint => _hint;
     public Notifications Notifications => _notifications;
+    public PointerRing Pointer => _pointer;
+    public ChoiceDialog Choice => _choice;
+    public Trainer Trainer => _trainer;
+
+    /// <summary>Whether this new game asks "Learn to play?" once it opens (the first New Game on a machine).</summary>
+    public bool AskTrainer { get; set; }
     public InventoryPanel Inventory => _inventory;
     public ResearchTree ResearchTree => _researchTree;
     public FieldDetail FieldDetail => _fieldDetail;
@@ -117,11 +126,18 @@ public partial class GameRoot : Node3D
     {
         _sim = _save is SaveFile save ? Simulation.FromSave(save.Sim) : new Simulation(WorldSettings.Generated(_seed));
         BuildWorld();
+        _trainer = new Trainer(this);
+        _notifications.StepCloseRequested += AskStopTrainer;
         if (_save is SaveFile loaded)
         {
             ApplyPresentation(loaded.Presentation);
             PlayTime = loaded.Header.PlayTimeSeconds;
             SavedPlayTime = PlayTime;
+        }
+        else if (AskTrainer)
+        {
+            UserSettings.TrainerAsked = true;
+            AskStartTrainer();
         }
         _save = null;
     }
@@ -144,7 +160,8 @@ public partial class GameRoot : Node3D
             Presentation = new System.Text.Json.Nodes.JsonObject
             {
                 ["pins"] = new System.Text.Json.Nodes.JsonArray(_pins.Pinned.Select(t => (System.Text.Json.Nodes.JsonNode)t.ToString()).ToArray()),
-                ["zoom"] = _camera.ZoomLevel
+                ["zoom"] = _camera.ZoomLevel,
+                ["trainer"] = _trainer.Step
             }
         };
     }
@@ -171,6 +188,23 @@ public partial class GameRoot : Node3D
         {
             _camera.ZoomTo(zoom.GetValue<float>());
         }
+        if (presentation["trainer"] is System.Text.Json.Nodes.JsonNode step)
+        {
+            _trainer.Start(step.GetValue<int>());
+        }
+    }
+
+    /// <summary>Asks "Learn to play?" (a new game's first time on this machine).</summary>
+    public void AskStartTrainer()
+    {
+        _choice.Ask("Welcome", "Learn to play? The trainer shows you the controls, one step at a time.",
+            "Start trainer", () => _trainer.Start(), "Skip", () => { });
+    }
+
+    private void AskStopTrainer()
+    {
+        _choice.Ask("Trainer", "Stop the trainer? The game menu's Trainer starts it again.",
+            "Stop", _trainer.Stop, "Keep going", () => { });
     }
 
     /// <summary>Marks the game saved now (no unsaved progress).</summary>
@@ -264,6 +298,7 @@ public partial class GameRoot : Node3D
         _notifications.Paused = paused;
         _notifications.Refresh(_sim, _dialogs.UiSize);
         ShowHappened();
+        _trainer.Update(delta);
         _debug.Refresh(_sim, _perf);
         _dialogs.PanelTop = TopBar.Height;
         _buildController.Focused = _dialogs.Current == _buildingDetail ? _buildingDetail.Building : null;
@@ -575,6 +610,11 @@ public partial class GameRoot : Node3D
             Name = "WalkMarker"
         };
         AddChild(_walkMarker);
+        _pointer = new PointerRing
+        {
+            Name = "PointerRing"
+        };
+        AddChild(_pointer);
 
         _camera = new CameraRig
         {
@@ -665,6 +705,11 @@ public partial class GameRoot : Node3D
             HasUnsavedProgress = () => HasUnsavedProgress
         };
         _dialogs.Add(_gameMenu, "Paused");
+        _choice = new ChoiceDialog
+        {
+            Name = "ChoiceDialog"
+        };
+        _dialogs.Add(_choice, "");
         _saveDialog = new SaveDialog
         {
             Name = "SaveDialog"
@@ -679,6 +724,11 @@ public partial class GameRoot : Node3D
         _gameMenu.SaveRequested += () => _dialogs.Open(_saveDialog);
         _gameMenu.LoadRequested += () => _dialogs.Open(_loadDialog);
         _gameMenu.MainMenuRequested += () => App.ReturnToMenu();
+        _gameMenu.TrainerRequested += () =>
+        {
+            _dialogs.Close(_gameMenu);
+            _trainer.Start();
+        };
         _gameMenu.QuitRequested += () => GetTree().Quit();
         _saveDialog.SaveRequested += name =>
         {

@@ -29,6 +29,7 @@ public partial class GameMenu : Dialog
     public event Action? LoadRequested;
     public event Action? MainMenuRequested;
     public event Action? QuitRequested;
+    public event Action? TrainerRequested;
 
     /// <summary>Whether leaving should ask first (unsaved progress).</summary>
     public Func<bool> HasUnsavedProgress { get; set; } = () => false;
@@ -51,6 +52,7 @@ public partial class GameMenu : Dialog
         AddButton("Resume", () => Host.Close(this));
         AddButton("Save Game", () => SaveRequested?.Invoke());
         AddButton("Load Game", () => LoadRequested?.Invoke());
+        AddButton("Trainer", () => TrainerRequested?.Invoke());
         AddButton("Main Menu", () => Leave(() => MainMenuRequested?.Invoke()));
         AddButton("Quit", () => Leave(() => QuitRequested?.Invoke()));
 

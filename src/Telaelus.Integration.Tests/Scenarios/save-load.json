@@ -12,7 +12,7 @@
 
     { "press": "Escape" },
     { "expect": "ui.open", "equals": "gameMenu" },
-    { "expect": "ui.buttons", "equals": ["Resume", "Save Game", "Load Game", "Main Menu", "Quit"] },
+    { "expect": "ui.buttons", "equals": ["Resume", "Save Game", "Load Game", "Trainer", "Main Menu", "Quit"] },
     { "screenshot": "game-menu" },
     { "comment": "The game stands still while the menu is open.", "wait": 30 },
     { "expect": "ui.playTime", "equals": 2 },
