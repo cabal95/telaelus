@@ -495,6 +495,64 @@ And seven buildings, all processors (output buffer 10, 5 cycles of each input):
   (`BuildingDef.Researches`; research.md). Its State is "Idle: No research running" with no active
   project.
 
+### Descriptions
+
+Each buildable building has a one-line description (`BuildingDefs.DescriptionOf`, "" for the HQ)
+of what it makes or gives and what it needs, shown in the build menu's tooltip (presentation.md):
+
+  | Building | Description |
+  |---|---|
+  | Mine | Digs Iron Ore, Copper Ore, Coal, Stone, and other ore deposits nearby. |
+  | Lumber Camp | Cuts Wood from nearby forests. |
+  | Smelter | Smelts Iron Ore or Copper Ore into Iron or Copper; burns fuel. |
+  | Refinery | Refines Crude Oil into Kerosene; needs Power and Water. |
+  | Oil Well | Pumps Crude Oil; build it right beside an oil seep. |
+  | Silo | Raises the storage limit of one chosen Bulk resource, such as Wood. |
+  | Stockyard | Raises the Wood, Stone, ore, and other Bulk storage limits. |
+  | Tank Farm | Raises the Crude Oil, Kerosene, and other Fluid storage limits. |
+  | Warehouse | Adds Cargo space for Iron, Steel, parts, and other goods. |
+  | Vault | Raises the Rare Earths, Uranium Ore, and other Secure storage limits. |
+  | Small Hub | Extends the HQ's network to buildings nearby. |
+  | Relay | Links far-off hubs back to the HQ's network over a long distance. |
+  | Water Wheel | Makes Power with no fuel; build it across a straight river. |
+  | Burner Generator | Makes lots of Power by burning Coal, Charcoal, or Wood. |
+  | Lumber Mill | A faster, powered Lumber Camp: cuts nearby Wood; needs Power. |
+  | Drill Rig | Powered Mine: digs ores plus Rare Earths, Uranium Ore, Crystals. |
+  | Water Pump | Supplies a little Water; build it beside water. |
+  | Pumping Station | Supplies four Pumps' worth of Water beside water; needs Power. |
+  | Sand Collector | Supplies a little Sand; build it on sand. |
+  | Sand Dredge | Supplies four Collectors' worth of Sand on sand; needs Power. |
+  | Glassworks | Makes Glass from Sand; burns fuel. |
+  | Depot | Its trucks haul resources from collectors back to the HQ. |
+  | Forester | Plants a Wood field that regrows on open grass; needs Power, Water. |
+  | Quarry | Cuts Stone (or Limestone) beside a mountain; needs Power. |
+  | Charcoal Kiln | Turns Wood into Charcoal for fuel and steelmaking. |
+  | Rock Crusher | Supplies Sand anywhere by crushing Stone; needs Power. |
+  | Deep Well | Pumps Crude Oil from a worked-out oil site or Salt Dome; needs Power. |
+  | Deep Mine | Keeps mining a worked-out ore site or a motherlode; needs Power. |
+  | Steel Mill | Makes Steel from Iron, Coal or Charcoal, and Limestone; needs Power. |
+  | Electrolyzer | Makes Hydrogen or Liquid Oxygen from Water; needs Power. |
+  | Fuel Plant | Makes Rocket Fuel from Kerosene and Hydrogen; needs Power. |
+  | Chemical Plant | Makes Plastic, Rubber, and more from Crude Oil and Sulfur; needs Power. |
+  | Aluminum Smelter | Makes Aluminum from Bauxite; needs lots of Power. |
+  | Electric Furnace | Makes Silicon from Quartz or Titanium from Titanium Ore; needs Power. |
+  | Fabricator | Makes parts such as Hull Plate and Steel Beam from metals; needs Power. |
+  | Electronics Works | Makes Copper Wire and Circuits from Copper and Plastic; needs Power. |
+  | Tile Kiln | Fires Silicon and Aluminum into Ceramic Tile; needs Power. |
+  | Assembly Plant | Assembles advanced parts such as Control Module and Fuel Tank. |
+  | Shipyard | Builds Hull Sections and Engines, and launches your ship. |
+  | Sawmill | Saws Wood into Lumber. |
+  | Cement Kiln | Bakes Limestone into Cement; burns fuel. |
+  | Concrete Mixer | Mixes Cement into Concrete; needs Power, Sand, and Water. |
+  | Brine Well | Draws Lithium from desert salt flats; needs Power and Water. |
+  | Semiconductor Fab | Makes Silicon Wafers, Processors, and Solar Cells; needs Power. |
+  | Air Separator | Makes Liquid Oxygen from the air; needs Power. |
+  | Enrichment Plant | Turns Uranium Ore into Enriched Uranium and Fuel Rods; needs Power. |
+  | Solar Array | Makes Power from sunlight, none at night; no fuel. |
+  | Battery Bank | Stores spare Power and gives it back during shortages. |
+  | Fission Reactor | Makes huge Power by burning Fuel Rods; needs Water to cool. |
+  | Research Lab | Speeds up research; each extra lab adds more. Needs Power. |
+
 ### Switching off, status, and destroying
 
 - `Building.Enabled` is true when placed. `SetBuildingEnabled(id, enabled)` switches a building.

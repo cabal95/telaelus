@@ -148,6 +148,8 @@ pausing it and stepping frame by frame.
   its cycle's inputs), status and idle reasons, destroying (half the cost back, rounded up, plus a
   running cycle's inputs; cells freed), `BuildingAt`, and `ExtractorsWorking` (the switched-on
   extractors on a field).
+- `BuildingDescriptionTests`: every buildable building has a description under 80 characters
+  with no long dash; the HQ has none.
 - `CostTests`: unlocking once the whole cost is held, by seeding and by hand gathering (kept
   when the stock runs out), placement
   deducting the cost, refusal with nothing deducted when locked, unaffordable, or blocked, free
@@ -576,8 +578,8 @@ pausing it and stepping frame by frame.
   switches it; empty ground, B, and Escape close it; Destroy asks once, then refunds half the
   cost),
   `build-menu` (B opens the menu with discovered buildings first, affordable in color and short
-  ones gray, then undiscovered ones; the modal menu stops the world; a hover shows the cost, none
-  for an undiscovered cell, which ignores clicks; B, Escape, and Close close it; clicking an
+  ones gray, then undiscovered ones; the modal menu stops the world; a hover shows the description
+  and then the cost, none for an undiscovered cell, which ignores clicks; B, Escape, and Close close it; clicking an
   unaffordable discovered cell selects it with the placement tooltip),
   `build-rotate` (R rotates the Refinery ghost 2 x 3 to 3 x 2 and back), `place-at-mouse` (aim and
   click places a Mine at the expected anchor; the ghost counts an Iron Ore field in range),

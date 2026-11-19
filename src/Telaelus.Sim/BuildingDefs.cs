@@ -874,6 +874,70 @@ public static class BuildingDefs
         }
     };
 
+    /// <summary>
+    /// What each buildable building makes or gives the player and what it needs, in a line for the
+    /// build menu's tooltip.
+    /// </summary>
+    private static readonly Dictionary<BuildingType, string> Descriptions = new()
+    {
+        [BuildingType.Mine] = "Digs Iron Ore, Copper Ore, Coal, Stone, and other ore deposits nearby.",
+        [BuildingType.LumberCamp] = "Cuts Wood from nearby forests.",
+        [BuildingType.Smelter] = "Smelts Iron Ore or Copper Ore into Iron or Copper; burns fuel.",
+        [BuildingType.Refinery] = "Refines Crude Oil into Kerosene; needs Power and Water.",
+        [BuildingType.OilWell] = "Pumps Crude Oil; build it right beside an oil seep.",
+        [BuildingType.Silo] = "Raises the storage limit of one chosen Bulk resource, such as Wood.",
+        [BuildingType.Stockyard] = "Raises the Wood, Stone, ore, and other Bulk storage limits.",
+        [BuildingType.TankFarm] = "Raises the Crude Oil, Kerosene, and other Fluid storage limits.",
+        [BuildingType.Warehouse] = "Adds Cargo space for Iron, Steel, parts, and other goods.",
+        [BuildingType.Vault] = "Raises the Rare Earths, Uranium Ore, and other Secure storage limits.",
+        [BuildingType.SmallHub] = "Extends the HQ's network to buildings nearby.",
+        [BuildingType.Relay] = "Links far-off hubs back to the HQ's network over a long distance.",
+        [BuildingType.WaterWheel] = "Makes Power with no fuel; build it across a straight river.",
+        [BuildingType.BurnerGenerator] = "Makes lots of Power by burning Coal, Charcoal, or Wood.",
+        [BuildingType.LumberMill] = "A faster, powered Lumber Camp: cuts nearby Wood; needs Power.",
+        [BuildingType.DrillRig] = "Powered Mine: digs ores plus Rare Earths, Uranium Ore, Crystals.",
+        [BuildingType.WaterPump] = "Supplies a little Water; build it beside water.",
+        [BuildingType.PumpingStation] = "Supplies four Pumps' worth of Water beside water; needs Power.",
+        [BuildingType.SandCollector] = "Supplies a little Sand; build it on sand.",
+        [BuildingType.SandDredge] = "Supplies four Collectors' worth of Sand on sand; needs Power.",
+        [BuildingType.Glassworks] = "Makes Glass from Sand; burns fuel.",
+        [BuildingType.Depot] = "Its trucks haul resources from collectors back to the HQ.",
+        [BuildingType.Forester] = "Plants a Wood field that regrows on open grass; needs Power, Water.",
+        [BuildingType.Quarry] = "Cuts Stone (or Limestone) beside a mountain; needs Power.",
+        [BuildingType.CharcoalKiln] = "Turns Wood into Charcoal for fuel and steelmaking.",
+        [BuildingType.RockCrusher] = "Supplies Sand anywhere by crushing Stone; needs Power.",
+        [BuildingType.DeepWell] = "Pumps Crude Oil from a worked-out oil site or Salt Dome; needs Power.",
+        [BuildingType.DeepMine] = "Keeps mining a worked-out ore site or a motherlode; needs Power.",
+        [BuildingType.SteelMill] = "Makes Steel from Iron, Coal or Charcoal, and Limestone; needs Power.",
+        [BuildingType.Electrolyzer] = "Makes Hydrogen or Liquid Oxygen from Water; needs Power.",
+        [BuildingType.FuelPlant] = "Makes Rocket Fuel from Kerosene and Hydrogen; needs Power.",
+        [BuildingType.ChemicalPlant] = "Makes Plastic, Rubber, and more from Crude Oil and Sulfur; needs Power.",
+        [BuildingType.AluminumSmelter] = "Makes Aluminum from Bauxite; needs lots of Power.",
+        [BuildingType.ElectricFurnace] = "Makes Silicon from Quartz or Titanium from Titanium Ore; needs Power.",
+        [BuildingType.Fabricator] = "Makes parts such as Hull Plate and Steel Beam from metals; needs Power.",
+        [BuildingType.ElectronicsWorks] = "Makes Copper Wire and Circuits from Copper and Plastic; needs Power.",
+        [BuildingType.TileKiln] = "Fires Silicon and Aluminum into Ceramic Tile; needs Power.",
+        [BuildingType.AssemblyPlant] = "Assembles advanced parts such as Control Module and Fuel Tank.",
+        [BuildingType.Shipyard] = "Builds Hull Sections and Engines, and launches your ship.",
+        [BuildingType.Sawmill] = "Saws Wood into Lumber.",
+        [BuildingType.CementKiln] = "Bakes Limestone into Cement; burns fuel.",
+        [BuildingType.ConcreteMixer] = "Mixes Cement into Concrete; needs Power, Sand, and Water.",
+        [BuildingType.BrineWell] = "Draws Lithium from desert salt flats; needs Power and Water.",
+        [BuildingType.SemiconductorFab] = "Makes Silicon Wafers, Processors, and Solar Cells; needs Power.",
+        [BuildingType.AirSeparator] = "Makes Liquid Oxygen from the air; needs Power.",
+        [BuildingType.EnrichmentPlant] = "Turns Uranium Ore into Enriched Uranium and Fuel Rods; needs Power.",
+        [BuildingType.SolarArray] = "Makes Power from sunlight, none at night; no fuel.",
+        [BuildingType.BatteryBank] = "Stores spare Power and gives it back during shortages.",
+        [BuildingType.FissionReactor] = "Makes huge Power by burning Fuel Rods; needs Water to cool.",
+        [BuildingType.ResearchLab] = "Speeds up research; each extra lab adds more. Needs Power."
+    };
+
+    /// <summary>A building's one-line description, or "" for one that cannot be built (the HQ).</summary>
+    public static string DescriptionOf(BuildingType type)
+    {
+        return Descriptions.GetValueOrDefault(type, "");
+    }
+
     public static BuildingDef For(BuildingType type)
     {
         return type switch

@@ -233,8 +233,9 @@ ui-style.md. There is no text HUD; the screen holds:
   It lists every buildable type (not the HQ). Discovered buildings (`IsUnlocked`) come first, then undiscovered ones, each group by name.
   A discovered cell shows the building's picture and name, in full color when affordable and in
   grayscale when not; an undiscovered cell shows its silhouette labeled "Undiscovered" in the dim
-  text color. Hovering a cell outlines it; a discovered cell also shows its cost tooltip, while
-  an undiscovered one shows none, so its cost stays a mystery. Clicking a discovered cell,
+  text color. Hovering a cell outlines it; a discovered cell also shows its tooltip, its description
+  (buildings.md) in `TextDim` broken into lines of about 44 characters (`TipLine.Wrapped`), then
+  its cost, while an undiscovered one shows none, so what it does and its cost stay a mystery. Clicking a discovered cell,
   affordable or not, closes the menu and selects the building for placement, so the player can
   position it while materials build up; clicking an undiscovered cell does nothing. The cells
   refresh while the menu is open, so a cell turns from gray to color as the stock arrives.

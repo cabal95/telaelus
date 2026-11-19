@@ -75,7 +75,7 @@
 
     { "hoverUi": { "id": "buildMenu/Mine" } },
     { "wait": 15 },
-    { "expect": "ui.tooltip", "equals": ["25 Wood", "15 Stone (have 5)"] },
+    { "comment": "What it does first, then its cost.", "expect": "ui.tooltip", "equals": ["Digs Iron Ore, Copper Ore, Coal, Stone, and", "other ore deposits nearby.", "25 Wood", "15 Stone (have 5)"] },
     { "screenshot": "menu-hover" },
     { "hoverUi": { "id": "buildMenu/AluminumSmelter" } },
     { "wait": 15 },

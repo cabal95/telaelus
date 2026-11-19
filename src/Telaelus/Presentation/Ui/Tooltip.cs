@@ -5,7 +5,31 @@ using Godot;
 namespace Telaelus.Presentation.Ui;
 
 /// <summary>One tooltip line: its text, and an optional color (the body text color when null).</summary>
-public readonly record struct TipLine(string Text, Color? Color = null);
+public readonly record struct TipLine(string Text, Color? Color = null)
+{
+    /// <summary>A long text as lines of at most about a width in characters, broken between words.</summary>
+    public static IEnumerable<TipLine> Wrapped(string text, Color? color = null, int width = 44)
+    {
+        var line = new StringBuilder();
+        foreach (string word in text.Split(' '))
+        {
+            if (line.Length > 0 && line.Length + 1 + word.Length > width)
+            {
+                yield return new TipLine(line.ToString(), color);
+                line.Clear();
+            }
+            if (line.Length > 0)
+            {
+                line.Append(' ');
+            }
+            line.Append(word);
+        }
+        if (line.Length > 0)
+        {
+            yield return new TipLine(line.ToString(), color);
+        }
+    }
+}
 
 /// <summary>
 /// A small panel of text lines that never takes the mouse. Used for hover tooltips and

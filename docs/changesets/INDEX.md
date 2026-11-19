@@ -237,6 +237,9 @@ Newest last. One line each; open the file for the full spec.
 - **2611191242-hq-unloading-pad** - Trucks unload on the HQ's landing pad: one at a time, backing on
   with the bed to the entrance and driving off nose first, the others waiting in a line in front of
   it. Unloading beside the HQ remains only when the pad's front cannot be reached.
+- **2611191244-building-descriptions** - Every buildable building has a one-line description of what
+  it makes or gives and what it needs, shown first in the build menu's tooltip (hidden for an
+  undiscovered building).
 
 ## Adding a changeset
 

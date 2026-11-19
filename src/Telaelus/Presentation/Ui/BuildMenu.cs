@@ -356,10 +356,12 @@ public partial class BuildMenu : Dialog
         private void OnEnter()
         {
             AddThemeStyleboxOverride("panel", _hover);
-            // An undiscovered building keeps its cost a mystery.
+            // An undiscovered building keeps what it does and its cost a mystery.
             if (State != BuildCellState.Undiscovered)
             {
-                _menu.Host.ShowHover(this, CostLines(_menu._sim, _type));
+                var lines = new List<TipLine>(TipLine.Wrapped(BuildingDefs.DescriptionOf(_type), UiTheme.TextDim));
+                lines.AddRange(CostLines(_menu._sim, _type));
+                _menu.Host.ShowHover(this, lines);
             }
         }
 
