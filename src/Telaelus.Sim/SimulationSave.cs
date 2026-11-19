@@ -136,6 +136,12 @@ public sealed partial class Simulation
     /// <summary>Replaces the whole state with a save's (see <see cref="Save"/>).</summary>
     public void Load(SaveData data)
     {
+        Quietly(() => LoadNow(data));
+    }
+
+    private void LoadNow(SaveData data)
+    {
+        _blackoutRaised.Clear();
         PlanetDef? planet = data.World.Planet is null ? null : PlanetDefs.Starter;
         World = new WorldSettings(data.World.Kind, data.World.Seed, planet)
         {

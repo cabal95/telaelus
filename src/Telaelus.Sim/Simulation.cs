@@ -625,6 +625,7 @@ public sealed partial class Simulation
             AddToStockpile(cost.Type, -cost.Amount);
         }
         ShipsLaunched++;
+        Raise(new SimEvent(SimEventKind.ShipLaunched));
         return true;
     }
 
@@ -1043,6 +1044,10 @@ public sealed partial class Simulation
             if (!_unlocked.Contains(type) && BuildingDefs.For(type).Buildable && CanAfford(type))
             {
                 _unlocked.Add(type);
+                Raise(new SimEvent(SimEventKind.Unlocked)
+                {
+                    Building = type
+                });
             }
         }
     }

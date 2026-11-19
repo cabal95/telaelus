@@ -207,6 +207,18 @@ public static class StateSnapshot
                 }
                 : null
         };
+        var toasts = new JsonArray();
+        foreach (ToastInfo toast in root.Notifications.Shown)
+        {
+            toasts.Add(new JsonObject
+            {
+                ["style"] = toast.Style == ToastStyle.Lasting ? "lasting" : "brief",
+                ["title"] = toast.Title,
+                ["detail"] = toast.Detail,
+                ["remaining"] = Math.Round(toast.Remaining, 1)
+            });
+        }
+        ui["toasts"] = toasts;
         ui["playTime"] = Math.Round(root.PlayTime, 1);
         ui["unsaved"] = root.HasUnsavedProgress;
         if (root.Dialogs.Current == root.GameMenu)

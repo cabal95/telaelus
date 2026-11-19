@@ -53,6 +53,12 @@ public sealed partial class Simulation
     /// </summary>
     private void ResetWorld(WorldSettings settings)
     {
+        Quietly(() => ResetWorldNow(settings));
+    }
+
+    private void ResetWorldNow(WorldSettings settings)
+    {
+        _blackoutRaised.Clear();
         World = settings;
         _chunks.Clear();
         _fields.Clear();

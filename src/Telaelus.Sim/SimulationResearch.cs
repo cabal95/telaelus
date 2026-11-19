@@ -143,6 +143,10 @@ public sealed partial class Simulation
         {
             _researched.Add(project);
             ActiveResearch = null;
+            Raise(new SimEvent(SimEventKind.ResearchComplete)
+            {
+                Project = project
+            });
         }
     }
 

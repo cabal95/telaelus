@@ -143,6 +143,17 @@ ui-style.md. There is no text HUD; the screen holds:
   the target, "[E] Collect Iron Ore (12)" (units left in the output buffer) or "[E] Load Iron Ore
   (3 / 5)" (input buffer held and capacity) while a building is; while storage has no room for the
   resource, "Storage full" in `Warning` replaces the bar.
+- **Notifications** (`Notifications`, look in ui-style.md): `GameRoot` collects the sim's
+  `Happened` events and, once a frame, turns them into toasts (`NotificationText`): a resource
+  discovered for the first time (brief, its icon, "Discovered: Coal", and what can work it, "A
+  Mine or a Drill Rig can work it", or no detail when nothing extracts it); a building unlocked
+  (brief, its picture, "New building: Mine", "[B] to build"); a research project complete
+  (lasting, the project's icon, "Research complete: Material Transfer", its description); a
+  capacity in blackout (lasting, its icon, "Blackout: Water", "Demand 2 over supply 0"); a ship
+  launched (lasting, the Shipyard's picture, "Ship launched", "Ships launched: 2"). A frame's
+  discoveries merge into one toast ("Discovered: Coal, Sulfur", the first one's icon, no detail),
+  and so do its unlocks ("New buildings: Mine, Smelter"), shown above the discoveries. A new
+  world and a load notify nothing.
 - **Debug overlay** (`DebugOverlay`, F3, hidden at start): the world line for exploring (for
   example `seed 1234   Highlands / Rock   chunk (1, -2)   cell (87, -101)`) and the performance
   line (see Performance below), in the top-left corner below the top bar, behind everything else.

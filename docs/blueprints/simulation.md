@@ -62,6 +62,18 @@ and mirrors it onto nodes.
   A loaded sim continues exactly as the saved one would have. The format, the files, and the UI
   are in saving.md.
 
+### Events
+
+- `Simulation.Happened` (an `Action<SimEvent>`) tells the presentation about moments during play:
+  `SimEventKind.Unlocked` (a building type unlocked, `Building`), `Discovered` (a resource
+  discovered for the first time, `Resource`), `ResearchComplete` (`Project`), `Blackout` (a
+  capacity type went into blackout, `Capacity`; raised again for that type only after it has been
+  back to normal), and `ShipLaunched`.
+- Each is raised once, on the change itself. A world reset or a load raises nothing (they run
+  quietly), so a new game and a loaded save start with no events.
+- `CellsRevealed`, `ChunkGenerated`, and the debug surface's `MapChanged` are the other events, for
+  the views.
+
 ### Input: intent and commands
 
 - Continuous, per-tick input is a `PlayerIntent` struct the presentation sets before each step:

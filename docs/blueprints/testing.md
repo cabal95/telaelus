@@ -142,6 +142,9 @@ pausing it and stepping frame by frame.
   when the stock runs out), placement
   deducting the cost, refusal with nothing deducted when locked, unaffordable, or blocked, free
   debug placement, and every building having a cost and every deposit a gather time.
+- `EventTests`: `Happened` raised once per unlock (a burst of unlocks one event each), per
+  first discovery, per completed project, and per launch; a blackout raised once, and again only
+  after the capacity was back to normal; nothing from a new world or a load.
 - `LaunchTests`: the launch needing the whole ship bill and an online Shipyard, consuming the bill
   and counting the ship, and an end-to-end run on the empty map from placed fields through the
   refining chain (Refineries, Electrolyzers on each gas, Fuel Plants) to the launch's Rocket Fuel
@@ -245,7 +248,7 @@ pausing it and stepping frame by frame.
     `buildingDetail/destroy` for the detail panel's actions, `buildingDetail/siloResource` for the
     Silo picker, `inventory/<ResourceType>` for an inventory row, `inventory/pin/<ResourceType>`
     for a row's Pin toggle (shown only on discovered rows, and only clickable while the row is
-    scrolled into view), `topBar/<ResourceType>` for a top bar entry (top bar ids work while no dialog is
+    scrolled into view), `toast/<n>` for a notification (0 is the newest) and `toast/<n>/close` for its X, `topBar/<ResourceType>` for a top bar entry (top bar ids work while no dialog is
     open), and `<dialog>/close` for the Close button. Buttons act on release, the frame after a `clickUi`, so check their effect after
     `wait` 2. UI pointer events go straight to the viewport (`PushInput`), so they reach the GUI in
     headless runs too.
@@ -282,7 +285,8 @@ pausing it and stepping frame by frame.
   `danger` when full, or `dim` with no storage), its `power`, `water`, and `sand` readouts ("45 / 100", "Blackout: 140 / 100", or null
   while hidden) and their `powerTone`, `waterTone`, and `sandTone`, its `clock` ("14:00"), and its
   `store` (the Battery Banks' readout, or null with none), `hint`: the hint's `text`, `progress`,
-  and `storageFull` or null, `tooltip`: the hover
+  and `storageFull` or null, `toasts`: the notifications shown, newest first, each `style`
+  (`brief` or `lasting`), `title`, `detail` (or null), and `remaining` seconds (one decimal), `tooltip`: the hover
   tooltip's lines or null, `worldTip`: the truck tooltip's lines outside build mode, or null,
   `playTime` (game seconds played) and `unsaved` (unsaved progress), while the game menu is open
   its `buttons`, `confirm` (the question shown, or null), and `status`, while the save dialog is
@@ -521,6 +525,11 @@ pausing it and stepping frame by frame.
   at once when Steel Beam is chosen; a Shipyard's panel showing the bill short and Launch ship
   disabled with why; with the bill seeded, the ship on its pad and the button enabled; L doing
   nothing; the button launching it, the bill counting down again, and "Ships launched: 1"),
+  `notifications` (no toasts in a new world; seeding Wood showing "New building: Lumber Camp"
+  above "Discovered: Wood", both gone after 5 s; a finished project's lasting toast held while
+  hovered and closed by its X; a Water blackout and a ship launch each a lasting toast; a burst of
+  discoveries as one toast without detail; a fifth and sixth toast pushing out the oldest brief
+  ones; the lasting ones gone after 15 s),
   `renewables` (a Forester on Water and Power growing its trees, a Lumber Camp idle until they are
   grown and then cutting; a Quarry beside a mountain; a Deep Mine on a Laterite producing Iron Ore,
   its panel's Site row and Output picker; a worked-out Crude Oil marker named on hover; a Rock

@@ -217,6 +217,10 @@ Newest last. One line each; open the file for the full spec.
 - **2611162133-low-poly-character** - The player character is a generated low-poly colonist in an
   orange work suit: rigid parts on joints, with looping idle and run clips, replacing the textured
   CC0 import. The asset factory's exporter writes animated models.
+- **2611191008-notifications** - Toast notifications on the right below the top bar: brief ones (5 s)
+  for a building unlocked and a resource first discovered, lasting ones (15 s, an X and a
+  countdown bar) for research complete, a blackout, and a ship launched. Bursts merge, hover holds
+  a toast, and a new world or load notifies nothing. The sim raises `Happened` events.
 
 ## Adding a changeset
 

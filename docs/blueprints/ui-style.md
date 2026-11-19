@@ -19,7 +19,7 @@ rules and never sets its own colors or sizes. The code lives in `src/Telaelus/Pr
   right click or Ctrl + left click walks (see player.md); over a panel, a modal, or the top bar
   neither does anything.
 - **Overlay**: part of the screen rather than something opened: always shown (the top bar),
-  shown while it applies (the hint overlay, later notifications), or toggled by the player (the
+  shown while it applies (the hint overlay, the notifications), or toggled by the player (the
   debug overlay). An overlay never takes keys and never closes anything.
 
 Modals and panels are **dialogs** in code (`Dialog`, with a `DialogKind` of `Modal` or `Panel`,
@@ -151,7 +151,21 @@ The two kinds place themselves:
   shown only while a hint applies, never taking the mouse. Today the one hint is harvesting:
   "[E] Harvest" in `Accent`, the resource's icon and name, over a progress bar toward the next
   unit, or "Storage full" (14 units, `Warning`, centered) in place of the bar; the verb reads
-  "[E] Harvest", "[E] Collect", or "[E] Load" for the target. Later hints and notifications stack in the same place.
+  "[E] Harvest", "[E] Collect", or "[E] Load" for the target.
+- **Notifications** (`Notifications`): toasts stacked against the right edge, `Gap` in from it
+  and `Gap` below the top bar, newest on top, at most 4. Each is a card 280 units wide in the
+  panel style (`PanelBox`, `Gap` + 2 padding): a 28-unit icon at the left, a title in `BodySize`
+  `Text`, and an optional detail line in `SmallSize` `TextDim`, both wrapping. Two styles:
+  - **Brief:** gone after 5 seconds; no close button.
+  - **Lasting:** gone after 15 seconds; a 3-unit `Accent` strip down its left edge, an X (two
+    drawn lines, 18 units, `TextDim`, `Text` while hovered) at its top right that closes it, and
+    a 3-unit `Accent` countdown bar along its bottom edge, shrinking to nothing.
+  A toast slides in 24 units from the right while fading in (0.2 s) and fades out (0.3 s); the
+  others glide to their new places. Its time counts only while the game runs (not under the game
+  menu or the save and load dialogs) and not while the pointer is over it. A new toast past the
+  fourth pushes out the oldest brief one, or the oldest of all when every one is lasting. The
+  cards take the mouse (so clicks on them never reach the world); the space around them does not.
+  A modal covers them; a panel docks left, so they never cover it.
 - **Debug overlay** (`DebugOverlay`): F3 toggles it; it starts hidden. Two lines of outlined text
   (readable over bright ground) in the top-left corner below the top bar: the world line (the
   seed or the bounded map's name, the biome and terrain under the player, their chunk and map

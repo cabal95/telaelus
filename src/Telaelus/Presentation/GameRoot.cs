@@ -31,6 +31,8 @@ public partial class GameRoot : Node3D
     private DebugOverlay _debug = null!;
     private TopBar _topBar = null!;
     private HintOverlay _hint = null!;
+    private Notifications _notifications = null!;
+    private readonly System.Collections.Generic.List<SimEvent> _happened = new();
     private InventoryPanel _inventory = null!;
     private ResearchTree _researchTree = null!;
     private FieldDetail _fieldDetail = null!;
@@ -66,6 +68,7 @@ public partial class GameRoot : Node3D
     public DebugOverlay Debug => _debug;
     public TopBar TopBar => _topBar;
     public HintOverlay Hint => _hint;
+    public Notifications Notifications => _notifications;
     public InventoryPanel Inventory => _inventory;
     public ResearchTree ResearchTree => _researchTree;
     public FieldDetail FieldDetail => _fieldDetail;
@@ -258,6 +261,9 @@ public partial class GameRoot : Node3D
         _standViews.Sync(_sim, delta);
         _topBar.Refresh(_sim, _dialogs.UiSize);
         _hint.Refresh(_sim, _dialogs.UiSize);
+        _notifications.Paused = paused;
+        _notifications.Refresh(_sim, _dialogs.UiSize);
+        ShowHappened();
         _debug.Refresh(_sim, _perf);
         _dialogs.PanelTop = TopBar.Height;
         _buildController.Focused = _dialogs.Current == _buildingDetail ? _buildingDetail.Building : null;
@@ -424,6 +430,20 @@ public partial class GameRoot : Node3D
     /// <summary>How near (in screen pixels) the pointer must be to a truck to hover it.</summary>
     private const float TruckHoverPixels = 28f;
 
+    /// <summary>Shows what happened in the sim since the last frame as toasts, bursts merged.</summary>
+    private void ShowHappened()
+    {
+        if (_happened.Count == 0)
+        {
+            return;
+        }
+        foreach (Toastable toast in NotificationText.For(_happened, _sim, _icons, _buildingPictures))
+        {
+            _notifications.Show(toast.Style, toast.Icon, toast.Title, toast.Detail);
+        }
+        _happened.Clear();
+    }
+
     private void UpdatePlacementTip()
     {
         if (_dialogs.CapturesWorldInput)
@@ -486,6 +506,7 @@ public partial class GameRoot : Node3D
         AddChild(_terrainView);
         _sim.MapChanged += _terrainView.MarkDirty;
         _sim.CellsRevealed += _terrainView.Reveal;
+        _sim.Happened += _happened.Add;
 
         _light = new DirectionalLight3D
         {
@@ -594,6 +615,12 @@ public partial class GameRoot : Node3D
         };
         _hint.Initialize(_icons);
         _dialogs.AddOverlay(_hint);
+        _notifications = new Notifications
+        {
+            Name = "Notifications"
+        };
+        _notifications.Initialize(_dialogs);
+        _dialogs.AddOverlay(_notifications);
 
         _buildMenu = new BuildMenu
         {

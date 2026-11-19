@@ -22,6 +22,9 @@ public sealed partial class Simulation
 
     public static readonly CapacityType[] CapacityTypes = Enum.GetValues<CapacityType>();
 
+    /// <summary>Capacity types whose blackout has been raised and that have not been back to normal since.</summary>
+    private readonly HashSet<CapacityType> _blackoutRaised = new();
+
     private readonly CapacityReading[] _capacity = Enumerable.Repeat(CapacityReading.Idle, CapacityTypes.Length).ToArray();
 
     /// <summary>A capacity type's supply, demand, speed, and state this tick.</summary>
@@ -89,6 +92,17 @@ public sealed partial class Simulation
                 _ => 0f
             };
             _capacity[(int)type] = new CapacityReading(supply, demand, speed, state, stored, storeCapacity, flow);
+            if (state == CapacityState.Blackout && _blackoutRaised.Add(type))
+            {
+                Raise(new SimEvent(SimEventKind.Blackout)
+                {
+                    Capacity = type
+                });
+            }
+            else if (state == CapacityState.Normal)
+            {
+                _blackoutRaised.Remove(type);
+            }
         }
     }
 

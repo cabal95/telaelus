@@ -19,7 +19,13 @@ public sealed partial class Simulation
 
     private void Discover(ResourceType type)
     {
-        _discovered.Add(type);
+        if (_discovered.Add(type))
+        {
+            Raise(new SimEvent(SimEventKind.Discovered)
+            {
+                Resource = type
+            });
+        }
     }
 
     /// <summary>Discovers what an explored map cell shows: its field's deposit and its Sand or Water.</summary>
