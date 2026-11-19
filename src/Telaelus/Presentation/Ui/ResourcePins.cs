@@ -6,21 +6,14 @@ using Telaelus.Sim;
 namespace Telaelus.Presentation.Ui;
 
 /// <summary>
-/// The resources pinned to the top bar, in table order. Pinned and unpinned from the
-/// inventory panel; presentation state for the session (there are no saves yet).
+/// The resources pinned to the top bar, in table order, at most <see cref="Max"/>. None at start:
+/// the first resources discovered pin themselves (<see cref="AutoPin"/>) while there is room, and
+/// the inventory panel pins and unpins by hand. Saved with the game.
 /// </summary>
 public sealed class ResourcePins
 {
-    /// <summary>The pins at start: the six starting deposits.</summary>
-    public static readonly IReadOnlyList<ResourceType> Defaults = new[]
-    {
-        ResourceType.Wood,
-        ResourceType.Stone,
-        ResourceType.IronOre,
-        ResourceType.CopperOre,
-        ResourceType.Coal,
-        ResourceType.CrudeOil
-    };
+    /// <summary>The most resources the top bar holds.</summary>
+    public const int Max = 8;
 
     /// <summary>
     /// Whether a resource can be pinned: not Sand or Water, which are capacity with their own
@@ -31,7 +24,7 @@ public sealed class ResourcePins
         return CapacityResources.CapacityOf(type) is null;
     }
 
-    private readonly SortedSet<ResourceType> _pinned = new(Defaults);
+    private readonly SortedSet<ResourceType> _pinned = new();
 
     /// <summary>Raised when a resource is pinned or unpinned.</summary>
     public event Action? Changed;
@@ -43,13 +36,25 @@ public sealed class ResourcePins
         return _pinned.Contains(type);
     }
 
+    /// <summary>Whether the top bar holds <see cref="Max"/> already, so nothing more can be pinned.</summary>
+    public bool IsFull => _pinned.Count >= Max;
+
+    /// <summary>Pins a newly discovered resource when it can be pinned and there is room.</summary>
+    public void AutoPin(ResourceType type)
+    {
+        if (CanPin(type) && !IsFull && _pinned.Add(type))
+        {
+            Changed?.Invoke();
+        }
+    }
+
     /// <summary>Replaces the pins (a loaded game's).</summary>
     public void SetAll(IEnumerable<ResourceType> types)
     {
         _pinned.Clear();
         foreach (ResourceType type in types)
         {
-            if (CanPin(type))
+            if (CanPin(type) && !IsFull)
             {
                 _pinned.Add(type);
             }
@@ -65,6 +70,10 @@ public sealed class ResourcePins
         }
         if (!_pinned.Remove(type))
         {
+            if (IsFull)
+            {
+                return;
+            }
             _pinned.Add(type);
         }
         Changed?.Invoke();

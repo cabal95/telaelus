@@ -96,7 +96,7 @@ pausing it and stepping frame by frame.
   trip); loading only what storage has room for (no job for less than a trip unless the buffer is
   full); room counting the loads other trucks carry; unloading everything when the room was taken
   on the way; dropping a job when the collector is destroyed or emptied;
-  finding a way round a building placed in its path; skipping a collector no truck can reach; a
+  finding a way round a building placed in its path; driving round its own Depot's shed, not through it; skipping a collector no truck can reach; a
   switched-off Depot's truck finishing its trip and parking; an offline Depot's truck staying
   parked; a destroyed Depot refunding its bought
   truck and the load.
@@ -211,7 +211,7 @@ pausing it and stepping frame by frame.
 - **Commands:**
   - Map setup: `initMap` `{}` (the bounded empty map: all-Grassland grass with no features, player
     at the center, fully explored; `{ fog: true }` gives it fog of war) or `{ generate: <seed> }`
-    (a generated world from that seed, player at its spawn, always with fog), either way with build mode reset: nothing selected, facing North, no aim override, and the camera jumped onto the player (`CameraRig.JumpTo`: attached, no slide or easing); `changeTiles`
+    (a generated world from that seed, player at its spawn, always with fog), either way with build mode reset: nothing selected, facing North, no aim override, and the camera jumped onto the player (`CameraRig.JumpTo`: attached, no slide or easing), and the pins started afresh as a new game's (`GameRoot.PinDiscovered`); `changeTiles`
     `{ type?, biome?, feature?, flow?, cells: [[x, z], ...] }` or the same with `from, to` (map
     cells, inclusive; at least one of `type`, `biome`, `feature`; `flow` goes with a River and
     sets biome, then terrain, then feature),
@@ -498,8 +498,8 @@ pausing it and stepping frame by frame.
   left drag in build mode places nothing),
   `fog` (on the empty map with fog, a field beyond sight is not drawn and cannot be hovered;
   coming into sight reveals it, and it stays revealed after the player leaves),
-  `hud` (the debug overlay starts hidden and F3 toggles it; the top bar shows the six starting
-  deposits as amounts, Crude Oil dim with no storage, with tooltips of name, amount, and limit, and no Power, Water, Sand, or ship bill with none on the network; the hint overlay shows the harvest hint
+  `hud` (the debug overlay starts hidden and F3 toggles it; the top bar starts with no pins on the
+  empty map, then shows each discovery pinned in table order as amounts, Crude Oil dim with no storage, with tooltips of name, amount, and limit, and no Power, Water, Sand, or ship bill with none on the network; the hint overlay shows the harvest hint
   and its bar; I opens and closes the inventory, grouped by tier with discovered resources first;
   the inventory and a building's detail replace each other; a panel covers the debug overlay),
   `power` (a Drill Rig with no supply is in a blackout; a Burner Generator on Coal powers it; four
@@ -561,10 +561,12 @@ pausing it and stepping frame by frame.
   working; the placement tooltip's
   online line; a selected hub shows only its own coverage),
   `storage` (Wood at the HQ's 100 shows full, in red, on the top bar and the harvest hint says Storage
-  full; a Silo raises the limit to 400 and harvesting resumes; the inventory's Cargo row, and
-  pinning and unpinning from it, which reorders the top bar; the Silo's detail lists what it adds),
-  `inventory` (on the empty map nothing is discovered and every row is darkened, through the last
-  tier; a field in sight and a held resource are discovered and move to the top of their tier),
+  full; a Silo raises the limit to 400 and harvesting resumes; the inventory's Cargo row; a
+  discovery pinning itself, unpinning and pinning again from the inventory in table order, and
+  the bar filling at 8 so a ninth discovery does not pin itself; the Silo's detail lists what it adds),
+  `inventory` (on the empty map nothing is discovered or pinned and every row is darkened, through
+  the last tier; a field in sight and a held resource are discovered, pinned, and move to the top
+  of their tier),
   `building-detail` (clicking a building opens its panel with the right status rows; the world
   keeps its hover with it open; it turns the building off and on; clicking another building
   switches it; empty ground, B, and Escape close it; Destroy asks once, then refunds half the

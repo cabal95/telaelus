@@ -231,6 +231,9 @@ Newest last. One line each; open the file for the full spec.
   hand, and trucks serve only online collectors (hand collection still works). The HQ reaches
   further (coverage 19, link 22) and so does the Small Hub (9, 14); placing off the network warns
   "Offline: will not work".
+- **2611191223-pin-and-truck-fixes** - Bug fixes: the top bar starts with no pins, a new game pins what
+  it discovered and each later discovery pins itself, up to 8; trucks drive round their own Depot's
+  shed instead of through it (only the apron is open to them).
 
 ## Adding a changeset
 

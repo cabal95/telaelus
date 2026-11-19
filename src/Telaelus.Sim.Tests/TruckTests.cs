@@ -278,6 +278,29 @@ public class TruckTests
     }
 
     [Fact]
+    public void ATruck_DrivesRoundItsDepotsShed_NotThroughIt()
+    {
+        Simulation sim = EmptyMap();
+        // The Depot faces North: its apron (bays) is z 14..15, its shed z 16..17. The Mine is behind it.
+        Building depot = sim.Debug.PlaceBuilding(BuildingType.Depot, DepotX, DepotZ, Facing.North);
+        Building mine = sim.Debug.PlaceBuilding(BuildingType.Mine, 47, 21, Facing.North);
+        Assert.True(mine.Online);
+        mine.Output[ResourceType.IronOre] = 12f;
+        Truck truck = Assert.Single(sim.TrucksOf(depot));
+
+        bool inShed = false;
+        for (int i = 0; i < 30 * 20 && truck.State != TruckState.Loading; i++)
+        {
+            SimTestHelpers.Ticks(sim, 1);
+            (int x, int z) = Simulation.CellAt(truck.Position.X, truck.Position.Z);
+            inShed |= x >= DepotX && x < DepotX + 4 && z >= DepotZ + 2 && z < DepotZ + 4;
+        }
+
+        Assert.Equal(TruckState.Loading, truck.State);
+        Assert.False(inShed);
+    }
+
+    [Fact]
     public void ACollectorNoTruckCanReach_IsSkipped()
     {
         Simulation sim = EmptyMap();

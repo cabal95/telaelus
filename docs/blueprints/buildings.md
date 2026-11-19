@@ -257,8 +257,9 @@ ship from a Shipyard, which closes the on-planet loop.
   the octile distance at road speed, so the search stays exact). Bridge cells are walkable, so a
   path crosses water only on a bridge. A cell is
   passable when it is walkable (`IsWalkable`) and its chunk already exists (a search never
-  generates the world); a truck's own Depot's cells are passable to it, so it can leave and reach
-  its bay. For the player a cell must also be explored. "Beside" a building is a cell sharing an
+  generates the world); a truck's own Depot's apron (the front half of its footprint, where the
+  bays are) is passable to it, so it can leave and reach its bay; the shed behind is not, so it
+  drives round. For the player a cell must also be explored. "Beside" a building is a cell sharing an
   edge with its footprint. A search gives up as unreachable after 60,000 cells; the player's
   search then (or when its goal cannot be reached) gives the path to the cell it found nearest the
   goal.

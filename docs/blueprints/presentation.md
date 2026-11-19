@@ -124,9 +124,11 @@ planned multiplayer feasible.
 The kinds of UI (modals, panels, overlays), their look, layers, and input rules are in
 ui-style.md. There is no text HUD; the screen holds:
 
-- **Top bar** (`TopBar`, always shown): the pinned resources (`ResourcePins`, presentation state
-  for the session; the six starting deposits at start, kept in table order; Sand and Water can
-  never be pinned, `ResourcePins.CanPin`, and a loaded save's pins drop them), each as its icon and
+- **Top bar** (`TopBar`, always shown): the pinned resources (`ResourcePins`, saved with the game;
+  at most 8, `ResourcePins.Max`, kept in table order; none at start: a new game pins what it
+  discovered around the HQ, in table order, and each later first discovery pins itself while the
+  bar has room (`AutoPin`, from the sim's `Discovered` events); Sand and Water can never be
+  pinned, `ResourcePins.CanPin`, and a loaded save's pins drop them and keep at most 8), each as its icon and
   its amount alone (`TopBar.PinText`), in `Danger` when storage has no room for another unit and
   dim while it has no storage at all (`TopBar.PinColor`), with a tooltip of its name, amount, and
   limit ("Wood 45 / 100", `HudOverlay.StorageText`). Then the clock
@@ -211,7 +213,8 @@ ui-style.md. There is no text HUD; the screen holds:
   a Cargo or unlimited resource, as "Iron (23)"; demand over supply for Sand and Water, as "Water
   (2 / 4)", colored by its state), including those at 0, in `Warning` when storage has no room for
   another unit, and a Pin toggle at the right ("Pin", or "Pinned" when on the top
-  bar) that pins or unpins it (none for Sand and Water, which have their own top bar readouts); an undiscovered row is darkened like an undiscovered building in the build
+  bar) that pins or unpins it, disabled with "The top bar holds 8: unpin one first" while 8 are
+  pinned and it is not one (none for Sand and Water, which have their own top bar readouts); an undiscovered row is darkened like an undiscovered building in the build
   menu: its icon tinted `Silhouette` and "Undiscovered" in `TextDim`, with no name, amount, or
   pin. The
   body scrolls. Like every panel, opening it closes a building's detail panel and the other way

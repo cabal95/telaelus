@@ -134,7 +134,11 @@ public partial class GameRoot : Node3D
             PlayTime = loaded.Header.PlayTimeSeconds;
             SavedPlayTime = PlayTime;
         }
-        else if (AskTrainer)
+        else
+        {
+            PinDiscovered(fresh: false);
+        }
+        if (_save is null && AskTrainer)
         {
             UserSettings.TrainerAsked = true;
             AskStartTrainer();
@@ -191,6 +195,26 @@ public partial class GameRoot : Node3D
         if (presentation["trainer"] is System.Text.Json.Nodes.JsonNode step)
         {
             _trainer.Start(step.GetValue<int>());
+        }
+    }
+
+    /// <summary>
+    /// Pins what the world has discovered so far, in table order, while there is room: a new world
+    /// discovers what lies around the HQ quietly, so those pin themselves first. Fresh clears the
+    /// pins before (a test's new map).
+    /// </summary>
+    public void PinDiscovered(bool fresh)
+    {
+        if (fresh)
+        {
+            _pins.SetAll(System.Array.Empty<ResourceType>());
+        }
+        foreach (ResourceType type in System.Enum.GetValues<ResourceType>())
+        {
+            if (_sim.IsDiscovered(type))
+            {
+                _pins.AutoPin(type);
+            }
         }
     }
 
@@ -471,6 +495,13 @@ public partial class GameRoot : Node3D
         if (_happened.Count == 0)
         {
             return;
+        }
+        foreach (SimEvent e in _happened)
+        {
+            if (e.Kind == SimEventKind.Discovered)
+            {
+                _pins.AutoPin(e.Resource);
+            }
         }
         foreach (Toastable toast in NotificationText.For(_happened, _sim, _icons, _buildingPictures))
         {

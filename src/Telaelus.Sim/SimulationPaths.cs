@@ -25,11 +25,19 @@ public sealed partial class Simulation
     {
         if (home is not null && InFootprint(home, x, z))
         {
-            return true;
+            // A truck's own Depot: only the apron its bays stand on, never the shed behind.
+            return OnApron(home, x, z);
         }
         return InBounds(x, z)
             && IsChunkGenerated(Chunk.Of(MapCellOf(x)), Chunk.Of(MapCellOf(z)))
             && IsWalkable(x, z);
+    }
+
+    /// <summary>Whether a cell of a Depot lies in its front half, the apron its trucks park on.</summary>
+    private static bool OnApron(Building depot, int x, int z)
+    {
+        Vector3 center = new(x + 0.5f, 0f, z + 0.5f);
+        return (center - depot.Position).Dot(FrontOf(depot)) > 0f;
     }
 
     private static bool InFootprint(Building building, int x, int z)

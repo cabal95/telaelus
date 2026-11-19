@@ -173,6 +173,8 @@ public partial class InventoryPanel : Dialog
         row.Pin.Visible = discovered && ResourcePins.CanPin(type);
         row.Pin.SetPressedNoSignal(pinned);
         row.Pin.Text = pinned ? "Pinned" : "Pin";
+        row.Pin.Disabled = !pinned && _pins.IsFull;
+        row.Pin.TooltipText = row.Pin.Disabled ? $"The top bar holds {ResourcePins.Max}: unpin one first" : "";
         if (discovered)
         {
             row.Icon.Modulate = Colors.White;

@@ -219,6 +219,8 @@ public sealed class CommandExecutor
         }
         _root.Builder.ResetBuildMode();
         _root.Camera.JumpTo(_root.Sim.Player.Position);
+        // A fresh world starts with its own pins, as a new game does.
+        _root.PinDiscovered(fresh: true);
         return StepOutcome.Ok;
     }
 
