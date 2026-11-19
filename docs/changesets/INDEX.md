@@ -234,6 +234,9 @@ Newest last. One line each; open the file for the full spec.
 - **2611191223-pin-and-truck-fixes** - Bug fixes: the top bar starts with no pins, a new game pins what
   it discovered and each later discovery pins itself, up to 8; trucks drive round their own Depot's
   shed instead of through it (only the apron is open to them).
+- **2611191242-hq-unloading-pad** - Trucks unload on the HQ's landing pad: one at a time, backing on
+  with the bed to the entrance and driving off nose first, the others waiting in a line in front of
+  it. Unloading beside the HQ remains only when the pad's front cannot be reached.
 
 ## Adding a changeset
 

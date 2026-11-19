@@ -121,7 +121,8 @@ public class TruckTests
         Assert.Same(mine, truck.Target);
         Assert.Same(truck, sim.TruckFor(mine));
 
-        SimTestHelpers.Seconds(sim, 40.0);
+        // Out, load, round to the pad's front, back on, unload, and home again.
+        SimTestHelpers.Seconds(sim, 60.0);
         Assert.Equal(12f, SimTestHelpers.Stock(sim, ResourceType.IronOre));
         Assert.Equal(0f, mine.OutputCount);
         Assert.Equal(TruckState.Parked, truck.State);
@@ -338,7 +339,7 @@ public class TruckTests
         Building other = sim.Debug.PlaceBuilding(BuildingType.Mine, 30, 50, Facing.North);
         other.Output[ResourceType.Stone] = 20f;
 
-        SimTestHelpers.Seconds(sim, 40.0);
+        SimTestHelpers.Seconds(sim, 60.0);
 
         Assert.Equal(12f, SimTestHelpers.Stock(sim, ResourceType.IronOre));
         Assert.Equal(20f, other.Output[ResourceType.Stone]);

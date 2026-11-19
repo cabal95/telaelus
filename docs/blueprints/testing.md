@@ -85,8 +85,11 @@ pausing it and stepping frame by frame.
 - `PathTests`: a straight path on open ground; a path round a building ending beside its target;
   no path to a collector on an island; a path round slow ground when that is cheaper.
 - `TruckBalanceTests`: Stone Mines about 40 units from the HQ hauled for ten minutes: one truck
-  keeps up with three, falls behind four, and two keep up with six (each run writes what it
-  delivered).
+  keeps up with three, falls behind four, and two nearly keep up with six, at least 90% since
+  trucks unload on the HQ's pad (each run writes what it delivered).
+- `PadTests`: a truck backing onto the HQ's pad (its bed to the entrance), unloading there, and
+  driving off home; a second truck waiting in line in front of the pad, facing the HQ, and never
+  two on the pad; a truck unloading beside the HQ when the pad's front is blocked.
 - `TruckTests`: a new Depot's one truck and buying up to four; selling trucks for half a bought
   one's cost back (the free one for nothing) down to none, and buying again; selling a parked
   truck first, and a loaded one's load coming back; a truck hauling a Mine's
@@ -551,7 +554,8 @@ pausing it and stepping frame by frame.
   `trucks` (a new Depot online beside the HQ with one truck, buying a second from its panel,
   selling it for 8 Iron and 5 Wood back (the first then selling for nothing) and buying it again, a
   Mine linked by Small Hubs
-  filled to 12 getting a truck that loads, carries, and unloads it into storage and parks, the
+  filled to 12 getting a truck that loads, carries it round to the HQ's pad, backs on, unloads it
+  into storage there (hovering it reads Unloading), and parks, the
   Mine's Truck row, hovering a parked truck),
   `capacity` (a Glassworks with no Sand is in a blackout, in `Danger` on the Sand readout beside Power; a Sand
   Collector on Sand supplies it and Glass is made; five Glassworks on four Collectors are a Sand

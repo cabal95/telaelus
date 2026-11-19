@@ -256,9 +256,17 @@ public sealed partial class Simulation
             case TruckState.ToHq:
                 if (Drive(truck, dt))
                 {
-                    truck.State = TruckState.Unloading;
-                    truck.Timer = truck.Amount * TruckDefs.LoadSecondsPerUnit;
+                    ArriveAtHq(truck);
                 }
+                break;
+            case TruckState.WaitingForPad:
+                StepWaitingForPad(truck, dt);
+                break;
+            case TruckState.BackingOnPad:
+                StepBackingOnPad(truck, dt);
+                break;
+            case TruckState.LeavingPad:
+                StepLeavingPad(truck, dt);
                 break;
             case TruckState.Unloading:
                 truck.Timer -= dt;
@@ -374,7 +382,7 @@ public sealed partial class Simulation
             GoHome(truck);
             return;
         }
-        if (FindPathBeside(truck.Position, hq, truck.Depot) is not List<Vector3> path)
+        if (PathToHq(truck, hq) is not List<Vector3> path)
         {
             // Nothing it loads here could reach storage.
             _unreachable.Add((target.Id, truck.Id));
@@ -395,12 +403,18 @@ public sealed partial class Simulation
     /// </summary>
     private void Unload(Truck truck)
     {
+        bool onPad = OnPad(truck);
         if (truck.Cargo is ResourceType cargo && truck.Amount > 0f)
         {
             AddToStockpile(cargo, truck.Amount);
         }
         truck.Cargo = null;
         truck.Amount = 0f;
+        if (onPad)
+        {
+            truck.State = TruckState.LeavingPad;
+            return;
+        }
         GoHome(truck);
     }
 
@@ -451,7 +465,7 @@ public sealed partial class Simulation
         List<Vector3>? path = truck.State switch
         {
             TruckState.ToCollector when truck.Target is Building target => FindPathBeside(truck.Position, target, truck.Depot),
-            TruckState.ToHq when Hq is Building hq => FindPathBeside(truck.Position, hq, truck.Depot),
+            TruckState.ToHq when Hq is Building hq => PathToHq(truck, hq),
             TruckState.ToDepot => FindPathTo(truck.Position, bayX, bayZ, truck.Depot),
             _ => null
         };

@@ -15,7 +15,7 @@ public enum TruckState
     /// <summary>Loading from a collector's buffer.</summary>
     Loading,
 
-    /// <summary>Driving its load to the HQ.</summary>
+    /// <summary>Driving its load to the HQ's pad (or beside the HQ when the pad cannot be reached).</summary>
     ToHq,
 
     /// <summary>Unloading into storage at the HQ.</summary>
@@ -28,7 +28,16 @@ public enum TruckState
     WaitingForRoom,
 
     /// <summary>Driving home to park.</summary>
-    ToDepot
+    ToDepot,
+
+    /// <summary>In line in front of the HQ's pad, waiting for it to be free (its Timer holds its place in line).</summary>
+    WaitingForPad,
+
+    /// <summary>Backing onto the HQ's pad, its tail to the entrance.</summary>
+    BackingOnPad,
+
+    /// <summary>Driving off the HQ's pad, nose first, before heading home.</summary>
+    LeavingPad
 }
 
 /// <summary>The fixed numbers every truck shares (placeholders).</summary>

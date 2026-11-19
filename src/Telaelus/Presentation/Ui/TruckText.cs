@@ -7,7 +7,7 @@ namespace Telaelus.Presentation.Ui;
 /// <summary>How a truck's state reads in the Depot panel and its hover tooltip.</summary>
 public static class TruckText
 {
-    /// <summary>"To Mine: Iron Ore", "Loading", "To HQ: 20 Iron Ore", "Unloading", "Waiting: storage full (Iron Ore)", "Heading home", "Parked".</summary>
+    /// <summary>"To Mine: Iron Ore", "Loading", "To HQ: 20 Iron Ore", "Waiting for the pad", "Backing onto the pad", "Unloading", "Waiting: storage full (Iron Ore)", "Heading home", "Parked".</summary>
     public static string State(Truck truck)
     {
         string cargo = truck.Cargo is ResourceType type ? ResourceDefs.For(type).Name : "";
@@ -18,6 +18,9 @@ public static class TruckText
             TruckState.Loading => "Loading",
             TruckState.ToHq => $"To HQ: {Mathf.FloorToInt(truck.Amount)} {cargo}",
             TruckState.Unloading => "Unloading",
+            TruckState.WaitingForPad => "Waiting for the pad",
+            TruckState.BackingOnPad => "Backing onto the pad",
+            TruckState.LeavingPad => "Heading home",
             TruckState.WaitingForRoom => $"Waiting: storage full ({cargo})",
             TruckState.ToDepot => "Heading home",
             _ => "Parked"

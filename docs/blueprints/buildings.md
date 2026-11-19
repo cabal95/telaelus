@@ -213,7 +213,9 @@ ship from a Shipyard, which closes the on-planet loop.
   terrain speed under it, and loads and unloads at `TruckDefs.LoadSecondsPerUnit` (0.25 s a unit:
   5 s for a full load). Trucks occupy no cells and pass through the player and each other.
 - **Balance:** one truck keeps up with about three base collectors 40 units from the HQ (four at
-  20, two at 80); a Depot's four trucks serve about twelve near the HQ. Upgrades that raise the
+  20, two at 80); a Depot's four trucks serve about twelve near the HQ. Unloading on the HQ's
+  pad costs a little when the pad faces away from the collectors (two trucks deliver about 92% of
+  six Mines 40 out on the empty map, whose HQ faces its pad away from them). Upgrades that raise the
   capacity are partly offset by the time each unit takes to load. `TruckBalanceTests` measures it.
 - **Room:** a truck's room for a resource is storage's room (`RoomFor`) less what every other
   loaded truck is carrying of it to the HQ (`ToHq` or `Unloading`). A truck's load from a
@@ -232,9 +234,19 @@ ship from a Shipyard, which closes the on-planet loop.
     or its buffer falls under 1 unit first, it drops the job and heads home (dispatching again on
     the way).
   - **Loading** (0.25 s for each unit of its load on arrival): then it takes its load as it
-    stands then and drives beside the HQ (**ToHq**). A collector that goes offline while it loads
+    stands then and drives to the HQ's pad (**ToHq**, below). A collector that goes offline while it loads
     sends it home empty (the load is taken only at the end). With nothing left to take it heads home; with
     no path to the HQ it takes nothing and counts the collector unreachable.
+  - **At the HQ's pad** (`HqPad`, 3.6 units in front of the HQ's center, its landing pad): a
+    truck drives to the pad's front (2 units further out, just outside the HQ) and joins the line
+    there (**WaitingForPad**, its place in line kept in its `Timer`). One truck holds the pad at a
+    time (`PadHolder`: backing on, unloading on it, or pulling off). The next in line, when the pad
+    is free, drives up to the front, turns its tail to the entrance, and backs on at half speed
+    (**BackingOnPad**); it unloads on the pad with its bed to the hall, then drives off nose first
+    to the front (**LeavingPad**) and heads home. The others wait in a line out from the front,
+    1.8 units apart, facing the HQ, moving up as it shortens (`PadQueue`). The pad moves are
+    straight runs over the HQ's forecourt, so paths never enter the HQ. With no path to the pad's
+    front (a building on it), a truck unloads beside the HQ as before.
   - **Unloading** (0.25 s a unit): it puts the whole load into the stockpile, even past the limit
     when room it counted on was taken on the way (the player collecting by hand, a store
     destroyed), as a destroy refund does, so a truck never waits at the HQ. Empty, it heads home.
