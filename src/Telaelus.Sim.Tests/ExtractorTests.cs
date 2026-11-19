@@ -21,7 +21,7 @@ public class ExtractorTests
     public void Mine_WorksTheNearestOreFieldInRange_OneUnitAtATime()
     {
         var sim = new Simulation();
-        sim.Debug.PlaceBuilding(BuildingType.Mine, NearOreX, NearOreZ, Facing.North);
+        SimTestHelpers.PlaceOnline(sim, BuildingType.Mine, NearOreX, NearOreZ);
         Building mine = Assert.Single(SimTestHelpers.Placed(sim));
 
         // Iron Ore takes 6 s by hand, so 8 s at speed 0.75.
@@ -40,7 +40,7 @@ public class ExtractorTests
         ResourceField first = SimTestHelpers.FieldAtMapCell(sim, 10, 9);
         ResourceField second = SimTestHelpers.FieldAtMapCell(sim, 11, 10);
         sim.Debug.SetFieldAmount(10, 9, 2f);
-        sim.Debug.PlaceBuilding(BuildingType.Mine, NearOreX, NearOreZ, Facing.North);
+        SimTestHelpers.PlaceOnline(sim, BuildingType.Mine, NearOreX, NearOreZ);
         Building mine = Assert.Single(SimTestHelpers.Placed(sim));
 
         // Two units empty the first field at 16 s; the next unit comes from the second at 24 s.
@@ -57,7 +57,7 @@ public class ExtractorTests
     public void Mine_IdlesWithNoFieldInRange()
     {
         var sim = new Simulation();
-        sim.Debug.PlaceBuilding(BuildingType.Mine, SimTestHelpers.ClearX, SimTestHelpers.ClearZ, Facing.North);
+        SimTestHelpers.PlaceOnline(sim, BuildingType.Mine, SimTestHelpers.ClearX, SimTestHelpers.ClearZ);
         Building mine = Assert.Single(SimTestHelpers.Placed(sim));
 
         SimTestHelpers.Seconds(sim, 9.0);
@@ -70,7 +70,7 @@ public class ExtractorTests
     public void LumberCamp_IgnoresOreFields()
     {
         var sim = new Simulation();
-        sim.Debug.PlaceBuilding(BuildingType.LumberCamp, NearOreX, NearOreZ, Facing.North);
+        SimTestHelpers.PlaceOnline(sim, BuildingType.LumberCamp, NearOreX, NearOreZ);
         Building camp = Assert.Single(SimTestHelpers.Placed(sim));
 
         SimTestHelpers.Seconds(sim, 9.0);
@@ -85,8 +85,8 @@ public class ExtractorTests
     {
         var sim = new Simulation();
         ResourceField field = SimTestHelpers.FieldAtMapCell(sim, 10, 9);
-        sim.Debug.PlaceBuilding(BuildingType.Mine, NearOreX, NearOreZ, Facing.North);
-        sim.Debug.PlaceBuilding(BuildingType.Mine, 40, 34, Facing.North);
+        SimTestHelpers.PlaceOnline(sim, BuildingType.Mine, NearOreX, NearOreZ);
+        SimTestHelpers.PlaceOnline(sim, BuildingType.Mine, 40, 34);
 
         SimTestHelpers.Seconds(sim, 8.1);
 
@@ -102,7 +102,7 @@ public class ExtractorTests
         sim.Debug.ResetToEmptyMap();
         sim.Debug.PlaceField(ResourceType.Limestone, 5, 5);
         sim.Debug.PlaceField(ResourceType.Crystals, 10, 5);
-        Building mine = sim.Debug.PlaceBuilding(BuildingType.Mine, 22, 24, Facing.North);
+        Building mine = SimTestHelpers.PlaceOnline(sim, BuildingType.Mine, 22, 24);
         Building rig = sim.Debug.PlaceBuilding(BuildingType.DrillRig, 41, 24, Facing.North);
         SimTestHelpers.Ticks(sim, 1);
 

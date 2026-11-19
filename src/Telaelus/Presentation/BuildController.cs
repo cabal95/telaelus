@@ -807,7 +807,9 @@ public partial class BuildController : Node3D
         }
         if (CurrentGhost() is GhostInfo ghost)
         {
-            lines.Add(ghost.Online ? new TipLine("Online") : new TipLine("Offline (no hub in reach)", UiTheme.Warning));
+            // Only a hub has a use offline (it can be linked later); everything else needs the network.
+            lines.Add(ghost.Online ? new TipLine("Online")
+                : new TipLine(def.IsHub ? "Offline (no hub in reach)" : "Offline: will not work", UiTheme.Warning));
             foreach (CapacityType capacity in Simulation.CapacityTypes)
             {
                 float draw = def.Draw(capacity);

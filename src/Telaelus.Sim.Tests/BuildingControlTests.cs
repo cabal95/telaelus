@@ -10,7 +10,7 @@ public class BuildingControlTests
     public void SwitchedOffExtractor_StopsAndStartsItsUnitOver()
     {
         var sim = new Simulation();
-        Building mine = sim.Debug.PlaceBuilding(BuildingType.Mine, NearOreX, NearOreZ, Facing.North);
+        Building mine = SimTestHelpers.PlaceOnline(sim, BuildingType.Mine, NearOreX, NearOreZ);
 
         SimTestHelpers.Seconds(sim, 6.0);
         Assert.True(sim.SetBuildingEnabled(mine.Id, false));
@@ -56,8 +56,8 @@ public class BuildingControlTests
     public void Status_ReportsWorkingIdleAndOff()
     {
         var sim = new Simulation();
-        Building mine = sim.Debug.PlaceBuilding(BuildingType.Mine, NearOreX, NearOreZ, Facing.North);
-        Building idleMine = sim.Debug.PlaceBuilding(BuildingType.Mine, SimTestHelpers.ClearX, SimTestHelpers.ClearZ, Facing.North);
+        Building mine = SimTestHelpers.PlaceOnline(sim, BuildingType.Mine, NearOreX, NearOreZ);
+        Building idleMine = SimTestHelpers.PlaceOnline(sim, BuildingType.Mine, SimTestHelpers.ClearX, SimTestHelpers.ClearZ);
         Building refinery = sim.Debug.PlaceBuilding(BuildingType.Refinery, 20, 28, Facing.North);
         SimTestHelpers.Ticks(sim, 1);
 
@@ -89,7 +89,7 @@ public class BuildingControlTests
     {
         var sim = new Simulation();
         sim.Debug.ResetToEmptyMap();
-        Building mine = sim.Debug.PlaceBuilding(BuildingType.Mine, SimTestHelpers.ClearX, SimTestHelpers.ClearZ, Facing.North);
+        Building mine = SimTestHelpers.PlaceOnline(sim, BuildingType.Mine, SimTestHelpers.ClearX, SimTestHelpers.ClearZ);
 
         // The Mine costs 25 Wood and 15 Stone.
         Assert.True(sim.TryDestroyBuilding(mine.Id));
@@ -127,8 +127,8 @@ public class BuildingControlTests
     {
         var sim = new Simulation();
         ResourceField ore = SimTestHelpers.FieldAtMapCell(sim, 10, 9);
-        Building first = sim.Debug.PlaceBuilding(BuildingType.Mine, NearOreX, NearOreZ, Facing.North);
-        Building second = sim.Debug.PlaceBuilding(BuildingType.Mine, 40, 34, Facing.North);
+        Building first = SimTestHelpers.PlaceOnline(sim, BuildingType.Mine, NearOreX, NearOreZ);
+        Building second = SimTestHelpers.PlaceOnline(sim, BuildingType.Mine, 40, 34);
         sim.Debug.PlaceBuilding(BuildingType.Smelter, SimTestHelpers.ClearX, SimTestHelpers.ClearZ, Facing.North);
         Assert.Empty(sim.ExtractorsWorking(ore));
 

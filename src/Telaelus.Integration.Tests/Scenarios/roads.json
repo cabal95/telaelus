@@ -45,6 +45,9 @@
     { "placeResource": { "type": "IronOre", "mapCell": [2, 10], "amount": 200 } },
     { "placeBuilding": { "type": "Mine", "anchor": [13, 40] } },
     { "fillBuffer": { "anchor": [13, 40], "type": "IronOre", "amount": 15 } },
+    { "comment": "Two Relays and a Small Hub on the far bank put the Mine online (trucks serve only online collectors).", "placeBuilding": { "type": "Relay", "anchor": [36, 4] } },
+    { "placeBuilding": { "type": "Relay", "anchor": [26, 24] } },
+    { "placeBuilding": { "type": "SmallHub", "anchor": [16, 36] } },
     { "wait": 30 },
     { "comment": "No way across: the truck stays parked.", "expect": "trucks[0].state", "equals": "parked" },
 

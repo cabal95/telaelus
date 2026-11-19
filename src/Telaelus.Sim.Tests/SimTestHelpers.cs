@@ -70,7 +70,19 @@ internal static class SimTestHelpers
             Vector3 from = last.Position;
             Vector3 step = from + (target - from).Normalized() * Mathf.Min(8f, from.DistanceTo(target));
             last = PlaceHubNear(sim, step);
+            ConnectHubs.GetOrCreateValue(sim).Add(last.Id);
         }
+    }
+
+    /// <summary>Places a building and connects it to the HQ's network (collectors work only online).</summary>
+    public static Building PlaceOnline(Simulation sim, BuildingType type, int x, int z, Facing facing = Facing.North)
+    {
+        Building building = sim.Debug.PlaceBuilding(type, x, z, facing);
+        if (!building.Online)
+        {
+            Connect(sim, building.Position.X, building.Position.Z);
+        }
+        return building;
     }
 
     private static Building PlaceHubNear(Simulation sim, Vector3 point)
@@ -116,9 +128,21 @@ internal static class SimTestHelpers
     }
 
     /// <summary>Every building but the HQ, which every world places at start.</summary>
+    /// <summary>The Small Hubs <see cref="Connect"/> placed, per sim, which <see cref="Placed"/> leaves out.</summary>
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<Simulation, System.Collections.Generic.HashSet<int>> ConnectHubs = new();
+
+    /// <summary>The Small Hubs <see cref="Connect"/> placed in a sim.</summary>
+    public static System.Collections.Generic.List<Building> ConnectedHubs(Simulation sim)
+    {
+        System.Collections.Generic.HashSet<int> ids = ConnectHubs.GetOrCreateValue(sim);
+        return System.Linq.Enumerable.ToList(System.Linq.Enumerable.Where(sim.Buildings, b => ids.Contains(b.Id)));
+    }
+
+    /// <summary>Every building but the HQ and the hubs <see cref="Connect"/> placed.</summary>
     public static System.Collections.Generic.List<Building> Placed(Simulation sim)
     {
-        return System.Linq.Enumerable.ToList(System.Linq.Enumerable.Where(sim.Buildings, b => b.Type != BuildingType.Hq));
+        System.Collections.Generic.HashSet<int> hubs = ConnectHubs.GetOrCreateValue(sim);
+        return System.Linq.Enumerable.ToList(System.Linq.Enumerable.Where(sim.Buildings, b => b.Type != BuildingType.Hq && !hubs.Contains(b.Id)));
     }
 
     public static float Stock(Simulation sim, ResourceType type)

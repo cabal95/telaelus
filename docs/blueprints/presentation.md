@@ -304,7 +304,8 @@ ui-style.md. There is no text HUD; the screen holds:
 - **Placement tooltip:** while a building is selected (and no modal is open), a tooltip
   follows the pointer 28 units below and to the right of it, clear of the ghost: the building's
   name in the accent color, its cost (short amounts marked), fields in range for an extractor,
-  "Online" or "Offline (no hub in reach)" in `Warning` for the spot (`WouldBeOnline`), for each
+  "Online", or offline in `Warning`: "Offline (no hub in reach)" for a hub and "Offline: will not
+  work" for anything else, for the spot (`WouldBeOnline`), for each
   capacity type the building draws or supplies, that and the network's figure with it added when
   the spot is online ("Draws 2 Sand: Sand 4 / 2", "Supplies 16 Water: Water 2 / 20", colored by the
   state that would give), and the dim hint "R rotate   Esc cancel". Outside build mode the same tooltip names the truck nearest the

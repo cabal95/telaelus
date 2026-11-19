@@ -245,7 +245,8 @@ buildings.md). A single global stockpile holds all amounts, within storage limit
   (`InteractTarget`) is the nearest building within `HarvestRange` of the player (distance to its
   footprint) that has something to collect or load, unless a hand-harvestable field is nearer; a
   building wins a tie. While a building is the target there is no harvest target.
-- **Collect** (`InteractAction.Collect`): a building with units in its output buffer. Each unit (the
+- **Collect** (`InteractAction.Collect`): a building with units in its output buffer, online or
+  offline (an offline collector makes nothing, but what it holds can still be carried in). Each unit (the
   first type in table order, at most 1) moves into storage after the resource's gather time over 10
   (`HandMoveSpeedup`), or 0.3 s (`HandMoveSeconds`) for a resource with no gather time; Iron Ore
   takes 0.6 s. With no room for the next unit (`InteractBlocked`) progress waits and the hint says

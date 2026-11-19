@@ -131,8 +131,8 @@ ship from a Shipyard, which closes the on-planet loop.
 
   | Hub | Footprint | Cost | Coverage radius | Link radius |
   |---|---|---|---|---|
-  | HQ | 6 x 10 | placed by the world | 14 | 16 |
-  | Small Hub | 1 x 1 | 10 Wood, 5 Stone | 8 | 12 |
+  | HQ | 6 x 10 | placed by the world | 19 | 22 |
+  | Small Hub | 1 x 1 | 10 Wood, 5 Stone | 9 | 14 |
   | Relay | 2 x 2 | 20 Iron, 10 Stone | 3 | 30 |
 
 - Two switched-on hubs **link** when the distance between their centers is at most the larger of
@@ -223,15 +223,17 @@ ship from a Shipyard, which closes the on-planet loop.
   (`TruckState`):
   - **Parked** or **ToDepot** (heading home): while its Depot is switched on and online, it
     **dispatches**:
-    among collectors (`IsCollector`: extractors and the Quarry, Deep Well, and Deep Mine; online
-    or offline) whose load is at least `TruckDefs.DispatchAt` (10), or at least 1 when the
+    among online collectors (`IsCollector`: extractors and the Quarry, Deep Well, and Deep Mine)
+    whose load is at least `TruckDefs.DispatchAt` (10), or at least 1 when the
     buffer is full, that no truck targets (`TruckFor`) and that it has not found unreachable, it
     takes the one with the biggest load, nearest on a tie, and the first a path reaches. A
     collector full of what storage cannot take is no job; it stays full until room appears.
-  - **ToCollector:** it drives beside the collector; if the collector is destroyed or its buffer
-    falls under 1 unit first, it drops the job and heads home (dispatching again on the way).
+  - **ToCollector:** it drives beside the collector; if the collector is destroyed, goes offline,
+    or its buffer falls under 1 unit first, it drops the job and heads home (dispatching again on
+    the way).
   - **Loading** (0.25 s for each unit of its load on arrival): then it takes its load as it
-    stands then and drives beside the HQ (**ToHq**). With nothing left to take it heads home; with
+    stands then and drives beside the HQ (**ToHq**). A collector that goes offline while it loads
+    sends it home empty (the load is taken only at the end). With nothing left to take it heads home; with
     no path to the HQ it takes nothing and counts the collector unreachable.
   - **Unloading** (0.25 s a unit): it puts the whole load into the stockpile, even past the limit
     when room it counted on was taken on the way (the player collecting by hand, a store
@@ -444,13 +446,17 @@ And seven buildings, all processors (output buffer 10, 5 cycles of each input):
 
 ### Production
 
-- Each tick, every building steps.
+- Each tick, every building steps. A collector (`IsCollector`) works only while **online**:
+  offline it does nothing, and going offline drops the unit in hand (`Progress` back to 0, as
+  switching off does), so it starts a whole unit over once online again. Its buffer keeps what it
+  holds, which the player can still collect by hand (resources.md); trucks serve only online
+  collectors.
 - An extractor works one field at a time: its current field, or if that is gone, the nearest
   non-depleted field of any type it works within its work area (distance from its footprint center
   to the field's square, at most the work radius). It works toward one unit of that field's type
   (`Progress`, in seconds, reset when it takes up a new field), puts the unit into its **output
-  buffer** at the gather time over its speed (online or not: collectors never deliver to storage
-  themselves; the player collects by hand, resources.md), and clears its current field when that
+  buffer** at the gather time over its speed (collectors never deliver to storage themselves;
+  the player collects by hand, resources.md), and clears its current field when that
   field depletes. When the buffer has no room for the unit, the unit waits at the field: progress
   holds at the gather time and the unit is taken as soon as there is room. Several extractors may work the same field. With no
   field in range, it idles, and it picks up a field as soon as one is in range.
@@ -484,7 +490,8 @@ And seven buildings, all processors (output buffer 10, 5 cycles of each input):
   (fuel, once buildings burn it, will not be). Switched back on, it starts a whole unit or cycle
   over.
 - `BuildingStatusOf(building)` gives a `BuildingStatus`: a state (`Working`, `Idle`, `Off`) and,
-  when not working, a reason. Off reads "Switched off". An extractor works while it has a field
+  when not working, a reason. Off reads "Switched off". An offline extractor is idle "Offline:
+  outside the network" (a powered one reads "No Power: offline" first). An extractor works while it has a field
   or one in range to take up and buffer room for its unit; with no field it is idle with "No fields
   in range", and with a full buffer "Full: waiting for pickup". A processor whose outputs have
   nowhere to go, before a cycle or with a finished one waiting, is idle "Storage full: Iron" online

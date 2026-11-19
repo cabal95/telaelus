@@ -37,7 +37,7 @@ public class TruckBalanceTests
         {
             int z = 4 + i * 7;
             sim.Debug.PlaceField(ResourceType.Stone, mineX / 4 - 1, z / 4, 5000f);
-            sim.Debug.PlaceBuilding(BuildingType.Mine, mineX, z, Facing.North);
+            SimTestHelpers.PlaceOnline(sim, BuildingType.Mine, mineX, z);
         }
         SimTestHelpers.Seconds(sim, 60.0);
         float before = SimTestHelpers.Stock(sim, ResourceType.Stone);

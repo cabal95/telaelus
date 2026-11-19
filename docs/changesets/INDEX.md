@@ -226,6 +226,11 @@ Newest last. One line each; open the file for the full spec.
   turn, and place a Lumber Camp, its panel, collect from it, the network, research and the game
   menu), each done by doing it, with a pulsing ring on the place it means. The first New Game asks;
   the game menu's Trainer starts it again; a save keeps the step.
+- **2611191129-collectors-need-network** - Collectors work only online: a Mine, Lumber Camp, or Oil
+  Well off the network idles "Offline: outside the network", going offline drops the unit in
+  hand, and trucks serve only online collectors (hand collection still works). The HQ reaches
+  further (coverage 19, link 22) and so does the Small Hub (9, 14); placing off the network warns
+  "Offline: will not work".
 
 ## Adding a changeset
 

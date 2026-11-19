@@ -106,12 +106,13 @@ public class LaunchTests
         }
         Building oxygen = sim.Buildings.Last(b => b.Type == BuildingType.Electrolyzer);
         Assert.True(sim.SetRecipe(oxygen.Id, 1));
-        // A chain of Small Hubs from the HQ along the open ground round the chain.
-        foreach ((int x, int z) in new[] { (52, 18), (48, 22), (40, 24), (35, 18), (28, 17), (26, 25) })
+        // A chain of Small Hubs from the HQ along the open ground round the chain, and on to the
+        // collectors (which work only online).
+        foreach ((int x, int z) in new[] { (52, 18), (48, 22), (40, 24), (35, 18), (28, 17), (26, 25), (34, 32), (40, 42) })
         {
             sim.Debug.PlaceBuilding(BuildingType.SmallHub, x, z, Facing.North);
         }
-        Assert.All(SimTestHelpers.Placed(sim).Where(b => !b.Def.IsExtractor && !b.Def.IsHub), b => Assert.True(b.Online, $"{b.Type} at ({b.AnchorX}, {b.AnchorZ}) is offline"));
+        Assert.All(SimTestHelpers.Placed(sim).Where(b => !b.Def.IsHub), b => Assert.True(b.Online, $"{b.Type} at ({b.AnchorX}, {b.AnchorZ}) is offline"));
 
         List<Building> collectors = SimTestHelpers.Placed(sim).Where(b => b.Def.IsExtractor).ToList();
         const double MaxSeconds = 4000;

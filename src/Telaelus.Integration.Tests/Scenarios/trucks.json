@@ -1,12 +1,15 @@
 {
   "$schema": "../scenario.schema.json",
   "name": "trucks",
-  "description": "Depot trucks: a new Depot, online beside the HQ, comes with one truck; the panel buys a second, sells it for half its cost back, and buys it again; a Mine off the network with 12 Iron Ore in its buffer gets a truck, which loads it, carries it to the HQ, unloads it into storage, and parks; the collector's panel shows the truck on its way; hovering a parked truck names its state.",
+  "description": "Depot trucks: a new Depot, online beside the HQ, comes with one truck; the panel buys a second, sells it for half its cost back, and buys it again; a Mine linked to the network by Small Hubs, with 12 Iron Ore in its buffer, gets a truck, which loads it, carries it to the HQ, unloads it into storage, and parks; the collector's panel shows the truck on its way; hovering a parked truck names its state.",
   "steps": [
     { "newGame": {} },
     { "initMap": {} },
     { "comment": "Beside the HQ, so it is online. It faces North: its bays are on the apron at z 14..15.", "placeBuilding": { "type": "Depot", "anchor": [46, 14] } },
     { "placeBuilding": { "type": "Mine", "anchor": [30, 30] } },
+    { "comment": "Small Hubs from the HQ put the Mine online (trucks serve only online collectors).", "placeBuilding": { "type": "SmallHub", "anchor": [52, 22] } },
+    { "placeBuilding": { "type": "SmallHub", "anchor": [44, 32] } },
+    { "placeBuilding": { "type": "SmallHub", "anchor": [36, 34] } },
     { "teleportPlayer": { "x": 40, "z": 24 } },
     { "wait": 2 },
     { "expect": "trucks[0].state", "equals": "parked" },
@@ -54,7 +57,7 @@
 
     { "fillBuffer": { "anchor": [30, 30], "type": "IronOre", "amount": 12 } },
     { "wait": 2 },
-    { "expect": "buildings[2].online", "equals": false },
+    { "comment": "Trucks serve only online collectors.", "expect": "buildings[2].online", "equals": true },
     { "expect": "trucks[0].state", "equals": "toCollector" },
     { "expect": "trucks[0].target", "equals": 3 },
     { "expect": "trucks[1].state", "equals": "parked" },

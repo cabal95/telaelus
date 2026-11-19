@@ -28,8 +28,8 @@ public class RenewablesTests
         sim.Debug.ResetToEmptyMap();
         sim.Debug.PlaceField(ResourceType.IronOre, 5, 5, 1f);
         sim.Debug.PlaceField(ResourceType.Wood, 8, 5, 1f);
-        sim.Debug.PlaceBuilding(BuildingType.Mine, 24, 20, Facing.North);
-        sim.Debug.PlaceBuilding(BuildingType.LumberCamp, 36, 20, Facing.North);
+        SimTestHelpers.PlaceOnline(sim, BuildingType.Mine, 24, 20);
+        SimTestHelpers.PlaceOnline(sim, BuildingType.LumberCamp, 36, 20);
 
         SimTestHelpers.Seconds(sim, 12.0);
 
@@ -48,7 +48,7 @@ public class RenewablesTests
         Assert.True(sim.CanPlace(BuildingType.Forester, 48, 12, Facing.North));
         Assert.False(sim.CanPlace(BuildingType.Forester, 49, 12, Facing.North));
         Building forester = sim.Debug.PlaceBuilding(BuildingType.Forester, 48, 12, Facing.North);
-        sim.Debug.PlaceBuilding(BuildingType.LumberCamp, 45, 15, Facing.North);
+        SimTestHelpers.PlaceOnline(sim, BuildingType.LumberCamp, 45, 15);
         SimTestHelpers.Ticks(sim, 1);
 
         ResourceField plot = Assert.IsType<ResourceField>(forester.Plot);
@@ -246,7 +246,7 @@ public class RenewablesTests
         var sim = new Simulation();
         sim.Debug.ResetToEmptyMap();
         sim.Debug.PlaceMotherlode(MotherlodeType.Laterite, 5, 5);
-        Building mine = sim.Debug.PlaceBuilding(BuildingType.Mine, 18, 20, Facing.North);
+        Building mine = SimTestHelpers.PlaceOnline(sim, BuildingType.Mine, 18, 20);
         sim.Debug.TeleportPlayer(19.5f, 24f);
         SimTestHelpers.Ticks(sim, 1);
 

@@ -89,8 +89,9 @@ pausing it and stepping frame by frame.
   delivered).
 - `TruckTests`: a new Depot's one truck and buying up to four; selling trucks for half a bought
   one's cost back (the free one for nothing) down to none, and buying again; selling a parked
-  truck first, and a loaded one's load coming back; a truck hauling an offline Mine's
-  buffer to the HQ and parking; waiting for 10 units; dispatch taking the fullest, then one no
+  truck first, and a loaded one's load coming back; a truck hauling a Mine's
+  buffer to the HQ and parking (the tests' map lays Relays and Small Hubs over its south-west, so
+  their Mines are online); waiting for 10 units; dispatch taking the fullest, then one no
   other truck is on; loading one resource up to 20 (and parking when what is left is under a
   trip); loading only what storage has room for (no job for less than a trip unless the buffer is
   full); room counting the loads other trucks carry; unloading everything when the room was taken
@@ -115,7 +116,12 @@ pausing it and stepping frame by frame.
   buffer and waiting for pickup; collecting by hand at a tenth of the gather time and stopping on
   full storage; an offline processor loaded by hand and working from its buffers; destroying
   returning buffers past the limit; storage counting only online; `WouldBeOnline`.
-  `SimTestHelpers.Connect` chains Small Hubs from the HQ to a spot, `Gathered` counts the stockpile
+- `CollectorNetworkTests`: an offline Mine, Lumber Camp, and Oil Well making nothing and reading
+  "Offline: outside the network"; a hub chain bringing a camp online, and cutting it dropping the
+  unit in hand; an offline buffer still collected by hand; a truck never sent to an offline
+  collector, and one on its way turning home when it goes offline; the HQ's and Small Hub's radii.
+  `SimTestHelpers.Connect` chains Small Hubs from the HQ to a spot (`PlaceOnline` places a building
+  and connects it, for tests about extraction rather than the network), `Gathered` counts the stockpile
   plus every output buffer, and `CollectByHand` empties a building by holding E on it.
 - `StorageTests`: every resource's storage class and amounts; the HQ's base; limits summing the
   HQ and storage buildings; a Silo's step following its resource; Cargo room as the free pool over
@@ -123,7 +129,8 @@ pausing it and stepping frame by frame.
   finished cycle waiting for room; refunds passing the limit; destroying storage leaving stock
   over the limit; the HQ permanent, placed in every kind of world, and on clear ground with no
   field under it in generated worlds; every building cost but the Vault's fitting the HQ's base.
-  `SimTestHelpers.Placed` lists the buildings other than the HQ, for tests that count them.
+  `SimTestHelpers.Placed` lists the buildings other than the HQ and the hubs `Connect` placed, for
+  tests that count them.
 - `DiscoveryTests`: nothing discovered on an all-grass map; a field discovers its deposit when
   placed in an explored cell or when its cell is revealed; Sand, Water, and rivers discover from
   terrain; a debug edit to an explored cell discovers; holding a resource discovers it; discovery
@@ -543,14 +550,15 @@ pausing it and stepping frame by frame.
   Crusher supplying 4 Sand),
   `trucks` (a new Depot online beside the HQ with one truck, buying a second from its panel,
   selling it for 8 Iron and 5 Wood back (the first then selling for nothing) and buying it again, a
-  Mine off the network
+  Mine linked by Small Hubs
   filled to 12 getting a truck that loads, carries, and unloads it into storage and parks, the
   Mine's Truck row, hovering a parked truck),
   `capacity` (a Glassworks with no Sand is in a blackout, in `Danger` on the Sand readout beside Power; a Sand
   Collector on Sand supplies it and Glass is made; five Glassworks on four Collectors are a Sand
   brownout at half speed, in `Warning`, shown in the Glassworks panel's Sand row and its recipe),
-  `network` (a Mine out of reach is offline with the warning marker and fills its buffer; E collects
-  from it; N shows the overlay; a chain of Small Hubs brings it online; the placement tooltip's
+  `network` (a Mine out of reach is offline with the warning marker and makes nothing; E still
+  collects what its buffer holds; N shows the overlay; a chain of Small Hubs brings it online and
+  working; the placement tooltip's
   online line; a selected hub shows only its own coverage),
   `storage` (Wood at the HQ's 100 shows full, in red, on the top bar and the harvest hint says Storage
   full; a Silo raises the limit to 400 and harvesting resumes; the inventory's Cargo row, and

@@ -9,10 +9,19 @@ public class TruckTests
     private const int DepotX = 46;
     private const int DepotZ = 14;
 
+    /// <summary>
+    /// The empty map with a network over its south-west, where the tests' Mines stand (trucks serve
+    /// only online collectors): a Relay 22.4 from the HQ's center, a second 23.4 on, and two Small
+    /// Hubs covering (20, 40), (10, 50), (20, 50), and (30, 50). The Depot at (20, 20) stays outside it.
+    /// </summary>
     private static Simulation EmptyMap()
     {
         var sim = new Simulation();
         sim.Debug.ResetToEmptyMap();
+        sim.Debug.PlaceBuilding(BuildingType.Relay, 36, 2, Facing.North);
+        sim.Debug.PlaceBuilding(BuildingType.Relay, 28, 24, Facing.North);
+        sim.Debug.PlaceBuilding(BuildingType.SmallHub, 15, 46, Facing.North);
+        sim.Debug.PlaceBuilding(BuildingType.SmallHub, 26, 46, Facing.North);
         return sim;
     }
 
@@ -101,10 +110,10 @@ public class TruckTests
     }
 
     [Fact]
-    public void ATruck_HaulsAnOfflineCollectorsBufferToTheHq_AndParks()
+    public void ATruck_HaulsACollectorsBufferToTheHq_AndParks()
     {
         (Simulation sim, Building depot, Building mine) = Haul(12f);
-        Assert.False(mine.Online);
+        Assert.True(mine.Online);
         Truck truck = Assert.Single(sim.TrucksOf(depot));
 
         SimTestHelpers.Ticks(sim, 1);
@@ -283,6 +292,9 @@ public class TruckTests
             }
         }
         Building island = sim.Debug.PlaceBuilding(BuildingType.Mine, 21, 21, Facing.North);
+        // A hub on the island, linked to the second Relay, puts the Mine online.
+        sim.Debug.PlaceBuilding(BuildingType.SmallHub, 20, 20, Facing.North);
+        Assert.True(island.Online);
         island.Output[ResourceType.IronOre] = 15f;
         Building depot = sim.Debug.PlaceBuilding(BuildingType.Depot, DepotX, DepotZ, Facing.North);
         Truck truck = Assert.Single(sim.TrucksOf(depot));

@@ -10,6 +10,9 @@
     { "placeResource": { "type": "Stone", "mapCell": [12, 8] } },
     { "placeBuilding": { "type": "Mine", "anchor": [44, 34] } },
     { "comment": "A Lumber Camp with no trees in range.", "placeBuilding": { "type": "LumberCamp", "anchor": [28, 28] } },
+    { "comment": "Small Hubs from the HQ put the Mine and the camp online.", "placeBuilding": { "type": "SmallHub", "anchor": [50, 20] } },
+    { "placeBuilding": { "type": "SmallHub", "anchor": [46, 30] } },
+    { "placeBuilding": { "type": "SmallHub", "anchor": [37, 30] } },
     { "wait": 2 },
 
     { "aimAt": { "world": [45, 35] } },
@@ -87,11 +90,11 @@
     { "clickUi": { "id": "buildingDetail/destroy" } },
     { "comment": "A button acts on release, the frame after the click.", "wait": 2 },
     { "comment": "The first click only arms the button.", "expect": "ui.destroy", "equals": "Confirm destroy" },
-    { "expect": "buildings[2]", "exists": true },
+    { "comment": "Six buildings: the HQ, the Mine, the camp, and three hubs.", "expect": "buildings[5]", "exists": true },
     { "clickUi": { "id": "buildingDetail/destroy" } },
     { "comment": "A button acts on release, the frame after the click.", "wait": 2 },
     { "expect": "ui.open", "equals": null },
-    { "expect": "buildings[2]", "exists": false },
+    { "expect": "buildings[5]", "exists": false },
     { "expect": "buildings[1].type", "equals": "LumberCamp" },
     { "expect": "stockpile.Wood", "equals": 13 },
     { "expect": "stockpile.Stone", "equals": 8 }

@@ -150,6 +150,7 @@ public class ResearchTests
         Building near = sim.Debug.PlaceBuilding(BuildingType.Mine, 52, 16, Facing.North);
         sim.Debug.PlaceField(ResourceType.IronOre, 3, 3, 200f);
         Building far = sim.Debug.PlaceBuilding(BuildingType.Mine, 12, 10, Facing.North);
+        far.Output[ResourceType.IronOre] = 8f;
         sim.Debug.PlaceField(ResourceType.Bauxite, 11, 2, 200f);
         Building rig = sim.Debug.PlaceBuilding(BuildingType.DrillRig, 44, 4, Facing.North);
         Assert.True(near.Online);
@@ -168,7 +169,7 @@ public class ResearchTests
         Assert.False(sim.Transfers(ResourceType.Bauxite));
 
         SimTestHelpers.Seconds(sim, 40.0);
-        Assert.True(far.OutputCount >= 8f);
+        Assert.Equal(8f, far.OutputCount);
         Assert.True(rig.OutputCount >= 4f);
         Assert.Equal(0f, SimTestHelpers.Stock(sim, ResourceType.Bauxite));
 
@@ -177,7 +178,7 @@ public class ResearchTests
         sim.Debug.SetResearchProgress(Advanced, ResearchDefs.For(Advanced).Work);
         SimTestHelpers.Ticks(sim, 1);
         Assert.Equal(0f, rig.OutputCount);
-        Assert.True(far.OutputCount >= 8f);
+        Assert.Equal(8f, far.OutputCount);
     }
 
     [Fact]

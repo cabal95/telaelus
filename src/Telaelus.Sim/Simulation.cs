@@ -532,6 +532,10 @@ public sealed partial class Simulation
         }
         if (building.Def.IsExtractor)
         {
+            if (!building.Online)
+            {
+                return new BuildingStatus(BuildingState.Idle, "Offline: outside the network");
+            }
             ResourceField? field = building.CurrentField is { Depleted: false } current ? current : NearestFieldInWorkArea(building);
             if (field is null)
             {
@@ -819,6 +823,12 @@ public sealed partial class Simulation
             if (building.Def.Plot is not null)
             {
                 StepForester(building, dt);
+                continue;
+            }
+            if (building.Def.IsCollector && !building.Online)
+            {
+                // A collector works only on the network; going offline drops the unit in hand.
+                building.Progress = 0f;
                 continue;
             }
             if (building.Def.ProduceSeconds > 0f)

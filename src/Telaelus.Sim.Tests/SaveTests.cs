@@ -21,7 +21,7 @@ public class SaveTests
         sim.Debug.PlaceBuilding(BuildingType.BurnerGenerator, 44, 0, Facing.North);
         sim.Debug.PlaceBuilding(BuildingType.BurnerGenerator, 46, 0, Facing.North);
         sim.Debug.PlaceField(ResourceType.IronOre, 2, 10, 300f);
-        sim.Debug.PlaceBuilding(BuildingType.Mine, 13, 40, Facing.North);
+        Building mine = sim.Debug.PlaceBuilding(BuildingType.Mine, 13, 40, Facing.North);
         sim.Debug.FillBuffer(13, 40, ResourceType.IronOre, 15f);
         sim.Debug.PlaceBuilding(BuildingType.Depot, 46, 14, Facing.North);
         sim.Debug.PlaceBuilding(BuildingType.Smelter, 40, 4, Facing.North);
@@ -37,6 +37,7 @@ public class SaveTests
         sim.Debug.PlaceBridge(20, 40, 22, 40);
         sim.Debug.SetWorkedOut(8, 12, ResourceType.CrudeOil);
         sim.Debug.SetTimeOfDay(0.6f);
+        SimTestHelpers.Connect(sim, mine.Position.X, mine.Position.Z);
         return sim;
     }
 

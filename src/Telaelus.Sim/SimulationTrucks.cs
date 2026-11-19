@@ -229,7 +229,7 @@ public sealed partial class Simulation
                 }
                 break;
             case TruckState.ToCollector:
-                if (truck.Target is not Building target || target.OutputCount < 1f - RoomTolerance)
+                if (truck.Target is not Building target || !target.Online || target.OutputCount < 1f - RoomTolerance)
                 {
                     DropJob(truck);
                     break;
@@ -241,6 +241,12 @@ public sealed partial class Simulation
                 }
                 break;
             case TruckState.Loading:
+                if (truck.Target is { Online: false })
+                {
+                    // The load is taken at the end, so a collector cut off mid-load sends it home empty.
+                    DropJob(truck);
+                    break;
+                }
                 truck.Timer -= dt;
                 if (truck.Timer <= 0f)
                 {
@@ -273,7 +279,7 @@ public sealed partial class Simulation
         var candidates = new List<(Building Building, float Load)>();
         foreach (Building building in _buildings)
         {
-            if (!building.Def.IsCollector || TruckFor(building) is not null || _unreachable.Contains((building.Id, truck.Id)))
+            if (!building.Def.IsCollector || !building.Online || TruckFor(building) is not null || _unreachable.Contains((building.Id, truck.Id)))
             {
                 continue;
             }

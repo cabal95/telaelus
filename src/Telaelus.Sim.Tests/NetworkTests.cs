@@ -4,7 +4,7 @@ namespace Telaelus.Sim.Tests;
 
 public class NetworkTests
 {
-    // The empty map's HQ is anchored at (56, 2), 6 x 10: its center is (59, 7), coverage 14, link 16.
+    // The empty map's HQ is anchored at (56, 2), 6 x 10: its center is (59, 7), coverage 19, link 22.
     private static Simulation EmptyMap()
     {
         var sim = new Simulation();
@@ -16,16 +16,16 @@ public class NetworkTests
     public void Hubs_LinkWithinTheLargerOfTheirLinkRadii()
     {
         Simulation sim = EmptyMap();
-        // A Small Hub 15 units from the HQ's center: past its own 12, inside the HQ's 16.
-        Building near = sim.Debug.PlaceBuilding(BuildingType.SmallHub, 44, 6, Facing.North);
-        // 13 units on from that one: past both Small Hubs' 12.
-        Building far = sim.Debug.PlaceBuilding(BuildingType.SmallHub, 31, 6, Facing.North);
+        // A Small Hub 18.5 units from the HQ's center: past its own 14, inside the HQ's 22.
+        Building near = sim.Debug.PlaceBuilding(BuildingType.SmallHub, 40, 6, Facing.North);
+        // 15 units on from that one: past both Small Hubs' 14.
+        Building far = sim.Debug.PlaceBuilding(BuildingType.SmallHub, 25, 6, Facing.North);
 
         Assert.True(near.Online);
         Assert.False(far.Online);
 
         // A Relay (link 30) between them links both.
-        sim.Debug.PlaceBuilding(BuildingType.Relay, 36, 14, Facing.North);
+        sim.Debug.PlaceBuilding(BuildingType.Relay, 32, 14, Facing.North);
         Assert.True(far.Online);
     }
 
@@ -35,13 +35,13 @@ public class NetworkTests
         Simulation sim = EmptyMap();
         Building hq = SimTestHelpers.Hq(sim);
 
-        // From the HQ's center (59, 7): this Smelter's nearest corner (48, 12) is 12.1 away, inside
-        // the 14 coverage, though its center (46.5, 13.5) is 14.1 away.
-        Building corner = sim.Debug.PlaceBuilding(BuildingType.Smelter, 45, 12, Facing.North);
-        // This one's nearest point (45, 12) is 14.9 away.
-        Building beyond = sim.Debug.PlaceBuilding(BuildingType.Smelter, 41, 12, Facing.North);
+        // From the HQ's center (59, 7): this Smelter's nearest corner (41, 12) is 18.7 away, inside
+        // the 19 coverage, though its center (39.5, 13.5) is 20.6 away.
+        Building corner = sim.Debug.PlaceBuilding(BuildingType.Smelter, 38, 12, Facing.North);
+        // This one's nearest point (37, 12) is 22.6 away.
+        Building beyond = sim.Debug.PlaceBuilding(BuildingType.Smelter, 34, 12, Facing.North);
 
-        Assert.True(hq.Position.DistanceTo(corner.Position) > 14f);
+        Assert.True(hq.Position.DistanceTo(corner.Position) > 19f);
         Assert.True(corner.Online);
         Assert.False(beyond.Online);
     }
@@ -50,12 +50,12 @@ public class NetworkTests
     public void SwitchingAHubOff_CutsItsBranch_AndDestroyingOneDoesToo()
     {
         Simulation sim = EmptyMap();
-        // HQ center (59, 7); hub A's center (47.5, 7.5) is 11.5 from it; hub B's (37.5, 7.5) is 10
-        // from A and 21.5 from the HQ, so B reaches the HQ only through A. The Smelter is covered
-        // by B alone.
-        Building a = sim.Debug.PlaceBuilding(BuildingType.SmallHub, 47, 7, Facing.North);
-        Building b = sim.Debug.PlaceBuilding(BuildingType.SmallHub, 37, 7, Facing.North);
-        Building smelter = sim.Debug.PlaceBuilding(BuildingType.Smelter, 35, 12, Facing.North);
+        // HQ center (59, 7); hub A's center (40.5, 7.5) is 18.5 from it; hub B's (28.5, 7.5) is 12
+        // from A and 30.5 from the HQ, so B reaches the HQ only through A. The Smelter is covered
+        // by B alone (its nearest point is 4.7 from B and 14.2 from A).
+        Building a = sim.Debug.PlaceBuilding(BuildingType.SmallHub, 40, 7, Facing.North);
+        Building b = sim.Debug.PlaceBuilding(BuildingType.SmallHub, 28, 7, Facing.North);
+        Building smelter = sim.Debug.PlaceBuilding(BuildingType.Smelter, 24, 12, Facing.North);
         Assert.True(b.Online);
         Assert.True(smelter.Online);
 
@@ -76,7 +76,7 @@ public class NetworkTests
     {
         Simulation sim = EmptyMap();
         ResourceField ore = sim.Debug.PlaceField(ResourceType.IronOre, 3, 3, 100f);
-        Building mine = sim.Debug.PlaceBuilding(BuildingType.Mine, 12, 10, Facing.North);
+        Building mine = SimTestHelpers.PlaceOnline(sim, BuildingType.Mine, 12, 10);
 
         // 8 s a unit at base speed; 20 units fill the buffer at 160 s.
         SimTestHelpers.Seconds(sim, 200.0);
@@ -92,7 +92,7 @@ public class NetworkTests
     {
         Simulation sim = EmptyMap();
         sim.Debug.PlaceField(ResourceType.IronOre, 3, 3, 100f);
-        Building mine = sim.Debug.PlaceBuilding(BuildingType.Mine, 12, 10, Facing.North);
+        Building mine = SimTestHelpers.PlaceOnline(sim, BuildingType.Mine, 12, 10);
         SimTestHelpers.Seconds(sim, 40.5);
         Assert.Equal(5f, mine.OutputCount);
 
@@ -117,7 +117,7 @@ public class NetworkTests
         Simulation sim = EmptyMap();
         sim.Debug.SeedStockpile(ResourceType.IronOre, 60f);
         sim.Debug.PlaceField(ResourceType.IronOre, 3, 3, 100f);
-        Building mine = sim.Debug.PlaceBuilding(BuildingType.Mine, 12, 10, Facing.North);
+        Building mine = SimTestHelpers.PlaceOnline(sim, BuildingType.Mine, 12, 10);
         SimTestHelpers.Seconds(sim, 20.0);
 
         SimTestHelpers.CollectByHand(sim, mine);
@@ -170,7 +170,7 @@ public class NetworkTests
         Simulation sim = EmptyMap();
         sim.Debug.SeedStockpile(ResourceType.IronOre, 60f);
         sim.Debug.PlaceField(ResourceType.IronOre, 3, 3, 100f);
-        Building mine = sim.Debug.PlaceBuilding(BuildingType.Mine, 12, 10, Facing.North);
+        Building mine = SimTestHelpers.PlaceOnline(sim, BuildingType.Mine, 12, 10);
         SimTestHelpers.Seconds(sim, 40.5);
 
         sim.TryDestroyBuilding(mine.Id);
