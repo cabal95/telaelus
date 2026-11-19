@@ -320,6 +320,7 @@ public partial class GameRoot : Node3D
         _topBar.Refresh(_sim, _dialogs.UiSize);
         _hint.Refresh(_sim, _dialogs.UiSize);
         _notifications.Paused = paused;
+        _notifications.Covered = _dialogs.CapturesWorldInput;
         _notifications.Refresh(_sim, _dialogs.UiSize);
         ShowHappened();
         _trainer.Update(delta);

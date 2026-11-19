@@ -72,6 +72,21 @@ public partial class Notifications : HudOverlay
     /// <summary>While the game stands still (the game menu, saving, loading), toasts wait.</summary>
     public bool Paused { get; set; }
 
+    /// <summary>
+    /// While a modal is open: the whole stack (the trainer's step card too) fades out and its toasts
+    /// wait, then fades back in when it closes, so nothing shows half covered beside a modal.
+    /// </summary>
+    public bool Covered { get; set; }
+
+    /// <summary>How long the stack takes to fade out under a modal, and back in.</summary>
+    public const double CoverFadeSeconds = 0.15;
+
+    /// <summary>How much of the stack shows: 1 uncovered, 0 hidden under a modal.</summary>
+    private float _shown = 1f;
+
+    /// <summary>Whether the stack shows (false once it has faded out under a modal).</summary>
+    public bool StackShown => Visible;
+
     public override void _Ready()
     {
         MouseFilter = MouseFilterEnum.Ignore;
@@ -130,7 +145,11 @@ public partial class Notifications : HudOverlay
     public override void _Process(double delta)
     {
         Control? hovered = GetViewport().GuiGetHoveredControl();
-        if (Paused)
+        float fade = (float)(delta / CoverFadeSeconds);
+        _shown = Mathf.Clamp(_shown + (Covered ? -fade : fade), 0f, 1f);
+        Modulate = new Color(1f, 1f, 1f, _shown);
+        Visible = _shown > 0f;
+        if (Paused || Covered)
         {
             delta = 0.0;
         }
@@ -153,7 +172,7 @@ public partial class Notifications : HudOverlay
             }
             toast.Sync();
         }
-        Layout(snap: false, Paused ? 1f : (float)delta);
+        Layout(snap: false, Paused || Covered ? 1f : (float)delta);
         RegisterControls();
     }
 

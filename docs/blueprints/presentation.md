@@ -155,7 +155,8 @@ ui-style.md. There is no text HUD; the screen holds:
   launched (lasting, the Shipyard's picture, "Ship launched", "Ships launched: 2"). A frame's
   discoveries merge into one toast ("Discovered: Coal, Sulfur", the first one's icon, no detail),
   and so do its unlocks ("New buildings: Mine, Smelter"), shown above the discoveries. A new
-  world and a load notify nothing.
+  world and a load notify nothing. `GameRoot` sets `Notifications.Covered` while a modal is open,
+  hiding the stack and holding its timers (ui-style.md).
 - **Trainer** (`Trainer`): teaches the controls and the opening, one step at a time on the step
   card (ui-style.md). Each step is done by doing it and reads "Done" for a second before the next;
   a step already done when it comes up completes at once. The steps (`TrainerStep`: text, hint,

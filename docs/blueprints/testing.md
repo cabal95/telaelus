@@ -298,7 +298,8 @@ pausing it and stepping frame by frame.
   while hidden) and their `powerTone`, `waterTone`, and `sandTone`, its `clock` ("14:00"), and its
   `store` (the Battery Banks' readout, or null with none), `hint`: the hint's `text`, `progress`,
   and `storageFull` or null, `toasts`: the notifications shown, newest first, each `style`
-  (`brief` or `lasting`), `title`, `detail` (or null), and `remaining` seconds (one decimal),
+  (`brief` or `lasting`), `title`, `detail` (or null), `remaining` seconds (one decimal), and
+  `shown` (false while the stack is hidden under a modal),
   `trainer`: the trainer's `step` (1-based) and `total`, its card's `header`, `text`, and `hint`,
   `done` (the card reads Done), and the pointer ring's `pointer` [x, z] or null; or null with the
   trainer off, `choice`: the choice dialog's question while it is open, or null, `tooltip`: the hover
@@ -545,7 +546,8 @@ pausing it and stepping frame by frame.
   completing at once; the "Trainer complete" toast; the card's X asking to stop, Keep going and
   Stop; a save resuming the step; the game menu's Trainer starting it again),
   `notifications` (no toasts in a new world; seeding Wood showing "New building: Lumber Camp"
-  above "Discovered: Wood", both gone after 5 s; a finished project's lasting toast held while
+  above "Discovered: Wood"; the build menu hiding the stack and holding its time, a discovery
+  under it joining the hidden stack, all showing again once it closes and gone after 5 s; a finished project's lasting toast held while
   hovered and closed by its X; a Water blackout and a ship launch each a lasting toast; a burst of
   discoveries as one toast without detail; a fifth and sixth toast pushing out the oldest brief
   ones; the lasting ones gone after 15 s),

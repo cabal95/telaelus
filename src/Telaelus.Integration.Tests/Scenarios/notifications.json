@@ -11,12 +11,29 @@
     { "seedStockpile": { "type": "Wood", "amount": 15 } },
     { "wait": 1 },
     { "comment": "Unlocks show above discoveries.", "expect": "ui.toasts", "equals": [
-      { "style": "brief", "title": "New building: Lumber Camp", "detail": "[B] to build", "remaining": 5 },
-      { "style": "brief", "title": "Discovered: Wood", "detail": "A Lumber Camp or a Lumber Mill can work it", "remaining": 5 }
+      { "style": "brief", "title": "New building: Lumber Camp", "detail": "[B] to build", "remaining": 5, "shown": true },
+      { "style": "brief", "title": "Discovered: Wood", "detail": "A Lumber Camp or a Lumber Mill can work it", "remaining": 5, "shown": true }
     ] },
     { "wait": 8 },
     { "screenshot": "brief" },
-    { "comment": "5 s and the fade later, both are gone.", "wait": 144 },
+    { "comment": "A modal hides the stack, which waits behind it: the toasts do not count down.", "press": "B" },
+    { "wait": 8 },
+    { "expect": "ui.open", "equals": "buildMenu" },
+    { "expect": "ui.toasts[0].shown", "equals": false },
+    { "expect": "ui.toasts[0].remaining", "equals": 4.7 },
+    { "screenshot": "covered" },
+    { "wait": 200 },
+    { "expect": "ui.toasts[0].remaining", "equals": 4.7 },
+    { "comment": "A discovery under the menu joins the hidden stack.", "seedStockpile": { "type": "Coal", "amount": 1 } },
+    { "wait": 2 },
+    { "expect": "ui.toasts[0].title", "equals": "Discovered: Coal" },
+    { "expect": "ui.toasts[0].shown", "equals": false },
+    { "press": "Escape" },
+    { "wait": 8 },
+    { "expect": "ui.open", "equals": null },
+    { "expect": "ui.toasts[0].shown", "equals": true },
+    { "comment": "It held at 4.7 behind the menu and counts down again.", "expect": "ui.toasts[1].remaining", "gte": 4.3 },
+    { "comment": "5 s and the fade later, all three are gone.", "wait": 152 },
     { "expect": "ui.toasts", "equals": [] },
 
     { "seedStockpile": { "type": "Coal", "amount": 60 } },
@@ -43,7 +60,7 @@
     { "placeBuilding": { "type": "Refinery", "anchor": [52, 12] } },
     { "wait": 2 },
     { "comment": "The Burner Generator covers its Power; nothing supplies its Water.", "expect": "ui.toasts", "equals": [
-      { "style": "lasting", "title": "Blackout: Water", "detail": "Demand 2 over supply 0", "remaining": 14.9 }
+      { "style": "lasting", "title": "Blackout: Water", "detail": "Demand 2 over supply 0", "remaining": 14.9, "shown": true }
     ] },
     { "seedStockpile": { "type": "HullSection", "amount": 4 } },
     { "seedStockpile": { "type": "Engine", "amount": 1 } },

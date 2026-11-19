@@ -215,7 +215,8 @@ public static class StateSnapshot
                 ["style"] = toast.Style == ToastStyle.Lasting ? "lasting" : "brief",
                 ["title"] = toast.Title,
                 ["detail"] = toast.Detail,
-                ["remaining"] = Math.Round(toast.Remaining, 1)
+                ["remaining"] = Math.Round(toast.Remaining, 1),
+                ["shown"] = root.Notifications.StackShown
             });
         }
         ui["toasts"] = toasts;

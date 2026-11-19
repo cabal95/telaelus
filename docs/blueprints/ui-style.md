@@ -169,7 +169,10 @@ The two kinds place themselves:
   menu or the save and load dialogs) and not while the pointer is over it. A new toast past the
   fourth pushes out the oldest brief one, or the oldest of all when every one is lasting. The
   cards take the mouse (so clicks on them never reach the world); the space around them does not.
-  A modal covers them; a panel docks left, so they never cover it.
+  While a modal is open (`DialogHost.CapturesWorldInput`) the whole stack, the trainer's step
+  card too, fades out over 0.15 s and its toasts wait (`Notifications.Covered`); it fades back in
+  when the modal closes, with new toasts raised meanwhile on top. A panel docks left, so they never
+  cover it.
   - **Step card** (the trainer's): the lasting card's strip and X, no icon and no countdown bar,
     and three lines: "Trainer 3 / 13" (or "Done" once the step is done) in `SmallSize` `Accent`,
     the instruction in `BodySize` `Text`, and an optional hint in `SmallSize` `TextDim`. It sits

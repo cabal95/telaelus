@@ -240,6 +240,9 @@ Newest last. One line each; open the file for the full spec.
 - **2611191244-building-descriptions** - Every buildable building has a one-line description of what
   it makes or gives and what it needs, shown first in the build menu's tooltip (hidden for an
   undiscovered building).
+- **2611191433-toasts-under-modals** - While a modal is open the notification stack (the trainer's
+  card too) fades out and its timers hold, then fades back in when it closes, so no toast shows half
+  covered beside the build menu or runs out unread behind it.
 
 ## Adding a changeset
 
