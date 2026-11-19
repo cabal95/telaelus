@@ -243,6 +243,9 @@ Newest last. One line each; open the file for the full spec.
 - **2611191433-toasts-under-modals** - While a modal is open the notification stack (the trainer's
   card too) fades out and its timers hold, then fades back in when it closes, so no toast shows half
   covered beside the build menu or runs out unread behind it.
+- **2611191454-building-table** - The buildings blueprint gains an "At a glance" table of every
+  building's cost, draws, supplies, fuel, and recipes; `BuildingTableTests` rebuilds it from the
+  code and fails when the blueprint's copy differs.
 
 ## Adding a changeset
 

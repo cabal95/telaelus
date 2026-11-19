@@ -148,6 +148,8 @@ pausing it and stepping frame by frame.
   its cycle's inputs), status and idle reasons, destroying (half the cost back, rounded up, plus a
   running cycle's inputs; cells freed), `BuildingAt`, and `ExtractorsWorking` (the switched-on
   extractors on a field).
+- `BuildingTableTests`: buildings.md's "At a glance" table matches one rebuilt from
+  `BuildingDefs` and `Recipes` (the failure prints the table as it should read).
 - `BuildingDescriptionTests`: every buildable building has a description under 80 characters
   with no long dash; the HQ has none.
 - `CostTests`: unlocking once the whole cost is held, by seeding and by hand gathering (kept
