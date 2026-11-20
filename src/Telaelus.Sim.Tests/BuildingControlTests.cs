@@ -34,6 +34,7 @@ public class BuildingControlTests
         sim.Debug.SeedStockpile(ResourceType.IronOre, 1f);
         sim.Debug.SeedStockpile(ResourceType.Coal, 1f);
         Building smelter = sim.Debug.PlaceBuilding(BuildingType.Smelter, SimTestHelpers.ClearX, SimTestHelpers.ClearZ, Facing.North);
+        SimTestHelpers.Order(sim, smelter);
 
         SimTestHelpers.Seconds(sim, 10.0);
         Assert.Equal(0f, SimTestHelpers.Gathered(sim, ResourceType.IronOre));
@@ -59,6 +60,7 @@ public class BuildingControlTests
         Building mine = SimTestHelpers.PlaceOnline(sim, BuildingType.Mine, NearOreX, NearOreZ);
         Building idleMine = SimTestHelpers.PlaceOnline(sim, BuildingType.Mine, SimTestHelpers.ClearX, SimTestHelpers.ClearZ);
         Building refinery = sim.Debug.PlaceBuilding(BuildingType.Refinery, 20, 28, Facing.North);
+        SimTestHelpers.Order(sim, refinery);
         SimTestHelpers.Ticks(sim, 1);
 
         Assert.Equal(new BuildingStatus(BuildingState.Working, null), sim.BuildingStatusOf(mine));
@@ -110,6 +112,7 @@ public class BuildingControlTests
         sim.Debug.SeedStockpile(ResourceType.IronOre, 1f);
         sim.Debug.SeedStockpile(ResourceType.Coal, 1f);
         Building smelter = sim.Debug.PlaceBuilding(BuildingType.Smelter, SimTestHelpers.ClearX, SimTestHelpers.ClearZ, Facing.North);
+        SimTestHelpers.Order(sim, smelter);
         SimTestHelpers.Connect(sim, SimTestHelpers.ClearX, SimTestHelpers.ClearZ);
         SimTestHelpers.Seconds(sim, 2.0);
         Assert.Equal(0f, SimTestHelpers.Stock(sim, ResourceType.IronOre));

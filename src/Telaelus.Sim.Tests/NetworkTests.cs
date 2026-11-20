@@ -134,6 +134,7 @@ public class NetworkTests
         sim.Debug.SeedStockpile(ResourceType.IronOre, 10f);
         sim.Debug.SeedStockpile(ResourceType.Coal, 10f);
         Building smelter = sim.Debug.PlaceBuilding(BuildingType.Smelter, 20, 20, Facing.North);
+        SimTestHelpers.Order(sim, smelter);
         Assert.False(smelter.Online);
         SimTestHelpers.Ticks(sim, 1);
 

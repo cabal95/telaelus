@@ -335,6 +335,16 @@ public static class StateSnapshot
             ui["fuel"] = root.BuildingDetail.FuelText;
             ui["output"] = root.BuildingDetail.OutputText;
             ui["recipe"] = root.BuildingDetail.RecipeChoiceText;
+            ui["order"] = root.BuildingDetail.Order is (string quantity, bool canCraft)
+                ? new JsonObject
+                {
+                    ["quantity"] = quantity,
+                    ["canCraft"] = canCraft
+                }
+                : null;
+            ui["queue"] = root.BuildingDetail.QueueRows is System.Collections.Generic.IReadOnlyList<string> queueRows
+                ? new JsonArray(queueRows.Select(r => (JsonNode?)r).ToArray())
+                : null;
             ui["input"] = root.BuildingDetail.InputChoiceText is (string choice, string note)
                 ? new JsonObject
                 {
@@ -577,6 +587,13 @@ public static class StateSnapshot
                 ["burning"] = b.BurnLeft > 0f ? b.Burning?.ToString() : null,
                 ["producing"] = b.Def.ProduceSeconds > 0f ? sim.OutputOf(b)?.ToString() : null,
                 ["recipe"] = b.Recipe?.Name,
+                ["queue"] = b.Queues
+                    ? new JsonArray(b.Queue.Select(o => (JsonNode?)new JsonObject
+                    {
+                        ["recipe"] = b.Recipes[o.RecipeIndex].Name,
+                        ["remaining"] = o.Remaining
+                    }).ToArray())
+                    : null,
                 ["display"] = DisplayStandViews.DisplayedOutput(sim, b)?.ToString(),
                 ["charge"] = b.Def.StoreCapacity > 0f ? Round(b.Charge) : null,
                 ["status"] = Camel(sim.BuildingStatusOf(b).State.ToString()),

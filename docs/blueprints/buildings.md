@@ -228,7 +228,8 @@ Recipes marked "(capacity only)" use only the Sand or Water they draw.
 - **Overload** is demand over supply less 1. The state (`CapacityState`, from `StateFor`) is
   Normal at or under supply, Brownout up to `BrownoutLimit` (25%) over, and Blackout past it or
   with demand and no supply. The type's speed is 1 when Normal, 1 less twice the overload in a
-  Brownout (0.8 at 10% over, 0.5 at 25%), 0 in a Blackout.
+  Brownout (0.8 at 10% over, 0.5 at 25%), 0 in a Blackout. A processor with an empty crafting
+  queue is a consumer like any other: it draws while switched on, idle or not.
 - A building's speed (`WorkSpeed`) is the slowest speed of the types it draws (1 when it draws
   none), and 0 offline. A consumer's extractor progress and processor cycle advance at their speed
   times it; at 0 they do not start or advance. A provider that draws capacity supplies times its
@@ -257,7 +258,8 @@ Recipes marked "(capacity only)" use only the Sand or Water they draw.
   Mill, Drill Rig, and Refinery tier 1. A Pumping Station is four Pumps' worth for some Power, and
   a Sand Dredge four Collectors'.
 - **The Glassworks** is a furnace: it burns fuel like the Smelter (Coal, Charcoal, or Wood, Best by
-  default) and needs no power. Its Glass goes to the Cargo pool.
+  default) and needs no power. Its Glass goes to the Cargo pool. It makes from nothing but queues
+  (its fuel and the Cargo pool are worth guarding).
 
 - **The Water Wheel's placement** (`CanPlaceAcrossRiver`): its whole footprint lies within one map
   cell whose river is Straight, its 4-unit side across the flow (facing North or South on a
@@ -350,12 +352,31 @@ Recipes marked "(capacity only)" use only the Sand or Water they draw.
 
 - `Recipes.For(type)` lists a processor's recipes, the default first (an empty list for anything
   else); every recipe has one output, named for it in a picker (`Recipe.Name`). A building runs one
-  (`RecipeIndex`, `Building.Recipe`). `SetRecipe` changes it at once between cycles, or, during a
-  cycle, when that cycle finishes (`PendingRecipe`); the input buffer keeps what it holds, and
-  what the running recipe cannot use goes back to storage whenever the building is online.
+  at a time (`RecipeIndex`, `Building.Recipe`).
+- **The crafting queue.** Every processor but the three that make from nothing and burn no fuel
+  (the Electrolyzer, Brine Well, and Air Separator) crafts from a queue (`Building.Queues`,
+  `Building.Queue`): an ordered list of orders (`CraftOrder`: a recipe and the items still to make).
+  It crafts the first order's recipe; each finished cycle takes the recipe's output off that
+  order, and an order at 0 leaves the queue for the next. With the queue empty it starts no cycle
+  and is idle "Queue empty". The first order waits for its inputs even when a later one's are at
+  hand.
+  - `QueueCraft(id, recipe, count)` adds an order of a count in items, rounded up to whole cycles
+    (`WholeCycles`: 5 Copper Wire, two to a cycle, is 6). When the last order is the same recipe
+    it grows instead, so 5 Iron, 5 Copper, then 5 Iron is three orders, but 5 Iron then 3 Iron is
+    one of 8. A queue holds at most `MaxQueue` (4) orders; a new order beyond that is refused.
+  - `CancelCraft(id, index)` removes an order. Removing the first while its cycle runs stops the
+    cycle and returns what it took: to storage online, else to the input buffer.
+  - A new processor, and one in a save from before the queue, starts with an empty queue (a cycle
+    loaded running finishes and delivers first). The recipe changes only between orders, so
+    `SetRecipe` and `PendingRecipe` are for the three that run without a queue: `SetRecipe`
+    changes their recipe at once between cycles, or, during a cycle, when it finishes.
+  - The input buffer keeps what it holds; what no order in the queue (or a running processor's
+    recipe) can use goes back to storage whenever the building is online.
 - **Alternative inputs:** a recipe input may be filled by any of several types in the same amount
   (`Recipe.Alternatives`, `OptionsFor`; Steel's and Silicon's carbon is Coal or Charcoal).
-  `SetInputChoice` picks one (`Building.InputChoices`) or clears it for **Auto**, which takes the
+  `SetInputChoice(id, recipe, input, type)` picks one for one of the building's recipes
+  (`Building.InputChoices`, by recipe and input, so it holds while the queue moves between
+  recipes) or clears it for **Auto**, which takes the
   one most at hand (`AtHand`: the input buffer, plus storage when online), the first on a tie
   (`ChosenInput`, `ResolvedInputs`). A cycle records what it took (`CycleInputs`), refunded if the
   building is destroyed mid-cycle. A building waiting on an Auto input names all of them ("Waiting
@@ -501,6 +522,9 @@ And seven buildings, all processors (output buffer 10, 5 cycles of each input):
 - **The Smelter** burns fuel on top of its ore: it starts a cycle only with fuel at hand, and its
   cycle advances only while a unit burns, taking the next when one burns out mid-cycle (a 16 s
   cycle uses 0.4 Coal or 1.6 Wood). A finished cycle waiting for room burns nothing.
+- **An idle queue:** a fuel-burning processor with its crafting queue empty takes no new fuel, but
+  the unit already burning burns out and the rest of it is lost (a Coal with 3 s left when the last
+  order finishes burns those 3 s for nothing). A cycle waiting for its inputs keeps its unit.
 
 ### Buffers
 
@@ -634,6 +658,7 @@ of what it makes or gives and what it needs, shown in the build menu's tooltip (
   nowhere to go, before a cycle or with a finished one waiting, is idle "Storage full: Iron" online
   or "Full: collect by hand" offline; otherwise it works during a cycle, else is idle "Waiting for"
   its missing inputs ("Waiting for Crude Oil", and offline "Waiting for Iron Ore (load by hand)").
+  A queueing processor with no order and no cycle running is idle "Queue empty".
   A consumer that is offline is idle "No Power: offline" (naming the first type it draws, in
   `CapacityType` order), and in a blackout of a type it draws "Blackout: Water" (checked first). A
   fuel burner with no fuel at hand is idle "Waiting for fuel" (offline "Waiting for fuel (load by

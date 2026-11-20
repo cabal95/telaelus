@@ -246,6 +246,10 @@ Newest last. One line each; open the file for the full spec.
 - **2611191454-building-table** - The buildings blueprint gains an "At a glance" table of every
   building's cost, draws, supplies, fuel, and recipes; `BuildingTableTests` rebuilds it from the
   code and fails when the blueprint's copy differs.
+- **2611191751-crafting-queue** - Processors craft from a queue of up to four orders set in the
+  building panel (recipe, quantity, Craft, and a removable row per order) and idle when it is
+  empty, still drawing their capacity; the Electrolyzer, Brine Well, and Air Separator run without
+  one.
 
 ## Adding a changeset
 

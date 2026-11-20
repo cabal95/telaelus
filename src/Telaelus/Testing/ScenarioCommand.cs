@@ -220,6 +220,13 @@ public sealed class ScenarioCommand
                     int index = (int)Number(Required(arg, "index"), "index");
                     return e => e.SetRecipe(x, z, index);
                 }
+            case "queueCraft":
+                {
+                    (int x, int z) = Pair(Required(arg, "anchor"), "anchor");
+                    int recipe = (int)Number(Required(arg, "recipe"), "recipe");
+                    int count = (int)Number(Required(arg, "count"), "count");
+                    return e => e.QueueCraft(x, z, recipe, count);
+                }
             case "placeMotherlode":
                 {
                     MotherlodeType kind = ParseEnum<MotherlodeType>(Required(arg, "kind"));

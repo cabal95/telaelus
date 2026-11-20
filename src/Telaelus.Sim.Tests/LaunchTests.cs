@@ -102,7 +102,11 @@ public class LaunchTests
         };
         foreach ((BuildingType type, int x, int z) in placements)
         {
-            sim.Debug.PlaceBuilding(type, x, z, Facing.North);
+            Building building = sim.Debug.PlaceBuilding(type, x, z, Facing.North);
+            if (building.Queues)
+            {
+                SimTestHelpers.Order(sim, building);
+            }
         }
         Building oxygen = sim.Buildings.Last(b => b.Type == BuildingType.Electrolyzer);
         Assert.True(sim.SetRecipe(oxygen.Id, 1));

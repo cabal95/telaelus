@@ -52,6 +52,7 @@ public class CapacityTests
         sim.Debug.SeedStockpile(ResourceType.CrudeOil, 5f);
         sim.Debug.SeedStockpile(ResourceType.Coal, 5f);
         Building refinery = sim.Debug.PlaceBuilding(BuildingType.Refinery, 46, 8, Facing.North);
+        SimTestHelpers.Order(sim, refinery);
         sim.Debug.PlaceBuilding(BuildingType.BurnerGenerator, 52, 12, Facing.North);
         SimTestHelpers.Seconds(sim, 10.0);
 
@@ -75,6 +76,7 @@ public class CapacityTests
         for (int i = 0; i < 5; i++)
         {
             refineries[i] = sim.Debug.PlaceBuilding(BuildingType.Refinery, 44 + 2 * i, 8, Facing.North);
+            SimTestHelpers.Order(sim, refineries[i]);
         }
         sim.Debug.PlaceBuilding(BuildingType.BurnerGenerator, 52, 12, Facing.North);
         sim.Debug.PlaceBuilding(BuildingType.BurnerGenerator, 54, 12, Facing.North);
@@ -161,6 +163,7 @@ public class CapacityTests
     {
         Simulation sim = EmptyMap();
         Building glassworks = sim.Debug.PlaceBuilding(BuildingType.Glassworks, 44, 10, Facing.North);
+        SimTestHelpers.Order(sim, glassworks);
         SimTestHelpers.Ticks(sim, 1);
         Assert.True(glassworks.Online);
         Assert.Equal(new BuildingStatus(BuildingState.Idle, "Blackout: Sand"), sim.BuildingStatusOf(glassworks));

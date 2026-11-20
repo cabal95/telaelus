@@ -19,7 +19,9 @@ Game; in a game, Escape opens the game menu (Resume, Save Game, Load Game, Train
     revealed from;
   - every field (id, type, map cell, motherlode, initial and current amount, the building working
     it, growing and time left) and the worked-out cells;
-  - every building (id, type, anchor, facing, enabled, recipe and the waiting change, input, fuel,
+  - every building (id, type, anchor, facing, enabled, recipe and the waiting change, crafting
+    queue (each order's recipe and items left; absent in older saves, an empty queue), input
+    choices by recipe (an older save's by input alone belong to its recipe), fuel
     and output choices, Silo resource, input, output, and fuel buffers, the fuel burning and time
     left, cycle progress and the inputs it took, its current field, site, and plot, feeding state,
     and charge);

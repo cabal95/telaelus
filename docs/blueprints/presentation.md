@@ -261,10 +261,21 @@ ui-style.md. There is no text HUD; the screen holds:
   22 s left; 4 in slot") and, below the rows, a Fuel picker (Best, then each fuel the building
   takes, longest-burning first, rebuilt for a building that takes others; choosing calls
   `SetFuelChoice`) with a dim note naming what it burns ("Best: burns Coal
-  (40 s per unit)"). A processor with several recipes has a Recipe picker (choosing calls
-  `SetRecipe`; the Recipe row adds "(next: Copper)" while a change waits for the running cycle),
-  and one whose recipe has an input with alternatives an input picker labeled with them ("Coal or
-  Charcoal": Auto, then each; choosing calls `SetInputChoice`) over a dim note ("Auto: uses Coal
+  (40 s per unit)"). A processor with several recipes has a Recipe picker. On a queueing
+  processor (buildings.md) it chooses what to queue, starting on the recipe the building runs; on
+  the three that run without a queue it calls `SetRecipe`, and the Recipe row adds "(next:
+  Copper)" while a change waits for the running cycle. A queueing processor then has its order
+  controls: a quantity in items between "-" and "+" buttons (`buildingDetail/less`,
+  `buildingDetail/more`), each a cycle of the chosen recipe (Shift: ten), from one cycle (where it
+  starts, and again on a new recipe) to 99; a Craft button (`buildingDetail/craft`, calling
+  `QueueCraft`; disabled when the queue is full and its last order is another recipe); and under
+  a dim "Queue" label a row per order ("Iron x 5", the first "(crafting)" while its cycle runs),
+  each with an X (`buildingDetail/queue/0` and on, calling `CancelCraft`), or "Queue empty". Its
+  Recipe row and progress bar show only while it has an order or a cycle. The pickers, order
+  controls, and queue come right under the progress bar (after a Shipyard's launch section), the
+  Fuel picker after them. A recipe whose
+  input has alternatives has an input picker for the picked recipe labeled with them ("Coal or
+  Charcoal": Auto, then each; choosing calls `SetInputChoice` for that recipe) over a dim note ("Auto: uses Coal
   (Coal 58, Charcoal 4)", or "Uses only Charcoal"). The Recipe row names an alternative input as
   all of them ("2 Iron + 1 Coal or Charcoal + 1 Limestone to 1 Steel, 20 s"), and the Buffer row
   lists the inputs as resolved. The progress bar shows only for extractors and processors. An extractor or
@@ -283,7 +294,7 @@ ui-style.md. There is no text HUD; the screen holds:
   of what is short ("15 Iron (have 3)" in `Short`) or "Every bay is full" (dim), then a "Sell truck
   (8 Iron, 5 Wood back)" button naming what selling the next truck (`TruckToSell`) gives back
   ("Sell truck (nothing back)" for the one the Depot came with), disabled with no trucks. A Shipyard
-  shows a Ship launch section under its progress bar (above the recipe picker, so it shows without
+  shows a Ship launch section under its progress bar (above the recipe picker and order controls, so it shows without
   scrolling): a Launch ship button, enabled only while this Shipyard is switched on and online and
   the whole ship bill (`Simulation.LaunchCost`) is in storage, calling `TryLaunchShip`; under it
   why not ("Needs the whole bill in storage", "This Shipyard is offline", "This Shipyard is

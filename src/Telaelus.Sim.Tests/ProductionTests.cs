@@ -12,7 +12,7 @@ public class ProductionTests
         var sim = new Simulation();
         sim.Debug.SeedStockpile(ResourceType.IronOre, 10f);
         sim.Debug.SeedStockpile(ResourceType.Coal, 5f);
-        sim.Debug.PlaceBuilding(BuildingType.Smelter, SimTestHelpers.ClearX, SimTestHelpers.ClearZ, Facing.North);
+        SimTestHelpers.Order(sim, sim.Debug.PlaceBuilding(BuildingType.Smelter, SimTestHelpers.ClearX, SimTestHelpers.ClearZ, Facing.North));
 
         SimTestHelpers.Ticks(sim, JustOver33Seconds);
 
@@ -26,7 +26,7 @@ public class ProductionTests
     {
         var sim = new Simulation();
         sim.Debug.SeedStockpile(ResourceType.CrudeOil, 10f);
-        sim.Debug.PlaceBuilding(BuildingType.Refinery, SimTestHelpers.ClearX, SimTestHelpers.ClearZ, Facing.North);
+        SimTestHelpers.Order(sim, sim.Debug.PlaceBuilding(BuildingType.Refinery, SimTestHelpers.ClearX, SimTestHelpers.ClearZ, Facing.North));
         sim.Debug.PlaceBuilding(BuildingType.TankFarm, SimTestHelpers.ClearX + 4, SimTestHelpers.ClearZ, Facing.North);
         sim.Debug.SeedStockpile(ResourceType.Coal, 5f);
         sim.Debug.PlaceBuilding(BuildingType.BurnerGenerator, SimTestHelpers.ClearX - 3, SimTestHelpers.ClearZ, Facing.North);

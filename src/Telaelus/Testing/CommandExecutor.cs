@@ -432,6 +432,12 @@ public sealed class CommandExecutor
         return StepOutcome.Ok;
     }
 
+    public StepOutcome QueueCraft(int anchorX, int anchorZ, int recipe, int count)
+    {
+        _root.Sim.Debug.QueueCraft(anchorX, anchorZ, recipe, count);
+        return StepOutcome.Ok;
+    }
+
     public StepOutcome PlaceMotherlode(MotherlodeType kind, int mapX, int mapZ)
     {
         _root.Sim.Debug.PlaceMotherlode(kind, mapX, mapZ);

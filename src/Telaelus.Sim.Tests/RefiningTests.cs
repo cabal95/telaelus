@@ -46,6 +46,7 @@ public class RefiningTests
         sim.Debug.SeedStockpile(ResourceType.Limestone, 2f);
         sim.Debug.SeedStockpile(ResourceType.Charcoal, 1f);
         Building mill = sim.Debug.PlaceBuilding(BuildingType.SteelMill, 48, 4, Facing.North);
+        SimTestHelpers.Order(sim, mill);
         Assert.True(mill.Online);
 
         // Coal is 60 less what the generators burn; Auto takes it, there being more of it.
@@ -55,9 +56,9 @@ public class RefiningTests
         Assert.Equal(ResourceType.Coal, mill.CycleInputs[1].Type);
 
         // Set to Charcoal mid-cycle, the next cycle takes Charcoal; with none left it waits for it.
-        Assert.True(sim.SetInputChoice(mill.Id, 1, ResourceType.Charcoal));
-        Assert.False(sim.SetInputChoice(mill.Id, 1, ResourceType.Wood));
-        Assert.False(sim.SetInputChoice(mill.Id, 0, ResourceType.Charcoal));
+        Assert.True(sim.SetInputChoice(mill.Id, 0, 1, ResourceType.Charcoal));
+        Assert.False(sim.SetInputChoice(mill.Id, 0, 1, ResourceType.Wood));
+        Assert.False(sim.SetInputChoice(mill.Id, 0, 0, ResourceType.Charcoal));
         SimTestHelpers.Seconds(sim, 10.2);
         Assert.Equal(1f, SimTestHelpers.Stock(sim, ResourceType.Steel));
         Assert.Equal(ResourceType.Charcoal, mill.CycleInputs[1].Type);
@@ -70,7 +71,7 @@ public class RefiningTests
         Assert.Equal(new BuildingStatus(BuildingState.Idle, "Waiting for Charcoal"), sim.BuildingStatusOf(mill));
 
         // Back on Auto it takes the Coal again; with neither at hand it would wait for either.
-        Assert.True(sim.SetInputChoice(mill.Id, 1, null));
+        Assert.True(sim.SetInputChoice(mill.Id, 0, 1, null));
         SimTestHelpers.Ticks(sim, 1);
         Assert.True(mill.Crafting);
         Assert.Equal(ResourceType.Coal, mill.CycleInputs[1].Type);
@@ -78,26 +79,28 @@ public class RefiningTests
     }
 
     [Fact]
-    public void ARecipeChange_WaitsForTheRunningCycle_AndReturnsUnusedInputs()
+    public void TheNextOrdersRecipe_WaitsForTheRunningCycle_AndUnusedInputsGoBack()
     {
         Simulation sim = Plant();
         sim.Debug.SeedStockpile(ResourceType.IronOre, 2f);
         sim.Debug.SeedStockpile(ResourceType.CopperOre, 2f);
         Building smelter = sim.Debug.PlaceBuilding(BuildingType.Smelter, 48, 4, Facing.North);
+        SimTestHelpers.Order(sim, smelter, 0, 1);
+        SimTestHelpers.Order(sim, smelter, 1, 1);
         SimTestHelpers.Ticks(sim, 1);
         Assert.True(smelter.Crafting);
-
-        Assert.True(sim.SetRecipe(smelter.Id, 1));
         Assert.Equal(0, smelter.RecipeIndex);
-        Assert.False(sim.SetRecipe(smelter.Id, 2));
+        Assert.False(sim.SetRecipe(smelter.Id, 1));
+        Assert.False(sim.QueueCraft(smelter.Id, 2, 1));
 
-        // The Iron cycle finishes, then it makes Copper.
+        // The Iron order finishes, then it makes Copper and idles.
         SimTestHelpers.Seconds(sim, 16.1);
         Assert.Equal(1f, SimTestHelpers.Stock(sim, ResourceType.Iron));
         Assert.Equal(1, smelter.RecipeIndex);
         SimTestHelpers.Seconds(sim, 16.1);
         Assert.Equal(1f, SimTestHelpers.Stock(sim, ResourceType.Copper));
         Assert.Equal(1f, SimTestHelpers.Stock(sim, ResourceType.IronOre));
+        Assert.Equal(new BuildingStatus(BuildingState.Idle, "Queue empty"), sim.BuildingStatusOf(smelter));
 
         // Iron Ore loaded for the old recipe goes back to storage.
         smelter.Input[ResourceType.IronOre] = 3f;
@@ -123,7 +126,7 @@ public class RefiningTests
 
         sim.Debug.RemoveBuilding(48, 4);
         sim.Debug.SeedStockpile(ResourceType.Kerosene, 2f);
-        sim.Debug.PlaceBuilding(BuildingType.FuelPlant, 48, 4, Facing.North);
+        SimTestHelpers.Order(sim, sim.Debug.PlaceBuilding(BuildingType.FuelPlant, 48, 4, Facing.North));
         SimTestHelpers.Seconds(sim, 16.2);
         Assert.Equal(2f, SimTestHelpers.Stock(sim, ResourceType.RocketFuel));
         Assert.Equal(1f, SimTestHelpers.Stock(sim, ResourceType.Hydrogen));
@@ -136,9 +139,10 @@ public class RefiningTests
         Simulation sim = Plant();
         sim.Debug.SeedStockpile(ResourceType.CrudeOil, 4f);
         Building chemical = sim.Debug.PlaceBuilding(BuildingType.ChemicalPlant, 47, 4, Facing.North);
+        SimTestHelpers.Order(sim, chemical, 0, 2);
         SimTestHelpers.Seconds(sim, 20.2);
         Assert.Equal(2f, SimTestHelpers.Stock(sim, ResourceType.Plastic));
-        Assert.True(sim.SetRecipe(chemical.Id, 2));
+        SimTestHelpers.Order(sim, chemical, 2, 1);
         SimTestHelpers.Seconds(sim, 15.2);
         Assert.Equal(1f, SimTestHelpers.Stock(sim, ResourceType.CarbonFiber));
 
@@ -146,9 +150,10 @@ public class RefiningTests
         sim.Debug.SeedStockpile(ResourceType.Quartz, 1f);
         sim.Debug.SeedStockpile(ResourceType.TitaniumOre, 2f);
         Building furnace = sim.Debug.PlaceBuilding(BuildingType.ElectricFurnace, 48, 4, Facing.North);
+        SimTestHelpers.Order(sim, furnace, 0, 1);
+        SimTestHelpers.Order(sim, furnace, 1, 1);
         SimTestHelpers.Seconds(sim, 15.2);
         Assert.Equal(1f, SimTestHelpers.Stock(sim, ResourceType.Silicon));
-        Assert.True(sim.SetRecipe(furnace.Id, 1));
         SimTestHelpers.Seconds(sim, 20.2);
         Assert.Equal(1f, SimTestHelpers.Stock(sim, ResourceType.Titanium));
     }
@@ -159,8 +164,9 @@ public class RefiningTests
         Simulation sim = Plant();
         sim.Debug.SeedStockpile(ResourceType.Bauxite, 8f);
         // Facing East a 3 x 8 pot line lies 8 along X.
-        sim.Debug.PlaceBuilding(BuildingType.AluminumSmelter, 44, 12, Facing.East);
+        SimTestHelpers.Order(sim, sim.Debug.PlaceBuilding(BuildingType.AluminumSmelter, 44, 12, Facing.East));
         Building second = sim.Debug.PlaceBuilding(BuildingType.AluminumSmelter, 44, 15, Facing.East);
+        SimTestHelpers.Order(sim, second);
         Assert.True(second.Online);
         SimTestHelpers.Ticks(sim, 1);
 

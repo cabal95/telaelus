@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Godot;
 
 namespace Telaelus.Sim;
@@ -21,17 +22,30 @@ public sealed class Building
     /// <summary>The recipes it can run (none for a building that is not a processor), the default first.</summary>
     public IReadOnlyList<Recipe> Recipes { get; }
 
-    /// <summary>The index of the recipe it runs (see Simulation.SetRecipe).</summary>
+    /// <summary>
+    /// Whether it crafts from a queue of orders (see Simulation.QueueCraft): every processor but one
+    /// that makes from nothing and burns no fuel (the Electrolyzer, Brine Well, Air Separator), which
+    /// runs its recipe until storage is full.
+    /// </summary>
+    public bool Queues { get; }
+
+    /// <summary>A queueing processor's orders, the first crafting; at most Simulation.MaxQueue.</summary>
+    public List<CraftOrder> Queue { get; } = new();
+
+    /// <summary>
+    /// The index of the recipe it runs: a queueing processor's first order's (or its last when the
+    /// queue is empty), else the one chosen with Simulation.SetRecipe.
+    /// </summary>
     public int RecipeIndex { get; set; }
 
-    /// <summary>A recipe chosen while a cycle runs, taken up when the cycle finishes; null for none.</summary>
+    /// <summary>A recipe chosen for a running processor while a cycle runs, taken up when the cycle finishes; null for none.</summary>
     public int? PendingRecipe { get; set; }
 
     /// <summary>The recipe it runs, or null for a building that is not a processor.</summary>
     public Recipe? Recipe => Recipes.Count > 0 ? Recipes[RecipeIndex] : null;
 
-    /// <summary>The choice for each input with alternatives, by input index: a type, or absent for Auto.</summary>
-    public Dictionary<int, ResourceType> InputChoices { get; } = new();
+    /// <summary>The choice for each input with alternatives, by recipe and input index: a type, or absent for Auto.</summary>
+    public Dictionary<(int Recipe, int Input), ResourceType> InputChoices { get; } = new();
 
     /// <summary>The inputs the running cycle took (refunded if the building is destroyed mid-cycle).</summary>
     public List<ResourceAmount> CycleInputs { get; } = new();
@@ -118,6 +132,7 @@ public sealed class Building
         AnchorZ = anchorZ;
         Facing = facing;
         Recipes = recipes;
+        Queues = recipes.Count > 0 && (Def.BurnsFuel || recipes.Any(recipe => recipe.Inputs.Count > 0));
     }
 
     public int Width => Def.Footprint(Facing).Width;

@@ -62,6 +62,7 @@ public class LaterTiersTests
         Simulation sim = Plant();
         sim.Debug.SeedStockpile(ResourceType.Silicon, 1f);
         Building fab = sim.Debug.PlaceBuilding(BuildingType.SemiconductorFab, 47, 4, Facing.North);
+        SimTestHelpers.Order(sim, fab);
         Assert.True(fab.Online);
 
         SimTestHelpers.Seconds(sim, 10.2);
@@ -113,6 +114,7 @@ public class LaterTiersTests
         sim.Debug.ResetToEmptyMap();
         sim.Debug.SeedStockpile(ResourceType.Limestone, 6f);
         Building kiln = sim.Debug.PlaceBuilding(BuildingType.CementKiln, 48, 4, Facing.North);
+        SimTestHelpers.Order(sim, kiln);
         SimTestHelpers.Ticks(sim, 1);
         Assert.True(kiln.Online);
         Assert.Equal(new BuildingStatus(BuildingState.Idle, "Waiting for fuel"), sim.BuildingStatusOf(kiln));
@@ -131,6 +133,7 @@ public class LaterTiersTests
         Simulation sim = Plant();
         sim.Debug.SeedStockpile(ResourceType.Cement, 1f);
         Building mixer = sim.Debug.PlaceBuilding(BuildingType.ConcreteMixer, 48, 4, Facing.North);
+        SimTestHelpers.Order(sim, mixer);
         SimTestHelpers.Ticks(sim, 1);
         Assert.Equal(new BuildingStatus(BuildingState.Idle, "Blackout: Sand"), sim.BuildingStatusOf(mixer));
 
@@ -185,9 +188,9 @@ public class LaterTiersTests
         foreach ((BuildingType type, int x, int z, int recipe) in placements)
         {
             Building building = sim.Debug.PlaceBuilding(type, x, z, Facing.North);
-            if (recipe > 0)
+            if (building.Queues)
             {
-                Assert.True(sim.SetRecipe(building.Id, recipe));
+                SimTestHelpers.Order(sim, building, recipe);
             }
         }
         foreach ((int x, int z) in new[] { (47, 10), (37, 10), (27, 10), (17, 10), (30, 21), (30, 32), (20, 32), (12, 32), (47, 20) })

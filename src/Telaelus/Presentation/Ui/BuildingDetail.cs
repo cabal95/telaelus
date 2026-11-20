@@ -50,6 +50,19 @@ public partial class BuildingDetail : Dialog
     private Label _recipeLabel = null!;
     private OptionButton _recipe = null!;
     private string _recipeSignature = "";
+    // A queueing processor's order controls: the recipe the picker has chosen to queue, the quantity
+    // stepper and Craft, and a row per order with a button that removes it.
+    private int _selected;
+    private int _quantity;
+    private HBoxContainer _orderRow = null!;
+    private Button _less = null!;
+    private Label _quantityLabel = null!;
+    private Button _more = null!;
+    private Button _craft = null!;
+    private Label _queueLabel = null!;
+    private VBoxContainer _queue = null!;
+    private string _queueSignature = "";
+    private int _queueRows;
     private Label _inputLabel = null!;
     private OptionButton _input = null!;
     private Label _inputNote = null!;
@@ -85,6 +98,14 @@ public partial class BuildingDetail : Dialog
     public string? DestroyText => _destroy.Visible ? _destroy.Text : null;
 
     /// <summary>The Buy truck button's text and whether it can be pressed, or null when hidden (not a Depot).</summary>
+    /// <summary>The quantity to queue as shown ("5"), and whether Craft can be pressed; null when hidden.</summary>
+    public (string Quantity, bool CanCraft)? Order => _orderRow.Visible ? (_quantityLabel.Text, !_craft.Disabled) : null;
+
+    /// <summary>The queue's rows as shown ("Iron x 5 (crafting)"), or null when hidden; empty when the queue is.</summary>
+    public IReadOnlyList<string>? QueueRows => _queue.Visible
+        ? _queue.GetChildren().Select(row => row is Label label ? label.Text : row.GetChild<Label>(0).Text).ToList()
+        : null;
+
     /// <summary>The Recipe picker's choice as shown ("Copper"), or null when hidden.</summary>
     public string? RecipeChoiceText => _recipe.Visible && _recipe.Selected >= 0 ? _recipe.GetItemText(_recipe.Selected) : null;
 
@@ -156,19 +177,6 @@ public partial class BuildingDetail : Dialog
         Body.AddChild(_silo);
         Host.Register(Id + "/siloResource", _silo);
 
-        _fuelLabel = UiTheme.MakeLabel("Fuel", UiTheme.SmallSize, UiTheme.TextDim);
-        Body.AddChild(_fuelLabel);
-        _fuel = new OptionButton
-        {
-            Name = "Fuel",
-            FocusMode = FocusModeEnum.None
-        };
-        _fuel.ItemSelected += OnFuelSelected;
-        Body.AddChild(_fuel);
-        Host.Register(Id + "/fuel", _fuel);
-        _fuelNote = UiTheme.MakeLabel("", UiTheme.SmallSize, UiTheme.TextDim);
-        Body.AddChild(_fuelNote);
-
         _recipeLabel = UiTheme.MakeLabel("Recipe", UiTheme.SmallSize, UiTheme.TextDim);
         Body.AddChild(_recipeLabel);
         _recipe = new OptionButton
@@ -192,6 +200,52 @@ public partial class BuildingDetail : Dialog
         Host.Register(Id + "/input", _input);
         _inputNote = UiTheme.MakeLabel("", UiTheme.SmallSize, UiTheme.TextDim);
         Body.AddChild(_inputNote);
+
+        _orderRow = new HBoxContainer
+        {
+            Name = "Order",
+            MouseFilter = MouseFilterEnum.Ignore
+        };
+        _orderRow.AddThemeConstantOverride("separation", UiTheme.Gap / 2);
+        _less = OrderButton("Less", "-", "One cycle fewer (Shift: ten)");
+        _less.Pressed += () => StepQuantity(-1);
+        _orderRow.AddChild(_less);
+        _quantityLabel = UiTheme.MakeLabel("", UiTheme.BodySize);
+        _quantityLabel.CustomMinimumSize = new Vector2(36f, 0f);
+        _quantityLabel.HorizontalAlignment = HorizontalAlignment.Center;
+        _quantityLabel.VerticalAlignment = VerticalAlignment.Center;
+        _orderRow.AddChild(_quantityLabel);
+        _more = OrderButton("More", "+", "One cycle more (Shift: ten)");
+        _more.Pressed += () => StepQuantity(1);
+        _orderRow.AddChild(_more);
+        _craft = OrderButton("Craft", "Craft", null);
+        _craft.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        _craft.Pressed += OnCraft;
+        _orderRow.AddChild(_craft);
+        Body.AddChild(_orderRow);
+        _queueLabel = UiTheme.MakeLabel("Queue", UiTheme.SmallSize, UiTheme.TextDim);
+        Body.AddChild(_queueLabel);
+        _queue = new VBoxContainer
+        {
+            Name = "Queue",
+            MouseFilter = MouseFilterEnum.Ignore
+        };
+        _queue.AddThemeConstantOverride("separation", 2);
+        Body.AddChild(_queue);
+
+        _fuelLabel = UiTheme.MakeLabel("Fuel", UiTheme.SmallSize, UiTheme.TextDim);
+        Body.AddChild(_fuelLabel);
+        _fuel = new OptionButton
+        {
+            Name = "Fuel",
+            FocusMode = FocusModeEnum.None
+        };
+        _fuel.ItemSelected += OnFuelSelected;
+        Body.AddChild(_fuel);
+        Host.Register(Id + "/fuel", _fuel);
+        _fuelNote = UiTheme.MakeLabel("", UiTheme.SmallSize, UiTheme.TextDim);
+        Body.AddChild(_fuelNote);
+
 
         _outputLabel = UiTheme.MakeLabel("Output", UiTheme.SmallSize, UiTheme.TextDim);
         Body.AddChild(_outputLabel);
@@ -318,9 +372,28 @@ public partial class BuildingDetail : Dialog
         Host.Register(Id + "/destroy", _destroy);
     }
 
+    private Button OrderButton(string name, string text, string? tip)
+    {
+        var button = new Button
+        {
+            Name = name,
+            Text = text,
+            TooltipText = tip ?? "",
+            FocusMode = FocusModeEnum.None,
+            CustomMinimumSize = new Vector2(28f, 0f)
+        };
+        Host.Register(Id + "/" + char.ToLowerInvariant(name[0]) + name[1..], button);
+        return button;
+    }
+
     /// <summary>Shows a building (opening the panel if needed).</summary>
     public void ShowBuilding(Building building)
     {
+        if (building != Building)
+        {
+            _selected = building.RecipeIndex;
+            _quantity = 0;
+        }
         Building = building;
         _confirmLeft = 0;
         _addsSignature = "";
@@ -401,7 +474,9 @@ public partial class BuildingDetail : Dialog
             _rows.Set("In range", null);
             _rows.Set("Working on", null);
             Recipe? recipe = building.Recipe;
-            _rows.Set("Recipe", recipe is null ? null : RecipeText(recipe)
+            // A queueing processor names its recipe only while it has an order.
+            bool idleQueue = building.Queues && building.Queue.Count == 0 && !building.Crafting;
+            _rows.Set("Recipe", recipe is null || idleQueue ? null : RecipeText(recipe)
                 + (building.PendingRecipe is int next ? $" (next: {building.Recipes[next].Name})" : ""));
             if (recipe is not null && building.Crafting)
             {
@@ -413,7 +488,7 @@ public partial class BuildingDetail : Dialog
             progress = building.Progress / _sim.UnitSeconds(building);
         }
         _progress.Value = Mathf.Clamp(progress, 0f, 1f);
-        bool hasProgress = works && (def.IsCollector || building.Recipe is not null);
+        bool hasProgress = works && (def.IsCollector || building.Recipe is not null) && !(building.Queues && building.Queue.Count == 0 && !building.Crafting);
         _progressLabel.Visible = hasProgress;
         _progress.Visible = hasProgress;
 
@@ -453,11 +528,12 @@ public partial class BuildingDetail : Dialog
                     _recipe.AddItem(option.Name);
                 }
             }
-            _recipe.Selected = building.PendingRecipe ?? building.RecipeIndex;
+            _recipe.Selected = building.Queues ? _selected : building.PendingRecipe ?? building.RecipeIndex;
         }
+        RefreshOrders(building);
 
         _inputIndex = -1;
-        if (building.Recipe is Recipe recipe)
+        if (PickedRecipe(building) is Recipe recipe)
         {
             for (int i = 0; i < recipe.Inputs.Count; i++)
             {
@@ -477,7 +553,7 @@ public partial class BuildingDetail : Dialog
             _inputSignature = "";
             return;
         }
-        Recipe current = building.Recipe!;
+        Recipe current = PickedRecipe(building)!;
         IReadOnlyList<ResourceType> options = current.OptionsFor(_inputIndex);
         string inputSignature = current.Name + "|" + _inputIndex;
         if (inputSignature != _inputSignature)
@@ -492,7 +568,7 @@ public partial class BuildingDetail : Dialog
         }
         _inputLabel.Text = current.InputName(_inputIndex);
         ResourceType uses = _sim.ChosenInput(building, current, _inputIndex);
-        if (building.InputChoices.TryGetValue(_inputIndex, out ResourceType chosen))
+        if (building.InputChoices.TryGetValue((PickedIndex(building), _inputIndex), out ResourceType chosen))
         {
             _input.Selected = 1 + options.ToList().IndexOf(chosen);
             _inputNote.Text = $"Uses only {ResourceDefs.For(chosen).Name}";
@@ -505,9 +581,29 @@ public partial class BuildingDetail : Dialog
         }
     }
 
+    /// <summary>The recipe the pickers show: the one chosen to queue, or a running processor's own.</summary>
+    private int PickedIndex(Building building)
+    {
+        return building.Queues ? _selected : building.PendingRecipe ?? building.RecipeIndex;
+    }
+
+    private Recipe? PickedRecipe(Building building)
+    {
+        return building.Recipes.Count > 0 ? building.Recipes[PickedIndex(building)] : null;
+    }
+
     private void OnRecipeSelected(long index)
     {
-        if (Building is Building building)
+        if (Building is not Building building)
+        {
+            return;
+        }
+        if (building.Queues)
+        {
+            _selected = (int)index;
+            _quantity = 0;
+        }
+        else
         {
             _sim.SetRecipe(building.Id, (int)index);
         }
@@ -515,12 +611,119 @@ public partial class BuildingDetail : Dialog
 
     private void OnInputSelected(long index)
     {
-        if (Building is not Building building || building.Recipe is not Recipe recipe || _inputIndex < 0)
+        if (Building is not Building building || PickedRecipe(building) is not Recipe recipe || _inputIndex < 0)
         {
             return;
         }
         IReadOnlyList<ResourceType> options = recipe.OptionsFor(_inputIndex);
-        _sim.SetInputChoice(building.Id, _inputIndex, index <= 0 ? null : options[(int)index - 1]);
+        _sim.SetInputChoice(building.Id, PickedIndex(building), _inputIndex, index <= 0 ? null : options[(int)index - 1]);
+    }
+
+    /// <summary>Items a cycle of the recipe chosen to queue makes (the quantity's step).</summary>
+    private int PerCycle(Building building)
+    {
+        return Simulation.WholeCycles(building.Recipes[_selected], 1);
+    }
+
+    /// <summary>
+    /// A queueing processor's quantity and Craft (disabled when the queue is full and the last order
+    /// is another recipe), then its orders, the first marked while it crafts.
+    /// </summary>
+    private void RefreshOrders(Building building)
+    {
+        bool queues = building.Queues;
+        _orderRow.Visible = queues;
+        _queueLabel.Visible = queues;
+        _queue.Visible = queues;
+        if (!queues)
+        {
+            _queueSignature = "";
+            return;
+        }
+        int step = PerCycle(building);
+        _quantity = Mathf.Clamp(_quantity <= 0 ? step : _quantity, step, MaxCycles * step);
+        _quantityLabel.Text = _quantity.ToString();
+        _less.Disabled = _quantity <= step;
+        _more.Disabled = _quantity >= MaxCycles * step;
+        List<CraftOrder> orders = building.Queue;
+        _craft.Disabled = orders.Count >= Simulation.MaxQueue && orders[^1].RecipeIndex != _selected;
+
+        string signature = $"{building.Id}{(building.Crafting ? "*" : "")}:" + string.Join("|", orders.Select(o => $"{o.RecipeIndex}x{o.Remaining}"));
+        if (signature == _queueSignature)
+        {
+            return;
+        }
+        _queueSignature = signature;
+        for (int i = 0; i < _queueRows; i++)
+        {
+            Host.Unregister($"{Id}/queue/{i}");
+        }
+        foreach (Node child in _queue.GetChildren())
+        {
+            _queue.RemoveChild(child);
+            child.QueueFree();
+        }
+        _queueRows = orders.Count;
+        if (orders.Count == 0)
+        {
+            _queue.AddChild(UiTheme.MakeLabel("Queue empty", UiTheme.SmallSize, UiTheme.TextDim));
+            return;
+        }
+        for (int i = 0; i < orders.Count; i++)
+        {
+            var row = new HBoxContainer
+            {
+                MouseFilter = MouseFilterEnum.Ignore
+            };
+            string name = building.Recipes[orders[i].RecipeIndex].Name;
+            Label label = UiTheme.MakeLabel($"{name} x {orders[i].Remaining}" + (i == 0 && building.Crafting ? " (crafting)" : ""), UiTheme.BodySize);
+            label.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+            label.VerticalAlignment = VerticalAlignment.Center;
+            row.AddChild(label);
+            int index = i;
+            var remove = new Button
+            {
+                Name = "Remove",
+                Text = "X",
+                TooltipText = "Remove this order",
+                FocusMode = FocusModeEnum.None,
+                CustomMinimumSize = new Vector2(28f, 0f)
+            };
+            remove.Pressed += () => OnRemoveOrder(index);
+            row.AddChild(remove);
+            Host.Register($"{Id}/queue/{i}", remove);
+            _queue.AddChild(row);
+        }
+    }
+
+    /// <summary>The most cycles one press of Craft queues.</summary>
+    private const int MaxCycles = 99;
+
+    private void StepQuantity(int direction)
+    {
+        if (Building is not Building building)
+        {
+            return;
+        }
+        int step = PerCycle(building) * (Input.IsKeyPressed(Key.Shift) ? 10 : 1);
+        _quantity = Mathf.Clamp(_quantity + direction * step, PerCycle(building), MaxCycles * PerCycle(building));
+        Refresh();
+    }
+
+    private void OnCraft()
+    {
+        if (Building is Building building && _sim.QueueCraft(building.Id, _selected, _quantity))
+        {
+            Refresh();
+        }
+    }
+
+    private void OnRemoveOrder(int index)
+    {
+        if (Building is Building building && _sim.CancelCraft(building.Id, index))
+        {
+            Refresh();
+        }
     }
 
     /// <summary>

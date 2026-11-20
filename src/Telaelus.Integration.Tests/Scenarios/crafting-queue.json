@@ -1,0 +1,58 @@
+{
+  "$schema": "../scenario.schema.json",
+  "name": "crafting-queue",
+  "description": "A Smelter crafts from a queue: it idles with the queue empty; its panel's quantity steps by a cycle and Craft adds an order; a later order of the same recipe goes after another recipe's; an order's X removes it; the first order counts down as cycles finish, and the Smelter idles when the queue is done.",
+  "steps": [
+    { "newGame": {} },
+    { "initMap": {} },
+    { "seedStockpile": { "type": "Coal", "amount": 20 } },
+    { "seedStockpile": { "type": "IronOre", "amount": 3 } },
+    { "teleportPlayer": { "x": 44, "z": 14 } },
+    { "placeBuilding": { "type": "Smelter", "anchor": [48, 4] } },
+    { "wait": 2 },
+    { "expect": "buildings[1].idleReason", "equals": "Queue empty" },
+    { "expect": "buildings[1].queue", "equals": [] },
+
+    { "aimAt": { "world": [49.5, 5.5] } },
+    { "wait": 1 },
+    { "click": {} },
+    { "wait": 2 },
+    { "expect": "ui.open", "equals": "buildingDetail" },
+    { "expect": "ui.queue", "equals": ["Queue empty"] },
+    { "expect": "ui.order", "equals": { "quantity": "1", "canCraft": true } },
+    { "expect": "ui.rows.recipe", "exists": false },
+    { "screenshot": "queue-empty" },
+
+    { "clickUi": { "id": "buildingDetail/more" } },
+    { "wait": 2 },
+    { "expect": "ui.order.quantity", "equals": "2" },
+    { "clickUi": { "id": "buildingDetail/craft" } },
+    { "wait": 2 },
+    { "expect": "ui.queue", "equals": ["Iron x 2 (crafting)"] },
+    { "expect": "buildings[1].idleReason", "equals": null },
+
+    { "comment": "Copper, as the picker would choose it, then Iron again: a new order after the Copper.", "queueCraft": { "anchor": [48, 4], "recipe": 1, "count": 1 } },
+    { "clickUi": { "id": "buildingDetail/craft" } },
+    { "wait": 2 },
+    { "expect": "ui.queue", "equals": ["Iron x 2 (crafting)", "Copper x 1", "Iron x 2"] },
+    { "expect": "buildings[1].queue", "equals": [{ "recipe": "Iron", "remaining": 2 }, { "recipe": "Copper", "remaining": 1 }, { "recipe": "Iron", "remaining": 2 }] },
+    { "scrollUi": { "id": "buildingDetail/craft", "ticks": 4 } },
+    { "wait": 2 },
+    { "screenshot": "queue" },
+
+    { "clickUi": { "id": "buildingDetail/queue/1" } },
+    { "wait": 2 },
+    { "expect": "ui.queue", "equals": ["Iron x 2 (crafting)", "Iron x 2"] },
+
+    { "comment": "A 16 s cycle at 30 frames a second.", "wait": 480 },
+    { "expect": "stockpile.Iron", "equals": 1 },
+    { "expect": "ui.queue", "equals": ["Iron x 1 (crafting)", "Iron x 2"] },
+    { "clickUi": { "id": "buildingDetail/queue/1" } },
+    { "wait": 490 },
+    { "expect": "stockpile.Iron", "equals": 2 },
+    { "expect": "stockpile.IronOre", "equals": 1 },
+    { "expect": "ui.queue", "equals": ["Queue empty"] },
+    { "expect": "buildings[1].idleReason", "equals": "Queue empty" },
+    { "screenshot": "queue-done" }
+  ]
+}

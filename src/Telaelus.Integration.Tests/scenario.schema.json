@@ -55,6 +55,7 @@
         { "$ref": "#/definitions/fillBuffer" },
         { "$ref": "#/definitions/placeMotherlode" },
         { "$ref": "#/definitions/setRecipe" },
+        { "$ref": "#/definitions/queueCraft" },
         { "$ref": "#/definitions/setTimeOfDay" },
         { "$ref": "#/definitions/newGame" },
         { "$ref": "#/definitions/saveGame" },
@@ -450,7 +451,7 @@
       }
     },
     "setRecipe": {
-      "description": "Choose the recipe (by index in its list, 0 the default) of the building anchored at a fine cell, as its Recipe picker does.",
+      "description": "Choose the recipe (by index in its list, 0 the default) of a running processor (Electrolyzer, Brine Well, Air Separator) anchored at a fine cell, as its Recipe picker does; a queueing processor takes queueCraft instead.",
       "type": "object",
       "required": ["setRecipe"],
       "additionalProperties": false,
@@ -462,6 +463,25 @@
           "properties": {
             "anchor": { "$ref": "#/definitions/pair" },
             "index": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "comment": { "$ref": "#/definitions/comment" }
+      }
+    },
+    "queueCraft": {
+      "description": "Queue an order (a recipe by index, a count in items rounded up to whole cycles) at the queueing processor anchored at a fine cell, as its Craft button does; fails for a building that does not queue or a full queue.",
+      "type": "object",
+      "required": ["queueCraft"],
+      "additionalProperties": false,
+      "properties": {
+        "queueCraft": {
+          "type": "object",
+          "required": ["anchor", "recipe", "count"],
+          "additionalProperties": false,
+          "properties": {
+            "anchor": { "$ref": "#/definitions/pair" },
+            "recipe": { "type": "integer", "minimum": 0 },
+            "count": { "type": "integer", "minimum": 1 }
           }
         },
         "comment": { "$ref": "#/definitions/comment" }

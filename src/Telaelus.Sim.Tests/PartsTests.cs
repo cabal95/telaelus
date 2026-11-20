@@ -34,6 +34,7 @@ public class PartsTests
         sim.Debug.PlaceBuilding(BuildingType.WaterPump, 52, 14, Facing.North);
         sim.Debug.SeedStockpile(ResourceType.Copper, 1f);
         Building works = sim.Debug.PlaceBuilding(BuildingType.ElectronicsWorks, 48, 4, Facing.North);
+        SimTestHelpers.Order(sim, works);
         Assert.True(works.Online);
 
         SimTestHelpers.Seconds(sim, 6.2);
@@ -95,9 +96,9 @@ public class PartsTests
         foreach ((BuildingType type, int x, int z, int recipe) in placements)
         {
             Building building = sim.Debug.PlaceBuilding(type, x, z, Facing.North);
-            if (recipe > 0)
+            if (building.Queues)
             {
-                Assert.True(sim.SetRecipe(building.Id, recipe));
+                SimTestHelpers.Order(sim, building, recipe);
             }
         }
         // Small Hubs from the HQ along the open ground between the rows.

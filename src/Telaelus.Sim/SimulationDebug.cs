@@ -259,6 +259,16 @@ public sealed partial class Simulation
             }
         }
 
+        /// <summary>Queues an order at the building anchored at a fine cell, as its Craft button does.</summary>
+        public void QueueCraft(int anchorX, int anchorZ, int recipe, int count)
+        {
+            Building? building = _sim._buildings.Find(b => b.AnchorX == anchorX && b.AnchorZ == anchorZ);
+            if (building is null || !_sim.QueueCraft(building.Id, recipe, count))
+            {
+                throw new InvalidOperationException($"no building at ({anchorX}, {anchorZ}) that can queue recipe {recipe} x {count}");
+            }
+        }
+
         /// <summary>Marks a map cell worked out, as if a field of the deposit had depleted there.</summary>
         public void SetWorkedOut(int mapX, int mapZ, ResourceType deposit)
         {

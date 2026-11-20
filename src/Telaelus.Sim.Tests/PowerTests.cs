@@ -133,6 +133,7 @@ public class PowerTests
         Simulation sim = EmptyMap();
         sim.Debug.SeedStockpile(ResourceType.IronOre, 5f);
         Building smelter = sim.Debug.PlaceBuilding(BuildingType.Smelter, 48, 14, Facing.North);
+        SimTestHelpers.Order(sim, smelter);
         Assert.True(smelter.Online);
         SimTestHelpers.Seconds(sim, 5.0);
 

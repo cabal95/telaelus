@@ -203,9 +203,19 @@ pausing it and stepping frame by frame.
   end-to-end run from seeded materials through two Semiconductor Fabs, an Electronics Works, an
   Assembly Plant, and two Enrichment Plants to a Computer and a Fuel Rod.
 - `RefiningTests`: each building's recipes; the Steel Mill on Auto taking Coal, on Charcoal only
-  Charcoal, waiting for it, and back on Auto; a recipe change waiting for the running cycle and
-  unused inputs going back to storage; the Electrolyzer's two gases and the Fuel Plant's Rocket
+  Charcoal, waiting for it, and back on Auto; the next order's recipe waiting for the running cycle
+  and unused inputs going back to storage; the Electrolyzer's two gases and the Fuel Plant's Rocket
   Fuel; the Chemical Plant's and Electric Furnace's recipes; Aluminum Smelters' heavy draw.
+- `CraftingQueueTests`: a Charcoal Kiln taking only the Wood its order needs, then idle "Queue
+  empty"; a later order of the same recipe going after another's, one in a row growing the last;
+  four orders at most; orders running in turn, the first waiting for its inputs; a Copper Wire
+  order counted in whole cycles; cancelling the running order returning its inputs, and a later one
+  leaving the running one alone; an idle Electric Furnace still drawing its 40 Power; an idle
+  Smelter taking no new fuel while its burning unit burns out; the Electrolyzer, Brine Well, and
+  Air Separator running without a queue and the Glassworks queueing; input choices kept per
+  recipe; the queue and choices surviving a save; an older save loading with an empty queue.
+- Sim tests that need a processor working queue an order large enough for the test
+  (`SimTestHelpers.Order`).
 - `SeamTests`: the seam rule above.
 - `DebugTests`: each `Simulation.Debug` operation and the `MapChanged` event.
 
@@ -228,7 +238,10 @@ pausing it and stepping frame by frame.
   - Other setup: `placeBuilding` `{ type, anchor, facing? }` (the spatial placement rule, free
     and whether or not unlocked), `teleportPlayer` `{ x, z }` (the camera jumps onto the player too), `seedStockpile` `{ type, amount }`, `fillBuffer` `{ anchor, type, amount }` (sets one
     resource in the output buffer of the building at that anchor; 0 removes it), `setRecipe`
-    `{ anchor, index }` (chooses the recipe of the building at that anchor, as its picker does),
+    `{ anchor, index }` (chooses the recipe of the running processor at that anchor, as its picker
+    does; a queueing processor refuses it), `queueCraft` `{ anchor, recipe, count }` (queues an
+    order at the processor at that anchor, as its Craft button does; fails when it does not queue
+    or its queue is full),
     `newGame` `{ seed? }` (see above), `saveGame` `{ name }` (saves the game in play, as the save
     dialog does), `loadGame` `{ name }` (loads a save whatever the state; the next command runs
     once the loaded game is in play; fails when the save cannot be loaded), `loadDemo` (`{}`;
@@ -320,7 +333,8 @@ pausing it and stepping frame by frame.
   `charge`, `research`),
   `fuel` (the fuel picker's choice, or null), `output` (the Output picker's choice as shown, or
   null), `recipe` (the Recipe picker's choice, or null), `input` (the input picker's `choice` and
-  `note`, or null), `buyTruck` and `sellTruck` (a Depot's buttons: `text` and `enabled`, or null), `launch` (a
+  `note`, or null), `order` (a queueing processor's `quantity` as shown and `canCraft`, or null),
+  `queue` (its queue rows as shown, "Iron x 5 (crafting)" or "Queue empty", or null), `buyTruck` and `sellTruck` (a Depot's buttons: `text` and `enabled`, or null), `launch` (a
   Shipyard's Ship launch section: its `bill` ("have / need" per entry), the `button` text,
   `enabled`, the `note` saying why not or null, and `ships` ("Ships launched: n") or null; null for
   other buildings), `adds` (what a storage building adds, by
@@ -336,7 +350,8 @@ pausing it and stepping frame by frame.
   `waitingForRoom` (older saves only), `toDepot`), `position` [x, z], `cargo` or null, `amount`, and `target` or null);
   `workedOut` (each worked-out map cell's `mapCell` and `deposit`); each building also has
   `producing` (a collector without a field's output, or null), `recipe` (the name of the
-  recipe a processor runs, or null), `display` (the item its display stand shows, or null), and
+  recipe a processor runs, or null), `queue` (a queueing processor's orders, each `recipe` and
+  `remaining`, or null for any other building), `display` (the item its display stand shows, or null), and
   `charge` (a Battery Bank's stored Power, or null);
   `hoveredBuilding` (the id of the building under the pointer outside build mode, or null);
   `focusedBuilding` (the id of the building the detail panel shows and outlines, or null);
@@ -513,6 +528,10 @@ pausing it and stepping frame by frame.
   `power` (a Drill Rig with no supply is in a blackout; a Burner Generator on Coal powers it; four
   then five Refineries push demand into a brownout at 80% and a blackout, on the top bar; the
   generator's panel shows its supply and Best fuel),
+  `crafting-queue` (a Smelter idle "Queue empty"; its panel's quantity stepping by a cycle and
+  Craft adding an order; a later Iron order going after a Copper one; an order's X removing it;
+  the first order counting down and the Smelter idle when the queue is done; windowed screenshots
+  of the empty queue, the queue, and the end),
   `refining` (a Steel Mill's Auto input picker and its note and recipe text; an Electrolyzer on
   Hydrogen feeding a Fuel Plant to Rocket Fuel; no ship bill on the top bar),
   `menu` (the loading screen done and the menu showing its title and New Game, Demo, and Quit; `newGame`
@@ -538,9 +557,10 @@ pausing it and stepping frame by frame.
   Reactor on Fuel Rods and Water adding 400),
   `later-tiers` (a Sawmill's Lumber; a Cement Kiln's Cement turned into Concrete by a Concrete
   Mixer on Sand and Water; a Brine Well on Desert Sand pumping Lithium into a Stockyard; a
-  Semiconductor Fab's display stand and recipe changing to Processor),
+  Semiconductor Fab's display stand and recipe changing to Processor when its Silicon Wafer order
+  is done),
   `first-ship` (a Fabricator making Hull Plate, its display stand showing the part and changing
-  at once when Steel Beam is chosen; a Shipyard's panel showing the bill short and Launch ship
+  when its Hull Plate order is done and the Steel Beam order runs; a Shipyard's panel showing the bill short and Launch ship
   disabled with why; with the bill seeded, the ship on its pad and the button enabled; L doing
   nothing; the button launching it, the bill counting down again, and "Ships launched: 1"),
   `trainer` (a generated world: the question starting it; all 13 steps done by doing them, each

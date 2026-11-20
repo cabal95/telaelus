@@ -20,6 +20,13 @@ internal static class SimTestHelpers
     public const int PondPumpX = 34;
     public const int PondPumpZ = 22;
 
+    /// <summary>Queues an order at a processor large enough to keep it crafting for the whole test.</summary>
+    public static Building Order(Simulation sim, Building building, int recipe = 0, int count = 10000)
+    {
+        Assert.True(sim.QueueCraft(building.Id, recipe, count));
+        return building;
+    }
+
     /// <summary>Steps the sim for a number of fixed ticks with the current intent.</summary>
     public static void Ticks(Simulation sim, int ticks)
     {

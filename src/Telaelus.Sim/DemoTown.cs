@@ -165,9 +165,13 @@ public static class DemoTown
             sim.TryLayRoad(fromX, fromZ, toX, toZ);
         }
 
-        // Smelters: Iron, but the last on Copper.
+        // Orders: the Smelters 99 Iron, but the last 99 Copper, and the Charcoal Kiln 99 Charcoal.
         List<Building> smelters = sim.Buildings.Where(b => b.Type == BuildingType.Smelter).ToList();
-        sim.SetRecipe(smelters[^1].Id, 1);
+        foreach (Building smelter in smelters)
+        {
+            Order(sim, smelter, smelter == smelters[^1] ? 1 : 0);
+        }
+        Order(sim, sim.Buildings.First(b => b.Type == BuildingType.CharcoalKiln), 0);
 
         Building depot = sim.Buildings.First(b => b.Type == BuildingType.Depot);
         for (int truck = 1; truck < depot.Def.TruckSlots; truck++)
@@ -228,6 +232,14 @@ public static class DemoTown
     }
 
     // Tops the stockpile up to a cost, so the next purchase can pay for it.
+    private static void Order(Simulation sim, Building building, int recipe)
+    {
+        if (!sim.QueueCraft(building.Id, recipe, 99))
+        {
+            throw new InvalidOperationException($"the demo could not queue work at the {building.Def.Name}");
+        }
+    }
+
     private static void Pay(Simulation sim, IEnumerable<ResourceAmount> cost)
     {
         foreach (ResourceAmount amount in cost)

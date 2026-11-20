@@ -135,7 +135,7 @@ public class RenewablesTests
         var sim = new Simulation();
         sim.Debug.ResetToEmptyMap();
         sim.Debug.SeedStockpile(ResourceType.Wood, 6f);
-        sim.Debug.PlaceBuilding(BuildingType.CharcoalKiln, 50, 14, Facing.North);
+        SimTestHelpers.Order(sim, sim.Debug.PlaceBuilding(BuildingType.CharcoalKiln, 50, 14, Facing.North));
 
         SimTestHelpers.Seconds(sim, 30.2);
 

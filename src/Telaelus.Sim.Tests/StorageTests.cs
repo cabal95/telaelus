@@ -142,6 +142,7 @@ public class StorageTests
         sim.Debug.SeedStockpile(ResourceType.IronOre, 15f);
         sim.Debug.SeedStockpile(ResourceType.Coal, 10f);
         Building smelter = sim.Debug.PlaceBuilding(BuildingType.Smelter, 20, 20, Facing.North);
+        SimTestHelpers.Order(sim, smelter);
         SimTestHelpers.Connect(sim, 21f, 21f);
 
         // Ten 16 s cycles fill its 10-unit output buffer; then it stops.
@@ -160,6 +161,7 @@ public class StorageTests
         sim.Debug.SeedStockpile(ResourceType.IronOre, 1f);
         sim.Debug.SeedStockpile(ResourceType.Coal, 1f);
         Building smelter = sim.Debug.PlaceBuilding(BuildingType.Smelter, 20, 20, Facing.North);
+        SimTestHelpers.Order(sim, smelter);
         SimTestHelpers.Connect(sim, 21f, 21f);
         SimTestHelpers.Seconds(sim, 20.0);
         Assert.Equal(1f, smelter.Output[ResourceType.Iron]);

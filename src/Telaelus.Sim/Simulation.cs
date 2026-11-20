@@ -549,6 +549,10 @@ public sealed partial class Simulation
         {
             return new BuildingStatus(BuildingState.Working, null);
         }
+        if (building.Queues && !building.Crafting && building.Queue.Count == 0)
+        {
+            return new BuildingStatus(BuildingState.Idle, "Queue empty");
+        }
         bool finished = building.Crafting && building.Progress >= recipe.CycleTime;
         if ((finished || !building.Crafting) && !OutputsHaveRoom(building, recipe))
         {
@@ -572,7 +576,7 @@ public sealed partial class Simulation
             if (AtHand(building, type) < recipe.Inputs[i].Amount - RoomTolerance)
             {
                 // On Auto with none at hand it waits for any of them.
-                missing.Add(building.InputChoices.ContainsKey(i) ? ResourceDefs.For(type).Name : recipe.InputName(i));
+                missing.Add(HasInputChoice(building, recipe, i) ? ResourceDefs.For(type).Name : recipe.InputName(i));
             }
         }
         if (missing.Count == 0)
@@ -842,10 +846,9 @@ public sealed partial class Simulation
                 continue;
             }
 
-            Recipe? recipe = building.Recipe;
-            if (recipe is not null)
+            if (building.Recipe is not null)
             {
-                StepProcessor(building, recipe, dt);
+                StepProcessor(building, dt);
             }
         }
         StepResearch(dt);
@@ -905,16 +908,24 @@ public sealed partial class Simulation
         return best;
     }
 
-    private void StepProcessor(Building building, Recipe recipe, double dt)
+    private void StepProcessor(Building building, double dt)
     {
         if (building.Online)
         {
             DrainOutput(building);
             ReturnStaleInputs(building);
         }
+        FollowQueue(building);
+        Recipe recipe = building.Recipe!;
         float speed = WorkSpeed(building);
         if (!building.Crafting)
         {
+            if (building.Queues && building.Queue.Count == 0)
+            {
+                // Idle with nothing queued: no new fuel, but the unit already burning burns out.
+                building.BurnLeft = Math.Max(0f, building.BurnLeft - (float)dt);
+                return;
+            }
             if (speed <= 0f || !InputsAvailable(building, recipe) || !OutputsHaveRoom(building, recipe)
                 || (building.Def.BurnsFuel && !HasFuel(building)))
             {
@@ -941,6 +952,7 @@ public sealed partial class Simulation
             building.Crafting = false;
             building.Progress = 0f;
             building.CycleInputs.Clear();
+            CountFinishedCycle(building, recipe);
             TakeUpPendingRecipe(building);
         }
     }

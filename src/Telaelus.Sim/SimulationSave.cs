@@ -194,7 +194,23 @@ public sealed partial class Simulation
             };
             foreach (int[] choice in d.InputChoices)
             {
-                b.InputChoices[choice[0]] = (ResourceType)choice[1];
+                if (choice.Length == 2)
+                {
+                    b.InputChoices[(d.RecipeIndex, choice[0])] = (ResourceType)choice[1];
+                }
+                else
+                {
+                    b.InputChoices[(choice[0], choice[1])] = (ResourceType)choice[2];
+                }
+            }
+            foreach (int[] order in d.Queue)
+            {
+                b.Queue.Add(new CraftOrder(order[0], order[1]));
+            }
+            if (b.Queues)
+            {
+                // An older save's queueing processor chose its recipe directly; its orders choose now.
+                b.PendingRecipe = null;
             }
             b.CycleInputs.AddRange(d.CycleInputs.Select(a => new ResourceAmount(a.Type, a.Amount)));
             Fill(b.Output, d.Output);
@@ -414,7 +430,8 @@ public sealed partial class Simulation
             Enabled = b.Enabled,
             RecipeIndex = b.RecipeIndex,
             PendingRecipe = b.PendingRecipe,
-            InputChoices = b.InputChoices.Select(p => new[] { p.Key, (int)p.Value }).ToList(),
+            InputChoices = b.InputChoices.Select(p => new[] { p.Key.Recipe, p.Key.Input, (int)p.Value }).ToList(),
+            Queue = b.Queue.Select(o => new[] { o.RecipeIndex, o.Remaining }).ToList(),
             CycleInputs = b.CycleInputs.Select(a => new AmountData(a.Type, a.Amount)).ToList(),
             Output = Amounts(b.Output),
             Input = Amounts(b.Input),

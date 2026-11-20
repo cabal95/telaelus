@@ -103,7 +103,10 @@ public sealed class BuildingData
     public bool Enabled { get; set; }
     public int RecipeIndex { get; set; }
     public int? PendingRecipe { get; set; }
+    /// <summary>Each input choice as [recipe, input, type]; an older save's [input, type] is for its RecipeIndex.</summary>
     public List<int[]> InputChoices { get; set; } = new();
+    /// <summary>The crafting queue as [recipe, remaining] in order; absent in older saves (an empty queue).</summary>
+    public List<int[]> Queue { get; set; } = new();
     public List<AmountData> CycleInputs { get; set; } = new();
     public List<AmountData> Output { get; set; } = new();
     public List<AmountData> Input { get; set; } = new();
