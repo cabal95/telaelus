@@ -49,6 +49,7 @@ public partial class BuildingDetail : Dialog
     public event System.Action? ResearchRequested;
     private Label _recipeLabel = null!;
     private OptionButton _recipe = null!;
+    private RichTextLabel _recipeNeeds = null!;
     private string _recipeSignature = "";
     // A queueing processor's order controls: the recipe the picker has chosen to queue, the quantity
     // stepper and Craft, and a row per order with a button that removes it.
@@ -112,6 +113,14 @@ public partial class BuildingDetail : Dialog
 
     /// <summary>The Recipe picker's choice as shown ("Copper"), or null when hidden.</summary>
     public string? RecipeChoiceText => _recipe.Visible && _recipe.Selected >= 0 ? _recipe.GetItemText(_recipe.Selected) : null;
+
+    /// <summary>
+    /// The line under the Recipe picker ("2 Iron Ore + 1 Coal to 1 Iron, 16 s") and the inputs it
+    /// shows short (storage holds less than a cycle's worth), or null while the picker is hidden.
+    /// </summary>
+    public (string Text, IReadOnlyList<string> Short)? RecipeNeeds => _recipeNeeds.Visible ? (_recipeNeeds.GetParsedText(), _recipeShort) : null;
+
+    private IReadOnlyList<string> _recipeShort = new List<string>();
 
     /// <summary>The input picker's choice and note as shown ("Auto", "Auto: uses Coal (Coal 59, Charcoal 1)"), or null when hidden.</summary>
     public (string Choice, string Note)? InputChoiceText => _input.Visible && _input.Selected >= 0 ? (_input.GetItemText(_input.Selected), _inputNote.Text) : null;
@@ -193,6 +202,18 @@ public partial class BuildingDetail : Dialog
         _recipe.ItemSelected += OnRecipeSelected;
         Body.AddChild(_recipe);
         Host.Register(Id + "/recipe", _recipe);
+        _recipeNeeds = new RichTextLabel
+        {
+            Name = "RecipeNeeds",
+            BbcodeEnabled = true,
+            FitContent = true,
+            AutowrapMode = TextServer.AutowrapMode.WordSmart,
+            ScrollActive = false,
+            MouseFilter = MouseFilterEnum.Ignore
+        };
+        _recipeNeeds.AddThemeFontSizeOverride("normal_font_size", UiTheme.SmallSize);
+        _recipeNeeds.AddThemeColorOverride("default_color", UiTheme.TextDim);
+        Body.AddChild(_recipeNeeds);
 
         _inputLabel = UiTheme.MakeLabel("Input", UiTheme.SmallSize, UiTheme.TextDim);
         Body.AddChild(_inputLabel);
@@ -550,6 +571,16 @@ public partial class BuildingDetail : Dialog
                 }
             }
             _recipe.Selected = building.Queues ? _selected : building.PendingRecipe ?? building.RecipeIndex;
+        }
+        _recipeNeeds.Visible = many;
+        if (many && PickedRecipe(building) is Recipe picked)
+        {
+            (string needs, List<string> shortOf) = NeedsText(picked);
+            if (_recipeNeeds.Text != needs)
+            {
+                _recipeNeeds.Text = needs;
+            }
+            _recipeShort = shortOf;
         }
         RefreshOrders(building);
 
@@ -1092,6 +1123,32 @@ public partial class BuildingDetail : Dialog
         {
             _sim.SetSiloResource(building.Id, SiloChoices[index]);
         }
+    }
+
+    /// <summary>
+    /// A recipe as the Recipe row reads it, in BBCode with each input storage holds less than a
+    /// cycle's worth of in the danger color (an input with alternatives only when every one is short),
+    /// and the names of those inputs.
+    /// </summary>
+    private (string Text, List<string> Short) NeedsText(Recipe recipe)
+    {
+        var shortOf = new List<string>();
+        var inputs = new List<string>();
+        for (int i = 0; i < recipe.Inputs.Count; i++)
+        {
+            float amount = recipe.Inputs[i].Amount;
+            string text = $"{(int)amount} {recipe.InputName(i)}";
+            bool isShort = recipe.OptionsFor(i).All(type => _sim.Stockpile.GetValueOrDefault(type) < amount);
+            if (isShort)
+            {
+                shortOf.Add(recipe.InputName(i));
+                text = $"[color=#{UiTheme.Danger.ToHtml(false)}]{text}[/color]";
+            }
+            inputs.Add(text);
+        }
+        string outputs = string.Join(" + ", recipe.Outputs.Select(a => $"{(int)a.Amount} {ResourceDefs.For(a.Type).Name}"));
+        string makes = recipe.Inputs.Count == 0 ? outputs : $"{string.Join(" + ", inputs)} to {outputs}";
+        return ($"{makes}, {recipe.CycleTime:0.#} s", shortOf);
     }
 
     private static string RecipeText(Recipe recipe)

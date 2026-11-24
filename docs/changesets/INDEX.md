@@ -259,6 +259,8 @@ Newest last. One line each; open the file for the full spec.
   tooltip, and side panels hold their width whatever their content.
 - **2611241311-collect-all-by-hand** - Holding E at a building collects its whole output buffer, every
   type, in one 0.5 s hold, as far as storage has room.
+- **2611241315-recipe-requirements-line** - A dim line under a processor's Recipe picker spells out
+  the chosen recipe, with inputs storage is short of in the danger color.
 
 ## Adding a changeset
 

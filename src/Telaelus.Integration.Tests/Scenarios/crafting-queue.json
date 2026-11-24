@@ -1,7 +1,7 @@
 {
   "$schema": "../scenario.schema.json",
   "name": "crafting-queue",
-  "description": "A Smelter crafts from a queue: it idles with the queue empty; its panel's quantity steps by a cycle and Craft adds an order; a later order of the same recipe goes after another recipe's; an order's X removes it; the first order counts down as cycles finish, and the Smelter idles when the queue is done.",
+  "description": "A Smelter crafts from a queue: it idles with the queue empty; its panel's quantity steps by a cycle and Craft adds an order; a later order of the same recipe goes after another recipe's; an order's X removes it; the first order counts down as cycles finish, and the Smelter idles when the queue is done. A line under the recipe picker spells out the chosen recipe, short inputs marked.",
   "steps": [
     { "newGame": {} },
     { "initMap": {} },
@@ -21,6 +21,7 @@
     { "expect": "ui.queue", "equals": ["Queue empty"] },
     { "expect": "ui.order", "equals": { "quantity": "1", "canCraft": true } },
     { "expect": "ui.rows.recipe", "exists": false },
+    { "comment": "Under the picker, what the chosen recipe needs.", "expect": "ui.recipeNeeds", "equals": { "text": "1 Iron Ore to 1 Iron, 16 s", "short": [] } },
     { "screenshot": "queue-empty" },
 
     { "clickUi": { "id": "buildingDetail/more" } },
@@ -53,6 +54,9 @@
     { "expect": "stockpile.IronOre", "equals": 1 },
     { "expect": "ui.queue", "equals": ["Queue empty"] },
     { "expect": "buildings[1].idleReason", "equals": "Queue empty" },
+    { "comment": "With the last Iron Ore gone from storage, the line shows it short.", "seedStockpile": { "type": "IronOre", "amount": -1 } },
+    { "wait": 2 },
+    { "expect": "ui.recipeNeeds.short", "equals": ["Iron Ore"] },
     { "screenshot": "queue-done" }
   ]
 }

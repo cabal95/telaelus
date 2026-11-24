@@ -336,6 +336,13 @@ public static class StateSnapshot
             ui["fuel"] = root.BuildingDetail.FuelText;
             ui["output"] = root.BuildingDetail.OutputText;
             ui["recipe"] = root.BuildingDetail.RecipeChoiceText;
+            ui["recipeNeeds"] = root.BuildingDetail.RecipeNeeds is (string needs, var shortOf)
+                ? new JsonObject
+                {
+                    ["text"] = needs,
+                    ["short"] = new JsonArray(shortOf.Select(s => (JsonNode?)s).ToArray())
+                }
+                : null;
             ui["order"] = root.BuildingDetail.Order is (string quantity, bool canCraft)
                 ? new JsonObject
                 {

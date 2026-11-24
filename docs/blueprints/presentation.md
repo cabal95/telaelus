@@ -264,7 +264,10 @@ ui-style.md. There is no text HUD; the screen holds:
   (40 s per unit)"). A processor with several recipes has a Recipe picker. On a queueing
   processor (buildings.md) it chooses what to queue, starting on the recipe the building runs; on
   the three that run without a queue it calls `SetRecipe`, and the Recipe row adds "(next:
-  Copper)" while a change waits for the running cycle. A queueing processor then has its order
+  Copper)" while a change waits for the running cycle. Right under the picker a dim line spells
+  out the chosen recipe as the Recipe row does ("1 Iron Ore to 1 Iron, 16 s"), each input storage
+  holds less than a cycle's worth of in `Danger` (an input with alternatives only when every one
+  is short). A queueing processor then has its order
   controls: a quantity in items between "-" and "+" buttons (`buildingDetail/less`,
   `buildingDetail/more`), each a cycle of the chosen recipe (Shift: ten), from one cycle (where it
   starts, and again on a new recipe) to 99; a Craft button (`buildingDetail/craft`, calling

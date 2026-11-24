@@ -338,7 +338,8 @@ pausing it and stepping frame by frame.
   `truck`, `burning`, `links`, `reach`, `trucks`, `truck1` to `truck4`, `site`, `plot`, `eats`,
   `charge`, `research`),
   `fuel` (the fuel picker's choice, or null), `output` (the Output picker's choice as shown, or
-  null), `recipe` (the Recipe picker's choice, or null), `input` (the input picker's `choice` and
+  null), `recipe` (the Recipe picker's choice, or null), `recipeNeeds` (the line under it: its
+  `text` and the `short` inputs' names, or null), `input` (the input picker's `choice` and
   `note`, or null), `order` (a queueing processor's `quantity` as shown and `canCraft`, or null),
   `queue` (its queue rows as shown, "Iron x 5 (crafting)" or "Queue empty", or null), `buyTruck` and `sellTruck` (a Depot's buttons: `text` and `enabled`, or null), `launch` (a
   Shipyard's Ship launch section: its `bill` ("have / need" per entry), the `button` text,
@@ -537,7 +538,8 @@ pausing it and stepping frame by frame.
   generator's panel shows its supply and Best fuel),
   `crafting-queue` (a Smelter idle "Queue empty"; its panel's quantity stepping by a cycle and
   Craft adding an order; a later Iron order going after a Copper one; an order's X removing it;
-  the first order counting down and the Smelter idle when the queue is done; windowed screenshots
+  the first order counting down and the Smelter idle when the queue is done; the line under the
+  picker naming the recipe's needs, and its input short once storage runs out; windowed screenshots
   of the empty queue, the queue, and the end),
   `refining` (a Steel Mill's Auto input picker and its note and recipe text; an Electrolyzer on
   Hydrogen feeding a Fuel Plant to Rocket Fuel; no ship bill on the top bar),
