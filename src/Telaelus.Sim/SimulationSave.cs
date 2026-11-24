@@ -214,8 +214,6 @@ public sealed partial class Simulation
             }
             b.CycleInputs.AddRange(d.CycleInputs.Select(a => new ResourceAmount(a.Type, a.Amount)));
             Fill(b.Output, d.Output);
-            Fill(b.Input, d.Input);
-            Fill(b.FuelSlot, d.FuelSlot);
             _buildings.Add(b);
             buildings[b.Id] = b;
             for (int x = b.AnchorX; x < b.AnchorX + b.Width; x++)
@@ -284,6 +282,11 @@ public sealed partial class Simulation
             _unreachable.Add((pair[0], pair[1]));
         }
         Fill(_stockpile, data.Stockpile);
+        // An older save's input buffers and fuel slots (gone with hand loading) go back to storage.
+        foreach (AmountData held in data.Buildings.SelectMany(d => d.Input.Concat(d.FuelSlot)))
+        {
+            AddToStockpile(held.Type, held.Amount);
+        }
         _unlocked.UnionWith(data.Unlocked);
         _discovered.Clear();
         _discovered.UnionWith(data.Discovered);
@@ -435,8 +438,6 @@ public sealed partial class Simulation
             Queue = b.Queue.Select(o => new[] { o.RecipeIndex, o.Remaining }).ToList(),
             CycleInputs = b.CycleInputs.Select(a => new AmountData(a.Type, a.Amount)).ToList(),
             Output = Amounts(b.Output),
-            Input = Amounts(b.Input),
-            FuelSlot = Amounts(b.FuelSlot),
             Burning = b.Burning,
             BurnLeft = b.BurnLeft,
             Charge = b.Charge,

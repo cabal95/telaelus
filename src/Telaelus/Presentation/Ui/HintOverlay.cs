@@ -6,8 +6,8 @@ namespace Telaelus.Presentation.Ui;
 /// <summary>
 /// The hint overlay: a small panel-style box centered just below the top bar, shown only
 /// while a hint applies. Today the hint is the E key's action: "[E] Harvest" a field,
-/// "[E] Collect" from a building's output buffer ("Wood (12)": what is left), or "[E] Load" an
-/// offline processor's input ("Iron Ore (3 / 5)"), with the resource's icon and a progress bar
+/// or "[E] Collect" from a building's output buffer ("Wood (12)": what is left), with the
+/// resource's icon and a progress bar
 /// toward the next unit, or "Storage full" in the warning color in place of the bar while there
 /// is no room for it. It never takes the mouse. Later hints and notifications stack in the same
 /// place.
@@ -83,10 +83,8 @@ public partial class HintOverlay : HudOverlay
         {
             type = moving;
             blocked = sim.InteractBlocked;
-            (float held, float? capacity) = sim.InteractAmounts();
-            string amount = capacity is float most ? $"{Mathf.FloorToInt(held)} / {Mathf.FloorToInt(most)}" : Mathf.CeilToInt(held).ToString();
-            _verb.Text = sim.InteractAction == InteractAction.Collect ? "[E] Collect" : "[E] Load";
-            _name.Text = $"{ResourceDefs.For(moving).Name} ({amount})";
+            _verb.Text = "[E] Collect";
+            _name.Text = $"{ResourceDefs.For(moving).Name} ({Mathf.CeilToInt(sim.InteractHeld())})";
             _progress.Value = sim.InteractProgress;
         }
         else if (sim.HarvestTarget is ResourceField field)

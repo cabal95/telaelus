@@ -109,7 +109,9 @@ public sealed class BuildingData
     public List<int[]> Queue { get; set; } = new();
     public List<AmountData> CycleInputs { get; set; } = new();
     public List<AmountData> Output { get; set; } = new();
+    /// <summary>Only in older saves: an input buffer, moved to storage on load.</summary>
     public List<AmountData> Input { get; set; } = new();
+    /// <summary>Only in older saves: a fuel slot, moved to storage on load.</summary>
     public List<AmountData> FuelSlot { get; set; } = new();
     public ResourceType? Burning { get; set; }
     public float BurnLeft { get; set; }

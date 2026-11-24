@@ -407,14 +407,6 @@ public sealed partial class Simulation
         {
             Add(refund, type, amount);
         }
-        foreach ((ResourceType type, float amount) in building.Input)
-        {
-            Add(refund, type, amount);
-        }
-        foreach ((ResourceType type, float amount) in building.FuelSlot)
-        {
-            Add(refund, type, amount);
-        }
         foreach (ResourceAmount truck in TruckRefund(building))
         {
             Add(refund, truck.Type, truck.Amount);
@@ -518,7 +510,7 @@ public sealed partial class Simulation
             }
             if (building.Def.BurnsFuel && !HasFuel(building))
             {
-                return new BuildingStatus(BuildingState.Idle, building.Online ? "Waiting for fuel" : "Waiting for fuel (load by hand)");
+                return new BuildingStatus(BuildingState.Idle, building.Online ? "Waiting for fuel" : "Offline: supplies nothing");
             }
             return building.Online
                 ? new BuildingStatus(BuildingState.Working, null)
@@ -549,6 +541,10 @@ public sealed partial class Simulation
         {
             return new BuildingStatus(BuildingState.Working, null);
         }
+        if (!building.Online)
+        {
+            return new BuildingStatus(BuildingState.Idle, "Offline: outside the network");
+        }
         if (building.Queues && !building.Crafting && building.Queue.Count == 0)
         {
             return new BuildingStatus(BuildingState.Idle, "Queue empty");
@@ -556,14 +552,12 @@ public sealed partial class Simulation
         bool finished = building.Crafting && building.Progress >= recipe.CycleTime;
         if ((finished || !building.Crafting) && !OutputsHaveRoom(building, recipe))
         {
-            return new BuildingStatus(BuildingState.Idle, building.Online
-                ? StorageFull(FirstOutputWithoutRoom(recipe) ?? recipe.Outputs[0].Type)
-                : "Full: collect by hand");
+            return new BuildingStatus(BuildingState.Idle, StorageFull(FirstOutputWithoutRoom(recipe) ?? recipe.Outputs[0].Type));
         }
         bool needsFuel = building.Def.BurnsFuel && !HasFuel(building);
         if (building.Crafting && !finished && needsFuel)
         {
-            return new BuildingStatus(BuildingState.Idle, building.Online ? "Waiting for fuel" : "Waiting for fuel (load by hand)");
+            return new BuildingStatus(BuildingState.Idle, "Waiting for fuel");
         }
         if (building.Crafting)
         {
@@ -582,11 +576,10 @@ public sealed partial class Simulation
         if (missing.Count == 0)
         {
             return needsFuel
-                ? new BuildingStatus(BuildingState.Idle, building.Online ? "Waiting for fuel" : "Waiting for fuel (load by hand)")
+                ? new BuildingStatus(BuildingState.Idle, "Waiting for fuel")
                 : new BuildingStatus(BuildingState.Working, null);
         }
-        return new BuildingStatus(BuildingState.Idle, "Waiting for " + string.Join(", ", missing)
-            + (building.Online ? "" : " (load by hand)"));
+        return new BuildingStatus(BuildingState.Idle, "Waiting for " + string.Join(", ", missing));
     }
 
     private Building AddBuilding(BuildingType type, int anchorX, int anchorZ, Facing facing)
@@ -917,11 +910,13 @@ public sealed partial class Simulation
 
     private void StepProcessor(Building building, double dt)
     {
-        if (building.Online)
+        if (!building.Online)
         {
-            DrainOutput(building);
-            ReturnStaleInputs(building);
+            // Offline it works on nothing: the cycle holds, and only the unit already burning burns out.
+            building.BurnLeft = Math.Max(0f, building.BurnLeft - (float)dt);
+            return;
         }
+        DrainOutput(building);
         FollowQueue(building);
         Recipe recipe = building.Recipe!;
         float speed = WorkSpeed(building);
@@ -964,7 +959,7 @@ public sealed partial class Simulation
         }
     }
 
-    /// <summary>Whether the inputs are at hand: in the input buffer, plus storage when online.</summary>
+    /// <summary>Whether the inputs are at hand in storage.</summary>
     private bool InputsAvailable(Building building, Recipe recipe)
     {
         foreach (ResourceAmount input in ResolvedInputs(building, recipe))
@@ -977,19 +972,14 @@ public sealed partial class Simulation
         return true;
     }
 
-    /// <summary>Takes a cycle's inputs, from the input buffer first and then (online) from storage.</summary>
+    /// <summary>Takes a cycle's inputs from storage.</summary>
     private void ConsumeInputs(Building building, Recipe recipe)
     {
         building.CycleInputs.Clear();
         foreach (ResourceAmount input in ResolvedInputs(building, recipe))
         {
             building.CycleInputs.Add(input);
-            float fromBuffer = Mathf.Min(Held(building.Input, input.Type), input.Amount);
-            Put(building.Input, input.Type, -fromBuffer);
-            if (input.Amount - fromBuffer > RoomTolerance)
-            {
-                AddToStockpile(input.Type, -(input.Amount - fromBuffer));
-            }
+            AddToStockpile(input.Type, -input.Amount);
         }
     }
 

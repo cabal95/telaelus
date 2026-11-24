@@ -122,8 +122,7 @@ public sealed class Trainer
         _zoomedOut |= _game.Camera.ZoomLevel > _startZoom + 0.01f;
         float wood = Stock(ResourceType.Wood);
         Simulation sim = _game.Sim;
-        if (wood > _lastWood && sim.Intent.Harvest && sim.InteractTarget is { Type: BuildingType.LumberCamp }
-            && sim.InteractAction == InteractAction.Collect)
+        if (wood > _lastWood && sim.Intent.Harvest && sim.InteractTarget is { Type: BuildingType.LumberCamp })
         {
             _collected = true;
         }

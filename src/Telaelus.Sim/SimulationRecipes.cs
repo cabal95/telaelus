@@ -44,7 +44,7 @@ public sealed partial class Simulation
 
     /// <summary>
     /// Removes an order. Removing the first while its cycle runs stops the cycle and returns what it
-    /// took: to storage when online, else to the input buffer. False when there is no such order.
+    /// took to storage (past limits, as a refund). False when there is no such order.
     /// </summary>
     public bool CancelCraft(int id, int index)
     {
@@ -57,14 +57,7 @@ public sealed partial class Simulation
         {
             foreach (ResourceAmount input in building.CycleInputs)
             {
-                if (building.Online)
-                {
-                    AddToStockpile(input.Type, input.Amount);
-                }
-                else
-                {
-                    Put(building.Input, input.Type, input.Amount);
-                }
+                AddToStockpile(input.Type, input.Amount);
             }
             building.CycleInputs.Clear();
             building.Crafting = false;
@@ -155,11 +148,11 @@ public sealed partial class Simulation
         return -1;
     }
 
-    /// <summary>How much of a type a building has at hand: its input buffer, plus storage when online.</summary>
+    /// <summary>How much of a type a building has at hand: what storage holds when it is online, else none.</summary>
     public float AtHand(Building building, ResourceType type)
     {
         _stockpile.TryGetValue(type, out float stock);
-        return Held(building.Input, type) + (building.Online ? stock : 0f);
+        return building.Online ? stock : 0f;
     }
 
     /// <summary>A recipe's inputs as this building would take them, each alternative resolved.</summary>
@@ -232,7 +225,6 @@ public sealed partial class Simulation
             return;
         }
         building.RecipeIndex = index;
-        ReturnStaleInputs(building);
     }
 
     /// <summary>Takes up a recipe chosen during the cycle that just finished.</summary>
@@ -241,34 +233,6 @@ public sealed partial class Simulation
         if (building.PendingRecipe is int pending)
         {
             ApplyRecipe(building, pending);
-        }
-    }
-
-    /// <summary>
-    /// Sends what the input buffer holds that no order in the queue (for a running processor, its
-    /// recipe) can use back to storage, when online.
-    /// </summary>
-    private void ReturnStaleInputs(Building building)
-    {
-        if (!building.Online || building.Recipe is not Recipe recipe || building.Input.Count == 0)
-        {
-            return;
-        }
-        var stale = new List<ResourceType>();
-        foreach (ResourceType type in building.Input.Keys)
-        {
-            bool used = building.Queues
-                ? building.Queue.Exists(order => building.Recipes[order.RecipeIndex].Uses(type))
-                : recipe.Uses(type);
-            if (!used)
-            {
-                stale.Add(type);
-            }
-        }
-        foreach (ResourceType type in stale)
-        {
-            AddToStockpile(type, building.Input[type]);
-            building.Input.Remove(type);
         }
     }
 }

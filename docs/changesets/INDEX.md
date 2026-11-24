@@ -252,6 +252,9 @@ Newest last. One line each; open the file for the full spec.
   one.
 - **2611241218-trucks-explored-paths** - Trucks path only through explored map cells, like the player;
   a collector reachable only through fog is unreachable until a map cell is newly explored.
+- **2611241302-network-only-processing** - Every building works only while online: hand loading goes,
+  with the input buffer and fuel slot; offline processors hold their cycle; the panel's Buffer and
+  Burning rows lose their empty parts.
 
 ## Adding a changeset
 

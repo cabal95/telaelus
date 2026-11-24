@@ -20,7 +20,6 @@
 
     { "comment": "Standing at the Mine, E collects: 0.6 s a unit of Iron Ore.", "teleportPlayer": { "x": 25, "z": 34 } },
     { "wait": 2 },
-    { "expect": "player.interactAction", "equals": "collect" },
     { "expect": "ui.hint.text", "equals": "[E] Collect Iron Ore (1)" },
     { "keyDown": "E" },
     { "wait": 25 },

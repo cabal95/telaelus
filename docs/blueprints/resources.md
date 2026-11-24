@@ -59,7 +59,7 @@ buildings.md). A single global stockpile holds all amounts, within storage limit
   `Combustibles` the same without the Fuel Rod, which only a Fission Reactor burns (buildings.md).
   Batteries, Solar Cells, Heat Shields, Sensor Arrays, and Computers also go into the power
   buildings' costs. A fuel is still a Stored
-  resource; burning it in a fuel slot is a use of it (buildings.md).
+  resource; burning it in a fire is a use of it (buildings.md).
 - Deposits are finite resource fields. Terrain-sourced resources never run out but need a building
   on or beside the right terrain. Every resource is defined so the production plan (see
   docs/game-plan.md) and the UI are settled; most have no source yet (no fields, no building, no
@@ -239,25 +239,20 @@ buildings.md). A single global stockpile holds all amounts, within storage limit
 - While the target's resource has no room for the unit (`HarvestBlocked`), progress does not
   advance; the hint shows "Storage full" (see presentation.md).
 
-### Collecting and loading by hand
+### Collecting by hand
 
 - The harvest intent also works on buildings. Each tick the **interaction target**
   (`InteractTarget`) is the nearest building within `HarvestRange` of the player (distance to its
-  footprint) that has something to collect or load, unless a hand-harvestable field is nearer; a
+  footprint) that has something to collect, unless a hand-harvestable field is nearer; a
   building wins a tie. While a building is the target there is no harvest target.
-- **Collect** (`InteractAction.Collect`): a building with units in its output buffer, online or
-  offline (an offline collector makes nothing, but what it holds can still be carried in). Each unit (the
+- **Collect:** a building with units in its output buffer, online or offline (an offline
+  building makes nothing, but what it holds can still be carried in). Each unit (the
   first type in table order, at most 1) moves into storage after the resource's gather time over 10
   (`HandMoveSpeedup`), or 0.3 s (`HandMoveSeconds`) for a resource with no gather time; Iron Ore
   takes 0.6 s. With no room for the next unit (`InteractBlocked`) progress waits and the hint says
   "Storage full".
-- **Load** (`InteractAction.Load`): an offline processor with an empty output buffer and a recipe
-  input short of its input buffer's 5 cycles' worth and held in storage, or else an offline fuel
-  burner whose fuel slot has room for a unit of its fuel (its choice, or with Best the
-  longest-burning fuel storage holds). Each unit moves from storage into the input buffer or the
-  fuel slot at the same pace; recipe inputs load before fuel.
-- `InteractProgress` runs 0 to 1 per unit and resets on release or a new target or action;
-  `InteractResource` and `InteractAmounts` give the hint its resource and counts.
+- `InteractProgress` runs 0 to 1 per unit and resets on release or a new target;
+  `InteractResource` and `InteractHeld` give the hint its resource and count.
 
 ### Rendering
 

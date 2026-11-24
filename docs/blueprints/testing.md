@@ -119,7 +119,9 @@ pausing it and stepping frame by frame.
 - `NetworkTests`: hubs linking within the larger link radius; coverage reaching a footprint's
   nearest point; switching off or destroying a hub cutting its branch; an extractor filling its
   buffer and waiting for pickup; collecting by hand at a tenth of the gather time and stopping on
-  full storage; an offline processor loaded by hand and working from its buffers; destroying
+  full storage; an offline processor doing nothing and offering nothing to load; a processor
+  going offline holding its cycle and finishing it once online; cancelling an offline cycle
+  returning its inputs to storage; destroying
   returning buffers past the limit; storage counting only online; `WouldBeOnline`.
 - `CollectorNetworkTests`: an offline Mine, Lumber Camp, and Oil Well making nothing and reading
   "Offline: outside the network"; a hub chain bringing a camp online, and cutting it dropping the
@@ -185,8 +187,10 @@ pausing it and stepping frame by frame.
 - `SaveTests`: a save loaded into a fresh sim saving identically; a game saved at a tick and
   loaded continuing identically to the one that ran on; every kind of state (buildings mid-cycle,
   fuel, choices, trucks mid-trip, roads and bridges, research, the clock, Battery charge) surviving;
-  a generated fog world round trip that keeps exploring the same; and the file format's round
-  trip, a newer version refused, and a damaged file refused.
+  a generated fog world round trip that keeps exploring the same; a switched-off extractor whose
+  field was removed saving and loading with no current field, and a save naming a missing one
+  loading with none; an older save's input buffer and fuel slot going to storage; and the file
+  format's round trip, a newer version refused, and a damaged file refused.
 - `DemoTownTests`: the demo town (saving.md) built and run as the demo save is: every building
   online and working, power normal, four trucks, Material Transfer running; every collector on a
   field and the Smelters fed by truck; no truck waiting on storage and every Smelter working 15
@@ -205,8 +209,8 @@ pausing it and stepping frame by frame.
   end-to-end run from seeded materials through two Semiconductor Fabs, an Electronics Works, an
   Assembly Plant, and two Enrichment Plants to a Computer and a Fuel Rod.
 - `RefiningTests`: each building's recipes; the Steel Mill on Auto taking Coal, on Charcoal only
-  Charcoal, waiting for it, and back on Auto; the next order's recipe waiting for the running cycle
-  and unused inputs going back to storage; the Electrolyzer's two gases and the Fuel Plant's Rocket
+  Charcoal, waiting for it, and back on Auto; the next order's recipe waiting for the running
+  cycle; the Electrolyzer's two gases and the Fuel Plant's Rocket
   Fuel; the Chemical Plant's and Electric Furnace's recipes; Aluminum Smelters' heavy draw.
 - `CraftingQueueTests`: a Charcoal Kiln taking only the Wood its order needs, then idle "Queue
   empty"; a later order of the same recipe going after another's, one in a row growing the last;
@@ -301,7 +305,7 @@ pausing it and stepping frame by frame.
   since the last frame), `worstMs`, `fps`, `draws`, `objects`, as of that frame; see
   presentation.md); `player` (`position`
   [x, z], `walking`, `destination` [x, z] (where the walk ends) or null, `harvestTarget` field id or null, `harvestProgress` (0 to 1), `interactTarget` building
-  id or null, `interactAction` (`collect` or `load`, or null), `interactProgress`, the `terrain`, `biome`, and `feature` under the player,
+  id or null, `interactProgress`, the `terrain`, `biome`, and `feature` under the player,
   and their `chunk` [x, z]); `build` (null when not in build
   mode, else `selected`, `facing`, `fieldsInRange`, and `ghost`: `anchor`, `width`, `depth`,
   `placeable` (the spot), `affordable` (the cost), or null, and `tooltip`: the placement
@@ -345,7 +349,7 @@ pausing it and stepping frame by frame.
   (`remaining`, `workedBy`); while the inventory is open, `inventory`: its rows in display order,
   each `type`, `amount`, `limit` (null for a Cargo or unlimited resource), `section` (`raw`,
   `tier1` to `tier4`), `discovered`, and `pinned`, and `cargo`, the Cargo row's text); `buildings` (`id`, `type`, `anchor`, `facing`, `width`, `depth`,
-  `currentField`, `enabled`, `online`, `output`, `input`, and `fuelSlot` (amounts by type),
+  `currentField`, `enabled`, `online`, and `output` (amounts by type),
   `burning` (the fuel burning, or null), `status`
   (`working`, `idle`, or `off`), and `idleReason` or null);
   `trucks` (`id`, `depot`, `bay`, `state` (`parked`, `toCollector`, `loading`, `toHq`, `unloading`,

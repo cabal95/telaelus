@@ -30,11 +30,11 @@ ship from a Shipyard, which closes the on-planet loop.
   `StoresClass`, or Warehouse), the `CargoPool` it adds, whether it is `Permanent` (cannot be
   switched off or destroyed), whether it is `Buildable` (placed by the player; the world places
   the HQ), a hub's `CoverageRadius` and `LinkRadius` (`IsHub` when either is set), and the sizes of
-  its buffers: `OutputBuffer` (units) and `InputCycles` (cycles' worth of each recipe input). It
+  its output buffer (`OutputBuffer`, units). It
   has a `Tier` (0 unpowered, 1 the first powered tier), the capacity it `Draws` and `Supplies`
   (maps from `CapacityType` to amount; `Draw(type)` and `Supply(type)` read 0 for a type not
-  listed, and `IsProvider` when it supplies any), `BurnsFuel` (a fuel slot, `FuelSlotSize` 5
-  units), and its `Placement` rule (Standard, AcrossStraightRiver, BesideWater, OnSand,
+  listed, and `IsProvider` when it supplies any), `BurnsFuel` (it burns fuel from storage), and
+  its `Placement` rule (Standard, AcrossStraightRiver, BesideWater, OnSand,
   OnDesertSand, or the renewables' three).
 
   | Type        | Footprint | Cost                       | Works                             | Work radius |
@@ -87,7 +87,7 @@ place for balancing. The sections below hold the rules; this table only gathers 
 from `BuildingDefs` and `Recipes`. `BuildingTableTests` rebuilds it from them and fails when this
 copy differs, printing the table as it should read, so a change to a cost, draw, or recipe
 updates its row here in the same change. **Draws** and **Supplies** are capacity per second while online and switched
-on (Power, Water, Sand); **Burns / eats** is fuel taken from the fuel slot or storage; **Makes**
+on (Power, Water, Sand); **Burns / eats** is fuel taken from storage; **Makes**
 lists each recipe as inputs → outputs (cycle time), an extractor's deposits, work radius, and speed
 (its rate is the deposit's gather time over that speed), a collector's rate, and any other role.
 Recipes marked "(capacity only)" use only the Sand or Water they draw.
@@ -251,7 +251,7 @@ Recipes marked "(capacity only)" use only the Sand or Water they draw.
 |---|---|---|---|---|---|---|
 | Lumber Mill | 3 x 3 | 30 Wood, 20 Iron | 5 Power | 2.0 | Wood, radius 8 | 40 |
 | Drill Rig | 3 x 3 | 30 Iron, 20 Stone | 10 Power | 2.0 | the Mine's deposits and Rare Earths, Uranium Ore, Crystals, radius 8 | 40 |
-| Refinery | 2 x 3 | as above | 25 Power, 2 Water (its cooling) | | | 10, inputs 5 cycles |
+| Refinery | 2 x 3 | as above | 25 Power, 2 Water (its cooling) | | | 10 |
 | Glassworks | 3 x 6 | 40 Stone, 20 Wood | 2 Sand | | | 10 |
 
 - The small providers and the Glassworks are tier 0; the Pumping Station, Sand Dredge, Lumber
@@ -366,19 +366,17 @@ Recipes marked "(capacity only)" use only the Sand or Water they draw.
     it grows instead, so 5 Iron, 5 Copper, then 5 Iron is three orders, but 5 Iron then 3 Iron is
     one of 8. A queue holds at most `MaxQueue` (4) orders; a new order beyond that is refused.
   - `CancelCraft(id, index)` removes an order. Removing the first while its cycle runs stops the
-    cycle and returns what it took: to storage online, else to the input buffer.
+    cycle and returns what it took to storage, past limits.
   - A new processor, and one in a save from before the queue, starts with an empty queue (a cycle
     loaded running finishes and delivers first). The recipe changes only between orders, so
     `SetRecipe` and `PendingRecipe` are for the three that run without a queue: `SetRecipe`
     changes their recipe at once between cycles, or, during a cycle, when it finishes.
-  - The input buffer keeps what it holds; what no order in the queue (or a running processor's
-    recipe) can use goes back to storage whenever the building is online.
 - **Alternative inputs:** a recipe input may be filled by any of several types in the same amount
   (`Recipe.Alternatives`, `OptionsFor`; Steel's and Silicon's carbon is Coal or Charcoal).
   `SetInputChoice(id, recipe, input, type)` picks one for one of the building's recipes
   (`Building.InputChoices`, by recipe and input, so it holds while the queue moves between
   recipes) or clears it for **Auto**, which takes the
-  one most at hand (`AtHand`: the input buffer, plus storage when online), the first on a tie
+  one most at hand (`AtHand`: what storage holds, when online), the first on a tie
   (`ChosenInput`, `ResolvedInputs`). A cycle records what it took (`CycleInputs`), refunded if the
   building is destroyed mid-cycle. A building waiting on an Auto input names all of them ("Waiting
   for Coal or Charcoal"); on a chosen one, that one.
@@ -392,7 +390,7 @@ Recipes marked "(capacity only)" use only the Sand or Water they draw.
 | Aluminum Smelter | 3 x 8 | 50 Steel, 30 Stone | 60 Power | Aluminum: 2 Bauxite, 20 s |
 | Electric Furnace | 4 x 4 | 50 Steel, 20 Copper | 40 Power | Silicon: 1 Quartz, 1 Coal or Charcoal, 15 s; Titanium: 2 Titanium Ore, 20 s |
 
-- All six are tier 1 with an output buffer of 10 and 5 cycles of each input. Steel is the gate:
+- All six are tier 1 with an output buffer of 10. Steel is the gate:
   the Steel Mill is built from Stone and Iron, the rest of the tier from Steel (the Electrolyzer
   from Iron and Copper).
 
@@ -411,7 +409,7 @@ the tier-4 Hull Section and Engine. A recipe may make more than one unit (`Recip
 
 - Each tier is built from the one before: tier-2 buildings from Steel and Copper (and Stone, Glass),
   the Assembly Plant and Shipyard from tier-2 parts. All have an output buffer of 10 (the
-  Shipyard's 2) and 5 cycles of each input.
+  Shipyard's 2).
 
 **Later tiers.** Every catalog item has a maker. The later tiers add recipes to buildings above,
 each listed after the ones in the tables:
@@ -425,7 +423,7 @@ each listed after the ones in the tables:
   Tile, 2 Composite Panel, 40 s; Life Support Unit: 2 Electric Motor, 2 Machine Parts, 2 Glass,
   45 s; Sensor Array: 1 Processor, 2 Magnet, 2 Glass, 40 s.
 
-And seven buildings, all processors (output buffer 10, 5 cycles of each input):
+And seven buildings, all processors (output buffer 10):
 
 | Building | Footprint | Cost | Tier | Draws | Recipes (inputs to output, cycle) |
 |---|---|---|---|---|---|
@@ -476,7 +474,7 @@ And seven buildings, all processors (output buffer 10, 5 cycles of each input):
 |---|---|---|---|---|---|
 | Forester | 4 x 4 | 30 Wood, 20 Stone | 1; 2 Power, 5 Water | OpenGrassCell | Grows a 150-Wood field on its own cell (`Plot`) |
 | Quarry | 3 x 3 | 40 Iron, 30 Wood | 1; 10 Power | BesideMountain | 1 Stone (or Limestone) every 6 s; buffer 40 |
-| Charcoal Kiln | 2 x 2 | 30 Stone, 10 Wood | 0 | Standard | Its recipe above; buffer 10, inputs 5 cycles |
+| Charcoal Kiln | 2 x 2 | 30 Stone, 10 Wood | 0 | Standard | Its recipe above; buffer 10 |
 | Rock Crusher | 3 x 3 | 40 Iron, 20 Stone | 1; 15 Power | Standard | A Sand provider (Capacity, above) |
 | Deep Well | 4 x 4 | 60 Iron, 30 Stone | 1; 15 Power | OverSite: worked-out Crude Oil, or a Salt Dome | 1 Crude Oil every 26.7 s on a worked-out cell; buffer 20 |
 | Deep Mine | 4 x 4 | 80 Iron, 40 Stone | 2; 30 Power | OverSite: worked-out Iron Ore, Copper Ore, Bauxite, Titanium Ore, Quartz, or Limestone, or a solid motherlode | 1 unit every 20 s on a worked-out cell; buffer 40 |
@@ -512,11 +510,10 @@ And seven buildings, all processors (output buffer 10, 5 cycles of each input):
   Reactor. A burner takes, and its picker and Best offer, only its own; `SetFuelChoice` refuses any
   other.
 - A fuel burner (the Burner Generator, the Smelter, the Glassworks, the Cement Kiln, the Fission
-  Reactor) has a **fuel slot** (`FuelSlot`, unburned units
-  by type) and a fire: the unit burning (`Burning`) and its seconds left (`BurnLeft`). When the fire
-  is out it takes the next unit, from the slot first and then, online, from storage, and burns it
-  for its burn time (resources.md). A unit taken is spent: switching off or destroying the building
-  does not return it, though unburned slot units are refunded.
+  Reactor) has a fire: the unit burning (`Burning`) and its seconds left (`BurnLeft`). When the
+  fire is out it takes the next unit from storage, online only, and burns it for its burn time
+  (resources.md). A unit taken is spent: switching off or destroying the building does not return
+  it.
 - **Fuel choice** (`FuelChoice`, `SetFuelChoice`): one fuel by name, or null for **Best**, the
   longest-burning fuel at hand (`ResourceDefs.Fuels` order), falling back when it runs out.
   `BestFuelAt` names what Best would take next.
@@ -530,10 +527,9 @@ And seven buildings, all processors (output buffer 10, 5 cycles of each input):
 ### Buffers
 
 - Extractors (Mine, Lumber Camp, Oil Well) have a 20-unit output buffer (any mix of the types they
-  work). Processors (Smelter, Refinery) have a 10-unit output buffer and an input buffer of 5
-  cycles' worth of each recipe input. The HQ, hubs, and storage buildings have none.
-- `Building.Output` and `Building.Input` hold the amounts by type; a building keeps them when it
-  goes offline or online.
+  work). Processors (Smelter, Refinery) have a 10-unit output buffer. The HQ, hubs, and storage
+  buildings have none. Processors take their inputs straight from storage when a cycle starts.
+- `Building.Output` holds the amounts by type; a building keeps it when it goes offline or online.
 
 ### The HQ and the Silo
 
@@ -564,11 +560,12 @@ And seven buildings, all processors (output buffer 10, 5 cycles of each input):
   field depletes. When the buffer has no room for the unit, the unit waits at the field: progress
   holds at the gather time and the unit is taken as soon as there is room. Several extractors may work the same field. With no
   field in range, it idles, and it picks up a field as soon as one is in range.
-- A processor, when idle, starts a cycle only when its inputs are at hand and its outputs have
-  somewhere to go. Inputs come from its input buffer first, then (online only) from storage.
-  Outputs go into storage when it is online and they fit (Cargo outputs together in the pool), else
-  into its output buffer; offline, only into the buffer. A finished cycle with nowhere to put its
-  output waits (progress holds at the cycle time). Each tick an online processor's output buffer
+- A processor, like a collector, works only while **online**: offline it starts no cycle, a cycle
+  it is running holds where it is (resuming once online), and only the unit already burning in a
+  fire burns out. Online, when idle, it starts a cycle only when its inputs are in storage and its
+  outputs have somewhere to go, taking the inputs from storage. Outputs go into storage when they
+  fit (Cargo outputs together in the pool), else into its output buffer. A finished cycle with
+  nowhere to put its output waits (progress holds at the cycle time). Each tick its output buffer
   drains into storage as far as room allows.
 - Storage buildings do no work each tick; they only raise limits while they stand.
 - Online buildings share the one storage. Moving raw resources from collectors to storage is the
@@ -655,15 +652,16 @@ of what it makes or gives and what it needs, shown in the build menu's tooltip (
   when not working, a reason. Off reads "Switched off". An offline extractor is idle "Offline:
   outside the network" (a powered one reads "No Power: offline" first). An extractor works while it has a field
   or one in range to take up and buffer room for its unit; with no field it is idle with "No fields
-  in range", and with a full buffer "Full: waiting for pickup". A processor whose outputs have
-  nowhere to go, before a cycle or with a finished one waiting, is idle "Storage full: Iron" online
-  or "Full: collect by hand" offline; otherwise it works during a cycle, else is idle "Waiting for"
-  its missing inputs ("Waiting for Crude Oil", and offline "Waiting for Iron Ore (load by hand)").
+  in range", and with a full buffer "Full: waiting for pickup". An offline processor is idle
+  "Offline: outside the network" (a powered one reads "No Power: offline" first). A processor whose
+  outputs have nowhere to go, before a cycle or with a finished one waiting, is idle "Storage full:
+  Iron"; otherwise it works during a cycle, else is idle "Waiting for" its missing inputs
+  ("Waiting for Crude Oil").
   A queueing processor with no order and no cycle running is idle "Queue empty".
   A consumer that is offline is idle "No Power: offline" (naming the first type it draws, in
   `CapacityType` order), and in a blackout of a type it draws "Blackout: Water" (checked first). A
-  fuel burner with no fuel at hand is idle "Waiting for fuel" (offline "Waiting for fuel (load by
-  hand)"); an offline provider is idle "Offline: supplies nothing", and an eating provider with
+  fuel burner with no fuel at hand is idle "Waiting for fuel"; an offline provider is idle
+  "Offline: supplies nothing", and an eating provider with
   nothing to eat "Waiting for Stone". A collector without a field works until its buffer is full
   ("Full: waiting for pickup"); a Forester always reports Working. Storage
   buildings and hubs report Working (they do no work).

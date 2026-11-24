@@ -22,7 +22,8 @@ Game; in a game, Escape opens the game menu (Resume, Save Game, Load Game, Train
   - every building (id, type, anchor, facing, enabled, recipe and the waiting change, crafting
     queue (each order's recipe and items left; absent in older saves, an empty queue), input
     choices by recipe (an older save's by input alone belong to its recipe), fuel
-    and output choices, Silo resource, input, output, and fuel buffers, the fuel burning and time
+    and output choices, Silo resource, output buffer (an older save's input buffer and fuel slot
+    go to storage on load), the fuel burning and time
     left, cycle progress and the inputs it took, its current field, site, and plot, feeding state,
     and charge);
   - every truck (id, Depot, bay, state, position, heading, cargo, target, timer, and its path with

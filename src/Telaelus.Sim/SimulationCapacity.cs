@@ -186,7 +186,7 @@ public sealed partial class Simulation
                 continue;
             }
             _stockpile.TryGetValue(fuel, out float stock);
-            if (Held(building.FuelSlot, fuel) >= 1f - RoomTolerance || (building.Online && stock >= 1f - RoomTolerance))
+            if (building.Online && stock >= 1f - RoomTolerance)
             {
                 return fuel;
             }
@@ -200,7 +200,7 @@ public sealed partial class Simulation
         return building.BurnLeft > 0f || NextFuel(building) is not null;
     }
 
-    /// <summary>Takes the next unit of fuel into the fire, from the slot first and then (online) from storage.</summary>
+    /// <summary>Takes the next unit of fuel into the fire from storage (online only).</summary>
     private bool TakeFuel(Building building)
     {
         if (NextFuel(building) is not ResourceType fuel)
@@ -208,14 +208,7 @@ public sealed partial class Simulation
             building.Burning = null;
             return false;
         }
-        if (Held(building.FuelSlot, fuel) >= 1f - RoomTolerance)
-        {
-            Put(building.FuelSlot, fuel, -1f);
-        }
-        else
-        {
-            AddToStockpile(fuel, -1f);
-        }
+        AddToStockpile(fuel, -1f);
         building.Burning = fuel;
         building.BurnLeft = ResourceDefs.For(fuel).BurnSeconds!.Value;
         return true;
@@ -252,36 +245,5 @@ public sealed partial class Simulation
         ResourceType? best = NextFuel(building);
         building.FuelChoice = choice;
         return best;
-    }
-
-    /// <summary>The next unit of fuel to load into an offline burner's slot by hand, or null.</summary>
-    private (ResourceType Type, float Amount)? NextFuelLoad(Building building)
-    {
-        if (!building.Def.BurnsFuel || building.Online)
-        {
-            return null;
-        }
-        float held = 0f;
-        foreach (float amount in building.FuelSlot.Values)
-        {
-            held += amount;
-        }
-        if (held > BuildingDef.FuelSlotSize - 1f + RoomTolerance)
-        {
-            return null;
-        }
-        foreach (ResourceType fuel in building.Def.Fuels)
-        {
-            if (building.FuelChoice is ResourceType chosen && chosen != fuel)
-            {
-                continue;
-            }
-            _stockpile.TryGetValue(fuel, out float stock);
-            if (stock >= 1f - RoomTolerance)
-            {
-                return (fuel, 1f);
-            }
-        }
-        return null;
     }
 }

@@ -69,9 +69,6 @@ public sealed record BuildingDef(
     /// <summary>How many units its output buffer holds (extractors and processors; 0 for none).</summary>
     public float OutputBuffer { get; init; }
 
-    /// <summary>How many cycles' worth of each recipe input its input buffer holds (processors).</summary>
-    public int InputCycles { get; init; }
-
     /// <summary>Its tier: 0 for the unpowered start, 1 for the first powered buildings.</summary>
     public int Tier { get; init; }
 
@@ -133,8 +130,6 @@ public sealed record BuildingDef(
     /// <summary>A collector: it fills its output buffer, from fields (an extractor) or on its own.</summary>
     public bool IsCollector => IsExtractor || ProduceSeconds > 0f;
 
-    /// <summary>How many units of fuel a fuel slot holds.</summary>
-    public const float FuelSlotSize = 5f;
 
     public bool IsExtractor => Works.Count > 0;
 
@@ -203,7 +198,6 @@ public static class BuildingDefs
     }, Array.Empty<ResourceType>(), 0f)
     {
         OutputBuffer = 10f,
-        InputCycles = 5,
         BurnsFuel = true
     };
     private static readonly BuildingDef Refinery = new("Refinery", 2, 3, new ResourceAmount[]
@@ -214,7 +208,6 @@ public static class BuildingDefs
     }, Array.Empty<ResourceType>(), 0f)
     {
         OutputBuffer = 10f,
-        InputCycles = 5,
         Tier = 1,
         Draws = new Dictionary<CapacityType, float>
         {
@@ -483,7 +476,6 @@ public static class BuildingDefs
     }, Array.Empty<ResourceType>(), 0f)
     {
         OutputBuffer = 10f,
-        InputCycles = 5
     };
     private static readonly BuildingDef RockCrusher = new("Rock Crusher", 3, 3, new ResourceAmount[]
     {
@@ -554,7 +546,6 @@ public static class BuildingDefs
     {
         Tier = 1,
         OutputBuffer = 10f,
-        InputCycles = 5,
         Draws = new Dictionary<CapacityType, float>
         {
             [CapacityType.Power] = 20f
@@ -568,7 +559,6 @@ public static class BuildingDefs
     {
         Tier = 1,
         OutputBuffer = 10f,
-        InputCycles = 5,
         Draws = new Dictionary<CapacityType, float>
         {
             [CapacityType.Power] = 50f,
@@ -583,7 +573,6 @@ public static class BuildingDefs
     {
         Tier = 1,
         OutputBuffer = 10f,
-        InputCycles = 5,
         Draws = new Dictionary<CapacityType, float>
         {
             [CapacityType.Power] = 20f
@@ -597,7 +586,6 @@ public static class BuildingDefs
     {
         Tier = 1,
         OutputBuffer = 10f,
-        InputCycles = 5,
         Draws = new Dictionary<CapacityType, float>
         {
             [CapacityType.Power] = 25f,
@@ -612,7 +600,6 @@ public static class BuildingDefs
     {
         Tier = 1,
         OutputBuffer = 10f,
-        InputCycles = 5,
         Draws = new Dictionary<CapacityType, float>
         {
             [CapacityType.Power] = 60f
@@ -626,7 +613,6 @@ public static class BuildingDefs
     {
         Tier = 1,
         OutputBuffer = 10f,
-        InputCycles = 5,
         Draws = new Dictionary<CapacityType, float>
         {
             [CapacityType.Power] = 40f
@@ -641,7 +627,6 @@ public static class BuildingDefs
     {
         Tier = 2,
         OutputBuffer = 10f,
-        InputCycles = 5,
         Draws = new Dictionary<CapacityType, float>
         {
             [CapacityType.Power] = 30f
@@ -656,7 +641,6 @@ public static class BuildingDefs
     {
         Tier = 2,
         OutputBuffer = 10f,
-        InputCycles = 5,
         Draws = new Dictionary<CapacityType, float>
         {
             [CapacityType.Power] = 20f,
@@ -671,7 +655,6 @@ public static class BuildingDefs
     {
         Tier = 2,
         OutputBuffer = 10f,
-        InputCycles = 5,
         Draws = new Dictionary<CapacityType, float>
         {
             [CapacityType.Power] = 30f
@@ -686,7 +669,6 @@ public static class BuildingDefs
     {
         Tier = 3,
         OutputBuffer = 10f,
-        InputCycles = 5,
         Draws = new Dictionary<CapacityType, float>
         {
             [CapacityType.Power] = 40f
@@ -701,7 +683,6 @@ public static class BuildingDefs
     {
         Tier = 4,
         OutputBuffer = 2f,
-        InputCycles = 5,
         Draws = new Dictionary<CapacityType, float>
         {
             [CapacityType.Power] = 50f
@@ -715,7 +696,6 @@ public static class BuildingDefs
     }, Array.Empty<ResourceType>(), 0f)
     {
         OutputBuffer = 10f,
-        InputCycles = 5
     };
     private static readonly BuildingDef CementKiln = new("Cement Kiln", 3, 7, new ResourceAmount[]
     {
@@ -725,7 +705,6 @@ public static class BuildingDefs
     }, Array.Empty<ResourceType>(), 0f)
     {
         OutputBuffer = 10f,
-        InputCycles = 5,
         BurnsFuel = true
     };
     private static readonly BuildingDef ConcreteMixer = new("Concrete Mixer", 3, 4, new ResourceAmount[]
@@ -736,7 +715,6 @@ public static class BuildingDefs
     {
         Tier = 1,
         OutputBuffer = 10f,
-        InputCycles = 5,
         Draws = new Dictionary<CapacityType, float>
         {
             [CapacityType.Power] = 10f,
@@ -753,7 +731,6 @@ public static class BuildingDefs
         Tier = 1,
         Placement = Placement.OnDesertSand,
         OutputBuffer = 10f,
-        InputCycles = 5,
         Draws = new Dictionary<CapacityType, float>
         {
             [CapacityType.Power] = 15f,
@@ -769,7 +746,6 @@ public static class BuildingDefs
     {
         Tier = 2,
         OutputBuffer = 10f,
-        InputCycles = 5,
         Draws = new Dictionary<CapacityType, float>
         {
             [CapacityType.Power] = 40f,
@@ -785,7 +761,6 @@ public static class BuildingDefs
     {
         Tier = 2,
         OutputBuffer = 10f,
-        InputCycles = 5,
         Draws = new Dictionary<CapacityType, float>
         {
             [CapacityType.Power] = 40f
@@ -801,7 +776,6 @@ public static class BuildingDefs
     {
         Tier = 3,
         OutputBuffer = 10f,
-        InputCycles = 5,
         Draws = new Dictionary<CapacityType, float>
         {
             [CapacityType.Power] = 80f,

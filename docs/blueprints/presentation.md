@@ -142,8 +142,7 @@ ui-style.md. There is no text HUD; the screen holds:
   ship launch is not on the bar: it is the Shipyard's panel's.
 - **Hint overlay** (`HintOverlay`): below the top bar, the E key's action with the resource's
   icon and a progress bar toward the next unit: "[E] Harvest Wood" while a hand-harvestable field is
-  the target, "[E] Collect Iron Ore (12)" (units left in the output buffer) or "[E] Load Iron Ore
-  (3 / 5)" (input buffer held and capacity) while a building is; while storage has no room for the
+  the target, "[E] Collect Iron Ore (12)" (units left in the output buffer) while a building is; while storage has no room for the
   resource, "Storage full" in `Warning` replaces the bar.
 - **Notifications** (`Notifications`, look in ui-style.md): `GameRoot` collects the sim's
   `Happened` events and, once a frame, turns them into toasts (`NotificationText`): a resource
@@ -258,7 +257,7 @@ ui-style.md. There is no text HUD; the screen holds:
   Battery Bank has a Charge row ("3200 / 6000, charging", or "discharging", "full", "holding"). A
   recipe with no inputs reads "1 Glass,
   12 s". A building with a fuel slot has a Burning row ("Coal,
-  22 s left; 4 in slot") and, below the rows, a Fuel picker (Best, then each fuel the building
+  22 s left", or "nothing") and, below the rows, a Fuel picker (Best, then each fuel the building
   takes, longest-burning first, rebuilt for a building that takes others; choosing calls
   `SetFuelChoice`) with a dim note naming what it burns ("Best: burns Coal
   (40 s per unit)"). A processor with several recipes has a Recipe picker. On a queueing
@@ -279,7 +278,7 @@ ui-style.md. There is no text HUD; the screen holds:
   (Coal 58, Charcoal 4)", or "Uses only Charcoal"). The Recipe row names an alternative input as
   all of them ("2 Iron + 1 Coal or Charcoal + 1 Limestone to 1 Steel, 20 s"), and the Buffer row
   lists the inputs as resolved. The progress bar shows only for extractors and processors. An extractor or
-  processor a Buffer row ("Iron Ore 12 / 20", or "Iron 4 / 10; in: Iron Ore 3 / 5"); a hub Links
+  processor a Buffer row ("Iron Ore 12 / 20", or "Iron 4 / 10"); a hub Links
   (how many hubs it links to) and Reach ("covers 8, links 12") and no State or progress. An
   extractor has a Truck row while a truck is on its way ("On its way") or loading ("Loading"), or
   "No truck can reach". A Forester has a Plot row ("Growing: 2:10 left", "Grown: 112 / 150 Wood",

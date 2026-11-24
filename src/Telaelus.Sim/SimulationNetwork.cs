@@ -4,16 +4,6 @@ using Godot;
 
 namespace Telaelus.Sim;
 
-/// <summary>What the player's interaction with a building does.</summary>
-public enum InteractAction
-{
-    /// <summary>Moves units from the building's output buffer into storage.</summary>
-    Collect,
-
-    /// <summary>Moves recipe inputs from storage into an offline processor's input buffer.</summary>
-    Load
-}
-
 /// <summary>
 /// The HQ network and hand interaction with buildings. Hubs (the HQ, Small Hubs, Relays) link
 /// when the distance between their centers is at most the larger of their link radii; the hubs
@@ -21,8 +11,7 @@ public enum InteractAction
 /// footprint comes within an online hub's coverage radius of its center. Switched-off hubs
 /// neither link nor cover. The network is recomputed when a building is placed, destroyed, or
 /// switched, never per tick. Holding the harvest intent beside a building collects its output
-/// buffer into storage, or loads an offline processor's inputs from storage, one unit at a time
-/// at ten times hand-harvest speed.
+/// buffer into storage, one unit at a time at ten times hand-harvest speed.
 /// </summary>
 public sealed partial class Simulation
 {
@@ -32,55 +21,23 @@ public sealed partial class Simulation
     /// <summary>How much faster moving units by hand is than gathering them.</summary>
     public const float HandMoveSpeedup = 10f;
 
-    /// <summary>The building the player would collect from or load, or null.</summary>
+    /// <summary>The building the player would collect from, or null.</summary>
     public Building? InteractTarget { get; private set; }
-
-    public InteractAction InteractAction { get; private set; }
 
     /// <summary>Progress toward moving the next unit, 0 to 1.</summary>
     public float InteractProgress { get; private set; }
 
     /// <summary>Whether collecting is stalled because storage has no room for the next unit.</summary>
-    public bool InteractBlocked => InteractTarget is Building building && InteractAction == InteractAction.Collect
+    public bool InteractBlocked => InteractTarget is Building building
         && NextCollect(building) is (ResourceType type, float amount) && !HasRoom(type, amount);
 
     /// <summary>The resource the interaction moves next, or null.</summary>
-    public ResourceType? InteractResource => InteractTarget is Building building
-        ? (InteractAction == InteractAction.Collect ? NextCollect(building) : NextLoad(building))?.Type
-        : null;
+    public ResourceType? InteractResource => InteractTarget is Building building ? NextCollect(building)?.Type : null;
 
-    /// <summary>
-    /// For the hint: when collecting, the units of the next resource left in the output buffer;
-    /// when loading, the units of it in the input buffer and the most it holds.
-    /// </summary>
-    public (float Held, float? Capacity) InteractAmounts()
+    /// <summary>For the hint: the units of the next resource left in the target's output buffer.</summary>
+    public float InteractHeld()
     {
-        if (InteractTarget is not Building building || InteractResource is not ResourceType type)
-        {
-            return (0f, null);
-        }
-        if (InteractAction == InteractAction.Collect)
-        {
-            return (Held(building.Output, type), null);
-        }
-        if (LoadsFuel(building))
-        {
-            float slot = 0f;
-            foreach (float amount in building.FuelSlot.Values)
-            {
-                slot += amount;
-            }
-            return (slot, BuildingDef.FuelSlotSize);
-        }
-        float capacity = 0f;
-        foreach (ResourceAmount input in ResolvedInputs(building, building.Recipe!))
-        {
-            if (input.Type == type)
-            {
-                capacity = InputCapacity(building, input);
-            }
-        }
-        return (Held(building.Input, type), capacity);
+        return InteractTarget is Building building && InteractResource is ResourceType type ? Held(building.Output, type) : 0f;
     }
 
     /// <summary>Distance from a point to the nearest point of a building's footprint (0 inside).</summary>
@@ -176,12 +133,6 @@ public sealed partial class Simulation
         }
     }
 
-    /// <summary>How much of a recipe input an input buffer holds at most.</summary>
-    private static float InputCapacity(Building building, ResourceAmount input)
-    {
-        return input.Amount * building.Def.InputCycles;
-    }
-
     /// <summary>Moves what fits of an online processor's output buffer into storage.</summary>
     private void DrainOutput(Building building)
     {
@@ -203,12 +154,7 @@ public sealed partial class Simulation
         {
             AddToStockpile(type, amount);
         }
-        foreach ((ResourceType type, float amount) in building.Input)
-        {
-            AddToStockpile(type, amount);
-        }
         building.Output.Clear();
-        building.Input.Clear();
     }
 
     // ---- Hand interaction -------------------------------------------------
@@ -232,52 +178,10 @@ public sealed partial class Simulation
         return null;
     }
 
-    /// <summary>The next unit to load into an offline building by hand: a recipe input first, then fuel; null when neither is short and in storage.</summary>
-    private (ResourceType Type, float Amount)? NextLoad(Building building)
-    {
-        return NextInputLoad(building) ?? NextFuelLoad(building);
-    }
-
-    /// <summary>Whether the next load goes into the fuel slot rather than the input buffer.</summary>
-    private bool LoadsFuel(Building building)
-    {
-        return NextInputLoad(building) is null && NextFuelLoad(building) is not null;
-    }
-
-    /// <summary>The next recipe input to load into an offline processor, or null when none is short and in storage.</summary>
-    private (ResourceType Type, float Amount)? NextInputLoad(Building building)
-    {
-        if (building.Online || building.Recipe is not Recipe recipe || building.Def.InputCycles == 0 || building.OutputCount > RoomTolerance)
-        {
-            return null;
-        }
-        foreach (ResourceAmount input in ResolvedInputs(building, recipe))
-        {
-            float room = InputCapacity(building, input) - Held(building.Input, input.Type);
-            _stockpile.TryGetValue(input.Type, out float stock);
-            float amount = Math.Min(Math.Min(room, stock), 1f);
-            if (amount > RoomTolerance)
-            {
-                return (input.Type, amount);
-            }
-        }
-        return null;
-    }
-
-    /// <summary>What the player would do at a building, or null when there is nothing to collect or load.</summary>
-    private InteractAction? ActionAt(Building building)
-    {
-        if (NextCollect(building) is not null)
-        {
-            return InteractAction.Collect;
-        }
-        return NextLoad(building) is not null ? InteractAction.Load : null;
-    }
-
     /// <summary>
     /// Picks what the harvest intent works on: the nearest hand-harvestable field or building with
-    /// something to collect or load, within reach; a building wins a tie. A new target drops any
-    /// partial progress.
+    /// something to collect, within reach; a building wins a tie. A new target drops any partial
+    /// progress.
     /// </summary>
     private void UpdateInteraction()
     {
@@ -285,25 +189,22 @@ public sealed partial class Simulation
         float fieldDistance = HarvestTarget is ResourceField field ? DistanceToField(Player.Position, field) : float.MaxValue;
 
         Building? best = null;
-        InteractAction action = InteractAction.Collect;
         float bestDistance = Math.Min(HarvestRange, fieldDistance);
         foreach (Building building in _buildings)
         {
             float distance = DistanceToReach(Player.Position, building);
-            if (distance <= bestDistance && ActionAt(building) is InteractAction found)
+            if (distance <= bestDistance && NextCollect(building) is not null)
             {
                 bestDistance = distance;
                 best = building;
-                action = found;
             }
         }
 
-        if (!ReferenceEquals(best, InteractTarget) || action != InteractAction)
+        if (!ReferenceEquals(best, InteractTarget))
         {
             InteractProgress = 0f;
         }
         InteractTarget = best;
-        InteractAction = action;
         if (best is not null)
         {
             HarvestTarget = null;
@@ -311,15 +212,14 @@ public sealed partial class Simulation
         }
     }
 
-    /// <summary>Works toward moving one unit to or from the target building.</summary>
+    /// <summary>Works toward collecting one unit from the target building.</summary>
     private void Interact(double dt)
     {
         if (InteractTarget is not Building building)
         {
             return;
         }
-        (ResourceType Type, float Amount)? next = InteractAction == InteractAction.Collect ? NextCollect(building) : NextLoad(building);
-        if (next is not (ResourceType type, float amount) || InteractBlocked)
+        if (NextCollect(building) is not (ResourceType type, float amount) || InteractBlocked)
         {
             return;
         }
@@ -330,16 +230,7 @@ public sealed partial class Simulation
             return;
         }
         InteractProgress = 0f;
-        if (InteractAction == InteractAction.Collect)
-        {
-            Put(building.Output, type, -amount);
-            AddToStockpile(type, amount);
-        }
-        else
-        {
-            bool fuel = LoadsFuel(building);
-            AddToStockpile(type, -amount);
-            Put(fuel ? building.FuelSlot : building.Input, type, amount);
-        }
+        Put(building.Output, type, -amount);
+        AddToStockpile(type, amount);
     }
 }

@@ -75,7 +75,7 @@ public class PowerTests
         Assert.Equal(0f, sim.Capacity(CapacityType.Power).Demand);
         Assert.Equal(new BuildingStatus(BuildingState.Idle, "No Power: offline"), sim.BuildingStatusOf(rig));
         // Offline it cannot reach storage for fuel either.
-        Assert.Equal(new BuildingStatus(BuildingState.Idle, "Waiting for fuel (load by hand)"), sim.BuildingStatusOf(burner));
+        Assert.Equal(new BuildingStatus(BuildingState.Idle, "Offline: supplies nothing"), sim.BuildingStatusOf(burner));
     }
 
     [Fact]

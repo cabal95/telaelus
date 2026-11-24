@@ -103,7 +103,6 @@ public class NetworkTests
         };
         SimTestHelpers.Ticks(sim, 1);
         Assert.Same(mine, sim.InteractTarget);
-        Assert.Equal(InteractAction.Collect, sim.InteractAction);
         Assert.Null(sim.HarvestTarget);
 
         // Iron Ore takes 6 s by hand, so 0.6 s a unit: two units in 1.25 s.
@@ -127,8 +126,17 @@ public class NetworkTests
         Assert.Equal(2f, mine.OutputCount);
     }
 
+    /// <summary>Switches every Small Hub off or on, taking whatever they cover off or onto the network.</summary>
+    private static void SwitchHubs(Simulation sim, bool enabled)
+    {
+        foreach (int id in sim.Buildings.Where(b => b.Type == BuildingType.SmallHub).Select(b => b.Id).ToArray())
+        {
+            Assert.True(sim.SetBuildingEnabled(id, enabled));
+        }
+    }
+
     [Fact]
-    public void AnOfflineProcessor_WorksFromItsInputBuffer_IntoItsOutputBuffer()
+    public void AnOfflineProcessor_DoesNothing_AndCannotBeLoadedByHand()
     {
         Simulation sim = EmptyMap();
         sim.Debug.SeedStockpile(ResourceType.IronOre, 10f);
@@ -136,33 +144,65 @@ public class NetworkTests
         Building smelter = sim.Debug.PlaceBuilding(BuildingType.Smelter, 20, 20, Facing.North);
         SimTestHelpers.Order(sim, smelter);
         Assert.False(smelter.Online);
-        SimTestHelpers.Ticks(sim, 1);
 
-        // Offline, it does not reach into storage.
-        Assert.False(smelter.Crafting);
-        Assert.Equal(new BuildingStatus(BuildingState.Idle, "Waiting for Iron Ore (load by hand)"), sim.BuildingStatusOf(smelter));
-
-        // Loading fills its input buffer to 5 cycles' worth (5 Iron Ore, 0.6 s each), then its fuel
-        // slot (5 Coal, 0.45 s each).
         SimTestHelpers.Teleport(sim, 21.5f, 21.5f);
         sim.Intent = new PlayerIntent
         {
             Harvest = true
         };
-        SimTestHelpers.Ticks(sim, 1);
-        Assert.Equal(InteractAction.Load, sim.InteractAction);
-        SimTestHelpers.Seconds(sim, 6.0);
-        sim.Intent = default;
-        // Its first cycle started once fuel was in, taking an ore, and loading topped it back up: 6 Iron Ore in all.
-        Assert.True(smelter.Crafting);
-        Assert.Equal(4f, SimTestHelpers.Stock(sim, ResourceType.IronOre));
-        Assert.Equal(5f, SimTestHelpers.Stock(sim, ResourceType.Coal));
+        SimTestHelpers.Seconds(sim, 30.0);
 
-        // It works the 6 loaded units into its output buffer (16 s each) and then waits.
-        SimTestHelpers.Seconds(sim, 100.0);
-        Assert.Equal(6f, smelter.Output[ResourceType.Iron]);
+        Assert.Null(sim.InteractTarget);
+        Assert.False(smelter.Crafting);
+        Assert.Equal(10f, SimTestHelpers.Stock(sim, ResourceType.IronOre));
+        Assert.Equal(10f, SimTestHelpers.Stock(sim, ResourceType.Coal));
+        Assert.Equal(new BuildingStatus(BuildingState.Idle, "Offline: outside the network"), sim.BuildingStatusOf(smelter));
+    }
+
+    [Fact]
+    public void AProcessorGoingOffline_HoldsItsCycle_ThenFinishesItOnline()
+    {
+        Simulation sim = EmptyMap();
+        sim.Debug.SeedStockpile(ResourceType.IronOre, 10f);
+        sim.Debug.SeedStockpile(ResourceType.Coal, 10f);
+        Building smelter = SimTestHelpers.PlaceOnline(sim, BuildingType.Smelter, 20, 20);
+        SimTestHelpers.Order(sim, smelter);
+        SimTestHelpers.Seconds(sim, 8.0);
+        Assert.True(smelter.Crafting);
+        float progress = smelter.Progress;
+        Assert.True(progress > 0f);
+
+        SwitchHubs(sim, false);
+        Assert.False(smelter.Online);
+        SimTestHelpers.Seconds(sim, 30.0);
+
+        Assert.True(smelter.Crafting);
+        Assert.Equal(progress, smelter.Progress, 3);
         Assert.Equal(0f, SimTestHelpers.Stock(sim, ResourceType.Iron));
-        Assert.Equal(new BuildingStatus(BuildingState.Idle, "Waiting for Iron Ore (load by hand)"), sim.BuildingStatusOf(smelter));
+
+        SwitchHubs(sim, true);
+        SimTestHelpers.Seconds(sim, 16.0);
+        Assert.Equal(1f, SimTestHelpers.Stock(sim, ResourceType.Iron));
+    }
+
+    [Fact]
+    public void CancellingAnOfflineCycle_ReturnsItsInputsToStorage()
+    {
+        Simulation sim = EmptyMap();
+        sim.Debug.SeedStockpile(ResourceType.IronOre, 10f);
+        sim.Debug.SeedStockpile(ResourceType.Coal, 10f);
+        Building smelter = SimTestHelpers.PlaceOnline(sim, BuildingType.Smelter, 20, 20);
+        SimTestHelpers.Order(sim, smelter);
+        SimTestHelpers.Ticks(sim, 1);
+        Assert.True(smelter.Crafting);
+        Assert.Equal(9f, SimTestHelpers.Stock(sim, ResourceType.IronOre));
+        SwitchHubs(sim, false);
+
+        Assert.False(smelter.Online);
+        Assert.True(sim.CancelCraft(smelter.Id, 0));
+
+        Assert.False(smelter.Crafting);
+        Assert.Equal(10f, SimTestHelpers.Stock(sim, ResourceType.IronOre));
     }
 
     [Fact]

@@ -934,8 +934,8 @@ public partial class BuildingDetail : Dialog
     }
 
     /// <summary>
-    /// The buffer row: an extractor's output ("Iron Ore 12, Coal 3 / 20"), a processor's output and
-    /// inputs ("Iron 4 / 10; in: Iron Ore 3 / 5"), or null for a building without one.
+    /// The buffer row: the output buffer of an extractor ("Iron Ore 12, Coal 3 / 20") or a processor
+    /// ("Iron 4 / 10"), or null for a building without one.
     /// </summary>
     private string? BufferText(Building building)
     {
@@ -947,16 +947,7 @@ public partial class BuildingDetail : Dialog
         string output = building.OutputCount <= 0f
             ? "empty"
             : string.Join(", ", building.Output.Select(e => $"{ResourceDefs.For(e.Key).Name} {Mathf.FloorToInt(e.Value)}"));
-        string text = $"{output} / {def.OutputBuffer:0}";
-        if (def.InputCycles > 0 && building.Recipe is Recipe recipe && recipe.Inputs.Count > 0)
-        {
-            text += "; in: " + string.Join(", ", _sim.ResolvedInputs(building, recipe).Select(input =>
-            {
-                building.Input.TryGetValue(input.Type, out float held);
-                return $"{ResourceDefs.For(input.Type).Name} {Mathf.FloorToInt(held)} / {input.Amount * def.InputCycles:0}";
-            }));
-        }
-        return text;
+        return $"{output} / {def.OutputBuffer:0}";
     }
 
     /// <summary>
@@ -1023,18 +1014,16 @@ public partial class BuildingDetail : Dialog
         return $"{Mathf.FloorToInt(building.Charge)} / {def.StoreCapacity:0}, {doing}";
     }
 
-    /// <summary>The Burning row for a building with a fuel slot: what burns and for how long, and what waits in the slot.</summary>
+    /// <summary>The Burning row for a fuel burner: what burns and for how long.</summary>
     private static string? BurningText(Building building)
     {
         if (!building.Def.BurnsFuel)
         {
             return null;
         }
-        float slot = building.FuelSlot.Values.Sum();
-        string burning = building.Burning is ResourceType fuel && building.BurnLeft > 0f
+        return building.Burning is ResourceType fuel && building.BurnLeft > 0f
             ? $"{ResourceDefs.For(fuel).Name}, {Mathf.CeilToInt(building.BurnLeft)} s left"
             : "nothing";
-        return $"{burning}; {Mathf.FloorToInt(slot)} in slot";
     }
 
     /// <summary>The fuel picker and its note naming what Best burns now.</summary>

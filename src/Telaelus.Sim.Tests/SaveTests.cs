@@ -94,6 +94,33 @@ public class SaveTests
     }
 
     [Fact]
+    public void AnOlderSavesInputBufferAndFuelSlot_GoToStorage()
+    {
+        var sim = new Simulation();
+        sim.Debug.ResetToEmptyMap();
+        sim.Debug.SeedStockpile(ResourceType.IronOre, 10f);
+        Building smelter = sim.Debug.PlaceBuilding(BuildingType.Smelter, 40, 4, Facing.North);
+        SaveData save = sim.Save();
+        BuildingData data = save.Buildings.Single(b => b.Id == smelter.Id);
+        data.Input.Add(new AmountData
+        {
+            Type = ResourceType.IronOre,
+            Amount = 3f
+        });
+        data.FuelSlot.Add(new AmountData
+        {
+            Type = ResourceType.Coal,
+            Amount = 2f
+        });
+
+        Simulation loaded = Simulation.FromSave(save);
+
+        Assert.Equal(13f, SimTestHelpers.Stock(loaded, ResourceType.IronOre));
+        Assert.Equal(2f, SimTestHelpers.Stock(loaded, ResourceType.Coal));
+        Assert.Empty(loaded.Save().Buildings.Single(b => b.Id == smelter.Id).Input);
+    }
+
+    [Fact]
     public void ASaveNamingAMissingCurrentField_LoadsWithNone()
     {
         var sim = new Simulation();

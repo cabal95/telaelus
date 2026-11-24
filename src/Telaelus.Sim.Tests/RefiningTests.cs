@@ -79,7 +79,7 @@ public class RefiningTests
     }
 
     [Fact]
-    public void TheNextOrdersRecipe_WaitsForTheRunningCycle_AndUnusedInputsGoBack()
+    public void TheNextOrdersRecipe_WaitsForTheRunningCycle()
     {
         Simulation sim = Plant();
         sim.Debug.SeedStockpile(ResourceType.IronOre, 2f);
@@ -101,12 +101,6 @@ public class RefiningTests
         Assert.Equal(1f, SimTestHelpers.Stock(sim, ResourceType.Copper));
         Assert.Equal(1f, SimTestHelpers.Stock(sim, ResourceType.IronOre));
         Assert.Equal(new BuildingStatus(BuildingState.Idle, "Queue empty"), sim.BuildingStatusOf(smelter));
-
-        // Iron Ore loaded for the old recipe goes back to storage.
-        smelter.Input[ResourceType.IronOre] = 3f;
-        SimTestHelpers.Ticks(sim, 1);
-        Assert.False(smelter.Input.ContainsKey(ResourceType.IronOre));
-        Assert.Equal(4f, SimTestHelpers.Stock(sim, ResourceType.IronOre));
     }
 
     [Fact]

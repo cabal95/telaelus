@@ -155,7 +155,7 @@ The two kinds place themselves:
   shown only while a hint applies, never taking the mouse. Today the one hint is harvesting:
   "[E] Harvest" in `Accent`, the resource's icon and name, over a progress bar toward the next
   unit, or "Storage full" (14 units, `Warning`, centered) in place of the bar; the verb reads
-  "[E] Harvest", "[E] Collect", or "[E] Load" for the target.
+  "[E] Harvest" or "[E] Collect" for the target.
 - **Notifications** (`Notifications`): toasts stacked against the right edge, `Gap` in from it
   and `Gap` below the top bar, newest on top, at most 4. Each is a card 280 units wide in the
   panel style (`PanelBox`, `Gap` + 2 padding): a 28-unit icon at the left, a title in `BodySize`

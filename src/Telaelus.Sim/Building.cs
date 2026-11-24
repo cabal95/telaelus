@@ -59,9 +59,6 @@ public sealed class Building
     /// <summary>Its output buffer: units waiting to be collected (or, online, to drain into storage).</summary>
     public Dictionary<ResourceType, float> Output { get; } = new();
 
-    /// <summary>Its input buffer: recipe inputs loaded by hand for working offline.</summary>
-    public Dictionary<ResourceType, float> Input { get; } = new();
-
     /// <summary>The units in the output buffer, of every type.</summary>
     public float OutputCount
     {
@@ -75,9 +72,6 @@ public sealed class Building
             return count;
         }
     }
-
-    /// <summary>Its fuel slot: unburned fuel waiting by type.</summary>
-    public Dictionary<ResourceType, float> FuelSlot { get; } = new();
 
     /// <summary>The fuel burning now, or null; it is spent once taken.</summary>
     public ResourceType? Burning { get; set; }
