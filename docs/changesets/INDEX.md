@@ -271,6 +271,8 @@ Newest last. One line each; open the file for the full spec.
   4 x 4; an old save's generator grows around its center or is refunded.
 - **2611241427-fuel-speed** - Buildings that make things work 15% faster on Charcoal and 30% faster on
   Coal than on Wood; generators supply the same on any fuel.
+- **2611241432-flat-network-overlay** - Network coverage draws as one even tint however many hubs
+  overlap, online over offline, with the placement ghost on top.
 
 ## Adding a changeset
 

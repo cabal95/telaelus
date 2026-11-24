@@ -13,6 +13,9 @@ namespace Telaelus.Presentation;
 /// coverage and links when it is a hub), and only the selected hub while the detail panel shows
 /// one. Separately, every switched-on offline building carries a small warning ring above it, so
 /// outposts read as unconnected without the overlay.
+/// Coverage draws as one flat plane under the hubs whose shader tints each point once: the online
+/// color where any online hub covers it, else gray where an offline one does, so overlapping
+/// discs never darken. The placement ghost's disc draws over it.
 /// </summary>
 public partial class NetworkView : Node3D
 {
@@ -25,6 +28,43 @@ public partial class NetworkView : Node3D
     private static readonly Color GhostColor = new(0.3f, 0.9f, 0.4f, 0.2f);
     private static readonly Color LinkColor = new(UiTheme.Accent, 0.7f);
 
+    /// <summary>The most hubs the coverage plane draws (the shader's array size).</summary>
+    private const int MaxCoverage = 256;
+
+    private const string CoverageShader = @"
+shader_type spatial;
+render_mode unshaded, cull_disabled, depth_draw_never, shadows_disabled;
+
+uniform int count = 0;
+uniform vec4 hubs[256];
+uniform vec4 online_color : source_color;
+uniform vec4 offline_color : source_color;
+
+varying vec2 ground;
+
+void vertex() {
+    ground = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xz;
+}
+
+void fragment() {
+    bool online = false;
+    bool offline = false;
+    for (int i = 0; i < count; i++) {
+        vec4 hub = hubs[i];
+        if (distance(ground, hub.xy) <= hub.z) {
+            online = online || hub.w > 0.5;
+            offline = offline || hub.w <= 0.5;
+        }
+    }
+    if (!online && !offline) {
+        discard;
+    }
+    vec4 color = online ? online_color : offline_color;
+    ALBEDO = color.rgb;
+    ALPHA = color.a;
+}
+";
+
     private Simulation _sim = null!;
     private BuildController _builder = null!;
     private BuildingDetail _detail = null!;
@@ -32,6 +72,9 @@ public partial class NetworkView : Node3D
     private readonly List<MeshInstance3D> _lines = new();
     private readonly List<MeshInstance3D> _markers = new();
     private readonly Dictionary<Color, StandardMaterial3D> _materials = new();
+    private readonly List<Vector4> _coverage = new();
+    private MeshInstance3D _coveragePlane = null!;
+    private ShaderMaterial _coverageMaterial = null!;
     private int _discsUsed;
     private int _linesUsed;
 
@@ -49,6 +92,24 @@ public partial class NetworkView : Node3D
         _sim = sim;
         _builder = builder;
         _detail = detail;
+        _coverageMaterial = new ShaderMaterial
+        {
+            Shader = new Shader
+            {
+                Code = CoverageShader
+            },
+            RenderPriority = -1
+        };
+        _coverageMaterial.SetShaderParameter("online_color", OnlineColor);
+        _coverageMaterial.SetShaderParameter("offline_color", OfflineColor);
+        _coveragePlane = new MeshInstance3D
+        {
+            Mesh = new PlaneMesh(),
+            MaterialOverride = _coverageMaterial,
+            CastShadow = GeometryInstance3D.ShadowCastingSetting.Off,
+            Visible = false
+        };
+        AddChild(_coveragePlane);
     }
 
     public override void _Process(double delta)
@@ -56,30 +117,54 @@ public partial class NetworkView : Node3D
         _discsUsed = 0;
         _linesUsed = 0;
         ShownHubs.Clear();
+        _coverage.Clear();
 
         if (OverlayShown || _builder.Selected is not null)
         {
             foreach (Building hub in _sim.Buildings.Where(b => b.Def.IsHub))
             {
-                DrawHub(hub, hub.Online && hub.Enabled ? OnlineColor : OfflineColor);
+                DrawHub(hub);
             }
             DrawGhost();
         }
         else if (_detail.Building is Building selected && selected.Def.IsHub)
         {
-            DrawHub(selected, selected.Online && selected.Enabled ? OnlineColor : OfflineColor);
+            DrawHub(selected);
         }
 
+        DrawCoverage();
         Hide(_discs, _discsUsed);
         Hide(_lines, _linesUsed);
         DrawMarkers();
     }
 
-    private void DrawHub(Building hub, Color color)
+    /// <summary>Sizes the coverage plane to this frame's hubs and hands their circles to its shader.</summary>
+    private void DrawCoverage()
+    {
+        if (_coverage.Count == 0)
+        {
+            _coveragePlane.Visible = false;
+            return;
+        }
+        float minX = _coverage.Min(c => c.X - c.Z);
+        float maxX = _coverage.Max(c => c.X + c.Z);
+        float minZ = _coverage.Min(c => c.Y - c.Z);
+        float maxZ = _coverage.Max(c => c.Y + c.Z);
+        ((PlaneMesh)_coveragePlane.Mesh).Size = new Vector2(maxX - minX, maxZ - minZ);
+        _coveragePlane.Position = new Vector3((minX + maxX) * 0.5f, 0.06f, (minZ + maxZ) * 0.5f);
+        _coveragePlane.Visible = true;
+        // Online circles first, so a plane with more hubs than the shader holds drops offline ones.
+        Vector4[] circles = _coverage.OrderByDescending(c => c.W).Take(MaxCoverage).ToArray();
+        _coverageMaterial.SetShaderParameter("count", circles.Length);
+        _coverageMaterial.SetShaderParameter("hubs", circles);
+    }
+
+    private void DrawHub(Building hub)
     {
         ShownHubs.Add(hub.Id);
-        Disc(hub.Position, hub.Def.CoverageRadius, color);
-        if (!hub.Online || !hub.Enabled)
+        bool online = hub.Online && hub.Enabled;
+        _coverage.Add(new Vector4(hub.Position.X, hub.Position.Z, hub.Def.CoverageRadius, online ? 1f : 0f));
+        if (!online)
         {
             return;
         }

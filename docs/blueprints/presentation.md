@@ -316,10 +316,11 @@ ui-style.md. There is no text HUD; the screen holds:
   destroy" for 3 seconds, and a second click in that time destroys the building. The panel closes
   itself when its building is gone. While it is open, its building keeps the hover outline in
   the world.
-- **Network view** (`NetworkView`, in the world): each hub's coverage as a flat translucent disc
-  (accent for an online hub, gray for an offline or switched-off one) and the links between online
+- **Network view** (`NetworkView`, in the world): hub coverage as one flat translucent plane whose
+  shader tints each point once (accent where any online hub covers it, else gray where an offline
+  or switched-off one does), so overlapping coverage never darkens, and the links between online
   hubs as thin accent lines. It draws every hub while the network overlay is on (N toggles it; off at
-  start) or while a building is being placed, adding the ghost's own coverage (green) and lines to
+  start) or while a building is being placed, adding the ghost's own coverage (a green disc drawn over the plane) and lines to
   the hubs it would link to when the ghost is a hub; with neither, it draws only the hub the detail
   panel shows, if it shows one. Separately, every switched-on offline building carries a small
   `Warning` ring floating 2.4 units above its center.
