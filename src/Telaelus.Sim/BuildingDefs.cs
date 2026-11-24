@@ -235,8 +235,8 @@ public static class BuildingDefs
         CargoPool = 150f,
         Permanent = true,
         Buildable = false,
-        CoverageRadius = 19f,
-        LinkRadius = 22f
+        CoverageRadius = 38f,
+        LinkRadius = 44f
     };
     private static readonly BuildingDef Silo = new("Silo", 2, 2, new ResourceAmount[]
     {
@@ -288,17 +288,18 @@ public static class BuildingDefs
         new(ResourceType.Stone, 5f)
     }, Array.Empty<ResourceType>(), 0f)
     {
-        CoverageRadius = 9f,
-        LinkRadius = 14f
+        CoverageRadius = 11f,
+        LinkRadius = 22f
     };
     private static readonly BuildingDef Relay = new("Relay", 2, 2, new ResourceAmount[]
     {
-        new(ResourceType.Iron, 20f),
-        new(ResourceType.Stone, 10f)
+        new(ResourceType.Wood, 5f),
+        new(ResourceType.Stone, 10f),
+        new(ResourceType.Iron, 5f)
     }, Array.Empty<ResourceType>(), 0f)
     {
         CoverageRadius = 3f,
-        LinkRadius = 30f
+        LinkRadius = 90f
     };
 
     private static readonly BuildingDef WaterWheel = new("Water Wheel", 4, 2, new ResourceAmount[]

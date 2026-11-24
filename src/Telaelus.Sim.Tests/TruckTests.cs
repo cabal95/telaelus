@@ -417,9 +417,11 @@ public class TruckTests
     [Fact]
     public void AnOfflineDepotsTrucks_StayParked()
     {
-        Simulation sim = EmptyMap();
-        Building far = sim.Debug.PlaceBuilding(BuildingType.Depot, 20, 20, Facing.North);
-        Building mine = sim.Debug.PlaceBuilding(BuildingType.Mine, 20, 40, Facing.North);
+        // No hubs: only the HQ, whose coverage stops well short of this corner.
+        var sim = new Simulation();
+        sim.Debug.ResetToEmptyMap();
+        Building far = sim.Debug.PlaceBuilding(BuildingType.Depot, 5, 40, Facing.North);
+        Building mine = sim.Debug.PlaceBuilding(BuildingType.Mine, 5, 55, Facing.North);
         mine.Output[ResourceType.IronOre] = 12f;
         Truck idle = Assert.Single(sim.TrucksOf(far));
         SimTestHelpers.Seconds(sim, 2.0);

@@ -263,6 +263,8 @@ Newest last. One line each; open the file for the full spec.
   the chosen recipe, with inputs storage is short of in the danger color.
 - **2611241331-salt-flats** - Deserts gain salt flats, a new terrain placed about one per 400 desert
   map cells, and the Brine Well stands only on them.
+- **2611241358-hub-ranges** - The HQ's reach doubles, a Small Hub covers 11 and links 22 so two at full
+  range leave no gap, and a Relay links 90 for 5 Wood, 10 Stone, 5 Iron.
 
 ## Adding a changeset
 

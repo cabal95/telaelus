@@ -4,7 +4,7 @@ namespace Telaelus.Sim.Tests;
 
 public class NetworkTests
 {
-    // The empty map's HQ is anchored at (56, 2), 6 x 10: its center is (59, 7), coverage 19, link 22.
+    // The empty map's HQ is anchored at (56, 2), 6 x 10: its center is (59, 7), coverage 38, link 44.
     private static Simulation EmptyMap()
     {
         var sim = new Simulation();
@@ -16,17 +16,35 @@ public class NetworkTests
     public void Hubs_LinkWithinTheLargerOfTheirLinkRadii()
     {
         Simulation sim = EmptyMap();
-        // A Small Hub 18.5 units from the HQ's center: past its own 14, inside the HQ's 22.
-        Building near = sim.Debug.PlaceBuilding(BuildingType.SmallHub, 40, 6, Facing.North);
-        // 15 units on from that one: past both Small Hubs' 14.
-        Building far = sim.Debug.PlaceBuilding(BuildingType.SmallHub, 25, 6, Facing.North);
+        // A Small Hub 39.5 units from the HQ's center: past its own 22, inside the HQ's 44.
+        Building near = sim.Debug.PlaceBuilding(BuildingType.SmallHub, 19, 6, Facing.North);
+        // 29.4 units on from that one (past both Small Hubs' 22) and 61 from the HQ (past its 44).
+        Building far = sim.Debug.PlaceBuilding(BuildingType.SmallHub, 2, 30, Facing.North);
 
         Assert.True(near.Online);
         Assert.False(far.Online);
 
-        // A Relay (link 30) between them links both.
-        sim.Debug.PlaceBuilding(BuildingType.Relay, 32, 14, Facing.North);
+        // A Relay (link 90) at (31, 61), 63 from the HQ's center and 39 from the far hub, links both.
+        sim.Debug.PlaceBuilding(BuildingType.Relay, 30, 60, Facing.North);
         Assert.True(far.Online);
+    }
+
+    [Fact]
+    public void SmallHubsAtFullLinkRange_LeaveNoGapInCoverage()
+    {
+        Simulation sim = EmptyMap();
+        // Hub A's center (19.5, 6.5) is 39.5 from the HQ's; hub B's (19.5, 28.5) is exactly 22 (the
+        // Small Hub link radius) from A and 45 from the HQ, so B links through A alone.
+        Building a = sim.Debug.PlaceBuilding(BuildingType.SmallHub, 19, 6, Facing.North);
+        Building b = sim.Debug.PlaceBuilding(BuildingType.SmallHub, 19, 28, Facing.North);
+        // A Silo straddling the midpoint (19.5, 17.5), past the HQ's 38 coverage.
+        Building silo = sim.Debug.PlaceBuilding(BuildingType.Silo, 19, 17, Facing.North);
+
+        Assert.True(a.Online);
+        Assert.True(b.Online);
+        Assert.True(silo.Online);
+        sim.SetBuildingEnabled(a.Id, false);
+        Assert.False(silo.Online);
     }
 
     [Fact]
@@ -35,13 +53,13 @@ public class NetworkTests
         Simulation sim = EmptyMap();
         Building hq = SimTestHelpers.Hq(sim);
 
-        // From the HQ's center (59, 7): this Smelter's nearest corner (41, 12) is 18.7 away, inside
-        // the 19 coverage, though its center (39.5, 13.5) is 20.6 away.
-        Building corner = sim.Debug.PlaceBuilding(BuildingType.Smelter, 38, 12, Facing.North);
-        // This one's nearest point (37, 12) is 22.6 away.
-        Building beyond = sim.Debug.PlaceBuilding(BuildingType.Smelter, 34, 12, Facing.North);
+        // From the HQ's center (59, 7): this Smelter's nearest corner (22, 12) is 37.3 away, inside
+        // the 38 coverage, though its center (20.5, 13.5) is 39 away.
+        Building corner = sim.Debug.PlaceBuilding(BuildingType.Smelter, 19, 12, Facing.North);
+        // This one's nearest point (18, 12) is 41.3 away.
+        Building beyond = sim.Debug.PlaceBuilding(BuildingType.Smelter, 15, 12, Facing.North);
 
-        Assert.True(hq.Position.DistanceTo(corner.Position) > 19f);
+        Assert.True(hq.Position.DistanceTo(corner.Position) > 38f);
         Assert.True(corner.Online);
         Assert.False(beyond.Online);
     }
@@ -50,12 +68,12 @@ public class NetworkTests
     public void SwitchingAHubOff_CutsItsBranch_AndDestroyingOneDoesToo()
     {
         Simulation sim = EmptyMap();
-        // HQ center (59, 7); hub A's center (40.5, 7.5) is 18.5 from it; hub B's (28.5, 7.5) is 12
-        // from A and 30.5 from the HQ, so B reaches the HQ only through A. The Smelter is covered
-        // by B alone (its nearest point is 4.7 from B and 14.2 from A).
-        Building a = sim.Debug.PlaceBuilding(BuildingType.SmallHub, 40, 7, Facing.North);
-        Building b = sim.Debug.PlaceBuilding(BuildingType.SmallHub, 28, 7, Facing.North);
-        Building smelter = sim.Debug.PlaceBuilding(BuildingType.Smelter, 24, 12, Facing.North);
+        // HQ center (59, 7); hub A's center (20.5, 7.5) is 38.5 from it; hub B's (3.5, 20.5) is 21.4
+        // from A and 57.1 from the HQ, so B reaches the HQ only through A. The Smelter is covered
+        // by B alone (its nearest point (3, 24) is 3.5 from B and 24 from A).
+        Building a = sim.Debug.PlaceBuilding(BuildingType.SmallHub, 20, 7, Facing.North);
+        Building b = sim.Debug.PlaceBuilding(BuildingType.SmallHub, 3, 20, Facing.North);
+        Building smelter = sim.Debug.PlaceBuilding(BuildingType.Smelter, 0, 24, Facing.North);
         Assert.True(b.Online);
         Assert.True(smelter.Online);
 
@@ -259,8 +277,8 @@ public class NetworkTests
         Simulation sim = EmptyMap();
 
         Assert.True(sim.WouldBeOnline(BuildingType.Smelter, 50, 12, Facing.North));
-        Assert.False(sim.WouldBeOnline(BuildingType.Smelter, 20, 20, Facing.North));
-        Assert.True(sim.WouldBeOnline(BuildingType.SmallHub, 44, 6, Facing.North));
-        Assert.False(sim.WouldBeOnline(BuildingType.SmallHub, 30, 6, Facing.North));
+        Assert.False(sim.WouldBeOnline(BuildingType.Smelter, 5, 30, Facing.North));
+        Assert.True(sim.WouldBeOnline(BuildingType.SmallHub, 30, 6, Facing.North));
+        Assert.False(sim.WouldBeOnline(BuildingType.SmallHub, 10, 30, Facing.North));
     }
 }

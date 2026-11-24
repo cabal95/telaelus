@@ -120,8 +120,9 @@ pausing it and stepping frame by frame.
   on, Best fuel first, stopping when switched off, its burning unit not refunded; a fuel choice
   burning only that fuel; the Smelter's cycle advancing only while fuel burns; a Drill Rig's speed
   2; the Water Wheel only across a Straight river cell, supplying 20 online.
-- `NetworkTests`: hubs linking within the larger link radius; coverage reaching a footprint's
-  nearest point; switching off or destroying a hub cutting its branch; an extractor filling its
+- `NetworkTests`: hubs linking within the larger link radius, and a Relay linking a far hub 63
+  units out; two Small Hubs at their full 22-unit link range covering the ground between them;
+  coverage reaching a footprint's nearest point; switching off or destroying a hub cutting its branch; an extractor filling its
   buffer and waiting for pickup; collecting a whole two-type buffer by hand in one 0.5 s hold, leaving what storage has no room for, and stopping on
   full storage; an offline processor doing nothing and offering nothing to load; a processor
   going offline holding its cycle and finishing it once online; cancelling an offline cycle
@@ -600,8 +601,8 @@ pausing it and stepping frame by frame.
   Collector on Sand supplies it and Glass is made; five Glassworks on four Collectors are a Sand
   brownout at half speed, in `Warning`, shown in the Glassworks panel's Sand row and its recipe),
   `network` (a Mine out of reach is offline with the warning marker and makes nothing; E still
-  collects what its buffer holds; N shows the overlay; a chain of Small Hubs brings it online and
-  working; the placement tooltip's
+  collects what its buffer holds; N shows the overlay; one Small Hub in the HQ's link range brings it
+  online and working; the placement tooltip's
   online line; a selected hub shows only its own coverage),
   `storage` (Wood at the HQ's 100 shows full, in red, on the top bar and the harvest hint says Storage
   full; a Silo raises the limit to 400 and harvesting resumes; the inventory's Cargo row; a

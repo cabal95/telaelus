@@ -99,14 +99,14 @@ Recipes marked "(capacity only)" use only the Sand or Water they draw.
 | Smelter | 0 | 3 x 3 | 40 Stone, 15 Wood |  |  | fuel: Coal, Charcoal, Wood | 1 Iron Ore → 1 Iron (16 s)<br>1 Copper Ore → 1 Copper (16 s) |
 | Refinery | 1 | 2 x 3 | 40 Iron, 30 Stone, 20 Wood | 25 Power, 2 Water |  |  | 1 Crude Oil → 1 Kerosene (8 s) |
 | Oil Well | 0 | 2 x 2 | 25 Iron, 20 Stone, 10 Wood |  |  |  | works Crude Oil (radius 3, speed 0.75) |
-| HQ | 0 | 6 x 10 | placed by the world |  |  |  | network: covers 19, links 22 units<br>raises storage limits |
+| HQ | 0 | 6 x 10 | placed by the world |  |  |  | network: covers 38, links 44 units<br>raises storage limits |
 | Silo | 0 | 2 x 2 | 30 Wood |  |  |  | raises storage limits |
 | Stockyard | 0 | 3 x 3 | 40 Wood, 20 Iron |  |  |  | raises storage limits |
 | Tank Farm | 0 | 3 x 3 | 30 Iron, 20 Stone |  |  |  | raises storage limits |
 | Warehouse | 0 | 3 x 3 | 40 Wood, 30 Stone |  |  |  | raises storage limits |
 | Vault | 0 | 3 x 3 | 40 Steel, 40 Stone |  |  |  | raises storage limits |
-| Small Hub | 0 | 1 x 1 | 10 Wood, 5 Stone |  |  |  | network: covers 9, links 14 units |
-| Relay | 0 | 2 x 2 | 20 Iron, 10 Stone |  |  |  | network: covers 3, links 30 units |
+| Small Hub | 0 | 1 x 1 | 10 Wood, 5 Stone |  |  |  | network: covers 11, links 22 units |
+| Relay | 0 | 2 x 2 | 5 Wood, 10 Stone, 5 Iron |  |  |  | network: covers 3, links 90 units |
 | Water Wheel | 0 | 4 x 2 | 40 Wood, 20 Stone |  | 20 Power |  |  |
 | Burner Generator | 0 | 2 x 2 | 60 Stone, 40 Iron |  | 100 Power | fuel: Coal, Charcoal, Wood |  |
 | Lumber Mill | 1 | 3 x 3 | 30 Wood, 20 Iron | 5 Power |  |  | works Wood (radius 8, speed 2) |
@@ -196,9 +196,12 @@ Recipes marked "(capacity only)" use only the Sand or Water they draw.
 
   | Hub | Footprint | Cost | Coverage radius | Link radius |
   |---|---|---|---|---|
-  | HQ | 6 x 10 | placed by the world | 19 | 22 |
-  | Small Hub | 1 x 1 | 10 Wood, 5 Stone | 9 | 14 |
-  | Relay | 2 x 2 | 20 Iron, 10 Stone | 3 | 30 |
+  | HQ | 6 x 10 | placed by the world | 38 | 44 |
+  | Small Hub | 1 x 1 | 10 Wood, 5 Stone | 11 | 22 |
+  | Relay | 2 x 2 | 5 Wood, 10 Stone, 5 Iron | 3 | 90 |
+
+  A Small Hub's link radius is twice its coverage, so two Small Hubs at full link range have
+  coverage that meets between them.
 
 - Two switched-on hubs **link** when the distance between their centers is at most the larger of
   their link radii. The hubs linked to the HQ, directly or through others, are online; a cluster

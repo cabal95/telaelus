@@ -65,14 +65,14 @@ public class StorageTests
     public void Limits_SumTheHqAndEveryOnlineStorageBuilding()
     {
         Simulation sim = EmptyMap();
-        sim.Debug.PlaceBuilding(BuildingType.Stockyard, 20, 20, Facing.North);
-        sim.Debug.PlaceBuilding(BuildingType.Stockyard, 24, 20, Facing.North);
-        sim.Debug.PlaceBuilding(BuildingType.TankFarm, 28, 20, Facing.North);
-        sim.Debug.PlaceBuilding(BuildingType.Vault, 32, 20, Facing.North);
-        sim.Debug.PlaceBuilding(BuildingType.Warehouse, 36, 20, Facing.North);
+        sim.Debug.PlaceBuilding(BuildingType.Stockyard, 20, 44, Facing.North);
+        sim.Debug.PlaceBuilding(BuildingType.Stockyard, 24, 44, Facing.North);
+        sim.Debug.PlaceBuilding(BuildingType.TankFarm, 28, 44, Facing.North);
+        sim.Debug.PlaceBuilding(BuildingType.Vault, 32, 44, Facing.North);
+        sim.Debug.PlaceBuilding(BuildingType.Warehouse, 36, 44, Facing.North);
         Assert.Equal(100f, sim.StorageLimit(ResourceType.Wood));
 
-        SimTestHelpers.Connect(sim, 28f, 21f);
+        SimTestHelpers.Connect(sim, 28f, 45f);
 
         Assert.Equal(500f, sim.StorageLimit(ResourceType.Wood));
         Assert.Equal(160f, sim.StorageLimit(ResourceType.Bauxite));

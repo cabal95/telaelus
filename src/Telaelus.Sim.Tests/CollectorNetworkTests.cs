@@ -114,9 +114,9 @@ public class CollectorNetworkTests
     [Fact]
     public void TheHqAndSmallHubs_ReachFurther()
     {
-        Assert.Equal(19f, BuildingDefs.For(BuildingType.Hq).CoverageRadius);
-        Assert.Equal(22f, BuildingDefs.For(BuildingType.Hq).LinkRadius);
-        Assert.Equal(9f, BuildingDefs.For(BuildingType.SmallHub).CoverageRadius);
-        Assert.Equal(14f, BuildingDefs.For(BuildingType.SmallHub).LinkRadius);
+        Assert.Equal(38f, BuildingDefs.For(BuildingType.Hq).CoverageRadius);
+        Assert.Equal(44f, BuildingDefs.For(BuildingType.Hq).LinkRadius);
+        Assert.Equal(11f, BuildingDefs.For(BuildingType.SmallHub).CoverageRadius);
+        Assert.Equal(22f, BuildingDefs.For(BuildingType.SmallHub).LinkRadius);
     }
 }
