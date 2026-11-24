@@ -75,6 +75,39 @@ public class SaveTests
     }
 
     [Fact]
+    public void ASwitchedOffExtractor_WhoseFieldWasRemoved_SavesAndLoads()
+    {
+        var sim = new Simulation();
+        sim.Debug.ResetToEmptyMap();
+        sim.Debug.PlaceField(ResourceType.IronOre, 2, 10, 300f);
+        Building mine = sim.Debug.PlaceBuilding(BuildingType.Mine, 13, 40, Facing.North);
+        SimTestHelpers.Connect(sim, mine.Position.X, mine.Position.Z);
+        SimTestHelpers.Seconds(sim, 2.0);
+        Assert.NotNull(mine.CurrentField);
+        Assert.True(sim.SetBuildingEnabled(mine.Id, false));
+
+        sim.Debug.RemoveField(2, 10);
+
+        Assert.Null(mine.CurrentField);
+        Simulation loaded = Simulation.FromSave(sim.Save());
+        Assert.Null(loaded.BuildingById(mine.Id)!.CurrentField);
+    }
+
+    [Fact]
+    public void ASaveNamingAMissingCurrentField_LoadsWithNone()
+    {
+        var sim = new Simulation();
+        sim.Debug.ResetToEmptyMap();
+        Building mine = sim.Debug.PlaceBuilding(BuildingType.Mine, 13, 40, Facing.North);
+        SaveData save = sim.Save();
+        save.Buildings.Single(b => b.Id == mine.Id).CurrentField = 9999;
+
+        Simulation loaded = Simulation.FromSave(save);
+
+        Assert.Null(loaded.BuildingById(mine.Id)!.CurrentField);
+    }
+
+    [Fact]
     public void ALoadedGame_KeepsEveryKindOfState()
     {
         Simulation sim = Busy();

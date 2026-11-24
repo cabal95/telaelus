@@ -249,7 +249,8 @@ public sealed partial class Simulation
         foreach (BuildingData d in data.Buildings)
         {
             Building b = buildings[d.Id];
-            b.CurrentField = d.CurrentField is int cf ? fields[cf] : null;
+            // An older save may name a field that was removed while a switched-off extractor still pointed at it.
+            b.CurrentField = d.CurrentField is int cf ? fields.GetValueOrDefault(cf) : null;
             b.SiteMotherlode = d.SiteMotherlode is int sm ? fields[sm] : null;
             b.Plot = d.Plot is int pl ? fields[pl] : null;
         }

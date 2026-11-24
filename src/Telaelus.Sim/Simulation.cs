@@ -722,6 +722,13 @@ public sealed partial class Simulation
     private void RemoveField(ResourceField field)
     {
         UnregisterField(field);
+        foreach (Building building in _buildings)
+        {
+            if (ReferenceEquals(building.CurrentField, field))
+            {
+                building.CurrentField = null;
+            }
+        }
         if (field.Owner is Building owner && ReferenceEquals(owner.Plot, field))
         {
             owner.Plot = null;
