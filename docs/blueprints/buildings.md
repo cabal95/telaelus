@@ -573,7 +573,8 @@ And seven buildings, all processors (output buffer 10):
 - Online buildings share the one storage. Moving raw resources from collectors to storage is the
   player's hand work, then Depot trucks', until research lets online collectors drain their
   buffers into storage (Material Transfer for Wood, Stone, Iron Ore, Copper Ore, and Coal; Advanced
-  Material Transfer for the rest; research.md).
+  Material Transfer for Crude Oil, Bauxite, Limestone, Quartz, and Sulfur; research.md). Titanium
+  Ore, Rare Earths, Uranium Ore, and Crystals always come by hand or truck.
 
 ### The Research Lab
 

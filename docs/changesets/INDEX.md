@@ -265,6 +265,8 @@ Newest last. One line each; open the file for the full spec.
   map cells, and the Brine Well stands only on them.
 - **2611241358-hub-ranges** - The HQ's reach doubles, a Small Hub covers 11 and links 22 so two at full
   range leave no gap, and a Relay links 90 for 5 Wood, 10 Stone, 5 Iron.
+- **2611241405-advanced-transfer-exclusions** - Advanced Material Transfer no longer carries Titanium
+  Ore, Rare Earths, Uranium Ore, or Crystals; those come by hand or truck.
 
 ## Adding a changeset
 

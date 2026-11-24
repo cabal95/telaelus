@@ -177,7 +177,8 @@ pausing it and stepping frame by frame.
   Fabricators, two Electronics Works, a Tile Kiln, three Assembly Plants, and two Shipyards (on
   Burner Generators, with Warehouses for the parts) to a launch.
 - `ResearchTests`: the fee taken once and refused short; Advanced Material Transfer locked until
-  Material Transfer is complete; pausing keeping progress and the fee, resuming charging nothing;
+  Material Transfer is complete, and never carrying Titanium Ore, Rare Earths, Uranium Ore, or
+  Crystals; pausing keeping progress and the fee, resuming charging nothing;
   research speed at 0, 1, 2, 3, and 5 labs; one lab finishing Material Transfer in two game days;
   two labs at 1.5x; no lab working leaving research waiting; Material Transfer draining an online
   Mine but not an offline one nor a Drill Rig's Bauxite until Advanced Material Transfer;

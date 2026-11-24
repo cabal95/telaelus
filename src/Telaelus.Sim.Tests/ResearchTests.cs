@@ -182,6 +182,22 @@ public class ResearchTests
     }
 
     [Fact]
+    public void AdvancedMaterialTransfer_LeavesTheRareResourcesToHandsAndTrucks()
+    {
+        Simulation sim = Powered();
+        sim.Debug.SetResearchProgress(Basic, ResearchDefs.For(Basic).Work);
+        sim.Debug.SetResearchProgress(Advanced, ResearchDefs.For(Advanced).Work);
+        SimTestHelpers.Ticks(sim, 1);
+
+        Assert.True(sim.Transfers(ResourceType.Bauxite));
+        Assert.True(sim.Transfers(ResourceType.CrudeOil));
+        foreach (ResourceType rare in new[] { ResourceType.TitaniumOre, ResourceType.RareEarths, ResourceType.UraniumOre, ResourceType.Crystals })
+        {
+            Assert.False(sim.Transfers(rare));
+        }
+    }
+
+    [Fact]
     public void Transfer_StopsWhenStorageIsFull()
     {
         Simulation sim = Powered();

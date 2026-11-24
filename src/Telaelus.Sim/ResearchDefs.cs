@@ -75,7 +75,7 @@ public static class ResearchDefs
         },
         [ResearchProject.AdvancedMaterialTransfer] = new ResearchDef(
             "Advanced Material Transfer",
-            "The network carries every other raw resource from online collectors straight into storage.",
+            "The network carries more raw resources from online collectors straight into storage.",
             1800f,
             new ResourceAmount[]
             {
@@ -95,11 +95,7 @@ public static class ResearchDefs
                 ResourceType.Bauxite,
                 ResourceType.Limestone,
                 ResourceType.Quartz,
-                ResourceType.Sulfur,
-                ResourceType.TitaniumOre,
-                ResourceType.RareEarths,
-                ResourceType.UraniumOre,
-                ResourceType.Crystals
+                ResourceType.Sulfur
             }
         }
     };

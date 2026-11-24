@@ -5,7 +5,9 @@
 Research is global to the base: one project runs at a time, every working Research Lab speeds it
 up, and a complete project's effect lasts for the rest of the game. Progress is counted in
 game-world time and never lost. Today there are two projects, both about moving raw resources:
-Material Transfer and Advanced Material Transfer, the step after hand collection and trucks.
+Material Transfer and Advanced Material Transfer, the step after hand collection and trucks. Neither
+carries the rare raw resources (Titanium Ore, Rare Earths, Uranium Ore, Crystals): those reach
+storage only by hand or by truck.
 
 ## Current state
 
@@ -19,7 +21,7 @@ Material Transfer and Advanced Material Transfer, the step after hand collection
 | Project | Work | Fee | Prerequisites | Transfers |
 |---|---|---|---|---|
 | Material Transfer | 1200 s (two game days at one lab) | 40 Iron, 20 Copper | none | Wood, Stone, Iron Ore, Copper Ore, Coal |
-| Advanced Material Transfer | 1800 s (three game days at one lab) | 60 Steel, 20 Glass | Material Transfer | Crude Oil, Bauxite, Limestone, Quartz, Sulfur, Titanium Ore, Rare Earths, Uranium Ore, Crystals |
+| Advanced Material Transfer | 1800 s (three game days at one lab) | 60 Steel, 20 Glass | Material Transfer | Crude Oil, Bauxite, Limestone, Quartz, Sulfur |
 
 (placeholders; a game day is `Simulation.DayLength`, 600 s.)
 
