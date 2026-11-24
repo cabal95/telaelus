@@ -1074,8 +1074,14 @@ public partial class BuildingDetail : Dialog
             return null;
         }
         return building.Burning is ResourceType fuel && building.BurnLeft > 0f
-            ? $"{ResourceDefs.For(fuel).Name}, {Mathf.CeilToInt(building.BurnLeft)} s left"
+            ? $"{ResourceDefs.For(fuel).Name}, {Mathf.CeilToInt(building.BurnLeft)} s left{Boost(Simulation.FuelSpeed(building))}"
             : "nothing";
+    }
+
+    /// <summary>", +30% speed" for a fuel speed over 1, else nothing.</summary>
+    private static string Boost(float speed)
+    {
+        return speed > 1f ? $", +{Mathf.RoundToInt((speed - 1f) * 100f)}% speed" : "";
     }
 
     /// <summary>The fuel picker and its note naming what Best burns now.</summary>
@@ -1104,7 +1110,7 @@ public partial class BuildingDetail : Dialog
         _fuel.Selected = building.FuelChoice is ResourceType chosen ? 1 + _fuels.ToList().IndexOf(chosen) : 0;
         _fuelNote.Text = building.FuelChoice is null
             ? _sim.BestFuelAt(building) is ResourceType best
-                ? $"Best: burns {ResourceDefs.For(best).Name} ({ResourceDefs.For(best).BurnSeconds:0} s per unit)"
+                ? $"Best: burns {ResourceDefs.For(best).Name} ({ResourceDefs.For(best).BurnSeconds:0} s per unit{(building.Def.IsProvider ? "" : Boost(ResourceDefs.For(best).FuelSpeed))})"
                 : "Best: no fuel at hand"
             : $"Burns only {ResourceDefs.For(building.FuelChoice.Value).Name}";
     }

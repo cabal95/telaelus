@@ -45,11 +45,11 @@ public class BuildingControlTests
         SimTestHelpers.Seconds(sim, 20.0);
         Assert.Equal(0f, SimTestHelpers.Stock(sim, ResourceType.Iron));
 
-        // Switched back on, it takes the Ore again and needs a whole 16 s cycle.
+        // Switched back on, it takes the Ore again and needs a whole cycle: 16 s at Coal's +30%, 12.3 s.
         sim.SetBuildingEnabled(smelter.Id, true);
-        SimTestHelpers.Seconds(sim, 15.8);
+        SimTestHelpers.Seconds(sim, 12.2);
         Assert.Equal(0f, SimTestHelpers.Stock(sim, ResourceType.Iron));
-        SimTestHelpers.Seconds(sim, 0.4);
+        SimTestHelpers.Seconds(sim, 0.3);
         Assert.Equal(1f, SimTestHelpers.Stock(sim, ResourceType.Iron));
     }
 

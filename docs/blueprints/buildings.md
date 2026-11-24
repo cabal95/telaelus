@@ -233,7 +233,10 @@ Recipes marked "(capacity only)" use only the Sand or Water they draw.
   Brownout (0.8 at 10% over, 0.5 at 25%), 0 in a Blackout. A processor with an empty crafting
   queue is a consumer like any other: it draws while switched on, idle or not.
 - A building's speed (`WorkSpeed`) is the slowest speed of the types it draws (1 when it draws
-  none), and 0 offline. A consumer's extractor progress and processor cycle advance at their speed
+  none), and 0 offline, times its fuel speed (`FuelSpeed`): for a fuel-burning building that is not
+  a provider (the Smelter, Glassworks, Cement Kiln), the speed of the fuel burning now (Coal 1.3,
+  Charcoal 1.15, Wood 1; resources.md), else 1. A provider supplies the same on any fuel. Burn time
+  runs on game time whatever the speed, so a better fuel both lasts longer and makes more per unit. A consumer's extractor progress and processor cycle advance at their speed
   times it; at 0 they do not start or advance. A provider that draws capacity supplies times its
   speed: a Pumping Station in a power brownout at 80% supplies 12.8 Water, and none in a power
   blackout, so a power shortage cascades into a water shortage. The order (a provider's draws come

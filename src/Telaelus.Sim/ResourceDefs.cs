@@ -28,6 +28,12 @@ public sealed record ResourceDef(string Name, ResourceKind Kind, int Tier, Resou
     /// <summary>A fuel's burn time: how long one unit burns in a fuel slot; null for a resource that is not a fuel.</summary>
     public float? BurnSeconds { get; init; }
 
+    /// <summary>
+    /// How fast a building that makes things works while this fuel burns, against Wood's 1; a
+    /// provider supplies the same on any fuel (buildings.md).
+    /// </summary>
+    public float FuelSpeed { get; init; } = 1f;
+
     /// <summary>Only deposits can be resource fields.</summary>
     public bool HasFields => Kind == ResourceKind.Deposit;
 }
@@ -48,7 +54,8 @@ public static class ResourceDefs
         [ResourceType.CopperOre] = Deposit("Copper Ore", 6f, ResourceStorage.Bulk(60f, 200f, 120f)),
         [ResourceType.Coal] = Deposit("Coal", 4.5f, ResourceStorage.Bulk(60f, 200f, 120f)) with
         {
-            BurnSeconds = 40f
+            BurnSeconds = 40f,
+            FuelSpeed = 1.3f
         },
         [ResourceType.CrudeOil] = Deposit("Crude Oil", 3f, ResourceStorage.Fluid(300f), handHarvestable: false),
         [ResourceType.Bauxite] = Deposit("Bauxite", 6f, ResourceStorage.Bulk(0f, 150f, 80f)),
@@ -70,7 +77,8 @@ public static class ResourceDefs
         [ResourceType.Lumber] = Refined("Lumber", 1, ResourceStorage.Pooled(1f)),
         [ResourceType.Charcoal] = Refined("Charcoal", 1, ResourceStorage.Bulk(60f, 200f, 120f)) with
         {
-            BurnSeconds = 30f
+            BurnSeconds = 30f,
+            FuelSpeed = 1.15f
         },
         [ResourceType.Cement] = Refined("Cement", 1, ResourceStorage.Pooled(1f)),
         [ResourceType.Concrete] = Refined("Concrete", 1, ResourceStorage.Pooled(2f)),

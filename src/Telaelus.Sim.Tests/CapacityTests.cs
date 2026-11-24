@@ -177,10 +177,12 @@ public class CapacityTests
         Assert.Equal(new CapacityReading(2f, 2f, 1f, CapacityState.Normal), Sand(sim));
         Assert.Equal(new BuildingStatus(BuildingState.Idle, "Waiting for fuel"), sim.BuildingStatusOf(glassworks));
 
-        // One Coal burns 40 s: three 12 s cycles finish, the fourth starts.
+        // One Coal burns 40 s at Coal's +30%, so a 12 s cycle takes 9.2 s: four finish, the fifth starts.
         sim.Debug.SeedStockpile(ResourceType.Coal, 1f);
-        SimTestHelpers.Seconds(sim, 37.0);
-        Assert.Equal(3f, SimTestHelpers.Stock(sim, ResourceType.Glass));
+        SimTestHelpers.Seconds(sim, 38.0);
+        Assert.Equal(4f, SimTestHelpers.Stock(sim, ResourceType.Glass));
+        // The fuel's speed multiplies the capacity speed: Sand at 1, Coal at 1.3.
+        Assert.Equal(1.3f, sim.WorkSpeed(glassworks), 3);
 
         // Sand and Water are never stored.
         Assert.Equal(0f, SimTestHelpers.Stock(sim, ResourceType.Sand));

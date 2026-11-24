@@ -260,10 +260,11 @@ ui-style.md. There is no text HUD; the screen holds:
   Battery Bank has a Charge row ("3200 / 6000, charging", or "discharging", "full", "holding"). A
   recipe with no inputs reads "1 Glass,
   12 s". A building with a fuel slot has a Burning row ("Coal,
-  22 s left", or "nothing") and, below the rows, a Fuel picker (Best, then each fuel the building
+  22 s left", or "nothing"; a building that makes things adds a fuel's boost, "Coal, 22 s left,
+  +30% speed") and, below the rows, a Fuel picker (Best, then each fuel the building
   takes, longest-burning first, rebuilt for a building that takes others; choosing calls
   `SetFuelChoice`) with a dim note naming what it burns ("Best: burns Coal
-  (40 s per unit)"). A processor with several recipes has a Recipe picker. On a queueing
+  (40 s per unit)", with ", +30% speed" on a building that makes things). A processor with several recipes has a Recipe picker. On a queueing
   processor (buildings.md) it chooses what to queue, starting on the recipe the building runs; on
   the three that run without a queue it calls `SetRecipe`, and the Recipe row adds "(next:
   Copper)" while a change waits for the running cycle. Right under the picker a dim line spells

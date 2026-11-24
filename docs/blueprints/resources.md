@@ -55,7 +55,8 @@ buildings.md). A single global stockpile holds all amounts, within storage limit
   | 4 | HullSection, Engine |
 
 - **Fuels** have a burn time (`ResourceDef.BurnSeconds`): Fuel Rod 300 s, Coal 40 s, Charcoal
-  30 s, Wood 10 s (placeholders). `ResourceDefs.Fuels` lists them longest-burning first, and
+  30 s, Wood 10 s (placeholders); and a speed (`ResourceDef.FuelSpeed`) for a building that makes
+  things while it burns: Coal 1.3, Charcoal 1.15, Wood and the Fuel Rod 1 (buildings.md, Capacity). `ResourceDefs.Fuels` lists them longest-burning first, and
   `Combustibles` the same without the Fuel Rod, which only a Fission Reactor burns (buildings.md).
   Batteries, Solar Cells, Heat Shields, Sensor Arrays, and Computers also go into the power
   buildings' costs. A fuel is still a Stored

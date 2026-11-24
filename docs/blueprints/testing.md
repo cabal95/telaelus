@@ -118,7 +118,8 @@ pausing it and stepping frame by frame.
 - `PowerTests`: brownout speeds and a blackout past a quarter over, demand counting idle
   consumers; offline buildings neither drawing nor supplying; the Burner Generator burning whenever
   on, Best fuel first, stopping when switched off, its burning unit not refunded; a fuel choice
-  burning only that fuel; the Smelter's cycle advancing only while fuel burns; a Drill Rig's speed
+  burning only that fuel; the Smelter's cycle advancing only while fuel burns, and finishing in
+  16 s on Wood, 13.9 s on Charcoal, 12.3 s on Coal; a Burner Generator supplying no more on Coal; a Drill Rig's speed
   2; the Water Wheel only across a Straight river cell, supplying 5 online.
 - `NetworkTests`: hubs linking within the larger link radius, and a Relay linking a far hub 63
   units out; two Small Hubs at their full 22-unit link range covering the ground between them;
@@ -546,7 +547,8 @@ pausing it and stepping frame by frame.
   then four Refineries push demand into a brownout at 57% and a blackout, on the top bar; the
   generator's panel shows its supply and Best fuel),
   `crafting-queue` (a Smelter idle "Queue empty"; its panel's quantity stepping by a cycle and
-  Craft adding an order; a later Iron order going after a Copper one; an order's X removing it;
+  Craft adding an order; its Burning row naming Coal's +30% speed; a later Iron order going after
+  a Copper one; an order's X removing it;
   the first order counting down and the Smelter idle when the queue is done; the line under the
   picker naming the recipe's needs, and its input short once storage runs out; windowed screenshots
   of the empty queue, the queue, and the end),

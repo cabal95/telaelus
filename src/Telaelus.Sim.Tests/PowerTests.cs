@@ -153,6 +153,38 @@ public class PowerTests
         Assert.Equal(1f, SimTestHelpers.Stock(sim, ResourceType.Iron));
     }
 
+    [Theory]
+    [InlineData(ResourceType.Wood, 16.0)]
+    [InlineData(ResourceType.Charcoal, 16.0 / 1.15)]
+    [InlineData(ResourceType.Coal, 16.0 / 1.3)]
+    public void ABetterFuel_RunsASmelterFaster(ResourceType fuel, double cycle)
+    {
+        Simulation sim = EmptyMap();
+        sim.Debug.SeedStockpile(ResourceType.IronOre, 1f);
+        sim.Debug.SeedStockpile(fuel, 2f);
+        Building smelter = sim.Debug.PlaceBuilding(BuildingType.Smelter, 48, 14, Facing.North);
+        Assert.True(sim.SetFuelChoice(smelter.Id, fuel));
+        SimTestHelpers.Order(sim, smelter);
+
+        SimTestHelpers.Seconds(sim, cycle - 0.2);
+        Assert.Equal(0f, SimTestHelpers.Stock(sim, ResourceType.Iron));
+        SimTestHelpers.Seconds(sim, 0.4);
+        Assert.Equal(1f, SimTestHelpers.Stock(sim, ResourceType.Iron));
+    }
+
+    [Fact]
+    public void ABetterFuel_GivesABurnerGeneratorNoMorePower()
+    {
+        Simulation sim = EmptyMap();
+        sim.Debug.SeedStockpile(ResourceType.Coal, 1f);
+        Building burner = sim.Debug.PlaceBuilding(BuildingType.BurnerGenerator, 50, 14, Facing.North);
+        SimTestHelpers.Ticks(sim, 1);
+
+        Assert.Equal(ResourceType.Coal, burner.Burning);
+        Assert.Equal(1f, Simulation.FuelSpeed(burner));
+        Assert.Equal(35f, sim.Capacity(CapacityType.Power).Supply);
+    }
+
     [Fact]
     public void ADrillRig_GathersAtItsSpeed_ScaledByPower()
     {

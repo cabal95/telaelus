@@ -142,7 +142,10 @@ public sealed partial class Simulation
         return (banks.Sum(b => b.Charge), banks.Sum(b => b.Def.StoreCapacity), seconds > 0f ? moved / seconds : 0f);
     }
 
-    /// <summary>How fast a building works this tick: the slowest speed of the types it draws (1 for none), 0 offline.</summary>
+    /// <summary>
+    /// How fast a building works this tick: the slowest speed of the types it draws (1 for none), 0
+    /// offline, times its <see cref="FuelSpeed"/>.
+    /// </summary>
     public float WorkSpeed(Building building)
     {
         float speed = 1f;
@@ -150,7 +153,18 @@ public sealed partial class Simulation
         {
             speed = Math.Min(speed, building.Online ? Capacity(type).Speed : 0f);
         }
-        return speed;
+        return speed * FuelSpeed(building);
+    }
+
+    /// <summary>
+    /// The burning fuel's speed (<see cref="ResourceDef.FuelSpeed"/>) for a fuel-burning building that
+    /// makes things; 1 for a provider (a better fuel only lasts longer there) or with nothing burning.
+    /// </summary>
+    public static float FuelSpeed(Building building)
+    {
+        return building.Def.BurnsFuel && !building.Def.IsProvider && building.Burning is ResourceType fuel && building.BurnLeft > 0f
+            ? ResourceDefs.For(fuel).FuelSpeed
+            : 1f;
     }
 
     /// <summary>Why a consumer cannot work ("No Water: offline", "Blackout: Sand"), or null when it can.</summary>
