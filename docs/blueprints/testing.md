@@ -119,7 +119,7 @@ pausing it and stepping frame by frame.
   consumers; offline buildings neither drawing nor supplying; the Burner Generator burning whenever
   on, Best fuel first, stopping when switched off, its burning unit not refunded; a fuel choice
   burning only that fuel; the Smelter's cycle advancing only while fuel burns; a Drill Rig's speed
-  2; the Water Wheel only across a Straight river cell, supplying 20 online.
+  2; the Water Wheel only across a Straight river cell, supplying 5 online.
 - `NetworkTests`: hubs linking within the larger link radius, and a Relay linking a far hub 63
   units out; two Small Hubs at their full 22-unit link range covering the ground between them;
   coverage reaching a footprint's nearest point; switching off or destroying a hub cutting its branch; an extractor filling its
@@ -133,7 +133,8 @@ pausing it and stepping frame by frame.
   unit in hand; an offline buffer still collected by hand; a truck never sent to an offline
   collector, and one on its way turning home when it goes offline; the HQ's and Small Hub's radii.
   `SimTestHelpers.Connect` chains Small Hubs from the HQ to a spot (`PlaceOnline` places a building
-  and connects it, for tests about extraction rather than the network), `Gathered` counts the stockpile
+  and connects it, for tests about extraction rather than the network), `Burners` places a row of
+  Burner Generators (along the empty map's north edge by default), `Gathered` counts the stockpile
   plus every output buffer, and `CollectByHand` empties a building by holding E on it.
 - `StorageTests`: every resource's storage class and amounts; the HQ's base; limits summing the
   HQ and storage buildings; a Silo's step following its resource; Cargo room as the free pool over
@@ -195,7 +196,9 @@ pausing it and stepping frame by frame.
   fuel, choices, trucks mid-trip, roads and bridges, research, the clock, Battery charge) surviving;
   a generated fog world round trip that keeps exploring the same; a switched-off extractor whose
   field was removed saving and loading with no current field, and a save naming a missing one
-  loading with none; an older save's input buffer and fuel slot going to storage; and the file
+  loading with none; an older save's input buffer and fuel slot going to storage; an older save's
+  2 x 2 Burner Generator growing to 4 x 4 around its center, or, with a building in the way,
+  refunded in full and told on the next step; and the file
   format's round trip, a newer version refused, and a damaged file refused.
 - `DemoTownTests`: the demo town (saving.md) built and run as the demo save is: every building
   online and working, power normal, four trucks, Material Transfer running; every collector on a
@@ -539,8 +542,8 @@ pausing it and stepping frame by frame.
   empty map, then shows each discovery pinned in table order as amounts, Crude Oil dim with no storage, with tooltips of name, amount, and limit, and no Power, Water, Sand, or ship bill with none on the network; the hint overlay shows the harvest hint
   and its bar; I opens and closes the inventory, grouped by tier with discovered resources first;
   the inventory and a building's detail replace each other; a panel covers the debug overlay),
-  `power` (a Drill Rig with no supply is in a blackout; a Burner Generator on Coal powers it; four
-  then five Refineries push demand into a brownout at 80% and a blackout, on the top bar; the
+  `power` (a Drill Rig with no supply is in a blackout; two Burner Generators on Coal power it; three
+  then four Refineries push demand into a brownout at 57% and a blackout, on the top bar; the
   generator's panel shows its supply and Best fuel),
   `crafting-queue` (a Smelter idle "Queue empty"; its panel's quantity stepping by a cycle and
   Craft adding an order; a later Iron order going after a Copper one; an order's X removing it;

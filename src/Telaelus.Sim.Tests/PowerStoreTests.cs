@@ -66,11 +66,11 @@ public class PowerStoreTests
     {
         Simulation sim = EmptyMap();
         sim.Debug.SeedStockpile(ResourceType.Coal, 10f);
-        sim.Debug.PlaceBuilding(BuildingType.BurnerGenerator, 44, 0, Facing.North);
+        SimTestHelpers.Burners(sim, 2);
         Building bank = sim.Debug.PlaceBuilding(BuildingType.BatteryBank, 48, 4, Facing.North);
         Assert.True(bank.Online);
 
-        // 100 Power spare, but a bank takes 50 a second.
+        // 70 Power spare, but a bank takes 50 a second.
         SimTestHelpers.Seconds(sim, 10.0);
         Assert.Equal(500f, bank.Charge, 0);
         Assert.Equal(50f, Power(sim).StoreFlow, 1);

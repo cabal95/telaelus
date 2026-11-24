@@ -39,7 +39,9 @@
     { "seedStockpile": { "type": "Coal", "amount": 60 } },
     { "seedStockpile": { "type": "Iron", "amount": 40 } },
     { "seedStockpile": { "type": "Copper", "amount": 20 } },
-    { "placeBuilding": { "type": "BurnerGenerator", "anchor": [44, 0] } },
+    { "comment": "Three Burner Generators (105 Power) cover the Lab, a Refinery, and the Shipyard below.", "placeBuilding": { "type": "BurnerGenerator", "anchor": [44, 0] } },
+    { "placeBuilding": { "type": "BurnerGenerator", "anchor": [40, 0] } },
+    { "placeBuilding": { "type": "BurnerGenerator", "anchor": [36, 0] } },
     { "placeBuilding": { "type": "ResearchLab", "anchor": [48, 4] } },
     { "wait": 160 },
     { "expect": "ui.toasts", "equals": [] },
@@ -59,7 +61,7 @@
 
     { "placeBuilding": { "type": "Refinery", "anchor": [52, 12] } },
     { "wait": 2 },
-    { "comment": "The Burner Generator covers its Power; nothing supplies its Water.", "expect": "ui.toasts", "equals": [
+    { "comment": "The Burner Generators cover its Power; nothing supplies its Water.", "expect": "ui.toasts", "equals": [
       { "style": "lasting", "title": "Blackout: Water", "detail": "Demand 2 over supply 0", "remaining": 14.9, "shown": true }
     ] },
     { "seedStockpile": { "type": "HullSection", "amount": 4 } },

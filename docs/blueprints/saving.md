@@ -19,13 +19,16 @@ Game; in a game, Escape opens the game menu (Resume, Save Game, Load Game, Train
     revealed from;
   - every field (id, type, map cell, motherlode, initial and current amount, the building working
     it, growing and time left) and the worked-out cells;
-  - every building (id, type, anchor, facing, enabled, recipe and the waiting change, crafting
+  - every building (id, type, anchor, facing, footprint width, enabled, recipe and the waiting change, crafting
     queue (each order's recipe and items left; absent in older saves, an empty queue), input
     choices by recipe (an older save's by input alone belong to its recipe), fuel
     and output choices, Silo resource, output buffer (an older save's input buffer and fuel slot
     go to storage on load), the fuel burning and time
     left, cycle progress and the inputs it took, its current field, site, and plot, feeding state,
-    and charge);
+    and charge). A Burner Generator saved before it grew to 4 x 4 (a width other than its own, or
+    none) grows around its old center (its anchor one cell back on each axis) when every cell of
+    the 4 x 4 can be built on; otherwise it is removed and its whole cost goes to storage (past a
+    limit if need be), told to the player on the first step after the load;
   - every truck (id, Depot, bay, state, position, heading, cargo, target, timer, and its path with
     the point it is heading for), and the cells trucks found unreachable;
   - the stockpile, unlocked buildings, discovered resources, ships launched, the time of day,

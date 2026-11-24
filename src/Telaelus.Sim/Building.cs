@@ -16,8 +16,8 @@ public sealed class Building
     public int Id { get; }
     public BuildingType Type { get; }
     public BuildingDef Def { get; }
-    public int AnchorX { get; }
-    public int AnchorZ { get; }
+    public int AnchorX { get; private set; }
+    public int AnchorZ { get; private set; }
     public Facing Facing { get; }
     /// <summary>The recipes it can run (none for a building that is not a processor), the default first.</summary>
     public IReadOnlyList<Recipe> Recipes { get; }
@@ -127,6 +127,13 @@ public sealed class Building
         Facing = facing;
         Recipes = recipes;
         Queues = recipes.Count > 0 && (Def.BurnsFuel || recipes.Any(recipe => recipe.Inputs.Count > 0));
+    }
+
+    /// <summary>Moves the anchor (a loaded building whose footprint grew since it was saved).</summary>
+    internal void MoveAnchor(int anchorX, int anchorZ)
+    {
+        AnchorX = anchorX;
+        AnchorZ = anchorZ;
     }
 
     public int Width => Def.Footprint(Facing).Width;

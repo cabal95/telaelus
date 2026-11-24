@@ -45,6 +45,12 @@ public static class NotificationText
                     toasts.Add(new Toastable(ToastStyle.Lasting, CapacityIcon(e.Capacity, icons), "Blackout: " + e.Capacity,
                         $"Demand {Mathf.CeilToInt(reading.Demand)} over supply {Mathf.FloorToInt(reading.Supply)}"));
                     break;
+                case SimEventKind.RefundedOnLoad:
+                    BuildingDef refunded = BuildingDefs.For(e.Building);
+                    toasts.Add(new Toastable(ToastStyle.Lasting, pictures.Color(e.Building),
+                        refunded.Name + " refunded",
+                        $"It grew to {refunded.Width} x {refunded.Depth} and no longer fit; its cost is back in storage"));
+                    break;
                 case SimEventKind.ShipLaunched:
                     toasts.Add(new Toastable(ToastStyle.Lasting, pictures.Color(BuildingType.Shipyard), "Ship launched",
                         $"Ships launched: {sim.ShipsLaunched}"));

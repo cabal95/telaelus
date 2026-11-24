@@ -310,11 +310,11 @@ public static class BuildingDefs
     {
         Supplies = new Dictionary<CapacityType, float>
         {
-            [CapacityType.Power] = 20f
+            [CapacityType.Power] = 5f
         },
         Placement = Placement.AcrossStraightRiver
     };
-    private static readonly BuildingDef BurnerGenerator = new("Burner Generator", 2, 2, new ResourceAmount[]
+    private static readonly BuildingDef BurnerGenerator = new("Burner Generator", 4, 4, new ResourceAmount[]
     {
         new(ResourceType.Stone, 60f),
         new(ResourceType.Iron, 40f)
@@ -322,7 +322,7 @@ public static class BuildingDefs
     {
         Supplies = new Dictionary<CapacityType, float>
         {
-            [CapacityType.Power] = 100f
+            [CapacityType.Power] = 35f
         },
         BurnsFuel = true
     };

@@ -6,17 +6,16 @@ namespace Telaelus.Sim.Tests;
 public class LaterTiersTests
 {
     /// <summary>
-    /// The empty map (its HQ at fine x 56..61, z 2..11) with two Burner Generators on Coal (200
+    /// The empty map (its HQ at fine x 56..61, z 2..11) with six Burner Generators on Coal (210
     /// Power), two Water Pumps on a pond at map cell (13, 4) (8 Water), and a Tank Farm for fluids.
     /// </summary>
     private static Simulation Plant(bool water = true)
     {
         var sim = new Simulation();
         sim.Debug.ResetToEmptyMap();
-        sim.Debug.SeedStockpile(ResourceType.Coal, 60f);
-        sim.Debug.PlaceBuilding(BuildingType.BurnerGenerator, 44, 0, Facing.North);
-        sim.Debug.PlaceBuilding(BuildingType.BurnerGenerator, 46, 0, Facing.North);
-        sim.Debug.PlaceBuilding(BuildingType.TankFarm, 48, 0, Facing.North);
+        sim.Debug.SeedStockpile(ResourceType.Coal, 180f);
+        SimTestHelpers.Burners(sim, 6);
+        sim.Debug.PlaceBuilding(BuildingType.TankFarm, 28, 0, Facing.North);
         if (water)
         {
             sim.Debug.SetTerrain(13, 4, TerrainType.ShallowWater);
@@ -169,6 +168,8 @@ public class LaterTiersTests
         }
         sim.Debug.SetTerrain(12, 6, TerrainType.ShallowWater);
 
+        // 300 Power of makers on nine Burner Generators (315) along the north edge.
+        SimTestHelpers.Burners(sim, 9);
         (BuildingType Type, int X, int Z, int Recipe)[] placements =
         {
             (BuildingType.SemiconductorFab, 8, 14, 0),
@@ -177,10 +178,6 @@ public class LaterTiersTests
             (BuildingType.AssemblyPlant, 8, 24, 3),
             (BuildingType.EnrichmentPlant, 15, 24, 0),
             (BuildingType.EnrichmentPlant, 22, 24, 1),
-            (BuildingType.BurnerGenerator, 42, 14, 0),
-            (BuildingType.BurnerGenerator, 44, 14, 0),
-            (BuildingType.BurnerGenerator, 46, 14, 0),
-            (BuildingType.BurnerGenerator, 42, 17, 0),
             (BuildingType.WaterPump, 46, 24, 0),
             (BuildingType.WaterPump, 46, 26, 0),
             (BuildingType.WaterPump, 48, 22, 0),

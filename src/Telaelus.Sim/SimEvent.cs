@@ -16,7 +16,10 @@ public enum SimEventKind
     Blackout,
 
     /// <summary>A ship launched.</summary>
-    ShipLaunched
+    ShipLaunched,
+
+    /// <summary>A loaded building no longer fit its larger footprint and its cost went back to storage.</summary>
+    RefundedOnLoad
 }
 
 /// <summary>

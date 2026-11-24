@@ -38,6 +38,12 @@ class Mesh:
         m.tris = [(mt, add(a, d), add(b, d), add(c, d)) for mt, a, b, c in self.tris]
         return m
 
+    def scaled(self, s):
+        """The same triangles scaled by `s` about the origin (the base centre)."""
+        m = Mesh()
+        m.tris = [(mt, mul(a, s), mul(b, s), mul(c, s)) for mt, a, b, c in self.tris]
+        return m
+
     def extend(self, other):
         self.tris.extend(other.tris)
 

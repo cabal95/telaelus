@@ -321,7 +321,8 @@ def water_wheel():
 
 
 def burner_generator():
-    """A squat boiler with a chimney, a fuel hopper at the front, and a yellow junction box."""
+    """A squat boiler with a chimney, a fuel hopper at the front, and a yellow junction box: drawn
+    for 2 x 2 and scaled up twice to fill its 4 x 4 footprint."""
     m, mat = Mesh(), Materials()
     hx, hz = half(2), half(2)
     box(m, mat("stone_dark"), -hx, 0, -hz, hx, 0.08, hz, mat_top=mat("stone", 0.85))
@@ -335,7 +336,7 @@ def burner_generator():
     box(m, mat("metal"), -0.55, 0.08, -0.85, -0.05, 0.55, -0.4, mat_top=mat("coal"))
     box(m, mat("power_accent"), 0.2, 0.08, -0.8, 0.6, 0.45, -0.45, mat_top=mat("metal_dark"))
     power_pole(m, mat, 0.75, -0.75, 1.3)
-    return m, mat.mats
+    return m.scaled(2.0), mat.mats
 
 
 def lumber_mill():

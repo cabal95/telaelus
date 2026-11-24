@@ -71,9 +71,10 @@ public class LaunchTests
 
         // Collectors: a Mine on the Iron Ore, two on the Coal, an Oil Well at each seep. The chain:
         // a Smelter for Iron; two Refineries for Kerosene; three Electrolyzers (two on Hydrogen, one
-        // on Liquid Oxygen); two Fuel Plants for Rocket Fuel; three Burner Generators on Coal for
-        // their 240 Power; four Water Pumps for their 16 Water; three Tank Farms for the fluids.
+        // on Liquid Oxygen); two Fuel Plants for Rocket Fuel; seven Burner Generators on Coal (along
+        // the north edge) for their 240 Power; four Water Pumps for their 16 Water; three Tank Farms for the fluids.
         // Collectors never deliver on their own, so the player walks round every 20 seconds.
+        SimTestHelpers.Burners(sim, 7);
         (BuildingType Type, int X, int Z)[] placements =
         {
             (BuildingType.Mine, 30, 24),
@@ -89,9 +90,6 @@ public class LaunchTests
             (BuildingType.Electrolyzer, 36, 19),
             (BuildingType.Electrolyzer, 40, 19),
             (BuildingType.Electrolyzer, 44, 19),
-            (BuildingType.BurnerGenerator, 48, 13),
-            (BuildingType.BurnerGenerator, 50, 13),
-            (BuildingType.BurnerGenerator, 48, 16),
             (BuildingType.WaterPump, 54, 20),
             (BuildingType.WaterPump, 54, 22),
             (BuildingType.WaterPump, 54, 24),

@@ -152,7 +152,9 @@ ui-style.md. There is no text HUD; the screen holds:
   (brief, its picture, "New building: Mine", "[B] to build"); a research project complete
   (lasting, the project's icon, "Research complete: Material Transfer", its description); a
   capacity in blackout (lasting, its icon, "Blackout: Water", "Demand 2 over supply 0"); a ship
-  launched (lasting, the Shipyard's picture, "Ship launched", "Ships launched: 2"). A frame's
+  launched (lasting, the Shipyard's picture, "Ship launched", "Ships launched: 2"); a building
+  refunded on load (lasting, its picture, "Burner Generator refunded", "It grew to 4 x 4 and no
+  longer fit; its cost is back in storage"). A frame's
   discoveries merge into one toast ("Discovered: Coal, Sulfur", the first one's icon, no detail),
   and so do its unlocks ("New buildings: Mine, Smelter"), shown above the discoveries. A new
   world and a load notify nothing. `GameRoot` sets `Notifications.Covered` while a modal is open,

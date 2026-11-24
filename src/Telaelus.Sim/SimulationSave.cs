@@ -142,6 +142,7 @@ public sealed partial class Simulation
     private void LoadNow(SaveData data)
     {
         _blackoutRaised.Clear();
+        _afterLoad.Clear();
         PlanetDef? planet = data.World.Planet is null ? null : PlanetDefs.Starter;
         World = new WorldSettings(data.World.Kind, data.World.Seed, planet)
         {
@@ -172,6 +173,7 @@ public sealed partial class Simulation
         }
 
         var buildings = new Dictionary<int, Building>();
+        var outgrown = new List<Building>();
         foreach (BuildingData d in data.Buildings)
         {
             var b = new Building(d.Id, d.Type, d.AnchorX, d.AnchorZ, d.Facing, Telaelus.Sim.Recipes.For(d.Type))
@@ -216,13 +218,16 @@ public sealed partial class Simulation
             Fill(b.Output, d.Output);
             _buildings.Add(b);
             buildings[b.Id] = b;
-            for (int x = b.AnchorX; x < b.AnchorX + b.Width; x++)
+            if (b.Type == BuildingType.BurnerGenerator && d.Width != b.Width)
             {
-                for (int z = b.AnchorZ; z < b.AnchorZ + b.Depth; z++)
-                {
-                    _occupied.Add((x, z));
-                }
+                // Saved at 2 x 2: anchored for 4 x 4 around the same center, holding only its old
+                // cells until the rest of the world is in and it can grow (GrowOrRefund).
+                b.MoveAnchor(b.AnchorX - 1, b.AnchorZ - 1);
+                outgrown.Add(b);
+                Occupy(b.AnchorX + 1, b.AnchorZ + 1, 2, 2);
+                continue;
             }
+            Occupy(b.AnchorX, b.AnchorZ, b.Width, b.Depth);
         }
 
         var fields = new Dictionary<int, ResourceField>();
@@ -341,9 +346,54 @@ public sealed partial class Simulation
         }
 
         RecountExplored();
+        foreach (Building b in outgrown)
+        {
+            GrowOrRefund(b);
+        }
         RecomputeNetwork();
         RoadVersion++;
         MapChanged?.Invoke();
+    }
+
+    private void Occupy(int anchorX, int anchorZ, int width, int depth)
+    {
+        for (int x = anchorX; x < anchorX + width; x++)
+        {
+            for (int z = anchorZ; z < anchorZ + depth; z++)
+            {
+                _occupied.Add((x, z));
+            }
+        }
+    }
+
+    /// <summary>
+    /// A Burner Generator saved at 2 x 2, anchored for 4 x 4 with its old cells in the middle: grows
+    /// to the full footprint when every cell of it can be built on, else is removed with its whole
+    /// cost back in storage (past a limit if need be), told to the player once play resumes.
+    /// </summary>
+    private void GrowOrRefund(Building b)
+    {
+        for (int x = b.AnchorX + 1; x < b.AnchorX + 3; x++)
+        {
+            for (int z = b.AnchorZ + 1; z < b.AnchorZ + 3; z++)
+            {
+                _occupied.Remove((x, z));
+            }
+        }
+        if (CanPlace(b.Type, b.AnchorX, b.AnchorZ, b.Facing))
+        {
+            Occupy(b.AnchorX, b.AnchorZ, b.Width, b.Depth);
+            return;
+        }
+        _buildings.Remove(b);
+        foreach (ResourceAmount cost in b.Def.Cost)
+        {
+            AddToStockpile(cost.Type, cost.Amount);
+        }
+        _afterLoad.Add(new SimEvent(SimEventKind.RefundedOnLoad)
+        {
+            Building = b.Type
+        });
     }
 
     /// <summary>Recounts the explored cells and their bounds from the chunks (fog worlds).</summary>
@@ -431,6 +481,7 @@ public sealed partial class Simulation
             AnchorX = b.AnchorX,
             AnchorZ = b.AnchorZ,
             Facing = b.Facing,
+            Width = b.Width,
             Enabled = b.Enabled,
             RecipeIndex = b.RecipeIndex,
             PendingRecipe = b.PendingRecipe,

@@ -66,6 +66,9 @@ public class PartsTests
         }
         sim.Debug.SetTerrain(12, 6, TerrainType.ShallowWater);
 
+        // 440 Power of makers on thirteen Burner Generators (455) in two rows along the north edge.
+        SimTestHelpers.Burners(sim, 9);
+        SimTestHelpers.Burners(sim, 4, 52, 4);
         (BuildingType Type, int X, int Z, int Recipe)[] placements =
         {
             (BuildingType.Fabricator, 8, 14, 0),
@@ -81,11 +84,6 @@ public class PartsTests
             (BuildingType.AssemblyPlant, 22, 24, 2),
             (BuildingType.Shipyard, 8, 34, 0),
             (BuildingType.Shipyard, 17, 34, 1),
-            (BuildingType.BurnerGenerator, 42, 14, 0),
-            (BuildingType.BurnerGenerator, 44, 14, 0),
-            (BuildingType.BurnerGenerator, 46, 14, 0),
-            (BuildingType.BurnerGenerator, 42, 17, 0),
-            (BuildingType.BurnerGenerator, 44, 17, 0),
             (BuildingType.WaterPump, 46, 24, 0),
             (BuildingType.Warehouse, 30, 24, 0),
             (BuildingType.Warehouse, 34, 24, 0),

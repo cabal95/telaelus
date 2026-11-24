@@ -100,6 +100,10 @@ public sealed class BuildingData
     public int AnchorX { get; set; }
     public int AnchorZ { get; set; }
     public Facing Facing { get; set; }
+
+    /// <summary>Its footprint width when saved (east-west, after facing); 0 in a save from before this was kept.</summary>
+    public int Width { get; set; }
+
     public bool Enabled { get; set; }
     public int RecipeIndex { get; set; }
     public int? PendingRecipe { get; set; }

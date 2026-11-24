@@ -10,10 +10,10 @@ public class PowerTests
     }
 
     /// <summary>
-    /// Five Refineries (25 each), two Drill Rigs (10 each), and a Burner Generator (100) on Coal,
-    /// around one Small Hub linked back to the HQ, all online: 145 against 100.
+    /// Five Refineries (25 each), two Drill Rigs (10 each), and three Burner Generators (35 each) on
+    /// Coal, around one Small Hub linked back to the HQ, all online: 145 against 105.
     /// </summary>
-    private static (Simulation Sim, Building[] Refineries, Building[] Rigs, Building Burner) PoweredBlock()
+    private static (Simulation Sim, Building[] Refineries, Building[] Rigs) PoweredBlock()
     {
         Simulation sim = EmptyMap();
         sim.Debug.SeedStockpile(ResourceType.Coal, 60f);
@@ -27,21 +27,21 @@ public class PowerTests
             sim.Debug.PlaceBuilding(BuildingType.DrillRig, 23, 32, Facing.North),
             sim.Debug.PlaceBuilding(BuildingType.DrillRig, 26, 32, Facing.North)
         };
-        Building burner = sim.Debug.PlaceBuilding(BuildingType.BurnerGenerator, 30, 32, Facing.North);
+        SimTestHelpers.Burners(sim, 3, 38, 36);
         sim.Debug.PlaceBuilding(BuildingType.SmallHub, 29, 31, Facing.North);
         SimTestHelpers.Connect(sim, 29.5f, 31.5f);
         SimTestHelpers.Ticks(sim, 1);
-        return (sim, refineries, rigs, burner);
+        return (sim, refineries, rigs);
     }
 
     [Fact]
     public void Brownout_SlowsByTwiceTheOverload_AndPastAQuarterOverIsABlackout()
     {
-        (Simulation sim, Building[] refineries, Building[] rigs, _) = PoweredBlock();
+        (Simulation sim, Building[] refineries, Building[] rigs) = PoweredBlock();
         Assert.All(SimTestHelpers.Placed(sim), b => Assert.True(b.Online));
 
-        // Demand counts the idle Refineries (no Crude Oil) as well: 145 / 100.
-        Assert.Equal(100f, sim.Capacity(CapacityType.Power).Supply);
+        // Demand counts the idle Refineries (no Crude Oil) as well: 145 / 105.
+        Assert.Equal(105f, sim.Capacity(CapacityType.Power).Supply);
         Assert.Equal(145f, sim.Capacity(CapacityType.Power).Demand);
         Assert.Equal(CapacityState.Blackout, sim.Capacity(CapacityType.Power).State);
         Assert.Equal(0f, sim.Capacity(CapacityType.Power).Speed);
@@ -50,11 +50,12 @@ public class PowerTests
         sim.SetBuildingEnabled(refineries[0].Id, false);
         SimTestHelpers.Ticks(sim, 1);
         Assert.Equal(CapacityState.Brownout, sim.Capacity(CapacityType.Power).State);
-        Assert.Equal(0.6f, sim.Capacity(CapacityType.Power).Speed, 3);
+        // 120 / 105 and then 110 / 105: speed is 1 less twice the overload.
+        Assert.Equal(1f - 2f * 15f / 105f, sim.Capacity(CapacityType.Power).Speed, 3);
 
         sim.SetBuildingEnabled(rigs[0].Id, false);
         SimTestHelpers.Ticks(sim, 1);
-        Assert.Equal(0.8f, sim.Capacity(CapacityType.Power).Speed, 3);
+        Assert.Equal(1f - 2f * 5f / 105f, sim.Capacity(CapacityType.Power).Speed, 3);
 
         sim.SetBuildingEnabled(refineries[1].Id, false);
         SimTestHelpers.Ticks(sim, 1);
@@ -90,7 +91,7 @@ public class PowerTests
 
         // Nothing draws power, yet it burns: Best takes the Coal (40 s) before the Wood (10 s).
         Assert.Equal(ResourceType.Coal, burner.Burning);
-        Assert.Equal(100f, sim.Capacity(CapacityType.Power).Supply);
+        Assert.Equal(35f, sim.Capacity(CapacityType.Power).Supply);
         SimTestHelpers.Seconds(sim, 40.5);
         Assert.Equal(ResourceType.Wood, burner.Burning);
         Assert.Equal(1f, SimTestHelpers.Stock(sim, ResourceType.Wood));
@@ -191,6 +192,6 @@ public class PowerTests
         SimTestHelpers.Connect(sim, 18f, 21f);
         SimTestHelpers.Ticks(sim, 1);
         Assert.True(wheel.Online);
-        Assert.Equal(20f, sim.Capacity(CapacityType.Power).Supply);
+        Assert.Equal(5f, sim.Capacity(CapacityType.Power).Supply);
     }
 }

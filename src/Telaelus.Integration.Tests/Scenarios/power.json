@@ -1,7 +1,7 @@
 {
   "$schema": "../scenario.schema.json",
   "name": "power",
-  "description": "Power on the HQ network: a Drill Rig with no supply is in a blackout; a Burner Generator on Coal powers it; Refineries push demand into a brownout (warning color) and then a blackout (danger color) on the top bar; the generator's panel shows what it supplies, what burns, and its Best fuel.",
+  "description": "Power on the HQ network: a Drill Rig with no supply is in a blackout; two Burner Generators on Coal power it; Refineries push demand into a brownout (warning color) and then a blackout (danger color) on the top bar; the generator's panel shows what it supplies, what burns, and its Best fuel.",
   "steps": [
     { "newGame": {} },
     { "initMap": {} },
@@ -13,26 +13,26 @@
     { "expect": "ui.topBar.power", "equals": "Blackout: 10 / 0" },
 
     { "placeBuilding": { "type": "BurnerGenerator", "anchor": [53, 13] } },
+    { "placeBuilding": { "type": "BurnerGenerator", "anchor": [53, 17] } },
     { "wait": 2 },
-    { "expect": "capacity.power", "equals": { "supply": 100, "demand": 10, "speed": 1, "state": "normal" } },
+    { "expect": "capacity.power", "equals": { "supply": 70, "demand": 10, "speed": 1, "state": "normal" } },
     { "expect": "buildings[2].burning", "equals": "Coal" },
-    { "expect": "ui.topBar.power", "equals": "10 / 100" },
+    { "expect": "ui.topBar.power", "equals": "10 / 70" },
 
-    { "comment": "Four Refineries (25 each): 110 against 100 is a brownout at 80%.", "placeBuilding": { "type": "Refinery", "anchor": [46, 4] } },
+    { "comment": "Three Refineries (25 each): 85 against 70 is a brownout at 57%.", "placeBuilding": { "type": "Refinery", "anchor": [46, 4] } },
     { "placeBuilding": { "type": "Refinery", "anchor": [48, 4] } },
     { "placeBuilding": { "type": "Refinery", "anchor": [50, 4] } },
-    { "placeBuilding": { "type": "Refinery", "anchor": [52, 4] } },
     { "teleportPlayer": { "x": 46, "z": 20 } },
     { "wait": 2 },
     { "expect": "capacity.power.state", "equals": "brownout" },
-    { "expect": "capacity.power.speed", "approx": 0.8 },
-    { "expect": "ui.topBar.power", "equals": "110 / 100" },
+    { "expect": "capacity.power.speed", "approx": 0.571 },
+    { "expect": "ui.topBar.power", "equals": "85 / 70" },
     { "screenshot": "brownout" },
 
-    { "comment": "A fifth: 135 against 100 is past a quarter over, a blackout.", "placeBuilding": { "type": "Refinery", "anchor": [46, 8] } },
+    { "comment": "A fourth: 110 against 70 is past a quarter over, a blackout.", "placeBuilding": { "type": "Refinery", "anchor": [52, 4] } },
     { "wait": 2 },
     { "expect": "capacity.power.state", "equals": "blackout" },
-    { "expect": "ui.topBar.power", "equals": "Blackout: 135 / 100" },
+    { "expect": "ui.topBar.power", "equals": "Blackout: 110 / 70" },
     { "screenshot": "blackout" },
 
     { "aimAt": { "world": [54, 14] } },
@@ -40,7 +40,7 @@
     { "click": {} },
     { "wait": 2 },
     { "expect": "ui.open", "equals": "buildingDetail" },
-    { "expect": "ui.rows.power", "equals": "Supplies 100" },
+    { "expect": "ui.rows.power", "equals": "Supplies 35" },
     { "expect": "ui.fuel", "equals": "Best" },
     { "screenshot": "generator-detail" }
   ]

@@ -5,16 +5,15 @@ namespace Telaelus.Sim.Tests;
 public class CraftingQueueTests
 {
     /// <summary>
-    /// The empty map (its HQ at fine x 56..61, z 2..11) with two Burner Generators on Coal (200
+    /// The empty map (its HQ at fine x 56..61, z 2..11) with six Burner Generators on Coal (210
     /// Power) and two Water Pumps on a pond (8 Water), all online, with Wood and Ore to spare.
     /// </summary>
     private static Simulation Plant()
     {
         var sim = new Simulation();
         sim.Debug.ResetToEmptyMap();
-        sim.Debug.SeedStockpile(ResourceType.Coal, 60f);
-        sim.Debug.PlaceBuilding(BuildingType.BurnerGenerator, 44, 0, Facing.North);
-        sim.Debug.PlaceBuilding(BuildingType.BurnerGenerator, 46, 0, Facing.North);
+        sim.Debug.SeedStockpile(ResourceType.Coal, 180f);
+        SimTestHelpers.Burners(sim, 6);
         sim.Debug.SetTerrain(13, 4, TerrainType.ShallowWater);
         sim.Debug.PlaceBuilding(BuildingType.WaterPump, 52, 14, Facing.North);
         sim.Debug.PlaceBuilding(BuildingType.WaterPump, 54, 14, Facing.North);

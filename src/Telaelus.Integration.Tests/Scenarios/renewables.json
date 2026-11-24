@@ -28,6 +28,7 @@
     { "placeBuilding": { "type": "SmallHub", "anchor": [45, 13] } },
     { "setWorkedOut": { "mapCell": [8, 5], "deposit": "CrudeOil" } },
     { "placeBuilding": { "type": "RockCrusher", "anchor": [56, 14] } },
+    { "comment": "A second Burner Generator: the Forester, Quarry, Deep Mine, and Rock Crusher draw 57 Power.", "placeBuilding": { "type": "BurnerGenerator", "anchor": [52, 0] } },
     { "wait": 2700 },
     { "comment": "Half grown at 90 s.", "expect": "fields[0].growing", "equals": true },
     { "expect": "buildings[7].online", "equals": true },

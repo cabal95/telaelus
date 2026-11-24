@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
@@ -18,8 +19,7 @@ public class SaveTests
         sim.Debug.SeedStockpile(ResourceType.IronOre, 20f);
         sim.Debug.SeedStockpile(ResourceType.Iron, 40f);
         sim.Debug.SeedStockpile(ResourceType.Copper, 20f);
-        sim.Debug.PlaceBuilding(BuildingType.BurnerGenerator, 44, 0, Facing.North);
-        sim.Debug.PlaceBuilding(BuildingType.BurnerGenerator, 46, 0, Facing.North);
+        SimTestHelpers.Burners(sim, 6);
         sim.Debug.PlaceField(ResourceType.IronOre, 2, 10, 300f);
         Building mine = sim.Debug.PlaceBuilding(BuildingType.Mine, 13, 40, Facing.North);
         sim.Debug.FillBuffer(13, 40, ResourceType.IronOre, 15f);
@@ -118,6 +118,57 @@ public class SaveTests
         Assert.Equal(13f, SimTestHelpers.Stock(loaded, ResourceType.IronOre));
         Assert.Equal(2f, SimTestHelpers.Stock(loaded, ResourceType.Coal));
         Assert.Empty(loaded.Save().Buildings.Single(b => b.Id == smelter.Id).Input);
+    }
+
+    /// <summary>
+    /// A save from when the Burner Generator was 2 x 2: one standing with its 2 x 2 at (41, 21), as
+    /// such a save holds it (no saved width), with a Small Hub at a cell its 4 x 4 would need or not.
+    /// </summary>
+    private static SaveData OldBurnerSave(bool blocked)
+    {
+        var sim = new Simulation();
+        sim.Debug.ResetToEmptyMap();
+        sim.Debug.SeedStockpile(ResourceType.Coal, 5f);
+        Building burner = sim.Debug.PlaceBuilding(BuildingType.BurnerGenerator, 30, 20, Facing.North);
+        sim.Debug.PlaceBuilding(BuildingType.SmallHub, blocked ? 43 : 45, 22, Facing.North);
+        SaveData save = sim.Save();
+        BuildingData data = save.Buildings.Single(b => b.Id == burner.Id);
+        data.AnchorX = 41;
+        data.AnchorZ = 21;
+        data.Width = 0;
+        return save;
+    }
+
+    [Fact]
+    public void AnOlderSavesBurnerGenerator_GrowsAroundItsCenter()
+    {
+        Simulation loaded = Simulation.FromSave(OldBurnerSave(blocked: false));
+
+        Building burner = loaded.Buildings.Single(b => b.Type == BuildingType.BurnerGenerator);
+        Assert.Equal((40, 20), (burner.AnchorX, burner.AnchorZ));
+        Assert.Equal((4, 4), (burner.Width, burner.Depth));
+        Assert.False(loaded.CanPlace(BuildingType.SmallHub, 40, 20, Facing.North));
+        Assert.False(loaded.CanPlace(BuildingType.SmallHub, 43, 23, Facing.North));
+        Assert.True(loaded.CanPlace(BuildingType.SmallHub, 44, 20, Facing.North));
+        Assert.Equal(4, loaded.Save().Buildings.Single(b => b.Id == burner.Id).Width);
+    }
+
+    [Fact]
+    public void AnOlderSavesBurnerGenerator_ThatNoLongerFits_IsRefundedInFull_AndTold()
+    {
+        Simulation loaded = Simulation.FromSave(OldBurnerSave(blocked: true));
+        var events = new List<SimEvent>();
+        loaded.Happened += events.Add;
+
+        Assert.DoesNotContain(loaded.Buildings, b => b.Type == BuildingType.BurnerGenerator);
+        Assert.Equal(60f, SimTestHelpers.Stock(loaded, ResourceType.Stone));
+        Assert.Equal(40f, SimTestHelpers.Stock(loaded, ResourceType.Iron));
+        // Its old cells are free again.
+        Assert.True(loaded.CanPlace(BuildingType.SmallHub, 41, 21, Facing.North));
+
+        SimTestHelpers.Ticks(loaded, 2);
+        SimEvent refunded = Assert.Single(events, e => e.Kind == SimEventKind.RefundedOnLoad);
+        Assert.Equal(BuildingType.BurnerGenerator, refunded.Building);
     }
 
     [Fact]

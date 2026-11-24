@@ -121,6 +121,7 @@ public sealed partial class Simulation
 
     public void Step(double dt)
     {
+        RaiseAfterLoad();
         EnsureChunksAroundPlayer();
         WalkPlayer(dt);
         RevealAroundPlayer();

@@ -68,7 +68,7 @@ public class CapacityTests
     [Fact]
     public void AConsumerOfTwoTypes_RunsAtTheSlower()
     {
-        // Power plenty (two generators, 200 against 125); Water 10 against 8, a quarter over: 0.5.
+        // Power plenty (four generators, 140 against 125); Water 10 against 8, a quarter over: 0.5.
         Simulation sim = EmptyMap();
         sim.Debug.SeedStockpile(ResourceType.CrudeOil, 10f);
         sim.Debug.SeedStockpile(ResourceType.Coal, 10f);
@@ -78,8 +78,7 @@ public class CapacityTests
             refineries[i] = sim.Debug.PlaceBuilding(BuildingType.Refinery, 44 + 2 * i, 8, Facing.North);
             SimTestHelpers.Order(sim, refineries[i]);
         }
-        sim.Debug.PlaceBuilding(BuildingType.BurnerGenerator, 52, 12, Facing.North);
-        sim.Debug.PlaceBuilding(BuildingType.BurnerGenerator, 54, 12, Facing.North);
+        SimTestHelpers.Burners(sim, 4);
         sim.Debug.PlaceBuilding(BuildingType.WaterPump, 48, 14, Facing.North);
         sim.Debug.PlaceBuilding(BuildingType.WaterPump, 50, 14, Facing.North);
         Assert.All(SimTestHelpers.Placed(sim), b => Assert.True(b.Online));
@@ -96,23 +95,27 @@ public class CapacityTests
     [Fact]
     public void APoweredProvider_SuppliesAtItsPowerSpeed_AndNothingInAPowerBlackout()
     {
-        // Four Refineries (100) and a Pumping Station (10) on one Burner Generator (100): power at 0.8.
+        // Four Refineries (100) and a Pumping Station (10) on three Burner Generators (105): 110 / 105,
+        // a 4.8% overload, so power runs at 0.905.
         Simulation sim = EmptyMap();
         sim.Debug.SeedStockpile(ResourceType.Coal, 10f);
         for (int i = 0; i < 4; i++)
         {
             sim.Debug.PlaceBuilding(BuildingType.Refinery, 44 + 2 * i, 8, Facing.North);
         }
-        Building burner = sim.Debug.PlaceBuilding(BuildingType.BurnerGenerator, 52, 12, Facing.North);
+        Building[] burners = SimTestHelpers.Burners(sim, 3);
         sim.Debug.PlaceBuilding(BuildingType.PumpingStation, 47, 13, Facing.North);
         Assert.All(SimTestHelpers.Placed(sim), b => Assert.True(b.Online));
         SimTestHelpers.Ticks(sim, 1);
 
-        Assert.Equal(0.8f, sim.Capacity(CapacityType.Power).Speed, 3);
-        Assert.Equal(12.8f, Water(sim).Supply, 3);
+        Assert.Equal(1f - 2f * 5f / 105f, sim.Capacity(CapacityType.Power).Speed, 3);
+        Assert.Equal(16f * (1f - 2f * 5f / 105f), Water(sim).Supply, 3);
         Assert.Equal(8f, Water(sim).Demand);
 
-        sim.SetBuildingEnabled(burner.Id, false);
+        foreach (Building burner in burners)
+        {
+            sim.SetBuildingEnabled(burner.Id, false);
+        }
         SimTestHelpers.Ticks(sim, 1);
         Assert.Equal(CapacityState.Blackout, sim.Capacity(CapacityType.Power).State);
         Assert.Equal(0f, Water(sim).Supply);

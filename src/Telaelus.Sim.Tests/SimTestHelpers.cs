@@ -81,6 +81,21 @@ internal static class SimTestHelpers
         }
     }
 
+    /// <summary>
+    /// Places Burner Generators (4 x 4, 35 Power each) side by side westward from an anchor; by
+    /// default along the empty map's north edge from (52, 0), where the HQ covers up to nine (x 20
+    /// to 55, z 0 to 3).
+    /// </summary>
+    public static Building[] Burners(Simulation sim, int count, int x = 52, int z = 0)
+    {
+        var burners = new Building[count];
+        for (int i = 0; i < count; i++)
+        {
+            burners[i] = sim.Debug.PlaceBuilding(BuildingType.BurnerGenerator, x - 4 * i, z, Facing.North);
+        }
+        return burners;
+    }
+
     /// <summary>Places a building and connects it to the HQ's network (collectors work only online).</summary>
     public static Building PlaceOnline(Simulation sim, BuildingType type, int x, int z, Facing facing = Facing.North)
     {

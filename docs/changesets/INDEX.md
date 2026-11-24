@@ -267,6 +267,8 @@ Newest last. One line each; open the file for the full spec.
   range leave no gap, and a Relay links 90 for 5 Wood, 10 Stone, 5 Iron.
 - **2611241405-advanced-transfer-exclusions** - Advanced Material Transfer no longer carries Titanium
   Ore, Rare Earths, Uranium Ore, or Crystals; those come by hand or truck.
+- **2611241419-power-provider-tuning** - The Water Wheel supplies 5 Power and the Burner Generator 35 at
+  4 x 4; an old save's generator grows around its center or is refunded.
 
 ## Adding a changeset
 

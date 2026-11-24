@@ -5,7 +5,7 @@ namespace Telaelus.Sim.Tests;
 public class RefiningTests
 {
     /// <summary>
-    /// The empty map (its HQ at fine x 56..61, z 2..11) with two Burner Generators on Coal (200
+    /// The empty map (its HQ at fine x 56..61, z 2..11) with six Burner Generators on Coal (210
     /// Power), two Water Pumps on a pond at map cell (13, 4) (8 Water), and a Tank Farm for fluids,
     /// all online; fine cells x 47..52, z 4..9 are left for the building under test.
     /// </summary>
@@ -13,10 +13,9 @@ public class RefiningTests
     {
         var sim = new Simulation();
         sim.Debug.ResetToEmptyMap();
-        sim.Debug.SeedStockpile(ResourceType.Coal, 60f);
-        sim.Debug.PlaceBuilding(BuildingType.BurnerGenerator, 44, 0, Facing.North);
-        sim.Debug.PlaceBuilding(BuildingType.BurnerGenerator, 46, 0, Facing.North);
-        sim.Debug.PlaceBuilding(BuildingType.TankFarm, 48, 0, Facing.North);
+        sim.Debug.SeedStockpile(ResourceType.Coal, 180f);
+        SimTestHelpers.Burners(sim, 6);
+        sim.Debug.PlaceBuilding(BuildingType.TankFarm, 28, 0, Facing.North);
         sim.Debug.SetTerrain(13, 4, TerrainType.ShallowWater);
         sim.Debug.PlaceBuilding(BuildingType.WaterPump, 52, 14, Facing.North);
         sim.Debug.PlaceBuilding(BuildingType.WaterPump, 54, 14, Facing.North);

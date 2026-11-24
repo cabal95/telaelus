@@ -107,8 +107,8 @@ Recipes marked "(capacity only)" use only the Sand or Water they draw.
 | Vault | 0 | 3 x 3 | 40 Steel, 40 Stone |  |  |  | raises storage limits |
 | Small Hub | 0 | 1 x 1 | 10 Wood, 5 Stone |  |  |  | network: covers 11, links 22 units |
 | Relay | 0 | 2 x 2 | 5 Wood, 10 Stone, 5 Iron |  |  |  | network: covers 3, links 90 units |
-| Water Wheel | 0 | 4 x 2 | 40 Wood, 20 Stone |  | 20 Power |  |  |
-| Burner Generator | 0 | 2 x 2 | 60 Stone, 40 Iron |  | 100 Power | fuel: Coal, Charcoal, Wood |  |
+| Water Wheel | 0 | 4 x 2 | 40 Wood, 20 Stone |  | 5 Power |  |  |
+| Burner Generator | 0 | 4 x 4 | 60 Stone, 40 Iron |  | 35 Power | fuel: Coal, Charcoal, Wood |  |
 | Lumber Mill | 1 | 3 x 3 | 30 Wood, 20 Iron | 5 Power |  |  | works Wood (radius 8, speed 2) |
 | Drill Rig | 1 | 3 x 3 | 30 Iron, 20 Stone | 10 Power |  |  | works Iron Ore, Copper Ore, Coal, Stone, Bauxite, Quartz, Limestone, Sulfur, Titanium Ore, Rare Earths, Uranium Ore, Crystals (radius 8, speed 2) |
 | Water Pump | 0 | 2 x 2 | 20 Wood, 10 Stone |  | 4 Water |  |  |
@@ -241,8 +241,8 @@ Recipes marked "(capacity only)" use only the Sand or Water they draw.
 
 | Provider | Footprint | Cost | Supplies | Draws | Placement |
 |---|---|---|---|---|---|
-| Water Wheel | 4 x 2 | 40 Wood, 20 Stone | 20 Power | | Across a Straight river map cell (below); runs whenever it stands |
-| Burner Generator | 2 x 2 | 60 Stone, 40 Iron | 100 Power | | Standard; burns fuel whenever switched on |
+| Water Wheel | 4 x 2 | 40 Wood, 20 Stone | 5 Power | | Across a Straight river map cell (below); runs whenever it stands |
+| Burner Generator | 4 x 4 | 60 Stone, 40 Iron | 35 Power | | Standard; burns fuel whenever switched on |
 | Water Pump | 2 x 2 | 20 Wood, 10 Stone | 4 Water | | BesideWater |
 | Pumping Station | 3 x 3 | 40 Iron, 20 Stone | 16 Water | 10 Power | BesideWater |
 | Sand Collector | 2 x 2 | 20 Wood, 10 Stone | 2 Sand | | OnSand |
@@ -256,6 +256,9 @@ Recipes marked "(capacity only)" use only the Sand or Water they draw.
 | Refinery | 2 x 3 | as above | 25 Power, 2 Water (its cooling) | | | 10 |
 | Glassworks | 3 x 6 | 40 Stone, 20 Wood | 2 Sand | | | 10 |
 
+- Early power is small on purpose: Water Wheels and Burner Generators keep a starting base going,
+  while the heavy makers (40 to 80 Power each) push a growing base toward the later power
+  buildings (Solar Arrays, Battery Banks, the Fission Reactor).
 - The small providers and the Glassworks are tier 0; the Pumping Station, Sand Dredge, Lumber
   Mill, Drill Rig, and Refinery tier 1. A Pumping Station is four Pumps' worth for some Power, and
   a Sand Dredge four Collectors'.
