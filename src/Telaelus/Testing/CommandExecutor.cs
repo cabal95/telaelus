@@ -642,6 +642,37 @@ public sealed class CommandExecutor
         return false;
     }
 
+    /// <summary>
+    /// Moves the pointer over a registered UI control and holds the left button down there for a
+    /// number of frames, releasing on the last; the scenario waits until the release. Fails when
+    /// the control is not on screen or a scroll container clips it (hover it first to scroll).
+    /// </summary>
+    public StepOutcome HoldUi(string id, int frames)
+    {
+        if (_root.Dialogs.Find(id) is not Control control)
+        {
+            return new StepOutcome(false, $"no visible UI control '{id}'");
+        }
+        if (ScrollIntoView(control))
+        {
+            return new StepOutcome(false, $"'{id}' was scrolled out of view; hoverUi it first");
+        }
+        frames = System.Math.Max(1, frames);
+        Vector2 screen = _root.Dialogs.ScreenCenter(control);
+        PushUi(MotionEvent(screen));
+        PushUi(MouseEvent(screen, true));
+        for (int i = 1; i < frames; i++)
+        {
+            _dragFrames.Enqueue(new List<InputEvent>());
+        }
+        _dragFrames.Enqueue(new List<InputEvent>
+        {
+            MouseEvent(screen, false)
+        });
+        _waitFrames = frames + 1;
+        return StepOutcome.Ok;
+    }
+
     /// <summary>Moves the pointer over a registered UI control (its hover state and tooltip follow).</summary>
     public StepOutcome HoverUi(string id)
     {

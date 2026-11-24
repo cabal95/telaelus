@@ -196,6 +196,10 @@ The two kinds place themselves:
   belongs to the camera, so it must never press the last-clicked button again.
 - **Destructive buttons** ask once: the first click changes the label to a confirmation ("Confirm
   destroy") for 3 seconds, and only a second click in that time acts. Buttons act on release.
+- **Step buttons** (`StepButton`, the "-" and "+" of an up/down value) act on press instead: one
+  step as the mouse button goes down, then, still held after 0.5 s, 15 steps a second until
+  released. Leaving the button or its turning disabled (the value at a limit) stops the repeat. It
+  is timed by the frame, so it runs while the game is paused. Their tooltips end "Hold to repeat."
 - **Icon rows:** a 22-unit resource icon, then the name and the amount in parentheses, as
   "Iron (23)"; hovering a row lightens its background (`CellHover`). The inventory lists them.
 - **Status rows:** a two-column grid of 14 px label (in `TextDim`) and value (in `Text`) pairs;

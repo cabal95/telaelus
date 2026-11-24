@@ -284,7 +284,9 @@ pausing it and stepping frame by frame.
     scenario waits until the release; pushed through the viewport like real input), `clickUi`
     `{ id }` (moves the pointer over a registered UI control and clicks it, released the next
     frame), `hoverUi` `{ id }` (moves the pointer over one, so its hover state and tooltip
-    show), and `scrollUi` `{ id, ticks }` (turns the wheel over one: positive ticks down,
+    show), `holdUi` `{ id, frames }` (moves the pointer over one and holds the left button down
+    for the frames, released on the last; the scenario waits for the release; a control clipped by
+    a scroll container must be hovered into view first), and `scrollUi` `{ id, ticks }` (turns the wheel over one: positive ticks down,
     negative up). When a scroll container clips the control, `clickUi` and `hoverUi` first scroll
     it into view, as a player would, and act a frame later, once the layout has settled. Keys are Godot `Key` names (`R`, `E`, `B`, `Escape`). UI ids are a dialog's id and a
     control's name: `buildMenu/<BuildingType>` for a cell (`buildMenu/Road` and `buildMenu/Bridge` for the line tools), `buildingDetail/toggle` and
@@ -546,8 +548,8 @@ pausing it and stepping frame by frame.
   `power` (a Drill Rig with no supply is in a blackout; two Burner Generators on Coal power it; three
   then four Refineries push demand into a brownout at 57% and a blackout, on the top bar; the
   generator's panel shows its supply and Best fuel),
-  `crafting-queue` (a Smelter idle "Queue empty"; its panel's quantity stepping by a cycle and
-  Craft adding an order; its Burning row naming Coal's +30% speed; a later Iron order going after
+  `crafting-queue` (a Smelter idle "Queue empty"; its panel's "+" held 1.5 s climbing to 17
+  cycles, "-" held back to one, and a click stepping one cycle; Craft adding an order; its Burning row naming Coal's +30% speed; a later Iron order going after
   a Copper one; an order's X removing it;
   the first order counting down and the Smelter idle when the queue is done; the line under the
   picker naming the recipe's needs, and its input short once storage runs out; windowed screenshots

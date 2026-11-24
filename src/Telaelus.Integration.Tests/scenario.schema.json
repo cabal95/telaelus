@@ -83,6 +83,7 @@
         { "$ref": "#/definitions/clickUi" },
         { "$ref": "#/definitions/hoverUi" },
         { "$ref": "#/definitions/scrollUi" },
+        { "$ref": "#/definitions/holdUi" },
         { "$ref": "#/definitions/wait" },
         { "$ref": "#/definitions/pause" },
         { "$ref": "#/definitions/resume" },
@@ -754,6 +755,24 @@
           "properties": {
             "id": { "type": "string" },
             "ticks": { "type": "integer" }
+          }
+        },
+        "comment": { "$ref": "#/definitions/comment" }
+      }
+    },
+    "holdUi": {
+      "description": "Hold the left mouse button down over a named UI control for this many frames, releasing on the last.",
+      "type": "object",
+      "required": ["holdUi"],
+      "additionalProperties": false,
+      "properties": {
+        "holdUi": {
+          "type": "object",
+          "required": ["id", "frames"],
+          "additionalProperties": false,
+          "properties": {
+            "id": { "type": "string" },
+            "frames": { "type": "integer", "minimum": 1 }
           }
         },
         "comment": { "$ref": "#/definitions/comment" }

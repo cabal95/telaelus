@@ -271,9 +271,9 @@ ui-style.md. There is no text HUD; the screen holds:
   out the chosen recipe as the Recipe row does ("1 Iron Ore to 1 Iron, 16 s"), each input storage
   holds less than a cycle's worth of in `Danger` (an input with alternatives only when every one
   is short). A queueing processor then has its order
-  controls: a quantity in items between "-" and "+" buttons (`buildingDetail/less`,
-  `buildingDetail/more`), each a cycle of the chosen recipe (Shift: ten), from one cycle (where it
-  starts, and again on a new recipe) to 99; a Craft button (`buildingDetail/craft`, calling
+  controls: a quantity in items between "-" and "+" step buttons (`buildingDetail/less`,
+  `buildingDetail/more`; ui-style.md, repeating while held), each step a cycle of the chosen
+  recipe, from one cycle (where it starts, and again on a new recipe) to 99; a Craft button (`buildingDetail/craft`, calling
   `QueueCraft`; disabled when the queue is full and its last order is another recipe); and under
   a dim "Queue" label a row per order ("Iron x 5", the first "(crafting)" while its cycle runs),
   each with an X (`buildingDetail/queue/0` and on, calling `CancelCraft`), or "Queue empty". Its

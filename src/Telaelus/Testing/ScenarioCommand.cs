@@ -332,6 +332,12 @@ public sealed class ScenarioCommand
                     string id = Label(Required(arg, "id"), "id");
                     return e => e.ClickUi(id);
                 }
+            case "holdUi":
+                {
+                    string id = Label(Required(arg, "id"), "id");
+                    int frames = Int(Required(arg, "frames"), "frames");
+                    return e => e.HoldUi(id, frames);
+                }
             case "hoverUi":
                 {
                     string id = Label(Required(arg, "id"), "id");

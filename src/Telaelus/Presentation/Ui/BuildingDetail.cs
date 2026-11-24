@@ -56,9 +56,9 @@ public partial class BuildingDetail : Dialog
     private int _selected;
     private int _quantity;
     private HBoxContainer _orderRow = null!;
-    private Button _less = null!;
+    private StepButton _less = null!;
     private Label _quantityLabel = null!;
-    private Button _more = null!;
+    private StepButton _more = null!;
     private Button _craft = null!;
     private Label _queueLabel = null!;
     private VBoxContainer _queue = null!;
@@ -235,16 +235,16 @@ public partial class BuildingDetail : Dialog
             MouseFilter = MouseFilterEnum.Ignore
         };
         _orderRow.AddThemeConstantOverride("separation", UiTheme.Gap / 2);
-        _less = OrderButton("Less", "-", "One cycle fewer (Shift: ten)");
-        _less.Pressed += () => StepQuantity(-1);
+        _less = StepperButton("Less", "-", "One cycle fewer. Hold to repeat.");
+        _less.Step += () => StepQuantity(-1);
         _orderRow.AddChild(_less);
         _quantityLabel = UiTheme.MakeLabel("", UiTheme.BodySize);
         _quantityLabel.CustomMinimumSize = new Vector2(36f, 0f);
         _quantityLabel.HorizontalAlignment = HorizontalAlignment.Center;
         _quantityLabel.VerticalAlignment = VerticalAlignment.Center;
         _orderRow.AddChild(_quantityLabel);
-        _more = OrderButton("More", "+", "One cycle more (Shift: ten)");
-        _more.Pressed += () => StepQuantity(1);
+        _more = StepperButton("More", "+", "One cycle more. Hold to repeat.");
+        _more.Step += () => StepQuantity(1);
         _orderRow.AddChild(_more);
         _craft = OrderButton("Craft", "Craft", null);
         _craft.SizeFlagsHorizontal = SizeFlags.ExpandFill;
@@ -407,6 +407,21 @@ public partial class BuildingDetail : Dialog
         };
         Body.AddChild(_destroy);
         Host.Register(Id + "/destroy", _destroy);
+    }
+
+    /// <summary>The quantity's "-" or "+": a <see cref="StepButton"/> that repeats while held.</summary>
+    private StepButton StepperButton(string name, string text, string tip)
+    {
+        var button = new StepButton
+        {
+            Name = name,
+            Text = text,
+            TooltipText = tip,
+            FocusMode = FocusModeEnum.None,
+            CustomMinimumSize = new Vector2(28f, 0f)
+        };
+        Host.Register(Id + "/" + char.ToLowerInvariant(name[0]) + name[1..], button);
+        return button;
     }
 
     private Button OrderButton(string name, string text, string? tip)
@@ -757,8 +772,8 @@ public partial class BuildingDetail : Dialog
         {
             return;
         }
-        int step = PerCycle(building) * (Input.IsKeyPressed(Key.Shift) ? 10 : 1);
-        _quantity = Mathf.Clamp(_quantity + direction * step, PerCycle(building), MaxCycles * PerCycle(building));
+        int step = PerCycle(building);
+        _quantity = Mathf.Clamp(_quantity + direction * step, step, MaxCycles * step);
         Refresh();
     }
 

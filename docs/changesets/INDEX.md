@@ -273,6 +273,8 @@ Newest last. One line each; open the file for the full spec.
   Coal than on Wood; generators supply the same on any fuel.
 - **2611241432-flat-network-overlay** - Network coverage draws as one even tint however many hubs
   overlap, online over offline, with the placement ghost on top.
+- **2611241441-hold-to-repeat-steppers** - Up/down buttons step on press and repeat 15 a second after a
+  0.5 s hold; the crafting quantity uses them and loses its Shift step.
 
 ## Adding a changeset
 
