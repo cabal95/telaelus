@@ -88,13 +88,12 @@ public class NetworkTests
     }
 
     [Fact]
-    public void CollectingByHand_MovesOneUnitPerTenthOfTheGatherTime_IntoStorage()
+    public void CollectingByHand_TakesTheWholeBuffer_InOneHalfSecondHold()
     {
         Simulation sim = EmptyMap();
-        sim.Debug.PlaceField(ResourceType.IronOre, 3, 3, 100f);
-        Building mine = SimTestHelpers.PlaceOnline(sim, BuildingType.Mine, 12, 10);
-        SimTestHelpers.Seconds(sim, 40.5);
-        Assert.Equal(5f, mine.OutputCount);
+        Building mine = sim.Debug.PlaceBuilding(BuildingType.Mine, 12, 10, Facing.North);
+        mine.Output[ResourceType.IronOre] = 12f;
+        mine.Output[ResourceType.Stone] = 5f;
 
         SimTestHelpers.Teleport(sim, 11.5f, 11f);
         sim.Intent = new PlayerIntent
@@ -104,10 +103,33 @@ public class NetworkTests
         SimTestHelpers.Ticks(sim, 1);
         Assert.Same(mine, sim.InteractTarget);
         Assert.Null(sim.HarvestTarget);
+        // The hint names the first type in table order (Stone) and counts the rest.
+        Assert.Equal((5f, 1), sim.InteractHeld());
 
-        // Iron Ore takes 6 s by hand, so 0.6 s a unit: two units in 1.25 s.
-        SimTestHelpers.Seconds(sim, 1.25);
-        Assert.Equal(2f, SimTestHelpers.Stock(sim, ResourceType.IronOre));
+        // Nothing moves before the hold is done, then everything does.
+        SimTestHelpers.Seconds(sim, 0.4);
+        Assert.Equal(0f, SimTestHelpers.Stock(sim, ResourceType.IronOre));
+        SimTestHelpers.Seconds(sim, 0.15);
+        Assert.Equal(12f, SimTestHelpers.Stock(sim, ResourceType.IronOre));
+        Assert.Equal(5f, SimTestHelpers.Stock(sim, ResourceType.Stone));
+        Assert.Equal(0f, mine.OutputCount);
+    }
+
+    [Fact]
+    public void CollectingByHand_LeavesWhatStorageHasNoRoomFor()
+    {
+        Simulation sim = EmptyMap();
+        sim.Debug.SeedStockpile(ResourceType.IronOre, 55f);
+        Building mine = sim.Debug.PlaceBuilding(BuildingType.Mine, 12, 10, Facing.North);
+        mine.Output[ResourceType.IronOre] = 8f;
+        mine.Output[ResourceType.Stone] = 3f;
+
+        SimTestHelpers.CollectByHand(sim, mine);
+
+        Assert.Equal(60f, SimTestHelpers.Stock(sim, ResourceType.IronOre));
+        Assert.Equal(3f, SimTestHelpers.Stock(sim, ResourceType.Stone));
+        Assert.Equal(3f, mine.Output[ResourceType.IronOre]);
+        Assert.True(sim.InteractBlocked);
     }
 
     [Fact]

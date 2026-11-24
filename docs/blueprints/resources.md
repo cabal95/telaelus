@@ -246,13 +246,14 @@ buildings.md). A single global stockpile holds all amounts, within storage limit
   footprint) that has something to collect, unless a hand-harvestable field is nearer; a
   building wins a tie. While a building is the target there is no harvest target.
 - **Collect:** a building with units in its output buffer, online or offline (an offline
-  building makes nothing, but what it holds can still be carried in). Each unit (the
-  first type in table order, at most 1) moves into storage after the resource's gather time over 10
-  (`HandMoveSpeedup`), or 0.3 s (`HandMoveSeconds`) for a resource with no gather time; Iron Ore
-  takes 0.6 s. With no room for the next unit (`InteractBlocked`) progress waits and the hint says
-  "Storage full".
-- `InteractProgress` runs 0 to 1 per unit and resets on release or a new target;
-  `InteractResource` and `InteractHeld` give the hint its resource and count.
+  building makes nothing, but what it holds can still be carried in). One hold of
+  `HandCollectSeconds` (0.5 s), whatever the buffer holds, moves every type into storage at once,
+  each as far as storage has room (a type needs room for a unit, or for all of it when less is
+  left). What does not fit stays in the buffer, and the next hold collects it once there is room.
+  With room for none of it (`InteractBlocked`) progress waits and the hint says "Storage full".
+- `InteractProgress` runs 0 to 1 over the hold and resets on release or a new target;
+  `InteractResource` (the first type in table order) and `InteractHeld` (its count and how many
+  other types the buffer holds) give the hint its text.
 
 ### Rendering
 

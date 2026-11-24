@@ -142,7 +142,8 @@ ui-style.md. There is no text HUD; the screen holds:
   ship launch is not on the bar: it is the Shipyard's panel's.
 - **Hint overlay** (`HintOverlay`): below the top bar, the E key's action with the resource's
   icon and a progress bar toward the next unit: "[E] Harvest Wood" while a hand-harvestable field is
-  the target, "[E] Collect Iron Ore (12)" (units left in the output buffer) while a building is; while storage has no room for the
+  the target, "[E] Collect Iron Ore (12)" (units of the first type in the output buffer, with "+1 more" for
+  each further type: "[E] Collect Stone (5) +1 more") while a building is; while storage has no room for the
   resource, "Storage full" in `Warning` replaces the bar.
 - **Notifications** (`Notifications`, look in ui-style.md): `GameRoot` collects the sim's
   `Happened` events and, once a frame, turns them into toasts (`NotificationText`): a resource

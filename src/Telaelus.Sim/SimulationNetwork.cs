@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Godot;
 
 namespace Telaelus.Sim;
@@ -10,34 +11,35 @@ namespace Telaelus.Sim;
 /// linked to the HQ, directly or through others, are online, and so is every building whose
 /// footprint comes within an online hub's coverage radius of its center. Switched-off hubs
 /// neither link nor cover. The network is recomputed when a building is placed, destroyed, or
-/// switched, never per tick. Holding the harvest intent beside a building collects its output
-/// buffer into storage, one unit at a time at ten times hand-harvest speed.
+/// switched, never per tick. Holding the harvest intent beside a building for
+/// <see cref="HandCollectSeconds"/> collects everything in its output buffer that storage has room for.
 /// </summary>
 public sealed partial class Simulation
 {
-    /// <summary>Seconds per unit moved by hand for a resource with no gather time.</summary>
-    public const float HandMoveSeconds = 0.3f;
-
-    /// <summary>How much faster moving units by hand is than gathering them.</summary>
-    public const float HandMoveSpeedup = 10f;
+    /// <summary>Seconds of holding the harvest intent to collect a building's whole output buffer.</summary>
+    public const float HandCollectSeconds = 0.5f;
 
     /// <summary>The building the player would collect from, or null.</summary>
     public Building? InteractTarget { get; private set; }
 
-    /// <summary>Progress toward moving the next unit, 0 to 1.</summary>
+    /// <summary>Progress toward collecting the target's buffer, 0 to 1.</summary>
     public float InteractProgress { get; private set; }
 
-    /// <summary>Whether collecting is stalled because storage has no room for the next unit.</summary>
-    public bool InteractBlocked => InteractTarget is Building building
-        && NextCollect(building) is (ResourceType type, float amount) && !HasRoom(type, amount);
+    /// <summary>Whether collecting is stalled because storage has room for none of what the buffer holds.</summary>
+    public bool InteractBlocked => InteractTarget is Building building && !Collectable(building).Any();
 
-    /// <summary>The resource the interaction moves next, or null.</summary>
-    public ResourceType? InteractResource => InteractTarget is Building building ? NextCollect(building)?.Type : null;
+    /// <summary>The first resource (in table order) in the target's output buffer, or null.</summary>
+    public ResourceType? InteractResource => InteractTarget is Building building ? Held(building).FirstOrDefault().Type : null;
 
-    /// <summary>For the hint: the units of the next resource left in the target's output buffer.</summary>
-    public float InteractHeld()
+    /// <summary>For the hint: the units of the first resource in the target's output buffer, and how many other types it holds.</summary>
+    public (float Held, int MoreTypes) InteractHeld()
     {
-        return InteractTarget is Building building && InteractResource is ResourceType type ? Held(building.Output, type) : 0f;
+        if (InteractTarget is not Building building)
+        {
+            return (0f, 0);
+        }
+        List<(ResourceType Type, float Amount)> held = Held(building).ToList();
+        return held.Count == 0 ? (0f, 0) : (held[0].Amount, held.Count - 1);
     }
 
     /// <summary>Distance from a point to the nearest point of a building's footprint (0 inside).</summary>
@@ -159,23 +161,23 @@ public sealed partial class Simulation
 
     // ---- Hand interaction -------------------------------------------------
 
-    private static float HandSeconds(ResourceType type)
-    {
-        return ResourceDefs.For(type).GatherSeconds is float seconds ? seconds / HandMoveSpeedup : HandMoveSeconds;
-    }
-
-    /// <summary>The next unit to collect from a building's output buffer (first in table order), or null.</summary>
-    private static (ResourceType Type, float Amount)? NextCollect(Building building)
+    /// <summary>What a building's output buffer holds, by type in table order.</summary>
+    private static IEnumerable<(ResourceType Type, float Amount)> Held(Building building)
     {
         foreach (ResourceType type in Enum.GetValues<ResourceType>())
         {
             float have = Held(building.Output, type);
             if (have > RoomTolerance)
             {
-                return (type, Math.Min(have, 1f));
+                yield return (type, have);
             }
         }
-        return null;
+    }
+
+    /// <summary>The types in a building's output buffer storage has room for (at least a unit, or all of a smaller amount).</summary>
+    private IEnumerable<ResourceType> Collectable(Building building)
+    {
+        return Held(building).Where(h => HasRoom(h.Type, Math.Min(h.Amount, 1f))).Select(h => h.Type);
     }
 
     /// <summary>
@@ -193,7 +195,7 @@ public sealed partial class Simulation
         foreach (Building building in _buildings)
         {
             float distance = DistanceToReach(Player.Position, building);
-            if (distance <= bestDistance && NextCollect(building) is not null)
+            if (distance <= bestDistance && building.OutputCount > RoomTolerance)
             {
                 bestDistance = distance;
                 best = building;
@@ -212,25 +214,32 @@ public sealed partial class Simulation
         }
     }
 
-    /// <summary>Works toward collecting one unit from the target building.</summary>
+    /// <summary>
+    /// Works toward collecting the target's output buffer; once the hold is done, every type moves
+    /// to storage as far as it has room. What does not fit stays for another hold.
+    /// </summary>
     private void Interact(double dt)
     {
-        if (InteractTarget is not Building building)
-        {
-            return;
-        }
-        if (NextCollect(building) is not (ResourceType type, float amount) || InteractBlocked)
+        if (InteractTarget is not Building building || InteractBlocked)
         {
             return;
         }
 
-        InteractProgress += (float)dt / HandSeconds(type);
+        InteractProgress += (float)dt / HandCollectSeconds;
         if (InteractProgress < 1f)
         {
             return;
         }
         InteractProgress = 0f;
-        Put(building.Output, type, -amount);
-        AddToStockpile(type, amount);
+        foreach ((ResourceType type, float have) in Held(building).ToList())
+        {
+            float take = Math.Min(have, RoomFor(type));
+            if (take < Math.Min(have, 1f) - RoomTolerance)
+            {
+                continue;
+            }
+            Put(building.Output, type, -take);
+            AddToStockpile(type, take);
+        }
     }
 }

@@ -84,7 +84,8 @@ public partial class HintOverlay : HudOverlay
             type = moving;
             blocked = sim.InteractBlocked;
             _verb.Text = "[E] Collect";
-            _name.Text = $"{ResourceDefs.For(moving).Name} ({Mathf.CeilToInt(sim.InteractHeld())})";
+            (float held, int more) = sim.InteractHeld();
+            _name.Text = $"{ResourceDefs.For(moving).Name} ({Mathf.CeilToInt(held)})" + (more > 0 ? $" +{more} more" : "");
             _progress.Value = sim.InteractProgress;
         }
         else if (sim.HarvestTarget is ResourceField field)

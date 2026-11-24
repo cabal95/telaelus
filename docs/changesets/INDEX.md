@@ -257,6 +257,8 @@ Newest last. One line each; open the file for the full spec.
   Burning rows lose their empty parts.
 - **2611241306-destroy-refund-tooltip** - The Destroy button reads "Destroy" with its refund in a hover
   tooltip, and side panels hold their width whatever their content.
+- **2611241311-collect-all-by-hand** - Holding E at a building collects its whole output buffer, every
+  type, in one 0.5 s hold, as far as storage has room.
 
 ## Adding a changeset
 

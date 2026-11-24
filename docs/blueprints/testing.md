@@ -118,7 +118,7 @@ pausing it and stepping frame by frame.
   2; the Water Wheel only across a Straight river cell, supplying 20 online.
 - `NetworkTests`: hubs linking within the larger link radius; coverage reaching a footprint's
   nearest point; switching off or destroying a hub cutting its branch; an extractor filling its
-  buffer and waiting for pickup; collecting by hand at a tenth of the gather time and stopping on
+  buffer and waiting for pickup; collecting a whole two-type buffer by hand in one 0.5 s hold, leaving what storage has no room for, and stopping on
   full storage; an offline processor doing nothing and offering nothing to load; a processor
   going offline holding its cycle and finishing it once online; cancelling an offline cycle
   returning its inputs to storage; destroying

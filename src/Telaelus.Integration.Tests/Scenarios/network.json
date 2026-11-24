@@ -18,7 +18,7 @@
     { "wait": 2 },
     { "screenshot": "offline-mine" },
 
-    { "comment": "Standing at the Mine, E collects: 0.6 s a unit of Iron Ore.", "teleportPlayer": { "x": 25, "z": 34 } },
+    { "comment": "Standing at the Mine, E collects the whole buffer in one 0.5 s hold.", "teleportPlayer": { "x": 25, "z": 34 } },
     { "wait": 2 },
     { "expect": "ui.hint.text", "equals": "[E] Collect Iron Ore (1)" },
     { "keyDown": "E" },
