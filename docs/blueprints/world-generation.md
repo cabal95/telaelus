@@ -98,11 +98,23 @@ few chunks varies, as large biomes do.
 | Grassland | Grass | ShallowWater ponds |
 | Forest | Grass | none |
 | Highlands | Rock | Grass in the lower parts |
-| Desert | Sand | Rock outcrops |
+| Desert | Sand | Rock outcrops; salt flats (below) |
 | Swamp | Mud | ShallowWater pockets |
 | Tundra | Snow | Rock outcrops |
 | Volcanic | Rock | Lava pools |
 | Ocean | DeepWater | ShallowWater within 2 cells of land |
+
+**Salt flats.** Desert Sand gains salt flats (terrain.md) from placed sites, after the patches.
+Each square of `SaltFlatSpacing` (18) map cells holds one site: an ellipse at a hashed spot in the
+square with hashed half-widths from `SaltFlatMinRadius` (1.75) to `SaltFlatMaxRadius` (3) map
+cells, its edge roughened by a little noise. A cell inside a site becomes SaltFlat when it and its
+8 neighbors are all Desert Sand (so a flat borders only Sand, and never a rock outcrop, the sea,
+or another biome), and it lies in a 2 x 2 block of such cells (so the smallest flat holds a Brine
+Well). Sites that land off Desert Sand make nothing, and edges trim others, so a desert holds
+about one flat per 400 of its map cells, 2 to 6 cells across (most 3 to 6), about 14 cells each.
+Flats take no mountains, rivers (a river reaching one ends at its rim), fields, or motherlodes.
+Chunks saved before salt flats existed keep their terrain (saving.md); only chunks generated since
+have them, so a flat may stop short at such a chunk's border.
 
 **Mountains.** In Highlands and Tundra, ridged noise above a threshold makes ranges, and a second
 noise field breaks them into segments, so ranges always have passes. Grassland, Forest, and
@@ -137,8 +149,8 @@ fields, 1600 in Highlands and Volcanic, 2000 for Forest Wood and Crude Oil, and 
 precious Rare Earths, Uranium Ore, and Crystals: fewer and larger fields than at first (four times
 the amount, a third of the density, the Forest half), so a found field lasts most of the mid game.
 
-A cell is a candidate when a hash falls below its biome's density, its terrain is walkable, it has
-no feature, and it is not within 2 cells of the spawn; a candidate becomes a field only if none of
+A cell is a candidate when a hash falls below its biome's density, its terrain is walkable and not
+a salt flat, it has no feature, and it is not within 2 cells of the spawn; a candidate becomes a field only if none of
 its 8 neighbors is a candidate with a lower hash, so fields never touch and paths stay open. A
 second hash picks the type by weight, and the field takes the biome's amount for it.
 
@@ -171,7 +183,8 @@ second hash picks the type by weight, and the field takes the biome's amount for
   are dropped, so fields still never touch. The bounded maps have no starter set.
 - **Motherlodes:** each chunk has a `MotherlodeChance` (1 in 5, by a hash of the seed and the
   chunk) of one motherlode (resources.md). It goes on the 2 x 2 block of map cells, with its ring
-  of cells around it inside the chunk, whose four cells are open (walkable, no feature) and of
+  of cells around it inside the chunk, whose four cells are open (walkable, not a salt flat, no
+  feature) and of
   biomes that host its kind, at least `MotherlodeSpawnDistance` (24) map cells from the spawn, with
   the lowest cell hash; the kind is the block's biome's, a second hash picking where the biome hosts
   two. Rolled fields on or touching the block are dropped. `GeneratedChunk.Motherlodes` carries

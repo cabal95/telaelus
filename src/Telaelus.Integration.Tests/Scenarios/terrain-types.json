@@ -1,7 +1,7 @@
 {
   "$schema": "../scenario.schema.json",
   "name": "terrain-types",
-  "description": "Every terrain type, a mountain on each ground that takes one (both model families), and rivers in every shape on grass, sand, snow, mud, and rock (with a mouth into water) render; a river channel blocks placement while its bank allows it; the snapshot reports the terrain, biome, and feature under the player.",
+  "description": "Every terrain type (a salt flat in a ring of sand), a mountain on each ground that takes one (both model families), and rivers in every shape on grass, sand, snow, mud, and rock (with a mouth into water) render; a river channel blocks placement while its bank allows it; the snapshot reports the terrain, biome, and feature under the player.",
   "steps": [
     { "newGame": {} },
     { "initMap": {} },
@@ -51,6 +51,14 @@
     { "teleportPlayer": { "x": 45.5, "z": 25.5 } },
     { "expect": "player.terrain", "equals": "Snow" },
     { "expect": "player.feature", "equals": "Mountain" },
+    { "comment": "A salt flat in desert sand: map cells (13..14, 3..4) inside a sand ring (12..15, 2..5).", "changeTiles": { "type": "Sand", "biome": "Desert", "from": [12, 2], "to": [15, 5] } },
+    { "changeTiles": { "type": "SaltFlat", "from": [13, 3], "to": [14, 4] } },
+    { "teleportPlayer": { "x": 56, "z": 16 } },
+    { "expect": "player.terrain", "equals": "SaltFlat" },
+    { "expect": "player.biome", "equals": "Desert" },
+    { "cameraZoom": { "size": 20 } },
+    { "wait": 10 },
+    { "screenshot": "salt-flat" },
     { "teleportPlayer": { "x": 26, "z": 34 } },
     { "cameraZoom": { "size": 20 } },
     { "press": "B" },

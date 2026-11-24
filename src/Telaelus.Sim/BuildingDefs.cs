@@ -729,7 +729,7 @@ public static class BuildingDefs
     }, Array.Empty<ResourceType>(), 0f)
     {
         Tier = 1,
-        Placement = Placement.OnDesertSand,
+        Placement = Placement.OnSaltFlat,
         OutputBuffer = 10f,
         Draws = new Dictionary<CapacityType, float>
         {

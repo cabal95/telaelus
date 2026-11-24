@@ -11,7 +11,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from export_glb import read_obj  # noqa: E402
 
 MODELS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "models")
-PRIORITY = {"grass": 6, "snow": 5, "sand": 4, "mud": 3, "rock": 2, "lava": 1, "shallow_water": 0, "deep_water": 0}
+PRIORITY = {"grass": 7, "snow": 6, "sand": 5, "salt_flat": 4, "mud": 3, "rock": 2, "lava": 1, "shallow_water": 0,
+            "deep_water": 0}
 DIRS = {"N": (0, -1), "E": (1, 0), "S": (0, 1), "W": (-1, 0)}
 EDGE_YAW = {"N": 0, "W": 90, "S": 180, "E": 270}
 ROT = {"N": "W", "W": "S", "S": "E", "E": "N"}  # what +90 degrees does to an edge
@@ -112,12 +113,13 @@ def compose(terrain, rivers, out):
 
 
 LAYOUTS = {
-    # Every terrain beside others, shorelines on shallow and deep water, and lava.
+    # Every terrain beside others, shorelines on shallow and deep water, and lava; a salt flat in
+    # sand, as the game places one.
     "ground": ([
-        ["grass", "grass", "sand", "sand", "snow"],
-        ["grass", "shallow_water", "shallow_water", "sand", "snow"],
-        ["mud", "shallow_water", "deep_water", "rock", "rock"],
-        ["mud", "mud", "lava", "lava", "rock"],
+        ["grass", "grass", "sand", "sand", "snow", "sand", "sand"],
+        ["grass", "shallow_water", "shallow_water", "sand", "snow", "sand", "salt_flat"],
+        ["mud", "shallow_water", "deep_water", "rock", "rock", "sand", "salt_flat"],
+        ["mud", "mud", "lava", "lava", "rock", "sand", "sand"],
     ], {}),
     # Every river shape: a cross and a junction on grass draining into a pond, and a bend,
     # straights, ends and a pool on sand.

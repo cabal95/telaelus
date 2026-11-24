@@ -1,0 +1,18 @@
+newmtl salt_flat_105
+Kd 0.924 0.903 0.840
+
+newmtl salt_flat
+Kd 0.880 0.860 0.800
+
+newmtl salt_flat_94
+Kd 0.827 0.808 0.752
+
+newmtl salt_flat_72
+Kd 0.634 0.619 0.576
+
+newmtl salt_crack
+Kd 0.700 0.670 0.600
+
+newmtl salt_crack_90
+Kd 0.630 0.603 0.540
+

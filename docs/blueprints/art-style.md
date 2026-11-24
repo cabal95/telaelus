@@ -38,6 +38,8 @@ or 1.05 for facet variation). A new material extends the table.
 |---|---|---|
 | grass | 0.33, 0.49, 0.27 | Grass ground |
 | sand | 0.78, 0.70, 0.48 | Sand ground |
+| salt_flat | 0.88, 0.86, 0.80 | Salt flat ground (a warm off-white, apart from snow's cool white) |
+| salt_crack | 0.70, 0.67, 0.60 | The ridges of a salt flat's crust |
 | snow | 0.90, 0.92, 0.95 | Snow ground |
 | rock | 0.48, 0.46, 0.44 | Rock ground, pebbles |
 | mud | 0.38, 0.32, 0.22 | Mud ground |

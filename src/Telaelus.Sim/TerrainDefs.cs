@@ -11,9 +11,12 @@ public sealed record TerrainDef(bool Walkable, float Speed, bool Buildable, bool
 /// <summary>The definition table for every terrain type.</summary>
 public static class TerrainDefs
 {
-    private static readonly TerrainDef Grass = new(Walkable: true, Speed: 1f, Buildable: true, TakesFeatures: true, DrawPriority: 6);
-    private static readonly TerrainDef Snow = new(Walkable: true, Speed: 0.75f, Buildable: true, TakesFeatures: true, DrawPriority: 5);
-    private static readonly TerrainDef Sand = new(Walkable: true, Speed: 0.75f, Buildable: true, TakesFeatures: true, DrawPriority: 4);
+    private static readonly TerrainDef Grass = new(Walkable: true, Speed: 1f, Buildable: true, TakesFeatures: true, DrawPriority: 7);
+    private static readonly TerrainDef Snow = new(Walkable: true, Speed: 0.75f, Buildable: true, TakesFeatures: true, DrawPriority: 6);
+    private static readonly TerrainDef Sand = new(Walkable: true, Speed: 0.75f, Buildable: true, TakesFeatures: true, DrawPriority: 5);
+    // A salt flat ranks under Sand, the only terrain it borders in a generated world, so it needs no
+    // transition pieces of its own.
+    private static readonly TerrainDef SaltFlat = new(Walkable: true, Speed: 1f, Buildable: true, TakesFeatures: false, DrawPriority: 4);
     private static readonly TerrainDef Mud = new(Walkable: true, Speed: 0.6f, Buildable: false, TakesFeatures: true, DrawPriority: 3);
     private static readonly TerrainDef Rock = new(Walkable: true, Speed: 1f, Buildable: true, TakesFeatures: true, DrawPriority: 2);
     private static readonly TerrainDef Lava = new(Walkable: false, Speed: 1f, Buildable: false, TakesFeatures: false, DrawPriority: 1);
@@ -27,6 +30,7 @@ public static class TerrainDefs
             TerrainType.Grass => Grass,
             TerrainType.Snow => Snow,
             TerrainType.Sand => Sand,
+            TerrainType.SaltFlat => SaltFlat,
             TerrainType.Mud => Mud,
             TerrainType.Rock => Rock,
             TerrainType.Lava => Lava,

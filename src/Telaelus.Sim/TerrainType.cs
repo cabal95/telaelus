@@ -13,5 +13,6 @@ public enum TerrainType
     Mud,
     ShallowWater,
     DeepWater,
-    Lava
+    Lava,
+    SaltFlat
 }

@@ -261,6 +261,8 @@ Newest last. One line each; open the file for the full spec.
   type, in one 0.5 s hold, as far as storage has room.
 - **2611241315-recipe-requirements-line** - A dim line under a processor's Recipe picker spells out
   the chosen recipe, with inputs storage is short of in the danger color.
+- **2611241331-salt-flats** - Deserts gain salt flats, a new terrain placed about one per 400 desert
+  map cells, and the Brine Well stands only on them.
 
 ## Adding a changeset
 

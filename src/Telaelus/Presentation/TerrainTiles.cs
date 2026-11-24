@@ -62,6 +62,7 @@ public static class TerrainTiles
         {
             TerrainType.ShallowWater => "shallow_water",
             TerrainType.DeepWater => "deep_water",
+            TerrainType.SaltFlat => "salt_flat",
             _ => terrain.ToString().ToLowerInvariant()
         };
     }

@@ -70,6 +70,19 @@ public sealed class WorldGenerator
     private const int SaltMotherlode = 21000;
     private const int SaltMotherlodeCell = 22000;
     private const int SaltMotherlodeKind = 23000;
+    private const int SaltSaltFlat = 24000;
+    private const int SaltSaltFlatSite = 25000;
+
+    /// <summary>
+    /// Salt-flat sites lie one to a square of this many map cells on a side; with the sites that land
+    /// off Desert Sand or lose cells at its edge, that comes to about one flat per 400 desert cells.
+    /// </summary>
+    public const int SaltFlatSpacing = 18;
+
+    /// <summary>A flat's half-widths range over these, in map cells (3 to 6 cells across).</summary>
+    public const float SaltFlatMinRadius = 1.75f;
+
+    public const float SaltFlatMaxRadius = 3f;
 
     /// <summary>The chance a chunk holds a motherlode.</summary>
     public const float MotherlodeChance = 0.2f;
@@ -563,6 +576,91 @@ public sealed class WorldGenerator
         };
     }
 
+    /// <summary>
+    /// Turns Desert Sand into salt flats. Each square of <see cref="SaltFlatSpacing"/> map cells holds
+    /// one site: an ellipse at a hashed spot with hashed half-widths, its edge roughened by noise. A
+    /// cell inside a site's ellipse becomes salt flat when it and every cell around it are Desert
+    /// Sand (so a flat borders only Sand), and it lies in a 2 x 2 block of such cells (so every flat
+    /// is at least that big). Each cell depends only on cells within two of it, which the chunk's
+    /// padding covers, so chunks agree along their borders.
+    /// </summary>
+    private TerrainType[,] WithSaltFlats(int ox, int oz, BiomeType[,] biome, TerrainType[,] terrain)
+    {
+        int n = terrain.GetLength(0);
+        bool DesertSand(int i, int j) => biome[i, j] == BiomeType.Desert && terrain[i, j] == TerrainType.Sand;
+        var candidate = new bool[n, n];
+        for (int i = 1; i < n - 1; i++)
+        {
+            for (int j = 1; j < n - 1; j++)
+            {
+                if (!DesertSand(i, j) || !InSaltFlatSite(ox + i, oz + j))
+                {
+                    continue;
+                }
+                bool ringed = true;
+                for (int di = -1; di <= 1 && ringed; di++)
+                {
+                    for (int dj = -1; dj <= 1; dj++)
+                    {
+                        if (!DesertSand(i + di, j + dj))
+                        {
+                            ringed = false;
+                            break;
+                        }
+                    }
+                }
+                candidate[i, j] = ringed;
+            }
+        }
+        var result = (TerrainType[,])terrain.Clone();
+        for (int i = 2; i < n - 2; i++)
+        {
+            for (int j = 2; j < n - 2; j++)
+            {
+                if (!candidate[i, j])
+                {
+                    continue;
+                }
+                for (int di = -1; di <= 0; di++)
+                {
+                    for (int dj = -1; dj <= 0; dj++)
+                    {
+                        if (candidate[i + di, j + dj] && candidate[i + di + 1, j + dj]
+                            && candidate[i + di, j + dj + 1] && candidate[i + di + 1, j + dj + 1])
+                        {
+                            result[i, j] = TerrainType.SaltFlat;
+                        }
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    /// <summary>Whether a map cell lies inside the ellipse of the salt-flat site of its square or a neighboring one.</summary>
+    private bool InSaltFlatSite(int x, int z)
+    {
+        int si = (int)MathF.Floor((float)x / SaltFlatSpacing);
+        int sj = (int)MathF.Floor((float)z / SaltFlatSpacing);
+        for (int i = si - 1; i <= si + 1; i++)
+        {
+            for (int j = sj - 1; j <= sj + 1; j++)
+            {
+                float cx = i * SaltFlatSpacing + Noise.Hash01(Seed, SaltSaltFlatSite, i, j) * SaltFlatSpacing;
+                float cz = j * SaltFlatSpacing + Noise.Hash01(Seed, SaltSaltFlatSite + 1, i, j) * SaltFlatSpacing;
+                float rx = SaltFlatMinRadius + Noise.Hash01(Seed, SaltSaltFlatSite + 2, i, j) * (SaltFlatMaxRadius - SaltFlatMinRadius);
+                float rz = SaltFlatMinRadius + Noise.Hash01(Seed, SaltSaltFlatSite + 3, i, j) * (SaltFlatMaxRadius - SaltFlatMinRadius);
+                float dx = (x + 0.5f - cx) / rx;
+                float dz = (z + 0.5f - cz) / rz;
+                if (dx * dx + dz * dz <= 1f + 0.35f * Noise.Fbm(Seed, SaltSaltFlat, x, z, 3f, 2))
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     private bool MountainAt(int x, int z, BiomeType biome, TerrainType terrain)
     {
         if (!TerrainDefs.For(terrain).TakesFeatures || InSpawnClearing(x, z))
@@ -639,6 +737,8 @@ public sealed class WorldGenerator
                 terrain[i, j] = BaseTerrainAt(ox + i, oz + j, biome[i, j]);
             }
         }
+
+        terrain = WithSaltFlats(ox, oz, biome, terrain);
 
         // Coasts: deep water within 2 cells of land is shallow.
         var coast = (TerrainType[,])terrain.Clone();
@@ -767,7 +867,7 @@ public sealed class WorldGenerator
 
     /// <summary>
     /// A cell is a deposit candidate when its biome's density roll passes on a
-    /// walkable, featureless cell away from the spawn; a candidate becomes a field
+    /// walkable, featureless cell that is not a salt flat, away from the spawn; a candidate becomes a field
     /// only if no neighboring candidate rolled lower, so fields never touch.
     /// </summary>
     private List<(ResourceType, int, int)> Deposits(int ox, int oz, BiomeType[,] biome, TerrainType[,] terrain, MapFeature[,] feature)
@@ -783,6 +883,7 @@ public sealed class WorldGenerator
                 float r = Noise.Hash01(Seed, SaltDeposit, x, z);
                 bool candidate = r < BiomeDefs.For(biome[i, j]).FieldDensity
                     && TerrainDefs.For(terrain[i, j]).Walkable
+                    && terrain[i, j] != TerrainType.SaltFlat
                     && feature[i, j] == MapFeature.None
                     && !NearSpawn(x, z);
                 roll[i, j] = candidate ? r : float.NaN;
@@ -826,7 +927,7 @@ public sealed class WorldGenerator
 
         bool Open(int i, int j)
         {
-            return TerrainDefs.For(terrain[i, j]).Walkable && feature[i, j] == MapFeature.None;
+            return TerrainDefs.For(terrain[i, j]).Walkable && terrain[i, j] != TerrainType.SaltFlat && feature[i, j] == MapFeature.None;
         }
 
         float best = float.MaxValue;

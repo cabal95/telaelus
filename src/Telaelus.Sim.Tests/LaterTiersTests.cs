@@ -71,18 +71,20 @@ public class LaterTiersTests
     }
 
     [Fact]
-    public void TheBrineWell_StandsOnDesertSand_AndPumpsLithium()
+    public void TheBrineWell_StandsOnASaltFlat_AndPumpsLithium()
     {
         Simulation sim = Plant();
-        // Map cells (12, 1) and (12, 2) are fine x 48..51, z 4..11.
+        // Map cells (12, 1) and (12, 2) are fine x 48..51, z 4..11. Desert Sand is not enough.
+        sim.Debug.SetBiome(12, 1, BiomeType.Desert);
+        sim.Debug.SetBiome(12, 2, BiomeType.Desert);
         sim.Debug.SetTerrain(12, 1, TerrainType.Sand);
         sim.Debug.SetTerrain(12, 2, TerrainType.Sand);
         Assert.False(sim.CanPlace(BuildingType.BrineWell, 48, 4, Facing.North));
 
-        sim.Debug.SetBiome(12, 1, BiomeType.Desert);
-        sim.Debug.SetBiome(12, 2, BiomeType.Desert);
+        sim.Debug.SetTerrain(12, 1, TerrainType.SaltFlat);
+        sim.Debug.SetTerrain(12, 2, TerrainType.SaltFlat);
         Assert.True(sim.CanPlace(BuildingType.BrineWell, 48, 4, Facing.North));
-        // One column off the Sand onto the Desert's grass is refused.
+        // One column off the flat onto the grass beside it is refused.
         Assert.False(sim.CanPlace(BuildingType.BrineWell, 47, 4, Facing.North));
 
         // Lithium has no room at the HQ: it keeps in a Stockyard or Silo.

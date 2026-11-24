@@ -1,7 +1,7 @@
 {
   "$schema": "../scenario.schema.json",
   "name": "later-tiers",
-  "description": "The later tiers beside the HQ: a Sawmill makes Lumber; a Cement Kiln burns fuel to make Cement and a Concrete Mixer on Sand and Water turns it into Concrete; a Brine Well on Desert Sand pumps Lithium into a Stockyard; a Semiconductor Fab's display stand changes with its recipe.",
+  "description": "The later tiers beside the HQ: a Sawmill makes Lumber; a Cement Kiln burns fuel to make Cement and a Concrete Mixer on Sand and Water turns it into Concrete; a Brine Well on a salt flat pumps Lithium into a Stockyard; a Semiconductor Fab's display stand changes with its recipe.",
   "steps": [
     { "newGame": {} },
     { "initMap": {} },
@@ -24,7 +24,7 @@
     { "queueCraft": { "anchor": [44, 4], "recipe": 0, "count": 99 } },
     { "placeBuilding": { "type": "ConcreteMixer", "anchor": [51, 4] } },
     { "queueCraft": { "anchor": [51, 4], "recipe": 0, "count": 99 } },
-    { "comment": "Salt flats: Desert Sand at map cells (10, 1..2), a Brine Well on them, a Small Hub to bring it online, and a Stockyard for its Lithium.", "changeTiles": { "type": "Sand", "biome": "Desert", "cells": [[10, 1], [10, 2]] } },
+    { "comment": "A salt flat at map cells (10, 1..2), a Brine Well on it, a Small Hub to bring it online, and a Stockyard for its Lithium.", "changeTiles": { "type": "SaltFlat", "biome": "Desert", "cells": [[10, 1], [10, 2]] } },
     { "placeBuilding": { "type": "BrineWell", "anchor": [40, 4] } },
     { "placeBuilding": { "type": "SmallHub", "anchor": [45, 13] } },
     { "placeBuilding": { "type": "Stockyard", "anchor": [52, 9] } },

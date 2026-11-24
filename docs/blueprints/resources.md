@@ -31,7 +31,7 @@ buildings.md). A single global stockpile holds all amounts, within storage limit
   | RareEarths, UraniumOre, Crystals | Deposit | no | 9 s | fields (Drill Rig only) |
   | Sand | TerrainSourced | no | | capacity from a Sand Collector or Sand Dredge on Sand (buildings.md) |
   | Water | TerrainSourced | no | | capacity from a Water Pump or Pumping Station beside water (buildings.md) |
-  | Lithium | TerrainSourced | no | | a Brine Well on Desert Sand (buildings.md) |
+  | Lithium | TerrainSourced | no | | a Brine Well on a salt flat (buildings.md) |
 
   The refined resources, by tier. What makes them: the Smelter Iron and Copper; the
   Refinery Kerosene; the Fuel Plant Rocket Fuel (Kerosene and Hydrogen); the Electrolyzer Hydrogen

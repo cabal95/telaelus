@@ -283,9 +283,10 @@ public sealed partial class Simulation
         SetMountain(14, 1);
         SetMountain(15, 1);
 
-        // Desert (east): sand, a rock outcrop, and a river running off the map edge.
+        // Desert (east): sand, a salt flat, a rock outcrop, and a river running off the map edge.
         Paint(13, 15, 5, 12, BiomeType.Desert, TerrainType.Sand);
         Paint(14, 14, 8, 8, BiomeType.Desert, TerrainType.Rock);
+        Paint(14, 15, 5, 6, BiomeType.Desert, TerrainType.SaltFlat);
         SetRiver(13, 10, Facing.East);
         SetRiver(14, 10, Facing.East);
         SetRiver(15, 10, Facing.East);

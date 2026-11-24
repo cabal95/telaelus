@@ -15,13 +15,14 @@ Every file here is required: the game loads them by name and throws if one is mi
   -0.1 on every open side, which shows as a bank beside a liquid.
 - Ground pieces cast no shadows (the game switches it off); mountains do.
 
-## Ground tiles (24)
+## Ground tiles (27)
 
-`ground_<terrain>_<a|b|c>.glb` for `grass`, `sand`, `snow`, `rock`, `mud`, `shallow_water`,
-`deep_water`, and `lava`.
+`ground_<terrain>_<a|b|c>.glb` for `grass`, `sand`, `snow`, `rock`, `mud`, `salt_flat`,
+`shallow_water`, `deep_water`, and `lava`. `salt_flat` has no transition pieces: it ranks under
+Sand, the only terrain it borders.
 
 - Land tiles are faceted surfaces with small, nearly flat details (grass patches, sand ripples,
-  snow drifts, rock slabs and pebbles, mud puddles). Every edge vertex is at y = 0, and the
+  snow drifts, rock slabs and pebbles, mud puddles, a salt flat's crust ridges). Every edge vertex is at y = 0, and the
   surface stays flat within about half a unit of each edge, where transition strips lie.
 - Liquid tiles are faceted surfaces at y = -0.1; lava has glowing cracks between darker crust
   plates.

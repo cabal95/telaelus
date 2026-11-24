@@ -21,14 +21,16 @@ cell holds and carry no rules of their own.
 
 ### Terrain types
 
-`TerrainType`: Grass (the default), Sand, Snow, Rock, Mud, ShallowWater, DeepWater, Lava.
+`TerrainType`: Grass (the default), Sand, Snow, Rock, Mud, ShallowWater, DeepWater, Lava,
+SaltFlat.
 `TerrainDefs.For(type)` returns a `TerrainDef`:
 
 | Terrain | Walkable | Speed | Buildable | Takes features | Draw priority |
 |---|---|---|---|---|---|
-| Grass | yes | 1.0 | yes | yes | 6 |
-| Snow | yes | 0.75 | yes | yes | 5 |
-| Sand | yes | 0.75 | yes | yes | 4 |
+| Grass | yes | 1.0 | yes | yes | 7 |
+| Snow | yes | 0.75 | yes | yes | 6 |
+| Sand | yes | 0.75 | yes | yes | 5 |
+| SaltFlat | yes | 1.0 | yes | no | 4 |
 | Mud | yes | 0.6 | no | yes | 3 |
 | Rock | yes | 1.0 | yes | yes | 2 |
 | Lava | no | 1.0 | no | no | 1 |
@@ -40,6 +42,10 @@ cell holds and carry no rules of their own.
 - **Buildable** gates building placement (see buildings.md).
 - **Takes features**: a mountain or river may sit only on walkable land.
 - **Draw priority** orders transitions (see Rendering).
+- **SaltFlat** is a desert's dry salt crust, found only where world generation places it
+  (world-generation.md) and the only ground a Brine Well stands on (buildings.md). It ranks just
+  under Sand, the only terrain it borders in a generated world, so Sand draws its edges over a
+  flat and a flat draws none of its own; it takes no features and no fields.
 - `MapTerrainAt(mapX, mapZ)` and `TerrainAt(x, z)` (a fine cell's map cell) read terrain;
   out-of-bounds reads return Grass. A feature never changes what they report.
 
@@ -146,7 +152,7 @@ generator described in world-generation.md.
 | River | (7, 0) to (7, 3) flow South; (7, 4), (8, 4) flow East; (9, 4) flows South | through the swamp's mud, then grass, into the pond |
 | Pond | x 9 to 11, z 5 to 6 | Grassland / ShallowWater |
 | Tundra | x 13 to 15, z 0 to 3 | Tundra / Snow, Mountain at (14, 1), (15, 1) |
-| Desert | x 13 to 15, z 5 to 12 | Desert / Sand, Rock at (14, 8), river at (13, 10) to (15, 10) flowing East off the map edge |
+| Desert | x 13 to 15, z 5 to 12 | Desert / Sand, SaltFlat at x 14 to 15, z 5 to 6, Rock at (14, 8), river at (13, 10) to (15, 10) flowing East off the map edge |
 | Highlands | x 0 to 5, z 8 to 12 | Highlands / Rock, Mountain at (4, 9), (4, 10), (5, 9) |
 | Grass mountain | (11, 12) | Grassland / Grass, Mountain |
 | Ocean | x 0 to 9, z 13 | Ocean / ShallowWater (shore) |
@@ -165,7 +171,7 @@ The center map cells around the spawn are clear Grassland grass.
 - A plain cell draws its **ground tile**, `ground_<terrain>_<a|b|c>`: one of three variants at a
   90-degree yaw, both from the map cell's coordinates. Land tiles are faceted surfaces at y = 0
   with small flat details (grass patches, sand ripples, snow drifts, rock slabs and pebbles, mud
-  puddles) and a skirt down to -0.1 on every side; water and lava tiles are surfaces at y = -0.1
+  puddles, a salt flat's low ridges along an irregular hexagon crust) and a skirt down to -0.1 on every side; water and lava tiles are surfaces at y = -0.1
   (lava has glowing cracks between crust plates). A mountain or river cell draws its mountain or
   river model instead, which covers the whole cell.
 - **Transitions** follow draw priority: on each edge whose in-bounds neighbor has a higher

@@ -232,11 +232,11 @@ public sealed partial class Simulation
                 {
                     return false;
                 }
-                if (def.Placement is Placement.OnSand or Placement.OnDesertSand && TerrainAt(x, z) != TerrainType.Sand)
+                if (def.Placement == Placement.OnSand && TerrainAt(x, z) != TerrainType.Sand)
                 {
                     return false;
                 }
-                if (def.Placement == Placement.OnDesertSand && BiomeAt(x, z) != BiomeType.Desert)
+                if (def.Placement == Placement.OnSaltFlat && TerrainAt(x, z) != TerrainType.SaltFlat)
                 {
                     return false;
                 }

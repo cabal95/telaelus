@@ -16,6 +16,7 @@ STRIP_Y = 0.006       # transition pieces float just above the ground tile they 
 STRIP_DEPTH = 0.4     # strip width at its ends and the corner square size
 
 LAND = ["grass", "sand", "snow", "rock", "mud"]
+SALT_FLAT = "salt_flat"  # land that outranks nothing it borders, so it has ground tiles only
 LIQUID = ["shallow_water", "deep_water", "lava"]
 OUTRANKING = ["grass", "snow", "sand", "mud", "rock", "lava"]  # terrains that draw transition pieces
 RIVER_BANKS = ["grass", "sand", "snow", "mud", "rock"]
@@ -133,6 +134,8 @@ def add_details(m, mat, terrain, rnd, keep=lambda x, z: True, margin=0.6):
                  rnd.uniform(0.25, 0.4), rnd.uniform(0.03, 0.06))
         for x, z in detail_spots(rnd, 6, margin, keep):
             spike(m, mat("rock", rnd.choice((0.85, 1.15))), (x, 0.0, z), (x, 0.025, z), 0.08, segs=5)
+    elif terrain == SALT_FLAT:
+        salt_cracks(m, mat, rnd, 0.5)
     elif terrain == "mud":
         for x, z in detail_spots(rnd, 3, margin, keep):
             disc(m, mat("puddle"), mat("puddle"), rnd, x, z, rnd.uniform(0.22, 0.38), 0.006)
@@ -140,16 +143,55 @@ def add_details(m, mat, terrain, rnd, keep=lambda x, z: True, margin=0.6):
             spike(m, mat("mud", 0.85), (x, 0.0, z), (x, 0.03, z), rnd.uniform(0.15, 0.22), segs=5)
 
 
+def salt_cracks(m, mat, rnd, margin):
+    """Thin, low ridges along the edges of an irregular hexagon pattern, like the polygons of a
+    dried salt crust. Shared hexagon corners move together, so neighboring polygons still meet."""
+    r = 0.42
+    inner = HALF - margin
+    jitter_seed = rnd.random()
+
+    def corner(x, z):
+        key = (round(x * 1000), round(z * 1000))
+        j = random.Random(hash((key, jitter_seed)))
+        return (x + j.uniform(-0.1, 0.1), z + j.uniform(-0.1, 0.1))
+
+    edges = set()
+    dx_hex, dz_hex = r * math.sqrt(3), r * 1.5
+    for row in range(-4, 5):
+        for col in range(-4, 5):
+            cx = col * dx_hex + (row % 2) * dx_hex / 2
+            cz = row * dz_hex
+            pts = [(round(cx + r * math.cos(math.radians(60 * k + 30)), 3),
+                    round(cz + r * math.sin(math.radians(60 * k + 30)), 3)) for k in range(6)]
+            for k in range(6):
+                a, b = pts[k], pts[(k + 1) % 6]
+                edges.add((min(a, b), max(a, b)))
+    width, height = 0.03, 0.012
+    for a0, b0 in sorted(edges):
+        a, b = corner(*a0), corner(*b0)
+        if max(abs(a[0]), abs(a[1]), abs(b[0]), abs(b[1])) > inner or rnd.random() < 0.15:
+            continue
+        dx, dz = b[0] - a[0], b[1] - a[1]
+        length = math.hypot(dx, dz)
+        nx, nz = -dz / length * width, dx / length * width
+        top_a, top_b = (a[0], height, a[1]), (b[0], height, b[1])
+        quad(m, mat("salt_crack"), (a[0] - nx, 0, a[1] - nz), (b[0] - nx, 0, b[1] - nz), top_b, top_a,
+             (-nx, 0.5, -nz))
+        quad(m, mat("salt_crack", 0.9), (a[0] + nx, 0, a[1] + nz), (b[0] + nx, 0, b[1] + nz), top_b, top_a,
+             (nx, 0.5, nz))
+
+
 # ---------------------------------------------------------------- ground tiles
 def land_tile(terrain, seed):
     rnd = random.Random(seed)
     m, mat = Mesh(), Materials()
+    relief = 0.008 if terrain == SALT_FLAT else 0.035  # a salt flat is nearly level
 
     def height(x, z, i, j):
         if i in (0, 8) or j in (0, 8):
             return 0.0
         # Flat near the edges, where transition strips lie; gentle relief further in.
-        return rnd.uniform(-0.035, 0.035) * smoothstep((edge_dist(x, z) - 0.45) / 0.6)
+        return rnd.uniform(-relief, relief) * smoothstep((edge_dist(x, z) - 0.45) / 0.6)
 
     pts = grid_surface(m, rnd, 8, height, lambda t: mat(terrain, rnd.choice(SHADES)))
     skirt(m, mat(terrain, 0.72), pts, 8)
@@ -312,3 +354,10 @@ def build_all():
         for s, shape in enumerate(RIVER_SHAPES):
             m, mats = river_piece(shape, terrain, 3000 + k * 10 + s)
             m.write("river_%s_%s" % (shape, terrain), mats)
+    build_salt_flat()
+
+
+def build_salt_flat():
+    for v, suffix in enumerate("abc"):
+        m, mats = land_tile(SALT_FLAT, 1500 + v)
+        m.write("ground_%s_%s" % (SALT_FLAT, suffix), mats)

@@ -35,7 +35,7 @@ ship from a Shipyard, which closes the on-planet loop.
   (maps from `CapacityType` to amount; `Draw(type)` and `Supply(type)` read 0 for a type not
   listed, and `IsProvider` when it supplies any), `BurnsFuel` (it burns fuel from storage), and
   its `Placement` rule (Standard, AcrossStraightRiver, BesideWater, OnSand,
-  OnDesertSand, or the renewables' three).
+  OnSaltFlat, or the renewables' three).
 
   | Type        | Footprint | Cost                       | Works                             | Work radius |
   |-------------|-----------|----------------------------|-----------------------------------|-------------|
@@ -168,8 +168,7 @@ Recipes marked "(capacity only)" use only the Sand or Water they draw.
   may sit on a resource. The rule is the definition's `Placement`: Standard is the rule above;
   BesideWater adds that at least one footprint cell is edge-adjacent (not corner) to ShallowWater,
   DeepWater, or river channel; OnSand adds that every footprint cell is Sand terrain;
-  OnDesertSand (the Brine Well's salt flats) adds that every cell is Sand terrain in a Desert map
-  cell; and
+  OnSaltFlat (the Brine Well's) adds that every cell is SaltFlat terrain (terrain.md); and
   AcrossStraightRiver is the Water Wheel's own rule (Capacity, below). The renewables add three
   (Renewables, below): BesideMountain (the standard rule, with a cell edge-adjacent to a mountain),
   OpenGrassCell (the footprint is exactly one map cell, all Grass), and OverSite (the footprint is
@@ -436,8 +435,8 @@ And seven buildings, all processors (output buffer 10):
 | Enrichment Plant | 6 x 7 | 40 Concrete, 20 Armor Plate, 10 Electric Motor, 10 Computer | 3 | 80 Power, 2 Water | Enriched Uranium: 2 Uranium Ore, 1 Sulfuric Acid, 30 s; Fuel Rod: 2 Enriched Uranium, 2 Steel, 40 s |
 
 - The Cement Kiln burns fuel like the Glassworks (Coal, Charcoal, or Wood, Best by default) and
-  needs no Power, so Cement and Concrete come early. The Brine Well stands on Desert Sand
-  (OnDesertSand) and the Air Separator anywhere; both make their output from nothing, as the
+  needs no Power, so Cement and Concrete come early. The Brine Well stands on a salt flat
+  (OnSaltFlat) and the Air Separator anywhere; both make their output from nothing, as the
   Electrolyzer does, which keeps its Liquid Oxygen recipe beside the Air Separator.
 - The new buildings' costs use the new materials: Lumber, Concrete, Electric Motors, Armor Plate,
   and Computers. The power buildings (below) take Batteries, Solar Cells, Heat Shields, Sensor

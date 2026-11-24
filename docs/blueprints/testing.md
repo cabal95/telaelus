@@ -58,6 +58,10 @@ pausing it and stepping frame by frame.
   a click on water ending on the nearest ground; no walk with no way out; paths never crossing the
   fog while the walk keeps going into it; walking round a building placed across the path;
   teleporting stopping a walk; and the map's edge.
+- `SaltFlatTests`: on generated worlds, about one salt flat per 400 desert map cells (300 to 500
+  over four seeds), each 2 to 6 cells across and most at least 3 x 3; every flat cell in the
+  Desert, bordered only by salt flat or Sand, and in a 2 x 2 block of flat; no field, motherlode,
+  or feature on a flat; the test map's flat at x 14 to 15, z 5 to 6.
 - `WorldGenTests`: the same seed gives identical chunks and generation order changes nothing; chunk
   biomes match the generator; rivers flow into rivers or water across chunk borders; the spawn is
   open Grassland at the center of chunk (0, 0) for seed 1; the spawn moves when the center has no
@@ -203,7 +207,7 @@ pausing it and stepping frame by frame.
   reactor and nothing else in it.
 - `LaterTiersTests`: each building's recipe list (the new buildings and the added recipes), every
   refined resource having a maker, a Silicon Wafer cycle making two, the Brine Well's placement (on
-  Desert Sand, refused on Sand elsewhere and off the Sand) and its Lithium into a Stockyard, the Air
+  a salt flat, refused on Desert Sand and off the flat) and its Lithium into a Stockyard, the Air
   Separator's Liquid Oxygen with no Water, the Cement Kiln waiting for fuel and then burning it
   with no Power, the Concrete Mixer in a Sand blackout and then making Concrete, and an
   end-to-end run from seeded materials through two Semiconductor Fabs, an Electronics Works, an
@@ -565,7 +569,7 @@ pausing it and stepping frame by frame.
   clock, power, and store readouts; at night the bank carrying a Drill Rig at Normal; a Fission
   Reactor on Fuel Rods and Water adding 400),
   `later-tiers` (a Sawmill's Lumber; a Cement Kiln's Cement turned into Concrete by a Concrete
-  Mixer on Sand and Water; a Brine Well on Desert Sand pumping Lithium into a Stockyard; a
+  Mixer on Sand and Water; a Brine Well on a salt flat pumping Lithium into a Stockyard; a
   Semiconductor Fab's display stand and recipe changing to Processor when its Silicon Wafer order
   is done),
   `first-ship` (a Fabricator making Hull Plate, its display stand showing the part and changing
@@ -625,8 +629,8 @@ pausing it and stepping frame by frame.
   vanish with the field), `pause-step` (a right click and a key, while paused, wait for `step`, the walk starting
   with the release,
   and steps advance exact ticks), `place-on-player` (a building cannot be placed on the player;
-  right beside them it can, and a click still walks the player away), `terrain-types` (every terrain, a mountain on each ground that
-  takes one, and rivers in every shape on several bank terrains render; the ghost is blocked on a
+  right beside them it can, and a click still walks the player away), `terrain-types` (every terrain, with a salt flat in a ring of sand
+  and a screenshot of it, a mountain on each ground that takes one, and rivers in every shape on several bank terrains render; the ghost is blocked on a
   river channel and allowed on its bank; the snapshot reports the terrain, biome, and feature under
   the player), `building-models` (every building model in every facing, the tinted ghost for each
   type, red over a blocked spot, and placement still works), `resource-fields` (every deposit's
