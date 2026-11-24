@@ -65,7 +65,8 @@
     { "wait": 2 },
     { "expect": "ui.open", "equals": "buildingDetail" },
     { "expect": "ui.adds", "equals": { "Wood": "+300" } },
-    { "expect": "ui.destroy", "equals": "Destroy (refund 15 Wood)" },
+    { "expect": "ui.destroy", "equals": "Destroy" },
+    { "expect": "ui.destroyTip", "equals": "Refund: 15 Wood" },
     { "screenshot": "silo-detail" }
   ]
 }

@@ -65,7 +65,9 @@ public abstract partial class Dialog : PanelContainer
 
         Scroll = new ScrollContainer
         {
-            HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
+            // A panel keeps its set width: its content never widens it (what cannot shrink is
+            // clipped), while a modal sizes to fit as before.
+            HorizontalScrollMode = Kind == DialogKind.Panel ? ScrollContainer.ScrollMode.ShowNever : ScrollContainer.ScrollMode.Disabled,
             VerticalScrollMode = ScrollContainer.ScrollMode.Auto,
             SizeFlagsVertical = SizeFlags.ExpandFill
         };

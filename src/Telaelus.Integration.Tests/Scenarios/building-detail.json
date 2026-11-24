@@ -1,7 +1,7 @@
 {
   "$schema": "../scenario.schema.json",
   "name": "building-detail",
-  "description": "Clicking a placed building opens its detail side panel: status rows, the world keeping its hover with it open, turning it off and on, switching to another building, closing by empty ground, B, and Escape, and destroying with a confirming second click for half the cost back.",
+  "description": "Clicking a placed building opens its detail side panel: status rows, the world keeping its hover with it open, turning it off and on, switching to another building, closing by empty ground, B, and Escape, and destroying with a confirming second click for half the cost back (shown in the Destroy button's tooltip).",
   "steps": [
     { "newGame": {} },
     { "initMap": {} },
@@ -25,7 +25,13 @@
     { "expect": "ui.rows.state", "equals": "Working" },
     { "comment": "Two Grassland Iron Ore fields of 1000 and one Stone field of 1000.", "expect": "ui.rows.inRange", "equals": "Iron Ore 2 (2000), Stone 1 (1000)" },
     { "expect": "ui.rows.workingOn", "equals": "Iron Ore (1000 left)" },
-    { "expect": "ui.destroy", "equals": "Destroy (refund 13 Wood, 8 Stone)" },
+    { "expect": "ui.destroy", "equals": "Destroy" },
+    { "expect": "ui.destroyTip", "equals": "Refund: 13 Wood, 8 Stone" },
+    { "comment": "A side panel is a third of the window wide, whatever it holds.", "expect": "ui.width", "approx": 426.7 },
+    { "comment": "The refund shows on hover.", "hoverUi": { "id": "buildingDetail/destroy" } },
+    { "wait": 15 },
+    { "expect": "ui.tooltip", "equals": ["Refund: 13 Wood, 8 Stone"] },
+    { "screenshot": "destroy-tip" },
     { "comment": "The open building keeps its outline with the pointer elsewhere.", "aimAt": { "world": [36, 28] } },
     { "wait": 1 },
     { "expect": "hoveredBuilding", "equals": null },

@@ -80,6 +80,7 @@ public partial class BuildingDetail : Dialog
         .Where(type => ResourceDefs.For(type).Storage.Class == StorageClass.Bulk)
         .ToArray();
     private double _confirmLeft;
+    private bool _destroyHovered;
 
     public override DialogKind Kind => DialogKind.Panel;
 
@@ -96,6 +97,9 @@ public partial class BuildingDetail : Dialog
 
     /// <summary>The Destroy button's text (it reads "Confirm destroy" while waiting), or null when hidden.</summary>
     public string? DestroyText => _destroy.Visible ? _destroy.Text : null;
+
+    /// <summary>The Destroy button's tooltip ("Refund: 13 Wood, 8 Stone").</summary>
+    public string DestroyTip { get; private set; } = "";
 
     /// <summary>The Buy truck button's text and whether it can be pressed, or null when hidden (not a Depot).</summary>
     /// <summary>The quantity to queue as shown ("5"), and whether Craft can be pressed; null when hidden.</summary>
@@ -167,7 +171,8 @@ public partial class BuildingDetail : Dialog
         _silo = new OptionButton
         {
             Name = "SiloResource",
-            FocusMode = FocusModeEnum.None
+            FocusMode = FocusModeEnum.None,
+            TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis
         };
         foreach (ResourceType type in SiloChoices)
         {
@@ -182,7 +187,8 @@ public partial class BuildingDetail : Dialog
         _recipe = new OptionButton
         {
             Name = "Recipe",
-            FocusMode = FocusModeEnum.None
+            FocusMode = FocusModeEnum.None,
+            TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis
         };
         _recipe.ItemSelected += OnRecipeSelected;
         Body.AddChild(_recipe);
@@ -193,7 +199,8 @@ public partial class BuildingDetail : Dialog
         _input = new OptionButton
         {
             Name = "InputChoice",
-            FocusMode = FocusModeEnum.None
+            FocusMode = FocusModeEnum.None,
+            TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis
         };
         _input.ItemSelected += OnInputSelected;
         Body.AddChild(_input);
@@ -238,7 +245,8 @@ public partial class BuildingDetail : Dialog
         _fuel = new OptionButton
         {
             Name = "Fuel",
-            FocusMode = FocusModeEnum.None
+            FocusMode = FocusModeEnum.None,
+            TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis
         };
         _fuel.ItemSelected += OnFuelSelected;
         Body.AddChild(_fuel);
@@ -252,7 +260,8 @@ public partial class BuildingDetail : Dialog
         _output = new OptionButton
         {
             Name = "Output",
-            FocusMode = FocusModeEnum.None
+            FocusMode = FocusModeEnum.None,
+            TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis
         };
         _output.ItemSelected += OnOutputSelected;
         Body.AddChild(_output);
@@ -357,7 +366,8 @@ public partial class BuildingDetail : Dialog
         _destroy = new Button
         {
             Name = "Destroy",
-            FocusMode = FocusModeEnum.None
+            FocusMode = FocusModeEnum.None,
+            TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis
         };
         StyleBoxFlat danger = UiTheme.Box(UiTheme.Danger, UiTheme.CellRadius, padding: UiTheme.Gap);
         StyleBoxFlat dangerHover = (StyleBoxFlat)danger.Duplicate();
@@ -368,6 +378,12 @@ public partial class BuildingDetail : Dialog
         _destroy.AddThemeStyleboxOverride("hover", dangerHover);
         _destroy.AddThemeStyleboxOverride("pressed", danger);
         _destroy.Pressed += OnDestroy;
+        _destroy.MouseEntered += () => _destroyHovered = true;
+        _destroy.MouseExited += () =>
+        {
+            _destroyHovered = false;
+            Host.HideHover(_destroy);
+        };
         Body.AddChild(_destroy);
         Host.Register(Id + "/destroy", _destroy);
     }
@@ -495,7 +511,12 @@ public partial class BuildingDetail : Dialog
         _toggle.Visible = !storage;
         _destroy.Visible = !def.Permanent;
         _toggle.Text = building.Enabled ? "Turn off" : "Turn on";
-        _destroy.Text = _confirmLeft > 0 ? "Confirm destroy" : "Destroy (refund " + RefundText(building) + ")";
+        _destroy.Text = _confirmLeft > 0 ? "Confirm destroy" : "Destroy";
+        DestroyTip = "Refund: " + RefundText(building);
+        if (_destroyHovered)
+        {
+            Host.ShowHover(_destroy, TipLine.Wrapped(DestroyTip).ToList());
+        }
     }
 
     public override void _Process(double delta)
@@ -1085,8 +1106,9 @@ public partial class BuildingDetail : Dialog
 
     private string RefundText(Building building)
     {
-        return string.Join(", ", _sim.DestroyRefund(building)
+        string refund = string.Join(", ", _sim.DestroyRefund(building)
             .Select(a => $"{(int)a.Amount} {ResourceDefs.For(a.Type).Name}"));
+        return refund.Length > 0 ? refund : "nothing";
     }
 
     private void OnToggle()

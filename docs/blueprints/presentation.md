@@ -304,8 +304,8 @@ ui-style.md. There is no text HUD; the screen holds:
   storage building lists "Adds to storage": one line per resource it adds to, with the amount
   ("Wood   +300"), and "Cargo pool" for the HQ and a Warehouse, headed "Offline: adds nothing until
   connected" while it is offline. Then its actions: Turn off / Turn
-  on (not for a storage building), and Destroy (not for the HQ), which shows its refund
-  ("Destroy (refund 13 Wood, 8 Stone)") and asks once: the first click changes it to "Confirm
+  on (not for a storage building), and Destroy (not for the HQ), whose tooltip shows its refund
+  ("Refund: 13 Wood, 8 Stone", or "Refund: nothing") and which asks once: the first click changes it to "Confirm
   destroy" for 3 seconds, and a second click in that time destroys the building. The panel closes
   itself when its building is gone. While it is open, its building keeps the hover outline in
   the world.

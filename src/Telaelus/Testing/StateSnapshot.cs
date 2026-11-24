@@ -187,6 +187,7 @@ public static class StateSnapshot
         var ui = new JsonObject
         {
             ["open"] = root.Dialogs.Current?.Id,
+            ["width"] = root.Dialogs.Current is Dialog open ? Math.Round(open.Size.X, 1) : null,
             ["tooltip"] = Lines(root.Dialogs.HoverTip),
             ["worldTip"] = !root.Builder.InBuildMode ? Lines(root.Dialogs.PlacementTip) : null,
             ["debug"] = root.Debug.Shown,
@@ -331,6 +332,7 @@ public static class StateSnapshot
             ui["building"] = building.Id;
             ui["rows"] = rows;
             ui["destroy"] = root.BuildingDetail.DestroyText;
+            ui["destroyTip"] = root.BuildingDetail.DestroyText is null ? null : root.BuildingDetail.DestroyTip;
             ui["fuel"] = root.BuildingDetail.FuelText;
             ui["output"] = root.BuildingDetail.OutputText;
             ui["recipe"] = root.BuildingDetail.RecipeChoiceText;

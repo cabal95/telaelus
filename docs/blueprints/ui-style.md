@@ -98,7 +98,9 @@ The two kinds place themselves:
   closes it.
 - **Panel:** against the left edge with a 16 px margin, a third of the window wide (at least
   280 UI units), from just below the top bar (`DialogHost.PanelTop`) to the bottom margin, with
-  no backdrop; when its content is taller, the body scrolls and the Close button stays pinned. It
+  no backdrop; when its content is taller, the body scrolls and the Close button stays pinned.
+  Its content never widens it: pickers and buttons cut long text with an ellipsis, status rows
+  wrap, and anything else too wide is clipped. It
   captures only Escape, so movement, harvesting, zoom over the world, and every other key still
   reach the game; its own toggle key (I for the inventory) reaches the game too, which closes it.
   It closes by its Close button, Escape, a click on the world that selects nothing, or another

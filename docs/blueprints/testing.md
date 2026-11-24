@@ -310,7 +310,7 @@ pausing it and stepping frame by frame.
   mode, else `selected`, `facing`, `fieldsInRange`, and `ghost`: `anchor`, `width`, `depth`,
   `placeable` (the spot), `affordable` (the cost), or null, and `tooltip`: the placement
   tooltip's lines, or null; with a line tool instead, `line` (`Road` or `Bridge`), `drag`
-  (`from`, `to`, `removes`) or null, and `tooltip`); `ui` (`open`: the open dialog's id or null, `debug`: whether the debug overlay shows,
+  (`from`, `to`, `removes`) or null, and `tooltip`); `ui` (`open`: the open dialog's id or null, `width`: its width in UI units or null, `debug`: whether the debug overlay shows,
   `network`: `overlay` (whether N has it on), `shownHubs` (the ids of the hubs whose coverage is
   drawn), and `offlineMarkers` (how many offline markers are drawn),
   `topBar`: its `items` (each pinned resource's `type`, `amount`, `limit` (null for a Cargo or
@@ -344,7 +344,8 @@ pausing it and stepping frame by frame.
   Shipyard's Ship launch section: its `bill` ("have / need" per entry), the `button` text,
   `enabled`, the `note` saying why not or null, and `ships` ("Ships launched: n") or null; null for
   other buildings), `adds` (what a storage building adds, by
-  resource name, as "+300"), `destroy` (the Destroy button's text, or null when hidden), and
+  resource name, as "+300"), `destroy` (the Destroy button's text, or null when hidden), `destroyTip`
+  (its tooltip, "Refund: 13 Wood, 8 Stone", or null when hidden), and
   `turnDegrees`; while the field detail panel is open, `field` (its id), `title`, and `rows`
   (`remaining`, `workedBy`); while the inventory is open, `inventory`: its rows in display order,
   each `type`, `amount`, `limit` (null for a Cargo or unlimited resource), `section` (`raw`,
@@ -605,8 +606,8 @@ pausing it and stepping frame by frame.
   of their tier),
   `building-detail` (clicking a building opens its panel with the right status rows; the world
   keeps its hover with it open; it turns the building off and on; clicking another building
-  switches it; empty ground, B, and Escape close it; Destroy asks once, then refunds half the
-  cost),
+  switches it; empty ground, B, and Escape close it; the panel is a third of the window wide; Destroy shows
+  its refund on hover, asks once, then refunds half the cost),
   `build-menu` (B opens the menu with discovered buildings first, affordable in color and short
   ones gray, then undiscovered ones; the modal menu stops the world; a hover shows the description
   and then the cost, none for an undiscovered cell, which ignores clicks; B, Escape, and Close close it; clicking an

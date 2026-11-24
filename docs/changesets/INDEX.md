@@ -255,6 +255,8 @@ Newest last. One line each; open the file for the full spec.
 - **2611241302-network-only-processing** - Every building works only while online: hand loading goes,
   with the input buffer and fuel slot; offline processors hold their cycle; the panel's Buffer and
   Burning rows lose their empty parts.
+- **2611241306-destroy-refund-tooltip** - The Destroy button reads "Destroy" with its refund in a hover
+  tooltip, and side panels hold their width whatever their content.
 
 ## Adding a changeset
 
