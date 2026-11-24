@@ -100,6 +100,8 @@ pausing it and stepping frame by frame.
   full); room counting the loads other trucks carry; unloading everything when the room was taken
   on the way; dropping a job when the collector is destroyed or emptied;
   finding a way round a building placed in its path; driving round its own Depot's shed, not through it; skipping a collector no truck can reach; a
+  collector reachable only through fog unreachable until the fog lifts, and a path never entering an
+  unexplored map cell; a
   switched-off Depot's truck finishing its trip and parking; an offline Depot's truck staying
   parked; a destroyed Depot refunding its bought
   truck and the load.

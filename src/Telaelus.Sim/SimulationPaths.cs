@@ -7,9 +7,9 @@ namespace Telaelus.Sim;
 /// <summary>
 /// Paths over fine cells for trucks and the player: A* in 8 directions without cutting corners, each
 /// step costing its length over the terrain speed of the cell it enters, so a slower cell costs more.
-/// For a truck a cell is passable when it is walkable and its chunk already exists (a search never
-/// generates the world), and the cells of its own Depot are passable to it, so it can leave and reach
-/// its bay; for the player it must also be explored (<see cref="Simulation.WalkTo"/>).
+/// A cell is passable when it is walkable, explored, and its chunk already exists (a search never
+/// generates the world); for a truck the apron of its own Depot is passable too, so it can leave and
+/// reach its bay (the player's walk, <see cref="Simulation.WalkTo"/>, uses the same test).
 /// </summary>
 public sealed partial class Simulation
 {
@@ -28,9 +28,7 @@ public sealed partial class Simulation
             // A truck's own Depot: only the apron its bays stand on, never the shed behind.
             return OnApron(home, x, z);
         }
-        return InBounds(x, z)
-            && IsChunkGenerated(Chunk.Of(MapCellOf(x)), Chunk.Of(MapCellOf(z)))
-            && IsWalkable(x, z);
+        return PlayerCanWalk(x, z);
     }
 
     /// <summary>Whether a cell of a Depot lies in its front half, the apron its trucks park on.</summary>

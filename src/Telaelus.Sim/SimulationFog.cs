@@ -35,6 +35,8 @@ public sealed partial class Simulation
     private void MarkExplored(int mapX, int mapZ)
     {
         ExploredCount++;
+        // A collector a truck could not reach through the fog may be reachable now.
+        _unreachable.Clear();
         _exploredBounds = _exploredBounds is (int minX, int minZ, int maxX, int maxZ)
             ? (Math.Min(minX, mapX), Math.Min(minZ, mapZ), Math.Max(maxX, mapX), Math.Max(maxZ, mapZ))
             : (mapX, mapZ, mapX, mapZ);

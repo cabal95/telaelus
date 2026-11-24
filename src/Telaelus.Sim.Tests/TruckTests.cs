@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using Godot;
 using System.Linq;
 
 namespace Telaelus.Sim.Tests;
@@ -14,10 +16,10 @@ public class TruckTests
     /// only online collectors): a Relay 22.4 from the HQ's center, a second 23.4 on, and two Small
     /// Hubs covering (20, 40), (10, 50), (20, 50), and (30, 50). The Depot at (20, 20) stays outside it.
     /// </summary>
-    private static Simulation EmptyMap()
+    private static Simulation EmptyMap(bool fog = false)
     {
         var sim = new Simulation();
-        sim.Debug.ResetToEmptyMap();
+        sim.Debug.ResetToEmptyMap(fog);
         sim.Debug.PlaceBuilding(BuildingType.Relay, 36, 2, Facing.North);
         sim.Debug.PlaceBuilding(BuildingType.Relay, 28, 24, Facing.North);
         sim.Debug.PlaceBuilding(BuildingType.SmallHub, 15, 46, Facing.North);
@@ -327,6 +329,72 @@ public class TruckTests
 
         Assert.Equal(TruckState.Parked, truck.State);
         Assert.True(sim.NoTruckCanReach(island));
+    }
+
+    /// <summary>
+    /// The empty map with fog: only the map cells around the player at the center start explored.
+    /// A Mine stands on explored map cell (2, 7), ringed by water but for map cell (1, 7), so its only
+    /// way in by land runs through the fog to the west. A Relay, two Small Hubs, and a Depot put it
+    /// and the Depot online.
+    /// </summary>
+    private static (Simulation Sim, Building Depot, Building Mine) FoggedPeninsula()
+    {
+        var sim = new Simulation();
+        sim.Debug.ResetToEmptyMap(fog: true);
+        for (int x = 1; x <= 3; x++)
+        {
+            for (int z = 6; z <= 8; z++)
+            {
+                if (z != 7 || x == 3)
+                {
+                    sim.Debug.SetTerrain(x, z, TerrainType.ShallowWater);
+                }
+            }
+        }
+        sim.Debug.PlaceBuilding(BuildingType.Relay, 40, 20, Facing.North);
+        sim.Debug.PlaceBuilding(BuildingType.SmallHub, 17, 30, Facing.North);
+        sim.Debug.PlaceBuilding(BuildingType.SmallHub, 34, 34, Facing.North);
+        Building mine = sim.Debug.PlaceBuilding(BuildingType.Mine, 9, 29, Facing.North);
+        Building depot = sim.Debug.PlaceBuilding(BuildingType.Depot, 36, 36, Facing.North);
+        Assert.True(mine.Online);
+        Assert.True(depot.Online);
+        Assert.False(sim.IsExplored(1, 7));
+        return (sim, depot, mine);
+    }
+
+    [Fact]
+    public void ACollectorReachableOnlyThroughFog_IsUnreachable_UntilTheFogLifts()
+    {
+        (Simulation sim, Building depot, Building mine) = FoggedPeninsula();
+        mine.Output[ResourceType.IronOre] = 15f;
+        Truck truck = Assert.Single(sim.TrucksOf(depot));
+
+        SimTestHelpers.Ticks(sim, 2);
+
+        Assert.Equal(TruckState.Parked, truck.State);
+        Assert.True(sim.NoTruckCanReach(mine));
+
+        sim.Debug.RevealAll();
+        SimTestHelpers.Ticks(sim, 2);
+
+        Assert.False(sim.NoTruckCanReach(mine));
+        Assert.Equal(TruckState.ToCollector, truck.State);
+    }
+
+    [Fact]
+    public void ATrucksPath_NeverEntersAnUnexploredCell()
+    {
+        (Simulation sim, Building depot, Building mine) = FoggedPeninsula();
+        Vector3 start = depot.Position;
+        Assert.Null(sim.FindPathBeside(start, mine, depot));
+
+        // Walking out west explores the way round to the Mine, but not all the fog near it.
+        sim.Debug.TeleportPlayer(2f, 22f);
+        SimTestHelpers.Ticks(sim, 1);
+        List<Vector3>? path = sim.FindPathBeside(start, mine, depot);
+
+        Assert.NotNull(path);
+        Assert.All(path!, p => Assert.True(sim.IsExplored(Simulation.MapCellOf((int)p.X), Simulation.MapCellOf((int)p.Z))));
     }
 
     [Fact]

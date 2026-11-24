@@ -325,7 +325,7 @@ Recipes marked "(capacity only)" use only the Sand or Water they draw.
 - **Destroying a Depot** removes its trucks; its refund (`DestroyRefund`) adds each truck's
   `RefundOf`, as selling it would.
 - `NoTruckCanReach(collector)` is true when every truck has found no path to it; the unreachable
-  set clears whenever a building is placed or removed.
+  set clears whenever a building is placed or removed and whenever a map cell is newly explored.
 
 ### Paths
 
@@ -336,10 +336,11 @@ Recipes marked "(capacity only)" use only the Sand or Water they draw.
   path goes round them when that is cheaper, and takes a road where it saves time; the estimate is
   the octile distance at road speed, so the search stays exact). Bridge cells are walkable, so a
   path crosses water only on a bridge. A cell is
-  passable when it is walkable (`IsWalkable`) and its chunk already exists (a search never
-  generates the world); a truck's own Depot's apron (the front half of its footprint, where the
+  passable when it is walkable (`IsWalkable`), explored, and its chunk already exists (a search
+  never generates the world), for trucks and the player alike, so a truck never drives through
+  fog; a truck's own Depot's apron (the front half of its footprint, where the
   bays are) is passable to it, so it can leave and reach its bay; the shed behind is not, so it
-  drives round. For the player a cell must also be explored. "Beside" a building is a cell sharing an
+  drives round. "Beside" a building is a cell sharing an
   edge with its footprint. A search gives up as unreachable after 60,000 cells; the player's
   search then (or when its goal cannot be reached) gives the path to the cell it found nearest the
   goal.

@@ -250,6 +250,8 @@ Newest last. One line each; open the file for the full spec.
   building panel (recipe, quantity, Craft, and a removable row per order) and idle when it is
   empty, still drawing their capacity; the Electrolyzer, Brine Well, and Air Separator run without
   one.
+- **2611241218-trucks-explored-paths** - Trucks path only through explored map cells, like the player;
+  a collector reachable only through fog is unreachable until a map cell is newly explored.
 
 ## Adding a changeset
 
