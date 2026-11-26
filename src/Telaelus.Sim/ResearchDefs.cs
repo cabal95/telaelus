@@ -164,7 +164,7 @@ public static class ResearchDefs
                 ResearchProject.Electronics
             },
             0,
-            0)
+            1)
         {
             Tier = 3,
             Unlocks = 4

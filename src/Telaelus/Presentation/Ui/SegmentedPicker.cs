@@ -13,23 +13,20 @@ namespace Telaelus.Presentation.Ui;
 /// <see cref="SetOptions"/> finds the cells wider than the room given, it is a dropdown instead, and
 /// it keeps that form until the options or the room change. Registered for scenarios at its id
 /// (where <c>selectUi</c> picks by label in either form), and each cell at "&lt;id&gt;/&lt;label&gt;".
-/// A cell can be disabled (<see cref="SetEnabled"/>: its label dim, clicks ignored, its tooltip still
-/// shown on hover) and can carry a small icon after its label (<see cref="SetIcon"/>).
+/// A cell can be disabled (<see cref="SetEnabled"/>: its label dim, its border darker, clicks ignored,
+/// its tooltip still shown on hover).
 /// </summary>
 public partial class SegmentedPicker : HBoxContainer
 {
     public const int CellHeight = 32;
     public const int CellPadding = 8;
     public const int CellGap = 4;
-    public const int IconSize = 14;
-    private const int IconGap = 4;
 
     private readonly DialogHost _host;
     private readonly string _id;
     private readonly OptionButton _dropdown;
     private readonly List<Button> _cells = new();
     private List<string> _labels = new();
-    private int _icons;
     private readonly List<bool> _enabled = new();
     private readonly List<string?> _tips = new();
     private int _selected = -1;
@@ -76,30 +73,26 @@ public partial class SegmentedPicker : HBoxContainer
     /// <summary>The chosen option's label, or null for none.</summary>
     public string? SelectedText => _selected >= 0 && _selected < _labels.Count ? _labels[_selected] : null;
 
-    /// <summary>
-    /// The width the cells take in a row: each label at <c>SmallSize</c> plus its padding, the gaps,
-    /// and room for a number of trailing icons.
-    /// </summary>
-    public static float CellsWidth(IReadOnlyList<string> labels, int icons = 0)
+    /// <summary>The width the cells take in a row: each label at <c>SmallSize</c> plus its padding, and the gaps.</summary>
+    public static float CellsWidth(IReadOnlyList<string> labels)
     {
         Font font = ThemeDB.FallbackFont;
         return labels.Sum(label => Mathf.Ceil(font.GetStringSize(label, HorizontalAlignment.Left, -1, UiTheme.SmallSize).X) + 2 * CellPadding)
-            + CellGap * Math.Max(0, labels.Count - 1) + icons * (IconSize + IconGap);
+            + CellGap * Math.Max(0, labels.Count - 1);
     }
 
     /// <summary>
-    /// Sets the options, as cells when they fit the width (each label whole, with room for
-    /// <paramref name="icons"/> trailing icons) or else as a dropdown. Does nothing when neither the
-    /// options nor the form change, so it can run every frame. Rebuilt cells start enabled with no icon.
+    /// Sets the options, as cells when they fit the width (each label whole) or else as a dropdown.
+    /// Does nothing when neither the options nor the form change, so it can run every frame. Rebuilt
+    /// cells start enabled.
     /// </summary>
-    public void SetOptions(IReadOnlyList<string> labels, float width, int icons = 0)
+    public void SetOptions(IReadOnlyList<string> labels, float width)
     {
-        bool dropdown = CellsWidth(labels, icons) > width;
-        if (labels.SequenceEqual(_labels) && dropdown == IsDropdown && icons == _icons)
+        bool dropdown = CellsWidth(labels) > width;
+        if (labels.SequenceEqual(_labels) && dropdown == IsDropdown)
         {
             return;
         }
-        _icons = icons;
         foreach (Button cell in _cells)
         {
             _host.Unregister(_id + "/" + cell.Text);
@@ -135,9 +128,6 @@ public partial class SegmentedPicker : HBoxContainer
                 };
                 cell.AddThemeFontSizeOverride("font_size", UiTheme.SmallSize);
                 cell.AddThemeColorOverride("font_disabled_color", UiTheme.TextDim);
-                cell.AddThemeConstantOverride("icon_max_width", IconSize);
-                cell.AddThemeConstantOverride("h_separation", IconGap);
-                cell.IconAlignment = HorizontalAlignment.Right;
                 cell.Pressed += () => Pick(index);
                 cell.MouseEntered += () =>
                 {
@@ -179,21 +169,6 @@ public partial class SegmentedPicker : HBoxContainer
         else
         {
             _cells[index].Disabled = !enabled;
-        }
-    }
-
-    /// <summary>Shows a small icon after an option's label, tinted (null removes it).</summary>
-    public void SetIcon(int index, Texture2D? icon, Color tint)
-    {
-        if (IsDropdown || index < 0 || index >= _cells.Count)
-        {
-            return;
-        }
-        Button cell = _cells[index];
-        cell.Icon = icon;
-        foreach (string state in new[] { "icon_normal_color", "icon_hover_color", "icon_pressed_color", "icon_hover_pressed_color", "icon_disabled_color" })
-        {
-            cell.AddThemeColorOverride(state, tint);
         }
     }
 

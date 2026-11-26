@@ -301,7 +301,7 @@ public static class StateSnapshot
         if (root.Dialogs.Current == root.ResearchTree)
         {
             var cards = new JsonArray();
-            foreach ((ResearchProject project, bool running, float progress, bool selected, bool locked, bool visible) in root.ResearchTree.Cards)
+            foreach ((ResearchProject project, bool running, float progress, bool selected, bool locked) in root.ResearchTree.Cards)
             {
                 cards.Add(new JsonObject
                 {
@@ -309,12 +309,21 @@ public static class StateSnapshot
                     ["running"] = running,
                     ["progress"] = Round(progress),
                     ["selected"] = selected,
-                    ["locked"] = locked,
-                    ["shown"] = visible
+                    ["locked"] = locked
                 });
             }
-            ui["tier"] = root.ResearchTree.Tier;
-            ui["tiers"] = Tiers(root.ResearchTree.TierCells);
+            var sections = new JsonArray();
+            foreach ((int tier, string heading, bool locked, bool isChecked) in root.ResearchTree.Sections)
+            {
+                sections.Add(new JsonObject
+                {
+                    ["tier"] = tier,
+                    ["heading"] = heading,
+                    ["locked"] = locked,
+                    ["checked"] = isChecked
+                });
+            }
+            ui["sections"] = sections;
             (ResearchProject shown, string state, string button, bool enabled, string fee, string time, float done) = root.ResearchTree.DrawerShown;
             ui["header"] = root.ResearchTree.HeaderText;
             ui["cards"] = cards;
@@ -574,7 +583,7 @@ public static class StateSnapshot
         };
     }
 
-    // A tier picker's cells: label, whether it can be chosen, and whether it shows the check mark.
+    // A tier picker's cells: label, whether it can be chosen, and whether it is checked (never, today).
     private static JsonArray Tiers(System.Collections.Generic.IReadOnlyList<(string Label, bool Enabled, bool Checked)> cells)
     {
         var list = new JsonArray();

@@ -362,9 +362,10 @@ pausing it and stepping frame by frame.
   `loadable`) and `confirm`, and while the build menu is open, its `tier` (1 to 4), `tiers` (each picker cell's `label`,
   `enabled`, and `checked`), and `cells`, the chosen tier's cells in display order (on Tier 1
   `Road` and `Bridge` sorted in by name), each `type`, `state` (`affordable` or `unaffordable`),
-  and `label`; while the research tree is open, its `header`, `tier`, `tiers` (as the build
-  menu's, `checked` when every project of the tier is complete), its `cards` (every project, each
-  `project`, `running`, `progress` 0 to 1, `selected`, `locked`, and `shown`, in the chosen tier), and its `drawer` (the selected `project`, its `state` as shown,
+  and `label`; while the research tree is open, its `header`, `sections` (each tier's
+  `tier`, `heading` as shown, `locked`, and `checked` when every project of the tier is complete),
+  its `cards` (every project, each `project`, `running`, `progress` 0 to 1, `selected`, and
+  `locked`), and its `drawer` (the selected `project`, its `state` as shown,
   `button`, `enabled`, `fee`, `time`, and `progress` 0 to 1); while the
   detail panel is open, `building` (its id), `strip` (the status strip in order, each entry's
   `id` (`switch` for the on/off toggle, then `network`, `power`, `water`, `sand`, `charge`,
@@ -608,12 +609,12 @@ pausing it and stepping frame by frame.
   `roads` (Bridge first and Road among the menu's Tier 1 cells; the menu's Road tool laying an L of tiles by drag and taking their Stone, a Shift drag
   removing three for half back, a right drag panning instead, Escape leaving build mode; a Mine across a strip of ShallowWater out
   of a truck's reach until the Bridge tool spans it, then the truck hauling its ore home over it),
-  `research` (a Research Lab; T opening the tree on Material Transfer in Tier 1, Tier 2 disabled;
-  selecting Steel Works showing it in the drawer; starting Material Transfer from the drawer taking
-  its fee; pausing keeping progress; resuming without a second fee; the project completing,
-  Advanced Material Transfer staying locked until Steel Works unlocks tier 2; then Tier 1 checked,
-  Tier 2 chosen showing and selecting Advanced Material Transfer, available; and an online Mine's
-  Iron Ore reaching storage),
+  `research` (a Research Lab; T opening the tree on Material Transfer, the tree in Tier 1 to 3
+  sections, Tiers 2 and 3 headed with the research that unlocks them; selecting Steel Works showing
+  it in the drawer; starting Material Transfer from the drawer taking its fee; pausing keeping
+  progress; resuming without a second fee; the project completing, Advanced Material Transfer
+  staying locked until Steel Works unlocks tier 2; then Tier 1's heading checked and Advanced
+  Material Transfer's card selected, available; and an online Mine's Iron Ore reaching storage),
   `power-consumers` (at midday a Solar Array's 60 Power charging a Battery Bank at 50, with the
   clock, power, and store readouts; at night the bank carrying a Drill Rig at Normal; a Fission
   Reactor on Fuel Rods and Water adding 400),

@@ -217,12 +217,10 @@ Which control or display does which job, so new UI picks from this list instead 
    unit border, `TextDim` when not chosen and `Accent` when chosen, lightening on hover; exactly
    one is chosen. Labels are `SmallSize` with 8 units of side padding, cells 32 tall and 4 apart.
    For **mutually exclusive options with short labels (or icons), where seeing them all helps**:
-   Queue / Hold, Best / Coal / Charcoal / Wood, Auto / Coal / Charcoal, and the build menu's and
-   research tree's tier pickers.
+   Queue / Hold, Best / Coal / Charcoal / Wood, Auto / Coal / Charcoal, and the build menu's tier
+   picker.
    - A cell that cannot be chosen now is **disabled**: its label `TextDim`, its border darker, and
      a tooltip saying why ("Unlocked by Steel Works research").
-   - A cell may carry a **small mark** after its label (14 units), such as the `check` icon in
-     `Good` on a research tier whose projects are all complete.
 4. **Dropdown** (`OptionButton`): for **choices whose options do not fit on one row**, and for
    **recipes**, which are dropdowns on every building for consistency.
    - **Segmented or dropdown: space decides.** A segmented picker's cells must fit the room it has
@@ -289,8 +287,7 @@ Which control or display does which job, so new UI picks from this list instead 
   they do not fit the room given to `SetOptions`. Setting `Selected` from code raises nothing;
   a player's choice raises `Chosen`. It registers itself at its id and each cell at
   "id/label" (`selectUi` picks by label in either form). `SetEnabled(index, enabled, tooltip)`
-  disables a cell (or dropdown item) with its tooltip; `SetIcon(index, texture, tint)` puts a
-  14-unit icon after a cell's label, and `SetOptions` takes how many icons to leave room for.
+  disables a cell (or dropdown item) with its tooltip.
 - **Arrow picker** (`ArrowPicker`): two 32-unit square arrow buttons ("<" and ">", a `TextDim`
   border) either side of the current choice's cell, 4 apart. `SetOptions` sizes the cell to the
   widest label; `SetVisible` hides or shows a choice; `Step(direction)` is an arrow's press.

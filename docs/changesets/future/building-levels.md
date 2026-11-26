@@ -166,8 +166,7 @@ The level model changes saved buildings enough that old saves are not carried ov
 2. **Level models:** the new and refit models, with kept previews. This could land before phase
    1, as models only.
 3. **Deep levels:** the "around" work area (could fold into phase 1).
-4. **Research tree sections:** the single screen with tier bands, in place of the tree's tier
-   picker. This lands before or with phase 1, because phase 1 adds cross-tier prerequisites.
+4. **Research tree sections:** done (completed/2611261650-research-tree-sections.md).
 5. **Process speed research:** the speed model and the eight projects.
 6. **Save version:** done (completed/2611261642-save-version.md). Phase 1 raises
    `SaveFormat.Version` to 2.

@@ -26,7 +26,7 @@ storage only by hand or by truck.
 | Advanced Material Transfer | 2 | 1800 s (three game days) | 60 Steel, 20 Glass | Material Transfer | column 0, row 0 | transfers Crude Oil, Bauxite, Limestone, Quartz, Sulfur |
 | Steel Works | 1 | 1200 s (two game days) | 60 Iron, 60 Copper, 40 Glass, 80 Wood | none | column 0, row 1 | unlocks Tier 2 |
 | Electronics | 2 | 1800 s (three game days) | 60 Steel, 60 Plastic, 40 Aluminum, 120 Wood | Steel Works | column 0, row 1 | unlocks Tier 3 |
-| Computers | 3 | 2700 s (four and a half game days) | 60 Circuit, 20 Electric Motor, 40 Steel, 200 Wood | Electronics | column 0, row 0 | unlocks Tier 4 |
+| Computers | 3 | 2700 s (four and a half game days) | 60 Circuit, 20 Electric Motor, 40 Steel, 200 Wood | Electronics | column 0, row 1 | unlocks Tier 4 |
 
 (placeholders; a game day is `Simulation.DayLength`, 600 s. The unlock projects' fees are modest
 because they will later gain prerequisites of their own.)
@@ -83,21 +83,22 @@ because they will later gain prerequisites of their own.)
   mode); T, Escape, the Close button, or the backdrop closes it. It fills the window below the top
   bar with a 24-unit margin of world showing round it (it overrides `Dialog.Place`). Its header
   reads "Speed 1.5x: 2 labs working", or "No labs working: research waits" in `Warning`. Below,
-  on the left a segmented tier picker (`researchTree/tier`: "Tier 1" to "Tier 4") over the chosen
-  tier's tree (scrolling both ways when it outgrows its area), and a 340-unit drawer on the right.
-  A tier not yet unlocked is a disabled cell whose tooltip names its research ("Unlocked by Steel
-  Works research"); a tier whose projects are all complete shows the `check` icon after its name,
-  in `Good` (a tier with no projects shows none). Choosing a tier shows its tree and selects its
-  first project.
-- **The tree:** each of the tier's projects a 240 x 64 card placed by its column and row within
-  the tier (80 units between columns, 24 between rows), with a line and arrowhead from each
-  prerequisite's card in the same tier to the project it opens, in `Accent` once the prerequisite
-  is complete and `PanelEdge` before (a prerequisite in another tier shows only in the drawer). A card shows only
+  the tree on the left (one canvas, scrolling both ways when it outgrows its area) and a 340-unit
+  drawer on the right.
+- **Sections:** the tree is one section per tier that has projects, side by side left to right,
+  48 units apart, each as wide as its columns and all as tall as the tallest. A section is a faint
+  panel (`Cell` at 35% opacity) headed in `SmallSize` `TextDim` caps, letter-spaced: "TIER 2", or
+  while the tier is locked "TIER 3: UNLOCKED BY ELECTRONICS RESEARCH" (wrapping within the section).
+  Once every project of the tier is complete, the `check` icon follows the heading, tinted `Good`.
+- **The tree:** each project a 240 x 64 card placed in its tier's section by its column and row
+  (80 units between columns, 24 between rows), with a line and arrowhead from each prerequisite's
+  card to the project it opens, across sections too, in `Accent` once the prerequisite is complete
+  and `PanelEdge` before. A card shows only
   the project's icon (`icons/<project>`, as `icons/material_transfer`) and name, and while the project
   runs, "Running" in `Accent`, an `Accent` outline, and a thin progress bar along its foot. A
   Locked card is drawn at half opacity; the selected card is lighter with a `Text` outline.
   Clicking a card selects it. The tree opens on the running project, else the first Available or
-  Paused one, else the first, and on that project's tier.
+  Paused one, else the first, scrolled so its card is in view.
 - **The drawer** shows the selected project: its icon and name, its state ("Available", "Running"
   in `Accent`, "Paused", "Locked", "Complete"); its description; "Transfers" and the icons of what
   it carries (each with its name as a tooltip); its prerequisites ("Needs Material Transfer
