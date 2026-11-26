@@ -148,15 +148,15 @@ ui-style.md. There is no text HUD; the screen holds:
 - **Notifications** (`Notifications`, look in ui-style.md): `GameRoot` collects the sim's
   `Happened` events and, once a frame, turns them into toasts (`NotificationText`): a resource
   discovered for the first time (brief, its icon, "Discovered: Coal", and what can work it, "A
-  Mine or a Drill Rig can work it", or no detail when nothing extracts it); a building unlocked
-  (brief, its picture, "New building: Mine", "[B] to build"); a research project complete
-  (lasting, the project's icon, "Research complete: Material Transfer", its description); a
+  Mine or a Drill Rig can work it", or no detail when nothing extracts it); a research project
+  complete (lasting, the project's icon, "Research complete: Material Transfer", its description),
+  and for a tier's unlock project a second lasting toast after it (its icon, "Tier 2 buildings and
+  research are now available", "[B] to build"); a
   capacity in blackout (lasting, its icon, "Blackout: Water", "Demand 2 over supply 0"); a ship
   launched (lasting, the Shipyard's picture, "Ship launched", "Ships launched: 2"); a building
   refunded on load (lasting, its picture, "Burner Generator refunded", "It grew to 4 x 4 and no
   longer fit; its cost is back in storage"). A frame's
-  discoveries merge into one toast ("Discovered: Coal, Sulfur", the first one's icon, no detail),
-  and so do its unlocks ("New buildings: Mine, Smelter"), shown above the discoveries. A new
+  discoveries merge into one toast ("Discovered: Coal, Sulfur", the first one's icon, no detail). A new
   world and a load notify nothing. `GameRoot` sets `Notifications.Covered` while a modal is open,
   hiding the stack and holding its timers (ui-style.md).
 - **Trainer** (`Trainer`): teaches the controls and the opening, one step at a time on the step
@@ -168,8 +168,8 @@ ui-style.md. There is no text HUD; the screen holds:
      player)
   3. "Scroll the mouse wheel to zoom in and out." (the zoom has gone both ways)
   4. "Press [Space] to bring the view back to you." (the camera follows again)
-  5. "Walk to the trees and hold [E] to gather Wood." (the Lumber Camp is unlocked; the ring on the
-     nearest explored Wood field)
+  5. "Walk to the trees and hold [E] to gather Wood." (hint "Gather 15 to build the Lumber Camp.";
+     done when the Lumber Camp is affordable; the ring on the nearest explored Wood field)
   6. "Press [I] to see what you have." (the inventory is open)
   7. "Press [B] and choose the Lumber Camp." (build mode with it)
   8. "Press [R] to turn it." (its facing has changed)
@@ -233,7 +233,8 @@ ui-style.md. There is no text HUD; the screen holds:
   (the Road and Bridge cells have pictures drawn from `road_cross` and `bridge_deck` as UI icons, in color when one
   tile is affordable on plain ground, grayscale when not; a hover names the tool and its price);
   clicking one closes the menu and selects that line tool (buildings.md).
-  It lists every buildable type (not the HQ). Discovered buildings (`IsUnlocked`) come first, then undiscovered ones, each group by name.
+  It lists every buildable type (not the HQ). Discovered buildings (`IsUnlocked`: a tier unlocked
+  by research, buildings.md) come first, then undiscovered ones, each group by name.
   A discovered cell shows the building's picture and name, in full color when affordable and in
   grayscale when not; an undiscovered cell shows its silhouette labeled "Undiscovered" in the dim
   text color. Hovering a cell outlines it; a discovered cell also shows its tooltip, its description

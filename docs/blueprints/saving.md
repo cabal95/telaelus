@@ -32,7 +32,7 @@ Game; in a game, Escape opens the game menu (Resume, Save Game, Load Game, Train
     limit if need be), told to the player on the first step after the load;
   - every truck (id, Depot, bay, state, position, heading, cargo, target, timer, and its path with
     the point it is heading for), and the cells trucks found unreachable;
-  - the stockpile, unlocked buildings, discovered resources, ships launched, the time of day,
+  - the stockpile, discovered resources, ships launched, the time of day,
     research (active project, progress, paid fees, completed), road tiles and bridges, the player's
     position, the id counters, and the last capacity readings.
 - **Amounts keep their order** (dictionaries are saved in insertion order), so a loaded game steps
@@ -81,6 +81,9 @@ Game; in a game, Escape opens the game menu (Resume, Save Game, Load Game, Train
   `Simulation.FromSave`, the views built over it, the pins and zoom applied, and the play time
   carried on.
 - A failed load shows its reason: on the main menu's save list, or on the game menu's status line.
+- No unlocked-building list is saved: the unlocked tier comes from the research (research.md). An
+  older save's list is ignored, so it loads at the tier its research gives; buildings it has above
+  that tier keep working, but no more can be placed.
 
 ### The demo save
 
@@ -91,8 +94,9 @@ Game; in a game, Escape opens the game menu (Resume, Save Game, Load Game, Train
   does not import.
 - **The town** (`DemoTown`, in the sim): on generated world `DemoTown.Seed`, the world's fields
   within 12 map cells of the spawn are cleared and the town's own placed, then its buildings are
-  bought and placed as a player would (each cost put in the stockpile first, so each unlocks as in
-  play). It has:
+  bought and placed as a player would (each cost put in the stockpile first). Its Drill Rig is tier
+  2, so it first researches Steel Works (its fee paid the same way, the work done at once). It
+  has:
   - a Drill Rig on Iron Ore, powered by a Burner Generator;
   - Mines on Copper Ore and Coal, and a Lumber Camp;
   - five Smelters (four on Iron, one on Copper) and a Charcoal Kiln;

@@ -49,6 +49,9 @@ public class ResearchTests
         Assert.False(sim.StartResearch(Advanced));
 
         sim.Debug.SetResearchProgress(Basic, ResearchDefs.For(Basic).Work);
+        // Advanced Material Transfer is tier 2, so Steel Works must be done too.
+        Assert.Equal(ResearchState.Locked, sim.StateOf(Advanced));
+        sim.Debug.SetResearchProgress(ResearchProject.SteelWorks, ResearchDefs.For(ResearchProject.SteelWorks).Work);
 
         Assert.Equal(ResearchState.Complete, sim.StateOf(Basic));
         Assert.Equal(ResearchState.Available, sim.StateOf(Advanced));

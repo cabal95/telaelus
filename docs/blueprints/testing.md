@@ -163,12 +163,10 @@ pausing it and stepping frame by frame.
   `BuildingDefs` and `Recipes` (the failure prints the table as it should read).
 - `BuildingDescriptionTests`: every buildable building has a description under 80 characters
   with no long dash; the HQ has none.
-- `CostTests`: unlocking once the whole cost is held, by seeding and by hand gathering (kept
-  when the stock runs out), placement
+- `CostTests`: an unlocked building staying unlocked when the stock runs out, placement
   deducting the cost, refusal with nothing deducted when locked, unaffordable, or blocked, free
   debug placement, and every building having a cost and every deposit a gather time.
-- `EventTests`: `Happened` raised once per unlock (a burst of unlocks one event each), per
-  first discovery, per completed project, and per launch; a blackout raised once, and again only
+- `EventTests`: `Happened` raised once per first discovery, per completed project, and per launch; a blackout raised once, and again only
   after the capacity was back to normal; nothing from a new world or a load.
 - `LaunchTests`: the launch needing the whole ship bill and an online Shipyard, consuming the bill
   and counting the ship, and an end-to-end run on the empty map from placed fields through the
@@ -204,7 +202,15 @@ pausing it and stepping frame by frame.
 - `DemoTownTests`: the demo town (saving.md) built and run as the demo save is: every building
   online and working, power normal, four trucks, Material Transfer running; every collector on a
   field and the Smelters fed by truck; no truck waiting on storage and every Smelter working 15
-  minutes later; and every building it has unlocked.
+  minutes later; and every building it has unlocked (Steel Works complete, so its tier 2 Drill
+  Rig).
+- `TierTests`: tier 1 unlocked from the start and nothing above it; holding a tier 2 cost not
+  unlocking it; each unlock project raising the unlocked tier by one; a Steel Mill placeable after
+  Steel Works; a project in a locked tier locked until its tier unlocks; a loaded building in a
+  locked tier working while no more can be placed; every buildable building tier 1 to 4 costing
+  nothing above its tier; each tier's gateways built from the tier below; a tier N building making
+  tier N items (Lithium and the Air Separator's Liquid Oxygen excepted); each unlock project in the
+  tier below the one it unlocks and paid in its own tier.
 - `PowerStoreTests`: the clock starting mid-morning, advancing, and wrapping; daylight through the
   day; the Solar Array's supply by daylight and its night status; a Battery Bank charging at its
   rate up to its capacity, covering a shortage at Normal until it runs dry, giving at most its rate
@@ -271,10 +277,11 @@ pausing it and stepping frame by frame.
     `{ from: [x, z], to: [x, z] }` (lay a road line or bridge span free, as `placeBuilding` places;
     fail when nothing can be laid), `removeRoad` and `removeBridge` (the same, with the refund), `startResearch` (a project name; fails
     when it cannot start), `pauseResearch` (`{}`), `startTrainer` (`{}`, or `{ step }` 1-based: start or restart the trainer there), `askTrainer` (`{}`: open the first New Game's question, which test runs never ask on their own), `setResearchProgress` `{ project, seconds }` (at
-    full work it completes),
+    full work it completes; scenarios that select a tier 2 or higher building through the menu
+    complete Steel Works or the tier's project this way first),
     `placeMotherlode`
     `{ kind, mapCell }`, `setWorkedOut` `{ mapCell, deposit }`
-    (unlocks any building whose whole cost is then held; scenarios that place through the menu and a click seed first), `cameraZoom` `{ size }` (the camera's zoom: world units across 720 pixels
+    `cameraZoom` `{ size }` (the camera's zoom: world units across 720 pixels
     of window height, so at the 1280 x 720 scenario resolution it is the visible world height).
   - Input: `press` (key down now, up at the start of the next frame), `keyDown`, `keyUp`, `hold`
     `{ key, frames }` (down, wait, up), `aimDrag` `{ from: [x, z], to: [x, z], button?: left|right,
@@ -408,7 +415,7 @@ pausing it and stepping frame by frame.
   `active` project or null, `speed`, and `projects`, each camel-cased with `state`, `progress`, and
   `paid`); `roads` (each road tile's corner cell, by row); `bridges` (each span's `tiles` and
   `alongX`); `discovered` (the discovered resources' type names, in enum
-  order); `unlockedBuildings` (type names, in enum order); and
+  order); `unlockedTier` (1 to 4); `unlockedBuildings` (type names, in enum order); and
   `shipsLaunched`. New checks are added as snapshot fields.
 - **Input injection:** keys and mouse buttons go through `Input.ParseInputEvent` followed by
   `Input.FlushBufferedEvents()`, so they are delivered in the current frame (Godot otherwise
@@ -593,8 +600,8 @@ pausing it and stepping frame by frame.
   `research` (a Research Lab; T opening the tree on Material Transfer with Advanced Material
   Transfer locked, selecting its card showing it disabled in the drawer; starting Material
   Transfer from the drawer taking its fee; pausing keeping progress; resuming without a second fee; the
-  project completing, Advanced Material Transfer turning available, and an online Mine's Iron Ore
-  reaching storage),
+  project completing, Advanced Material Transfer staying locked until Steel Works unlocks tier 2
+  and then turning available, and an online Mine's Iron Ore reaching storage),
   `power-consumers` (at midday a Solar Array's 60 Power charging a Battery Bank at 50, with the
   clock, power, and store readouts; at night the bank carrying a Drill Rig at Normal; a Fission
   Reactor on Fuel Rods and Water adding 400),
@@ -610,10 +617,11 @@ pausing it and stepping frame by frame.
   reading Done before the next; the ring on the nearest Wood and on the camp; a step already done
   completing at once; the "Trainer complete" toast; the card's X asking to stop, Keep going and
   Stop; a save resuming the step; the game menu's Trainer starting it again),
-  `notifications` (no toasts in a new world; seeding Wood showing "New building: Lumber Camp"
-  above "Discovered: Wood"; the build menu hiding the stack and holding its time, a discovery
+  `notifications` (no toasts in a new world; seeding Wood showing only "Discovered: Wood"; the
+  build menu hiding the stack and holding its time, a discovery
   under it joining the hidden stack, all showing again once it closes and gone after 5 s; a finished project's lasting toast held while
-  hovered and closed by its X; a Water blackout and a ship launch each a lasting toast; a burst of
+  hovered and closed by its X; Steel Works showing its research toast and "Tier 2 buildings and
+  research are now available" above it; a Water blackout and a ship launch each a lasting toast; a burst of
   discoveries as one toast without detail; a fifth and sixth toast pushing out the oldest brief
   ones; the lasting ones gone after 15 s),
   `renewables` (a Forester on Water and Power growing its trees, a Lumber Camp idle until they are
@@ -647,8 +655,8 @@ pausing it and stepping frame by frame.
   keeps its hover with it open; it turns the building off and on; clicking another building
   switches it; empty ground, B, and Escape close it; the panel is a third of the window wide; Destroy shows
   its refund on hover, asks once, then refunds half the cost),
-  `build-menu` (B opens the menu with discovered buildings first, affordable in color and short
-  ones gray, then undiscovered ones; the modal menu stops the world; a hover shows the description
+  `build-menu` (B opens the menu with discovered buildings first, every tier 1 building from the
+  start, affordable in color and short ones gray, then undiscovered ones (higher tiers); the modal menu stops the world; a hover shows the description
   and then the cost, none for an undiscovered cell, which ignores clicks; B, Escape, and Close close it; clicking an
   unaffordable discovered cell selects it with the placement tooltip),
   `build-rotate` (R rotates the Refinery ghost 2 x 3 to 3 x 2 and back), `place-at-mouse` (aim and
@@ -657,8 +665,7 @@ pausing it and stepping frame by frame.
   click on ground does not walk; a right click with a building's panel open walks and keeps it
   open; a right click on the building walks beside it, and on a pond to its nearest shore; a right
   drag pans without walking; in build mode a left click places and a right click walks),
-  `harvest-input` (holding E fills the progress bar and harvests one Wood at 3 s, which does
-  not yet unlock the Lumber Camp), `field-stage-views` (visible models track the stage and
+  `harvest-input` (holding E fills the progress bar and harvests one Wood at 3 s), `field-stage-views` (visible models track the stage and
   vanish with the field), `pause-step` (a right click and a key, while paused, wait for `step`, the walk starting
   with the release,
   and steps advance exact ticks), `place-on-player` (a building cannot be placed on the player;

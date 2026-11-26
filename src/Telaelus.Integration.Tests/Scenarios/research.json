@@ -1,7 +1,7 @@
 {
   "$schema": "../scenario.schema.json",
   "name": "research",
-  "description": "Research from a Research Lab: T opens the tree over most of the screen, cards on the left and the selected project's drawer on the right; Advanced Material Transfer is locked behind Material Transfer; starting Material Transfer from the drawer takes its fee; pausing keeps its progress, resuming charges nothing; once complete, an online Mine's Iron Ore flows into storage and Advanced Material Transfer becomes available.",
+  "description": "Research from a Research Lab: T opens the tree over most of the screen, cards on the left and the selected project's drawer on the right; Advanced Material Transfer is locked behind Material Transfer; starting Material Transfer from the drawer takes its fee; pausing keeps its progress, resuming charges nothing; once complete, an online Mine's Iron Ore flows into storage and Advanced Material Transfer becomes available once Steel Works unlocks tier 2.",
   "steps": [
     { "newGame": {} },
     { "initMap": {} },
@@ -67,6 +67,9 @@
     { "wait": 120 },
     { "expect": "research.projects.materialTransfer.state", "equals": "complete" },
     { "expect": "research.active", "equals": null },
+    { "comment": "Advanced Material Transfer is tier 2: still locked until Steel Works opens the tier.", "expect": "ui.cards[1].locked", "equals": true },
+    { "setResearchProgress": { "project": "SteelWorks", "seconds": 1200 } },
+    { "wait": 2 },
     { "expect": "ui.cards[1].locked", "equals": false },
     { "clickUi": { "id": "researchTree/card/AdvancedMaterialTransfer" } },
     { "wait": 2 },

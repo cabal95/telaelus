@@ -40,7 +40,6 @@ public sealed partial class Simulation
             NextFieldId = _nextFieldId,
             NextTruckId = _nextTruckId,
             NextBridgeId = _nextBridgeId,
-            Unlocked = _unlocked.OrderBy(t => t).ToList(),
             Discovered = _discovered.OrderBy(t => t).ToList(),
             Stockpile = Amounts(_stockpile)
         };
@@ -158,7 +157,6 @@ public sealed partial class Simulation
         _unreachable.Clear();
         _occupied.Clear();
         _stockpile.Clear();
-        _unlocked.Clear();
         _discovered.Clear();
         ResetResearch();
         ResetRoads();
@@ -296,7 +294,6 @@ public sealed partial class Simulation
         {
             AddToStockpile(held.Type, held.Amount);
         }
-        _unlocked.UnionWith(data.Unlocked);
         _discovered.Clear();
         _discovered.UnionWith(data.Discovered);
         ShipsLaunched = data.ShipsLaunched;

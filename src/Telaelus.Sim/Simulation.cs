@@ -45,9 +45,6 @@ public sealed partial class Simulation
     private readonly Dictionary<ResourceType, float> _stockpile = new();
     public IReadOnlyDictionary<ResourceType, float> Stockpile => _stockpile;
 
-    /// <summary>Buildings whose whole cost the stockpile has held at once; it never clears during play.</summary>
-    private readonly HashSet<BuildingType> _unlocked = new();
-
     /// <summary>The field currently in range to hand-harvest, or null.</summary>
     public ResourceField? HarvestTarget { get; private set; }
 
@@ -298,13 +295,11 @@ public sealed partial class Simulation
         return true;
     }
 
-    /// <summary>
-    /// A building is unlocked once the stockpile has held its whole cost at once; it
-    /// stays unlocked when the stock later runs short.
-    /// </summary>
+    /// <summary>Whether its tier is unlocked: a buildable type of the unlocked tier or below.</summary>
     public bool IsUnlocked(BuildingType type)
     {
-        return _unlocked.Contains(type);
+        BuildingDef def = BuildingDefs.For(type);
+        return def.Buildable && def.Tier <= UnlockedTier;
     }
 
     /// <summary>Whether the stockpile holds the building's whole cost.</summary>
@@ -1057,22 +1052,6 @@ public sealed partial class Simulation
         if (amount > 0f)
         {
             Discover(type);
-            UnlockAffordable();
-        }
-    }
-
-    private void UnlockAffordable()
-    {
-        foreach (BuildingType type in Enum.GetValues<BuildingType>())
-        {
-            if (!_unlocked.Contains(type) && BuildingDefs.For(type).Buildable && CanAfford(type))
-            {
-                _unlocked.Add(type);
-                Raise(new SimEvent(SimEventKind.Unlocked)
-                {
-                    Building = type
-                });
-            }
         }
     }
 }

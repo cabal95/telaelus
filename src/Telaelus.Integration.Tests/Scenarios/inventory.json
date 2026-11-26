@@ -21,8 +21,8 @@
     { "expect": "discovered", "equals": ["Quartz", "Steel"] },
     { "expect": "ui.inventory[0]", "equals": { "type": "Quartz", "amount": 0, "limit": 0, "section": "raw", "discovered": true, "pinned": true } },
     { "expect": "ui.inventory[1]", "equals": { "type": "Wood", "amount": 0, "limit": 100, "section": "raw", "discovered": false, "pinned": false } },
-    { "expect": "ui.inventory[17]", "equals": { "type": "Steel", "amount": 3, "limit": null, "section": "tier1", "discovered": true, "pinned": true } },
-    { "expect": "ui.inventory[18]", "equals": { "type": "Iron", "amount": 0, "limit": null, "section": "tier1", "discovered": false, "pinned": false } },
+    { "comment": "Steel is tier 2, after the six tier 1 rows.", "expect": "ui.inventory[23]", "equals": { "type": "Steel", "amount": 3, "limit": null, "section": "tier2", "discovered": true, "pinned": true } },
+    { "expect": "ui.inventory[24]", "equals": { "type": "RocketFuel", "amount": 0, "limit": 0, "section": "tier2", "discovered": false, "pinned": false } },
     { "screenshot": "some-discovered" }
   ]
 }

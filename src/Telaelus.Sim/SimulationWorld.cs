@@ -69,7 +69,6 @@ public sealed partial class Simulation
         _unreachable.Clear();
         _occupied.Clear();
         _stockpile.Clear();
-        _unlocked.Clear();
         _discovered.Clear();
         ResetResearch();
         ResetRoads();

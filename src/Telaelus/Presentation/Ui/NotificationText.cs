@@ -9,8 +9,9 @@ namespace Telaelus.Presentation.Ui;
 public sealed record Toastable(ToastStyle Style, Texture2D? Icon, string Title, string? Detail);
 
 /// <summary>
-/// Turns one frame's sim events into toasts. Discoveries merge into one toast, and so do unlocks (shown above them)
-/// ("New buildings: Mine, Smelter"); research, blackouts, and launches get one each, in order.
+/// Turns one frame's sim events into toasts. Discoveries merge into one toast; research, blackouts, and launches get
+/// one each, in order, and a project that unlocks a tier adds "Tier 2 buildings and research are now available" after
+/// its own.
 /// </summary>
 public static class NotificationText
 {
@@ -24,21 +25,19 @@ public static class NotificationText
             toasts.Add(new Toastable(ToastStyle.Brief, icons.For(discovered[0]), "Discovered: " + names,
                 discovered.Count == 1 ? WorkedBy(discovered[0]) : null));
         }
-        var unlocked = events.Where(e => e.Kind == SimEventKind.Unlocked).Select(e => e.Building).Distinct().ToList();
-        if (unlocked.Count > 0)
-        {
-            string names = string.Join(", ", unlocked.Select(t => BuildingDefs.For(t).Name));
-            toasts.Add(new Toastable(ToastStyle.Brief, pictures.Color(unlocked[0]),
-                (unlocked.Count == 1 ? "New building: " : "New buildings: ") + names, "[B] to build"));
-        }
         foreach (SimEvent e in events)
         {
             switch (e.Kind)
             {
                 case SimEventKind.ResearchComplete:
                     ResearchDef def = ResearchDefs.For(e.Project);
-                    toasts.Add(new Toastable(ToastStyle.Lasting, icons.Icon(ResearchTree.ResearchIconName(e.Project)),
-                        "Research complete: " + def.Name, def.Description));
+                    Texture2D? icon = icons.Icon(ResearchTree.ResearchIconName(e.Project));
+                    toasts.Add(new Toastable(ToastStyle.Lasting, icon, "Research complete: " + def.Name, def.Description));
+                    if (def.Unlocks is int tier)
+                    {
+                        toasts.Add(new Toastable(ToastStyle.Lasting, icon, $"Tier {tier} buildings and research are now available",
+                            "[B] to build"));
+                    }
                     break;
                 case SimEventKind.Blackout:
                     CapacityReading reading = sim.Capacity(e.Capacity);

@@ -69,8 +69,12 @@ public sealed record BuildingDef(
     /// <summary>How many units its output buffer holds (extractors and processors; 0 for none).</summary>
     public float OutputBuffer { get; init; }
 
-    /// <summary>Its tier: 0 for the unpowered start, 1 for the first powered buildings.</summary>
-    public int Tier { get; init; }
+    /// <summary>
+    /// Its tier, 1 to 4: tier 1 is buildable from the start, and each higher tier once its unlock
+    /// research is complete (see <see cref="Simulation.UnlockedTier"/>). A tier N building makes tier
+    /// N items.
+    /// </summary>
+    public int Tier { get; init; } = 1;
 
     private static readonly IReadOnlyDictionary<CapacityType, float> NoCapacity = new Dictionary<CapacityType, float>();
 
@@ -189,6 +193,7 @@ public static class BuildingDefs
         ResourceType.CrudeOil
     }, 3f)
     {
+        Tier = 2,
         OutputBuffer = 20f
     };
     private static readonly BuildingDef Smelter = new("Smelter", 3, 3, new ResourceAmount[]
@@ -207,8 +212,8 @@ public static class BuildingDefs
         new(ResourceType.Wood, 20f)
     }, Array.Empty<ResourceType>(), 0f)
     {
+        Tier = 2,
         OutputBuffer = 10f,
-        Tier = 1,
         Draws = new Dictionary<CapacityType, float>
         {
             [CapacityType.Power] = 25f,
@@ -260,6 +265,7 @@ public static class BuildingDefs
         new(ResourceType.Stone, 20f)
     }, Array.Empty<ResourceType>(), 0f)
     {
+        Tier = 2,
         Storage = StorageRole.ClassStore,
         StoresClass = StorageClass.Fluid
     };
@@ -278,6 +284,7 @@ public static class BuildingDefs
         new(ResourceType.Stone, 40f)
     }, Array.Empty<ResourceType>(), 0f)
     {
+        Tier = 2,
         Storage = StorageRole.ClassStore,
         StoresClass = StorageClass.Secure
     };
@@ -335,9 +342,9 @@ public static class BuildingDefs
         ResourceType.Wood
     }, 8f)
     {
+        Tier = 2,
         Speed = 2f,
         OutputBuffer = 40f,
-        Tier = 1,
         Draws = new Dictionary<CapacityType, float>
         {
             [CapacityType.Power] = 5f
@@ -363,9 +370,9 @@ public static class BuildingDefs
         ResourceType.Crystals
     }, 8f)
     {
+        Tier = 2,
         Speed = 2f,
         OutputBuffer = 40f,
-        Tier = 1,
         Draws = new Dictionary<CapacityType, float>
         {
             [CapacityType.Power] = 10f
@@ -386,11 +393,12 @@ public static class BuildingDefs
     };
     private static readonly BuildingDef PumpingStation = new("Pumping Station", 3, 3, new ResourceAmount[]
     {
-        new(ResourceType.Iron, 40f),
+        new(ResourceType.Iron, 30f),
+        new(ResourceType.Steel, 10f),
         new(ResourceType.Stone, 20f)
     }, Array.Empty<ResourceType>(), 0f)
     {
-        Tier = 1,
+        Tier = 2,
         Supplies = new Dictionary<CapacityType, float>
         {
             [CapacityType.Water] = 16f
@@ -415,11 +423,12 @@ public static class BuildingDefs
     };
     private static readonly BuildingDef SandDredge = new("Sand Dredge", 3, 3, new ResourceAmount[]
     {
-        new(ResourceType.Iron, 40f),
+        new(ResourceType.Iron, 30f),
+        new(ResourceType.Steel, 10f),
         new(ResourceType.Stone, 20f)
     }, Array.Empty<ResourceType>(), 0f)
     {
-        Tier = 1,
+        Tier = 2,
         Supplies = new Dictionary<CapacityType, float>
         {
             [CapacityType.Sand] = 8f
@@ -446,7 +455,7 @@ public static class BuildingDefs
         new(ResourceType.Stone, 20f)
     }, Array.Empty<ResourceType>(), 0f)
     {
-        Tier = 1,
+        Tier = 2,
         Placement = Placement.OpenGrassCell,
         Draws = new Dictionary<CapacityType, float>
         {
@@ -461,7 +470,7 @@ public static class BuildingDefs
         new(ResourceType.Wood, 30f)
     }, Array.Empty<ResourceType>(), 0f)
     {
-        Tier = 1,
+        Tier = 2,
         Placement = Placement.BesideMountain,
         Draws = new Dictionary<CapacityType, float>
         {
@@ -480,11 +489,12 @@ public static class BuildingDefs
     };
     private static readonly BuildingDef RockCrusher = new("Rock Crusher", 3, 3, new ResourceAmount[]
     {
-        new(ResourceType.Iron, 40f),
+        new(ResourceType.Iron, 30f),
+        new(ResourceType.Steel, 10f),
         new(ResourceType.Stone, 20f)
     }, Array.Empty<ResourceType>(), 0f)
     {
-        Tier = 1,
+        Tier = 2,
         Draws = new Dictionary<CapacityType, float>
         {
             [CapacityType.Power] = 15f
@@ -497,11 +507,11 @@ public static class BuildingDefs
     };
     private static readonly BuildingDef DeepWell = new("Deep Well", 4, 4, new ResourceAmount[]
     {
-        new(ResourceType.Iron, 60f),
+        new(ResourceType.Steel, 40f),
         new(ResourceType.Stone, 30f)
     }, Array.Empty<ResourceType>(), 0f)
     {
-        Tier = 1,
+        Tier = 2,
         Placement = Placement.OverSite,
         Sites = new[]
         {
@@ -516,11 +526,11 @@ public static class BuildingDefs
     };
     private static readonly BuildingDef DeepMine = new("Deep Mine", 4, 4, new ResourceAmount[]
     {
-        new(ResourceType.Iron, 80f),
-        new(ResourceType.Stone, 40f)
+        new(ResourceType.Steel, 60f),
+        new(ResourceType.Concrete, 30f)
     }, Array.Empty<ResourceType>(), 0f)
     {
-        Tier = 2,
+        Tier = 3,
         Placement = Placement.OverSite,
         Sites = new[]
         {
@@ -545,7 +555,7 @@ public static class BuildingDefs
         new(ResourceType.Iron, 40f)
     }, Array.Empty<ResourceType>(), 0f)
     {
-        Tier = 1,
+        Tier = 2,
         OutputBuffer = 10f,
         Draws = new Dictionary<CapacityType, float>
         {
@@ -558,7 +568,7 @@ public static class BuildingDefs
         new(ResourceType.Copper, 20f)
     }, Array.Empty<ResourceType>(), 0f)
     {
-        Tier = 1,
+        Tier = 2,
         OutputBuffer = 10f,
         Draws = new Dictionary<CapacityType, float>
         {
@@ -572,7 +582,7 @@ public static class BuildingDefs
         new(ResourceType.Copper, 20f)
     }, Array.Empty<ResourceType>(), 0f)
     {
-        Tier = 1,
+        Tier = 2,
         OutputBuffer = 10f,
         Draws = new Dictionary<CapacityType, float>
         {
@@ -585,7 +595,7 @@ public static class BuildingDefs
         new(ResourceType.Copper, 20f)
     }, Array.Empty<ResourceType>(), 0f)
     {
-        Tier = 1,
+        Tier = 2,
         OutputBuffer = 10f,
         Draws = new Dictionary<CapacityType, float>
         {
@@ -599,7 +609,7 @@ public static class BuildingDefs
         new(ResourceType.Stone, 30f)
     }, Array.Empty<ResourceType>(), 0f)
     {
-        Tier = 1,
+        Tier = 2,
         OutputBuffer = 10f,
         Draws = new Dictionary<CapacityType, float>
         {
@@ -612,7 +622,7 @@ public static class BuildingDefs
         new(ResourceType.Copper, 20f)
     }, Array.Empty<ResourceType>(), 0f)
     {
-        Tier = 1,
+        Tier = 2,
         OutputBuffer = 10f,
         Draws = new Dictionary<CapacityType, float>
         {
@@ -626,7 +636,7 @@ public static class BuildingDefs
         new(ResourceType.Copper, 20f)
     }, Array.Empty<ResourceType>(), 0f)
     {
-        Tier = 2,
+        Tier = 3,
         OutputBuffer = 10f,
         Draws = new Dictionary<CapacityType, float>
         {
@@ -640,7 +650,7 @@ public static class BuildingDefs
         new(ResourceType.Glass, 10f)
     }, Array.Empty<ResourceType>(), 0f)
     {
-        Tier = 2,
+        Tier = 3,
         OutputBuffer = 10f,
         Draws = new Dictionary<CapacityType, float>
         {
@@ -654,7 +664,7 @@ public static class BuildingDefs
         new(ResourceType.Steel, 20f)
     }, Array.Empty<ResourceType>(), 0f)
     {
-        Tier = 2,
+        Tier = 3,
         OutputBuffer = 10f,
         Draws = new Dictionary<CapacityType, float>
         {
@@ -668,7 +678,7 @@ public static class BuildingDefs
         new(ResourceType.Circuit, 10f)
     }, Array.Empty<ResourceType>(), 0f)
     {
-        Tier = 3,
+        Tier = 4,
         OutputBuffer = 10f,
         Draws = new Dictionary<CapacityType, float>
         {
@@ -714,7 +724,7 @@ public static class BuildingDefs
         new(ResourceType.Lumber, 20f)
     }, Array.Empty<ResourceType>(), 0f)
     {
-        Tier = 1,
+        Tier = 2,
         OutputBuffer = 10f,
         Draws = new Dictionary<CapacityType, float>
         {
@@ -729,7 +739,7 @@ public static class BuildingDefs
         new(ResourceType.Concrete, 20f)
     }, Array.Empty<ResourceType>(), 0f)
     {
-        Tier = 1,
+        Tier = 2,
         Placement = Placement.OnSaltFlat,
         OutputBuffer = 10f,
         Draws = new Dictionary<CapacityType, float>
@@ -745,7 +755,7 @@ public static class BuildingDefs
         new(ResourceType.Glass, 20f)
     }, Array.Empty<ResourceType>(), 0f)
     {
-        Tier = 2,
+        Tier = 3,
         OutputBuffer = 10f,
         Draws = new Dictionary<CapacityType, float>
         {
@@ -760,7 +770,7 @@ public static class BuildingDefs
         new(ResourceType.ElectricMotor, 6f)
     }, Array.Empty<ResourceType>(), 0f)
     {
-        Tier = 2,
+        Tier = 3,
         OutputBuffer = 10f,
         Draws = new Dictionary<CapacityType, float>
         {
@@ -775,7 +785,7 @@ public static class BuildingDefs
         new(ResourceType.Computer, 10f)
     }, Array.Empty<ResourceType>(), 0f)
     {
-        Tier = 3,
+        Tier = 4,
         OutputBuffer = 10f,
         Draws = new Dictionary<CapacityType, float>
         {
@@ -791,7 +801,7 @@ public static class BuildingDefs
         new(ResourceType.Concrete, 10f)
     }, Array.Empty<ResourceType>(), 0f)
     {
-        Tier = 2,
+        Tier = 3,
         Solar = true,
         Supplies = new Dictionary<CapacityType, float>
         {
@@ -805,7 +815,7 @@ public static class BuildingDefs
         new(ResourceType.Concrete, 10f)
     }, Array.Empty<ResourceType>(), 0f)
     {
-        Tier = 2,
+        Tier = 3,
         StoreCapacity = 6000f,
         StoreRate = 50f
     };
@@ -818,7 +828,7 @@ public static class BuildingDefs
         new(ResourceType.Computer, 10f)
     }, Array.Empty<ResourceType>(), 0f)
     {
-        Tier = 3,
+        Tier = 4,
         BurnsFuel = true,
         Fuels = new[]
         {
@@ -841,7 +851,6 @@ public static class BuildingDefs
         new(ResourceType.Iron, 30f)
     }, Array.Empty<ResourceType>(), 0f)
     {
-        Tier = 1,
         Researches = true,
         Draws = new Dictionary<CapacityType, float>
         {

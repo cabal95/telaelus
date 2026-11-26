@@ -37,10 +37,10 @@ public class ResourceTests
 
         Assert.Equal(63, Enum.GetValues<ResourceType>().Length);
         Assert.Equal(17, byTier[0].Count());
-        Assert.Equal(20, byTier[1].Count());
-        Assert.Equal(16, byTier[2].Count());
-        Assert.Equal(8, byTier[3].Count());
-        Assert.Equal(new[] { ResourceType.HullSection, ResourceType.Engine }, byTier[4]);
+        Assert.Equal(new[] { ResourceType.Iron, ResourceType.Copper, ResourceType.Glass, ResourceType.Lumber, ResourceType.Charcoal, ResourceType.Cement }, byTier[1]);
+        Assert.Equal(13, byTier[2].Count());
+        Assert.Equal(16, byTier[3].Count());
+        Assert.Equal(11, byTier[4].Count());
         Assert.Equal(Enum.GetValues<ResourceType>().OrderBy(type => ResourceDefs.For(type).Tier), Enum.GetValues<ResourceType>());
     }
 

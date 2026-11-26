@@ -52,7 +52,7 @@
     { "expect": "ui.inventory[0]", "equals": { "type": "Wood", "amount": 30, "limit": 100, "section": "raw", "discovered": true, "pinned": true } },
     { "comment": "Undiscovered raw resources follow the discovered ones; Lithium is the last raw row.", "expect": "ui.inventory[16]", "equals": { "type": "Lithium", "amount": 0, "limit": 0, "section": "raw", "discovered": false, "pinned": false } },
     { "expect": "ui.inventory[17]", "equals": { "type": "Iron", "amount": 12, "limit": null, "section": "tier1", "discovered": true, "pinned": true } },
-    { "expect": "ui.inventory[18]", "equals": { "type": "RocketFuel", "amount": 0, "limit": 0, "section": "tier1", "discovered": false, "pinned": false } },
+    { "expect": "ui.inventory[18]", "equals": { "type": "Copper", "amount": 0, "limit": null, "section": "tier1", "discovered": false, "pinned": false } },
     { "comment": "12 Iron take 12 of the HQ's 150 Cargo.", "expect": "ui.cargo", "equals": "Cargo (12 / 150)" },
     { "press": "F3" },
     { "wait": 2 },

@@ -5,7 +5,7 @@
   "steps": [
     { "newGame": {} },
     { "initMap": {} },
-    { "comment": "Buildings cost resources and unlock once their materials are held.", "seedStockpile": { "type": "Wood", "amount": 500 } },
+    { "comment": "Buildings cost resources.", "seedStockpile": { "type": "Wood", "amount": 500 } },
     { "seedStockpile": { "type": "Stone", "amount": 500 } },
     { "seedStockpile": { "type": "Iron", "amount": 500 } },
     { "press": "B" },

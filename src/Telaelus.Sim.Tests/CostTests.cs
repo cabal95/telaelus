@@ -11,60 +11,6 @@ public class CostTests
     }
 
     [Fact]
-    public void NothingIsUnlocked_AtTheStart()
-    {
-        Simulation sim = EmptyMap();
-
-        foreach (BuildingType type in System.Enum.GetValues<BuildingType>())
-        {
-            Assert.False(sim.IsUnlocked(type), type.ToString());
-        }
-    }
-
-    [Fact]
-    public void Buildings_UnlockOnceTheirWholeCostIsHeld()
-    {
-        Simulation sim = EmptyMap();
-
-        // Some of every material is not enough.
-        sim.Debug.SeedStockpile(ResourceType.Wood, 14f);
-        sim.Debug.SeedStockpile(ResourceType.Stone, 14f);
-        Assert.False(sim.IsUnlocked(BuildingType.LumberCamp));
-        Assert.False(sim.IsUnlocked(BuildingType.Mine));
-
-        sim.Debug.SeedStockpile(ResourceType.Wood, 1f);
-        Assert.True(sim.IsUnlocked(BuildingType.LumberCamp));
-        Assert.False(sim.IsUnlocked(BuildingType.Mine));
-
-        sim.Debug.SeedStockpile(ResourceType.Wood, 10f);
-        sim.Debug.SeedStockpile(ResourceType.Stone, 1f);
-        Assert.True(sim.IsUnlocked(BuildingType.Mine));
-        Assert.False(sim.IsUnlocked(BuildingType.Smelter));
-        Assert.False(sim.IsUnlocked(BuildingType.OilWell));
-    }
-
-    [Fact]
-    public void HandGathering_UnlocksAtTheUnitThatCompletesTheCost()
-    {
-        var sim = new Simulation();
-        sim.Debug.ResetToEmptyMap();
-        sim.Debug.PlaceField(ResourceType.Wood, 8, 7);
-        sim.Debug.SeedStockpile(ResourceType.Wood, 13f);
-        SimTestHelpers.Teleport(sim, 33.5f, 33f);
-        sim.Intent = new PlayerIntent
-        {
-            Harvest = true
-        };
-
-        SimTestHelpers.Seconds(sim, 3.1);
-        Assert.False(sim.IsUnlocked(BuildingType.LumberCamp));
-
-        SimTestHelpers.Seconds(sim, 3.0);
-        Assert.Equal(15f, SimTestHelpers.Stock(sim, ResourceType.Wood));
-        Assert.True(sim.IsUnlocked(BuildingType.LumberCamp));
-    }
-
-    [Fact]
     public void Unlocking_IsKeptWhenTheStockRunsOut()
     {
         Simulation sim = EmptyMap();

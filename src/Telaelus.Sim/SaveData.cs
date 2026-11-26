@@ -18,7 +18,6 @@ public sealed class SaveData
     /// <summary>Collector and truck ids a truck found no path for.</summary>
     public List<int[]> Unreachable { get; set; } = new();
     public List<AmountData> Stockpile { get; set; } = new();
-    public List<BuildingType> Unlocked { get; set; } = new();
     public List<ResourceType> Discovered { get; set; } = new();
     public int ShipsLaunched { get; set; }
     public float TimeOfDay { get; set; }

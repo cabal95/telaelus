@@ -65,7 +65,7 @@ and mirrors it onto nodes.
 ### Events
 
 - `Simulation.Happened` (an `Action<SimEvent>`) tells the presentation about moments during play:
-  `SimEventKind.Unlocked` (a building type unlocked, `Building`), `Discovered` (a resource
+  `SimEventKind.Discovered` (a resource
   discovered for the first time, `Resource`), `ResearchComplete` (`Project`), `Blackout` (a
   capacity type went into blackout, `Capacity`; raised again for that type only after it has been
   back to normal), and `ShipLaunched`.

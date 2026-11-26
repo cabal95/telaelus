@@ -149,6 +149,15 @@ public static class DemoTown
             sim.Debug.PlaceField(type, sx + dx, sz + dz, FieldAmount);
         }
 
+        // Its Drill Rig is tier 2, so Steel Works is researched first, its fee paid as a player's would be.
+        ResearchDef steelWorks = ResearchDefs.For(ResearchProject.SteelWorks);
+        Pay(sim, steelWorks.Fee);
+        if (!sim.StartResearch(ResearchProject.SteelWorks))
+        {
+            throw new InvalidOperationException("the demo could not start Steel Works");
+        }
+        sim.Debug.SetResearchProgress(ResearchProject.SteelWorks, steelWorks.Work);
+
         foreach ((BuildingType type, int dx, int dz, int ox, int oz, Facing facing) in BuildingLayout)
         {
             Place(sim, type, (sx + dx) * Simulation.FineCellsPerMapCell + ox, (sz + dz) * Simulation.FineCellsPerMapCell + oz, facing);
@@ -216,8 +225,8 @@ public static class DemoTown
         return (Simulation.MapCellOf((int)MathF.Floor(sim.SpawnPoint.X)), Simulation.MapCellOf((int)MathF.Floor(sim.SpawnPoint.Z)));
     }
 
-    // Places a building as the player does: its cost is added to the stockpile first (so it unlocks
-    // as it would once a player held its cost), then it is placed and paid for.
+    // Places a building as the player does: its cost is added to the stockpile first, then it is
+    // placed and paid for.
     private static void Place(Simulation sim, BuildingType type, int anchorX, int anchorZ, Facing facing)
     {
         if (!sim.CanPlace(type, anchorX, anchorZ, facing))

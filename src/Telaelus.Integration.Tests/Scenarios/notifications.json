@@ -1,7 +1,7 @@
 {
   "$schema": "../scenario.schema.json",
   "name": "notifications",
-  "description": "Toasts: a new world shows none; seeding Wood unlocks the Lumber Camp and discovers Wood, each a brief toast gone after 5 s; a finished research project shows a lasting toast with an X and a countdown, held while hovered and closed by its X; a Water blackout and a ship launch each show a lasting toast; a fifth toast pushes out the oldest brief one; an unclosed lasting toast is gone after 15 s.",
+  "description": "Toasts: a new world shows none; seeding Wood discovers Wood, a brief toast gone after 5 s; a finished research project shows a lasting toast with an X and a countdown, held while hovered and closed by its X, and a tier's unlock project adds a second, Tier 2 buildings and research are now available; a Water blackout and a ship launch each show a lasting toast; a fifth toast pushes out the oldest brief one; an unclosed lasting toast is gone after 15 s.",
   "steps": [
     { "newGame": {} },
     { "initMap": {} },
@@ -10,8 +10,7 @@
 
     { "seedStockpile": { "type": "Wood", "amount": 15 } },
     { "wait": 1 },
-    { "comment": "Unlocks show above discoveries.", "expect": "ui.toasts", "equals": [
-      { "style": "brief", "title": "New building: Lumber Camp", "detail": "[B] to build", "remaining": 5, "shown": true },
+    { "comment": "Holding a cost unlocks nothing; the discovery is the only toast.", "expect": "ui.toasts", "equals": [
       { "style": "brief", "title": "Discovered: Wood", "detail": "A Lumber Camp or a Lumber Mill can work it", "remaining": 5, "shown": true }
     ] },
     { "wait": 8 },
@@ -33,12 +32,13 @@
     { "expect": "ui.open", "equals": null },
     { "expect": "ui.toasts[0].shown", "equals": true },
     { "comment": "It held at 4.7 behind the menu and counts down again.", "expect": "ui.toasts[1].remaining", "gte": 4.3 },
-    { "comment": "5 s and the fade later, all three are gone.", "wait": 152 },
+    { "comment": "5 s and the fade later, both are gone.", "wait": 152 },
     { "expect": "ui.toasts", "equals": [] },
 
     { "seedStockpile": { "type": "Coal", "amount": 60 } },
     { "seedStockpile": { "type": "Iron", "amount": 40 } },
     { "seedStockpile": { "type": "Copper", "amount": 20 } },
+    { "comment": "Glass for Steel Works' fee, discovered now so its toast is gone before the research.", "seedStockpile": { "type": "Glass", "amount": 40 } },
     { "comment": "Three Burner Generators (105 Power) cover the Lab, a Refinery, and the Shipyard below.", "placeBuilding": { "type": "BurnerGenerator", "anchor": [44, 0] } },
     { "placeBuilding": { "type": "BurnerGenerator", "anchor": [40, 0] } },
     { "placeBuilding": { "type": "BurnerGenerator", "anchor": [36, 0] } },
@@ -55,6 +55,24 @@
     { "wait": 60 },
     { "comment": "Two seconds under the pointer and it has not counted down.", "expect": "ui.toasts[0].remaining", "equals": 14.9 },
     { "screenshot": "lasting" },
+    { "clickUi": { "id": "toast/0/close" } },
+    { "wait": 12 },
+    { "expect": "ui.toasts", "equals": [] },
+
+    { "comment": "Steel Works unlocks tier 2: its research toast, then the tier toast above it.", "seedStockpile": { "type": "Iron", "amount": 60 } },
+    { "seedStockpile": { "type": "Copper", "amount": 60 } },
+    { "seedStockpile": { "type": "Wood", "amount": 80 } },
+    { "startResearch": "SteelWorks" },
+    { "setResearchProgress": { "project": "SteelWorks", "seconds": 1199.98 } },
+    { "wait": 2 },
+    { "expect": "unlockedTier", "equals": 2 },
+    { "expect": "ui.toasts", "equals": [
+      { "style": "lasting", "title": "Tier 2 buildings and research are now available", "detail": "[B] to build", "remaining": 14.9, "shown": true },
+      { "style": "lasting", "title": "Research complete: Steel Works", "detail": "Unlocks Tier 2 buildings: steel, oil, and the chemistry they open up.", "remaining": 14.9, "shown": true }
+    ] },
+    { "screenshot": "tier" },
+    { "clickUi": { "id": "toast/0/close" } },
+    { "wait": 12 },
     { "clickUi": { "id": "toast/0/close" } },
     { "wait": 12 },
     { "expect": "ui.toasts", "equals": [] },

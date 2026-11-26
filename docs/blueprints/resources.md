@@ -12,7 +12,8 @@ buildings.md). A single global stockpile holds all amounts, within storage limit
 
 - `ResourceType` has 63 values, the catalog planned in 2611141757-resource-tree, ordered by tier
   and then catalog order. `ResourceDefs.For(type)` gives each a display name, a `Kind`, a **tier**
-  (0 for raw, 1 to 4 for made goods; `ResourceDefs.MaxTier` is 4), whether the player can harvest
+  (0 for raw, 1 to 4 for made goods, the tier of the buildings that make them, buildings.md;
+  `ResourceDefs.MaxTier` is 4), whether the player can harvest
   it by hand, and for a deposit, its gather time (`GatherSeconds`: the seconds to gather one unit
   by hand, which reads as how hard the material is to work; an extractor divides it by its speed,
   see buildings.md); rules read this table, not the enum:
@@ -49,10 +50,10 @@ buildings.md). A single global stockpile holds all amounts, within storage limit
 
   | Tier | Refined resources |
   |---|---|
-  | 1 | Iron, RocketFuel, Copper, Steel, Glass, Lumber, Charcoal, Cement, Concrete, Kerosene, Plastic, Hydrogen, LiquidOxygen, Aluminum, Silicon, SulfuricAcid, Rubber, Titanium, CarbonFiber, EnrichedUranium |
-  | 2 | HullPlate, SteelBeam, CopperWire, Circuit, InsulatedCable, MachineParts, SiliconWafer, Processor, Magnet, ElectricMotor, Battery, SolarCell, CompositePanel, CeramicTile, AluminumFrame, ArmorPlate |
-  | 3 | ControlModule, Computer, ThrusterAssembly, FuelTank, HeatShield, FuelRod, LifeSupportUnit, SensorArray |
-  | 4 | HullSection, Engine |
+  | 1 | Iron, Copper, Glass, Lumber, Charcoal, Cement |
+  | 2 | RocketFuel, Steel, Concrete, Kerosene, Plastic, Hydrogen, LiquidOxygen, Aluminum, Silicon, SulfuricAcid, Rubber, Titanium, CarbonFiber |
+  | 3 | HullPlate, SteelBeam, CopperWire, Circuit, InsulatedCable, MachineParts, SiliconWafer, Processor, Magnet, ElectricMotor, Battery, SolarCell, CompositePanel, CeramicTile, AluminumFrame, ArmorPlate |
+  | 4 | EnrichedUranium, ControlModule, Computer, ThrusterAssembly, FuelTank, HeatShield, FuelRod, LifeSupportUnit, SensorArray, HullSection, Engine |
 
 - **Fuels** have a burn time (`ResourceDef.BurnSeconds`): Fuel Rod 300 s, Coal 40 s, Charcoal
   30 s, Wood 10 s (placeholders); and a speed (`ResourceDef.FuelSpeed`) for a building that makes
@@ -68,8 +69,8 @@ buildings.md). A single global stockpile holds all amounts, within storage limit
 
 ### Discovery
 
-- The simulation records each resource the first time it is **discovered** (`IsDiscovered`); like
-  unlocking, it never clears during play and resets with the world.
+- The simulation records each resource the first time it is **discovered** (`IsDiscovered`); it
+  never clears during play and resets with the world.
 - A deposit is discovered when a field of it first lies in an explored map cell: when the cell is
   revealed, when a field is placed in an already explored cell, and for every cell at once in a
   world without fog. Sand is discovered when a Sand cell is explored, and Water when a ShallowWater
@@ -228,8 +229,6 @@ buildings.md). A single global stockpile holds all amounts, within storage limit
 
 - The stockpile is a map from `ResourceType` to amount, exposed read-only. It starts empty: the
   player begins with nothing. Gathering adds whole units, so amounts stay whole.
-- Whenever an amount rises, the simulation unlocks each building whose whole cost the stockpile
-  now holds (see buildings.md).
 - Each tick the simulation finds the nearest hand-harvestable field within `HarvestRange` (1.5
   units) of the player, by distance to the field's square, as the `HarvestTarget`; a Crude Oil
   field is never a target. Gathering is one unit at a time: while the player

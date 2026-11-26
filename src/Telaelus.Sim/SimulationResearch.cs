@@ -35,6 +35,12 @@ public sealed partial class Simulation
         return _researchPaid.Contains(project);
     }
 
+    /// <summary>
+    /// The highest unlocked tier, 1 to 4: tier 1 from the start, and one more for each completed
+    /// research project that unlocks a tier. It comes from research and is never stored.
+    /// </summary>
+    public int UnlockedTier => 1 + _researched.Count(project => ResearchDefs.For(project).Unlocks is not null);
+
     public bool IsResearched(ResearchProject project)
     {
         return _researched.Contains(project);
@@ -50,7 +56,8 @@ public sealed partial class Simulation
         {
             return ResearchState.Running;
         }
-        if (!ResearchDefs.For(project).Prerequisites.All(_researched.Contains))
+        ResearchDef def = ResearchDefs.For(project);
+        if (def.Tier > UnlockedTier || !def.Prerequisites.All(_researched.Contains))
         {
             return ResearchState.Locked;
         }

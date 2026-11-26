@@ -833,6 +833,44 @@ def icon_advanced_material_transfer(_rnd):
     return m, mat.mats
 
 
+def _rect(m, mat, front, side, u0, v0, u1, v1, depth=0.1):
+    _slab(m, mat(front), mat(side), [(u0, v0), (u1, v0), (u1, v1), (u0, v1)], depth)
+
+
+def icon_steel_works(_rnd):
+    """A steel I-beam end on, over a glowing ingot: Steel Works, the tier 2 unlock."""
+    m, mat = Mesh(), Materials()
+    _rect(m, mat, "steel_light", "steel", -0.42, 0.42, 0.42, 0.58, 0.14)
+    _rect(m, mat, "steel_light", "steel", -0.1, -0.12, 0.1, 0.42, 0.14)
+    _rect(m, mat, "steel_light", "steel", -0.42, -0.28, 0.42, -0.12, 0.14)
+    _slab(m, mat("furnace_glow"), mat("furnace_glow", 0.8), [(-0.34, -0.62), (0.34, -0.62), (0.26, -0.42), (-0.26, -0.42)], 0.12)
+    return m, mat.mats
+
+
+def icon_electronics(_rnd):
+    """A green circuit board with a black chip and gold pins: Electronics, the tier 3 unlock."""
+    m, mat = Mesh(), Materials()
+    _rect(m, mat, "board", "board", -0.55, -0.55, 0.55, 0.55, 0.06)
+    _rect(m, mat, "chip", "chip", -0.24, -0.24, 0.24, 0.24, 0.18)
+    for k in range(4):
+        c = -0.18 + k * 0.12
+        _rect(m, mat, "gold", "gold", -0.36, c - 0.03, -0.24, c + 0.03, 0.1)
+        _rect(m, mat, "gold", "gold", 0.24, c - 0.03, 0.36, c + 0.03, 0.1)
+        _rect(m, mat, "gold", "gold", c - 0.03, 0.24, c + 0.03, 0.36, 0.1)
+        _rect(m, mat, "gold", "gold", c - 0.03, -0.36, c + 0.03, -0.24, 0.1)
+    return m, mat.mats
+
+
+def icon_computers(_rnd):
+    """A monitor on a stand, its screen lit: Computers, the tier 4 unlock."""
+    m, mat = Mesh(), Materials()
+    _rect(m, mat, "panel_dark", "panel_dark", -0.58, -0.22, 0.58, 0.58, 0.1)
+    _rect(m, mat, "screen", "screen", -0.48, -0.12, 0.48, 0.48, 0.14)
+    _rect(m, mat, "panel_dark", "panel_dark", -0.07, -0.48, 0.07, -0.22, 0.08)
+    _rect(m, mat, "panel_dark", "panel_dark", -0.32, -0.6, 0.32, -0.48, 0.12)
+    return m, mat.mats
+
+
 def _ring(m, mat, cu, cv, r, width, a_from, a_to, segs, depth=0.1):
     """A band along a circular arc from a_from to a_to (radians, a_from < a_to), as slabs."""
     ri, ro = r - width / 2, r + width / 2
@@ -869,6 +907,9 @@ ICONS = {
     "icon_power": icon_power,
     "icon_material_transfer": icon_material_transfer,
     "icon_advanced_material_transfer": icon_advanced_material_transfer,
+    "icon_steel_works": icon_steel_works,
+    "icon_electronics": icon_electronics,
+    "icon_computers": icon_computers,
     "icon_power_switch": icon_power_switch,
     "icon_network": icon_network,
 }

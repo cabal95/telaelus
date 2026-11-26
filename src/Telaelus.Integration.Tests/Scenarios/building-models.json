@@ -5,7 +5,8 @@
   "steps": [
     { "newGame": {} },
     { "initMap": {} },
-    { "comment": "Buildings cost resources and unlock once their materials are held.", "seedStockpile": { "type": "Wood", "amount": 500 } },
+    { "comment": "The Refinery is tier 2: Steel Works unlocks it.", "setResearchProgress": { "project": "SteelWorks", "seconds": 1200 } },
+    { "comment": "Buildings cost resources.", "seedStockpile": { "type": "Wood", "amount": 500 } },
     { "seedStockpile": { "type": "Stone", "amount": 500 } },
     { "seedStockpile": { "type": "Iron", "amount": 500 } },
     { "comment": "Row 1: one of each type facing North.", "placeBuilding": { "type": "Mine", "anchor": [18, 20] } },

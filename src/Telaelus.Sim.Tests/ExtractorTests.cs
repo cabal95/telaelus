@@ -13,7 +13,7 @@ public class ExtractorTests
         foreach (BuildingType type in System.Enum.GetValues<BuildingType>())
         {
             BuildingDef def = BuildingDefs.For(type);
-            Assert.Equal(def.Tier == 0 ? 0.75f : def.IsExtractor ? 2f : 0.75f, def.Speed);
+            Assert.True((def.IsExtractor && def.Draws.ContainsKey(CapacityType.Power) ? 2f : 0.75f) == def.Speed, type.ToString());
         }
     }
 

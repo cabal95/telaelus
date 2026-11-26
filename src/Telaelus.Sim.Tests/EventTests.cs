@@ -20,27 +20,6 @@ public class EventTests
     }
 
     [Fact]
-    public void Unlocking_RaisesOncePerBuilding_AndABurstRaisesOneEach()
-    {
-        (Simulation sim, List<SimEvent> events) = Recorded();
-
-        sim.Debug.SeedStockpile(ResourceType.Wood, 15f);
-        Assert.Equal(new[] { BuildingType.LumberCamp }, Of(events, SimEventKind.Unlocked, e => e.Building));
-
-        sim.Debug.SeedStockpile(ResourceType.Wood, 5f);
-        Assert.Single(Of(events, SimEventKind.Unlocked, e => e.Building));
-
-        events.Clear();
-        sim.Debug.SeedStockpile(ResourceType.Wood, 80f);
-        sim.Debug.SeedStockpile(ResourceType.Stone, 100f);
-        List<BuildingType> unlocked = Of(events, SimEventKind.Unlocked, e => e.Building);
-        Assert.Contains(BuildingType.Mine, unlocked);
-        Assert.True(unlocked.Count > 1);
-        Assert.Equal(unlocked.Count, unlocked.Distinct().Count());
-        Assert.All(unlocked, t => Assert.True(sim.IsUnlocked(t)));
-    }
-
-    [Fact]
     public void Discovering_RaisesOncePerResource()
     {
         (Simulation sim, List<SimEvent> events) = Recorded();

@@ -16,24 +16,41 @@ storage only by hand or by truck.
 - `ResearchProject` lists the projects; `ResearchDefs.For(project)` gives each a `ResearchDef`: a
   name, a description, its **work** (game seconds at one lab's speed), its **fee** (resources paid
   once, to begin), its **prerequisites** (projects that must be complete first), its place in the
-  tree (`Column`, `Row`), and for a transfer project the raw resources it carries (`Transfers`).
+  tree (`Column`, `Row`), its **tier** (`Tier`, 1 to 4: it is locked while that tier is), the
+  building tier it unlocks if it is a tier's unlock project (`Unlocks`), and for a transfer project
+  the raw resources it carries (`Transfers`).
 
-| Project | Work | Fee | Prerequisites | Transfers |
-|---|---|---|---|---|
-| Material Transfer | 1200 s (two game days at one lab) | 40 Iron, 20 Copper | none | Wood, Stone, Iron Ore, Copper Ore, Coal |
-| Advanced Material Transfer | 1800 s (three game days at one lab) | 60 Steel, 20 Glass | Material Transfer | Crude Oil, Bauxite, Limestone, Quartz, Sulfur |
+| Project | Tier | Work | Fee | Prerequisites | Place | Unlocks or transfers |
+|---|---|---|---|---|---|---|
+| Material Transfer | 1 | 1200 s (two game days at one lab) | 40 Iron, 20 Copper | none | column 0, row 0 | transfers Wood, Stone, Iron Ore, Copper Ore, Coal |
+| Advanced Material Transfer | 2 | 1800 s (three game days) | 60 Steel, 20 Glass | Material Transfer | column 1, row 0 | transfers Crude Oil, Bauxite, Limestone, Quartz, Sulfur |
+| Steel Works | 1 | 1200 s (two game days) | 60 Iron, 60 Copper, 40 Glass, 80 Wood | none | column 0, row 1 | unlocks Tier 2 |
+| Electronics | 2 | 1800 s (three game days) | 60 Steel, 60 Plastic, 40 Aluminum, 120 Wood | Steel Works | column 1, row 1 | unlocks Tier 3 |
+| Computers | 3 | 2700 s (four and a half game days) | 60 Circuit, 20 Electric Motor, 40 Steel, 200 Wood | Electronics | column 2, row 1 | unlocks Tier 4 |
 
-(placeholders; a game day is `Simulation.DayLength`, 600 s.)
+(placeholders; a game day is `Simulation.DayLength`, 600 s. The unlock projects' fees are modest
+because they will later gain prerequisites of their own.)
+
+### Tiers
+
+- **The unlocked tier** (`Simulation.UnlockedTier`, 1 to 4) is 1 plus the number of complete
+  projects that unlock a tier. It is derived from research and never stored. It decides which
+  buildings can be placed (buildings.md) and which projects can start.
+- Each unlock project belongs to the tier below the one it unlocks and is paid in items of its own
+  tier or below (and Wood). Completing one shows the "Research complete" toast and a second,
+  "Tier 2 buildings and research are now available" (presentation.md).
 
 ### Running research
 
 - **State** (on `Simulation`): `ActiveResearch` (the running project or null), and per project its
   work done (`ResearchProgress`, game seconds, accumulated in double so a long project does not
   drift), whether its fee is paid (`ResearchFeePaid`), and whether it is complete (`IsResearched`).
-  `StateOf(project)` reads Locked (a prerequisite incomplete), Available (never started), Running,
+  `StateOf(project)` reads Locked (its tier above the unlocked tier, or a prerequisite incomplete),
+  Available (never started), Running,
   Paused (fee paid or some work done, not running), or Complete. A world reset clears it all.
 - **Starting** (`StartResearch`, checked by `CanStartResearch`): the project must be incomplete,
-  not already running, its prerequisites complete, and its fee either paid or held in storage.
+  not already running, its tier unlocked, its prerequisites complete, and its fee either paid or
+  held in storage.
   The first start takes the fee; it is never charged again or refunded. The project becomes the
   active one, and any project that was running is paused with its progress kept.
 - **Pausing** (`PauseResearch`) clears the active project. Resuming is starting again.

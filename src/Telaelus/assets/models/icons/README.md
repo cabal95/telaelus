@@ -15,5 +15,8 @@ Every file is required: the game throws if one is missing.
 | Power | `power.glb` | A lightning bolt in the power yellow | The top bar's power readout |
 | Material Transfer | `material_transfer.glb` | A crate under a green arrow arcing over it | Its research tree card |
 | Advanced Material Transfer | `advanced_material_transfer.glb` | Two crates under two green arrows, the inner with a yellow band | Its research tree card |
+| Steel Works | `steel_works.glb` | A steel I-beam end on, over a glowing ingot | Its research tree card and toasts |
+| Electronics | `electronics.glb` | A green circuit board with a black chip and gold pins | Its research tree card and toasts |
+| Computers | `computers.glb` | A monitor on a stand, its screen lit | Its research tree card and toasts |
 | Power switch | `power_switch.glb` | The power symbol: a ring broken at the top by a vertical bar, in a light neutral the UI tints | The detail panel's on/off toggle (`Good` on, `TextDim` off) |
 | Network | `network.glb` | A hub mast on a base, a ring around its top and a round cap, in a light neutral the UI tints | The detail panel's Network entry (`Good` online, `Warning` offline) |

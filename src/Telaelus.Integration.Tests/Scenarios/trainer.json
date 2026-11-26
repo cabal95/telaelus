@@ -49,7 +49,7 @@
     { "keyDown": "E" },
     { "wait": 100 },
     { "keyUp": "E" },
-    { "expect": "unlockedBuildings[0]", "equals": "LumberCamp" },
+    { "comment": "15 Wood affords the Lumber Camp.", "expect": "stockpile.Wood", "equals": 15 },
     { "wait": 32 },
     { "expect": "ui.trainer.step", "equals": 6 },
 

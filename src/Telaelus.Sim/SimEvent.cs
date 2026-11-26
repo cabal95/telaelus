@@ -3,9 +3,6 @@ namespace Telaelus.Sim;
 /// <summary>What kind of moment a <see cref="SimEvent"/> marks.</summary>
 public enum SimEventKind
 {
-    /// <summary>A building type was unlocked (its whole cost was held at once for the first time).</summary>
-    Unlocked,
-
     /// <summary>A resource was discovered for the first time.</summary>
     Discovered,
 

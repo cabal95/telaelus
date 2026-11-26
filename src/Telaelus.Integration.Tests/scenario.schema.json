@@ -248,7 +248,7 @@
         "comment": { "$ref": "#/definitions/comment" }
       }
     },
-    "research": { "enum": ["MaterialTransfer", "AdvancedMaterialTransfer"] },
+    "research": { "enum": ["MaterialTransfer", "AdvancedMaterialTransfer", "SteelWorks", "Electronics", "Computers"] },
     "startResearch": {
       "description": "Start (or resume) a research project, paying its fee the first time; fails if it cannot start.",
       "type": "object",

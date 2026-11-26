@@ -84,6 +84,7 @@ public static class StateSnapshot
             ["stockpile"] = Stockpile(sim),
             ["capacity"] = Capacity(sim),
             ["discovered"] = Discovered(sim),
+            ["unlockedTier"] = sim.UnlockedTier,
             ["unlockedBuildings"] = Unlocked(sim),
             ["shipsLaunched"] = sim.ShipsLaunched,
             ["timeOfDay"] = Round(sim.TimeOfDay),
