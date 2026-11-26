@@ -32,7 +32,7 @@ class Scene:
         self.mats, self.tris = {}, []
 
     def place(self, name, cx, cz, yaw=0):
-        mats, by = read_obj(os.path.join(MODELS, name + ".obj"))
+        mats, by = read_obj(os.path.join(MODELS, "terrain", name + ".obj"))
         for mname, faces in by.items():
             key = name + "/" + mname
             self.mats[key] = mats[mname]

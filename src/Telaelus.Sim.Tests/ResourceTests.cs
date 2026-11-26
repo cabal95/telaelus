@@ -85,7 +85,7 @@ public class ResourceTests
         foreach (ResourceType type in Enum.GetValues<ResourceType>())
         {
             string snake = string.Concat(type.ToString().Select((c, i) => i > 0 && char.IsUpper(c) ? "_" + char.ToLowerInvariant(c) : char.ToLowerInvariant(c).ToString()));
-            Assert.True(System.IO.File.Exists(System.IO.Path.Combine(items, $"item_{snake}.glb")), $"no item model for {type}");
+            Assert.True(System.IO.File.Exists(System.IO.Path.Combine(items, $"{snake}.glb")), $"no item model for {type}");
         }
     }
 

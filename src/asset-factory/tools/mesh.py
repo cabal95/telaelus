@@ -48,6 +48,9 @@ class Mesh:
         self.tris.extend(other.tris)
 
     def write(self, name, materials):
+        """Writes models/<folder>/<name>.obj and .mtl; name is "<folder>/<name>", as the game names it."""
+        assert "/" in name, "a model is named by its folder, as \"buildings/hq\": " + name
+        os.makedirs(os.path.dirname(os.path.join(OUT, name)), exist_ok=True)
         with open(os.path.join(OUT, name + ".mtl"), "w") as f:
             for mname, (kd, ke) in materials.items():
                 f.write("newmtl %s\nKd %.3f %.3f %.3f\n" % ((mname,) + kd))
@@ -62,7 +65,7 @@ class Mesh:
                 idx.append(len(verts))
             by_mat.setdefault(mt, []).append(idx)
         with open(os.path.join(OUT, name + ".obj"), "w") as f:
-            f.write("mtllib %s.mtl\n" % name)
+            f.write("mtllib %s.mtl\n" % os.path.basename(name))
             for v in verts:
                 f.write("v %.4f %.4f %.4f\n" % v)
             for mt, faces in by_mat.items():

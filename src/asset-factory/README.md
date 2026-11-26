@@ -3,8 +3,11 @@
 Source and tooling for the game's generated 3D assets. Not a C# project, and not imported by
 Godot (the Godot project is `src/Telaelus`).
 
-- `models/`: generated `.obj` and `.mtl` files. These are the source of truth.
-- `previews/`: kept sample sheets (game camera angle, two more yaws, and a top-down view).
+- `models/<folder>/`: generated `.obj` and `.mtl` files, in the same folders as the game's models
+  (`buildings`, `character`, `icons`, `infrastructure`, `items`, `nature`, `terrain`, `units`). These
+  are the source of truth.
+- `previews/<folder>/`: kept sample sheets (game camera angle, two more yaws, and a top-down view);
+  overviews that show a whole family sit at the top of `previews/`.
 - `tools/`: the generator (`gen.py`), the `.glb` exporter (`export_glb.py`), the preview renderer
   (`preview.py`, no window), and the Godot preview renderer (`preview/`, opens a window).
 - `requirements.txt` and `setup_env.py`: the tools' private Python environment. Run

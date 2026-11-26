@@ -1491,7 +1491,9 @@ BUILDINGS = {"mine": mine, "lumber_camp": lumber_camp, "smelter": smelter, "refi
 def build_all():
     for name, fn in BUILDINGS.items():
         m, mats = fn()
-        m.write(name, mats)
+        # Roads and bridges are infrastructure; everything else a building (or one of its parts).
+        folder = "infrastructure" if name.startswith(("road_", "bridge_")) else "buildings"
+        m.write(folder + "/" + name, mats)
 
 
 if __name__ == "__main__":

@@ -225,8 +225,8 @@ Emissive materials glow at half their base color. Mountains keep their own stone
   Bank (3 x 4, two rows of white cabinets with `battery_accent` bands and green lamps, a finned
   transformer at the front; static), Fission Reactor (6 x 8, a hyperboloid concrete cooling tower
   at the back with a white lip and a dark open top, a domed round reactor building, a turbine hall
-  across the front, an intake pipe). Icons (`assets/models/icons/`): `icon_sun` (a pale yellow
-  disc with eight rays), `icon_moon` (a pale crescent), `icon_power` (a lightning bolt in
+  across the front, an intake pipe). Icons (`assets/models/icons/`): `sun` (a pale yellow
+  disc with eight rays), `moon` (a pale crescent), `power` (a lightning bolt in
   `power_accent`), flat shapes facing the game camera.
 - Infrastructure (`assets/models/infrastructure/`, 2 x 2 tiles): road pieces are a gravel slab 0.03
   high with a darker verge along each closed edge and three pebbles at the same spots on every
@@ -236,8 +236,8 @@ Emissive materials glow at half their base color. Mountains keep their own stone
   water under a cross beam.
 - The Research Lab (4 x 5, a low white lab with a mint band, a glass-roofed bay at the back, a
   slotted dome and a small dish on the roof, an instrument bench under a mint awning at the front).
-  Project icons: `icon_material_transfer` (a crate under a `hub_accent` arrow arcing over it) and
-  `icon_advanced_material_transfer` (two crates under two arrows, the inner with a `power_accent`
+  Project icons: `material_transfer` (a crate under a `hub_accent` arrow arcing over it) and
+  `advanced_material_transfer` (two crates under two arrows, the inner with a `power_accent`
   band).
 - The later tiers: Sawmill (3 x 5, an open-sided shed with a `lumber_accent` gabled roof over a
   saw bench with a round blade, logs at the back, plank stacks either side at the front), Cement

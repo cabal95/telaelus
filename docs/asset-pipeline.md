@@ -40,10 +40,26 @@ Throwaway output (scratch renders, test scenarios, trial exports) goes in the gi
 ## Overview
 
 ```
-gen.py  ->  models/<name>.obj + .mtl  ->  preview.py (PNG)  ->  review and adjust
-                                      |                     \->  previews/<name>.png (kept)
-                                      \->  export_glb.py  ->  <name>.glb  ->  src/Telaelus/assets/models/...
+gen.py  ->  models/<folder>/<name>.obj + .mtl  ->  preview.py (PNG)  ->  review and adjust
+                                               |                     \->  previews/<folder>/<name>.png (kept)
+                                               \->  export_glb.py  ->  src/Telaelus/assets/models/<folder>/<name>.glb
 ```
+
+### Model names
+
+A model's name is `<folder>/<name>`, the same from generator to game: the folder says what kind of
+model it is and the name which one, with no kind prefix in the file name (`items/iron_ore`,
+`icons/moon`, `nature/iron_ore_a`, `buildings/hq`). The folders are `buildings`, `character`,
+`icons`, `infrastructure`, `items`, `nature`, `terrain`, and `units`.
+
+- Generators write by that name: `Mesh.write("items/iron_ore", ...)` writes
+  `models/items/iron_ore.obj` and `.mtl` (it refuses a name with no folder). `building_gen.py`
+  writes `buildings/` and its road and bridge pieces `infrastructure/`; `item_gen.py` `items/` and
+  `icons/`; `resource_gen.py` `nature/`; `terrain_gen.py` and `gen.py`'s mountains `terrain/`;
+  `character_gen.py` `character/`; `unit_gen.py` `units/`.
+- The game loads a model by the same name through `ModelLibrary` (`"icons/moon"`), never by a bare
+  file name, so two models of one name in two folders (`items/iron_ore`, a deposit's
+  `nature/iron_ore_a`) never clash, and within a folder the file system keeps names unique.
 
 Every new or updated model ships with its kept preview (see Kept previews below).
 
@@ -176,11 +192,11 @@ ambient light, so shapes read), not the game's.
 a change without running the tools. Every change that adds or updates a model updates its
 previews in the same commit:
 
-- **Its own sheet:** `previews/<model name>.png`, rendered by `preview.py` with its defaults from
-  the model's final `.obj`. A model with variants (`iron_ore_a`, `_b`, `_c`) or one family drawn
-  together may share one sheet named for the family (`previews/iron_ore.png`) that shows every
-  variant.
-- **Its family overview,** where one exists: `previews/items.png` (every resource item, in
+- **Its own sheet:** `previews/<folder>/<name>.png`, rendered by `preview.py` with its defaults
+  from the model's final `.obj`. A model with variants (`iron_ore_a`, `_b`, `_c`) or one family
+  drawn together may share one sheet named for the family (`previews/nature/iron_ore.png`) that
+  shows every variant.
+- **Its family overview,** where one exists, at the top of `previews/`: `previews/items.png` (every resource item, in
   `ResourceType` order, `--each 8 --size 160 --colors 256`) and the terrain arrangements
   (`arrangement_<name>.png`, see below). Rerender the whole overview so it always shows every
   model of the family.
@@ -193,8 +209,9 @@ previews in the same commit:
 <py> src/asset-factory/tools/export_glb.py <out_dir> <model.obj> [<model.obj> ...]
 ```
 
-Each model is written to `<out_dir>/<name>.glb`; pass the shipped folder (for example
-`src/Telaelus/assets/models/terrain`) to export in place. It handles any number of models in one run
+Each model is written to `<out_dir>/<name>.glb`; pass the shipped folder for the models' folder
+(for example `export_glb.py src/Telaelus/assets/models/terrain src/asset-factory/models/terrain/*.obj`)
+to export in place. It handles any number of models in one run
 and takes milliseconds.
 
 - Positions are copied as they are (OBJ and glTF are both Y up), and each triangle gets its face
@@ -214,12 +231,12 @@ keyframes:
 <py> src/asset-factory/tools/character_gen.py src/Telaelus/assets/models/character
 ```
 
-- It writes `models/character.obj` (the rest pose) and `models/character_pose_0..5.obj` (poses
+- It writes `models/character/character.obj` (the rest pose) and `character_pose_0..5.obj` (poses
   from the clips) for previews, and with an out dir `character.glb`: a node per joint, the part's
   mesh relative to its pivot, and a glTF animation per clip keying each joint's rotation and the
   hips' translation.
-- Its kept previews are `previews/character.png` (the rest pose, default sheet) and
-  `previews/character_poses.png` (the poses, `--each 6 --size 160 --colors 256`).
+- Its kept previews are `previews/character/character.png` (the rest pose, default sheet) and
+  `previews/character/character_poses.png` (the poses, `--each 6 --size 160 --colors 256`).
 - Godot imports the clips into an `AnimationPlayer`; their looping is set in
   `character.glb.import` (`_subresources`), which survives regenerating the `.glb`.
 - Judge the motion in a windowed run; the previews show only still poses.

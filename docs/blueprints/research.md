@@ -71,7 +71,7 @@ storage only by hand or by truck.
 - **The tree:** each project a 240 x 64 card placed by its column and row (80 units between
   columns, 24 between rows), with a line and arrowhead from each prerequisite's card to the project
   it opens, in `Accent` once the prerequisite is complete and `PanelEdge` before. A card shows only
-  the project's icon (`icon_<project>` from `assets/models/icons/`) and name, and while the project
+  the project's icon (`icons/<project>`, as `icons/material_transfer`) and name, and while the project
   runs, "Running" in `Accent`, an `Accent` outline, and a thin progress bar along its foot. A
   Locked card is drawn at half opacity; the selected card is lighter with a `Text` outline.
   Clicking a card selects it. The tree opens on the running project, else the first Available or

@@ -87,7 +87,7 @@ public static class NotificationText
         {
             CapacityType.Water => icons.For(ResourceType.Water),
             CapacityType.Sand => icons.For(ResourceType.Sand),
-            _ => icons.Icon("icon_power")
+            _ => icons.Icon("power")
         };
     }
 }

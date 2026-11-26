@@ -179,13 +179,13 @@ public partial class ResearchTree : Dialog
         return days == 0 ? $"{rest} h" : rest == 0 ? dayText : $"{dayText} {rest} h";
     }
 
-    /// <summary>A project's icon model name, as "icon_material_transfer".</summary>
+    /// <summary>A project's icon model name (in <c>icons/</c>), as "material_transfer".</summary>
     public static string ResearchIconName(ResearchProject project)
     {
-        var text = new System.Text.StringBuilder("icon");
+        var text = new System.Text.StringBuilder();
         foreach (char c in project.ToString())
         {
-            if (char.IsUpper(c))
+            if (char.IsUpper(c) && text.Length > 0)
             {
                 text.Append('_');
             }

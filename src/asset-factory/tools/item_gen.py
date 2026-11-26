@@ -845,10 +845,10 @@ ICONS = {
 def build_all():
     for name, (fn, seed) in ITEMS.items():
         m, mats = fn(random.Random(seed))
-        m.write(name, mats)
+        m.write("items/" + name.removeprefix("item_"), mats)
     for name, fn in ICONS.items():
         m, mats = fn(random.Random(0))
-        m.write(name, mats)
+        m.write("icons/" + name.removeprefix("icon_"), mats)
 
 
 if __name__ == "__main__":

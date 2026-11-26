@@ -70,7 +70,7 @@ pausing it and stepping frame by frame.
   planet's weights on average; chunks generate around the player and on demand; a generated world
   has no edge while bounded worlds keep theirs; resets switch the world kind.
 - `ResourceTests`: the resource definitions (63 by tier, raw resources at tier 0, the new
-  deposits' gather times, an item model file for each), biome deposits, the Mine and Oil Well, and
+  deposits' gather times, an item model file for each, `items/<resource>.glb`), biome deposits, the Mine and Oil Well, and
   hand-harvest rules.
 - `WorldGenTests` (added for the field rebalance): the starter set on ten seeds (two Wood and one
   Stone in the ring, on open cells, touching no other field, 1000 each); every newer deposit

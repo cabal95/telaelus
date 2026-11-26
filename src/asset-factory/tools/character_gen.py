@@ -4,7 +4,7 @@ Rigid low-poly parts, each hung from a joint and moved by it whole (nothing bend
 is a tree of joints rather than a skinned mesh. Two looping clips: idle and run.
 
 Run: python character_gen.py [<glb out dir>]
-Writes models/character.obj (the rest pose) and models/character_pose_*.obj (poses sampled from
+Writes models/character/character.obj (the rest pose) and character_pose_*.obj (poses sampled from
 the clips, for the pose preview), and with an out dir also <dir>/character.glb (the animated
 model). See src/Telaelus/assets/models/character/README.md.
 """
@@ -222,10 +222,10 @@ POSES = [("idle", 0.0), ("idle", 0.5), ("run", 0.0), ("run", 0.125), ("run", 0.2
 
 def build_all():
     joints, mats = figure()
-    posed(joints, ({}, 0.0)).write("character", mats)
+    posed(joints, ({}, 0.0)).write("character/character", mats)
     clips = {name: pose for name, _, pose, _ in CLIPS}
     for i, (clip, phase) in enumerate(POSES):
-        posed(joints, clips[clip](phase)).write("character_pose_%d" % i, mats)
+        posed(joints, clips[clip](phase)).write("character/character_pose_%d" % i, mats)
     return joints, mats
 
 

@@ -132,10 +132,10 @@ ui-style.md. There is no text HUD; the screen holds:
   its amount alone (`TopBar.PinText`), in `Danger` when storage has no room for another unit and
   dim while it has no storage at all (`TopBar.PinColor`), with a tooltip of its name, amount, and
   limit ("Wood 45 / 100", `HudOverlay.StorageText`). Then the clock
-  (the `icon_sun` icon while there is daylight, else `icon_moon`, and the hour of a 24-hour day,
+  (the `icons/sun` icon while there is daylight, else `icons/moon`, and the hour of a 24-hour day,
   "14:00"), then each capacity in `CapacityType` order (Power, Water, Sand), shown only once the
   network has any supply or demand of it (or, for Power, a Battery Bank): its icon (the
-  `icon_power` bolt, or the Water or Sand item's icon) and demand over supply ("45 / 100", or
+  `icons/power` bolt, or the Water or Sand item's icon) and demand over supply ("45 / 100", or
   "Blackout:" before the icon), in normal text, `Warning` in a brownout, or `Danger` in a blackout,
   with a name tooltip; and once there is a Battery Bank, what the banks hold (the Battery item's
   icon and "3200 / 6000", `Warning` while discharging). Pinning or unpinning rebuilds the pins. The

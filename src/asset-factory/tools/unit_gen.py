@@ -42,7 +42,7 @@ UNITS = {"truck": truck}
 def build_all():
     for name, fn in UNITS.items():
         m, mats = fn()
-        m.write(name, mats)
+        m.write("units/" + name, mats)
 
 
 if __name__ == "__main__":

@@ -1,4 +1,4 @@
-"""Generates every asset-factory model into models/ (.obj + .mtl).
+"""Generates every asset-factory model into models/<folder>/ (.obj + .mtl), named as the game names them.
 Run: python gen.py   (see docs/asset-pipeline.md)
 Mountains live here; ground, transitions and rivers in terrain_gen.py; buildings in
 building_gen.py; resource field models in resource_gen.py; resource items (UI icons) in item_gen.py.
@@ -113,8 +113,8 @@ MOUNTAIN_SHAPES = {
 def build_mountains():
     for suffix, (seed, peaks) in MOUNTAIN_SHAPES.items():
         shape = mountain_shape(seed, peaks)
-        paint(shape, seed, stone_mat).write("mountain_" + suffix, STONE_MATS)
-        paint(shape, seed, snow_mat).write("mountain_snow_" + suffix, SNOW_MATS)
+        paint(shape, seed, stone_mat).write("terrain/mountain_" + suffix, STONE_MATS)
+        paint(shape, seed, snow_mat).write("terrain/mountain_snow_" + suffix, SNOW_MATS)
 
 
 if __name__ == "__main__":

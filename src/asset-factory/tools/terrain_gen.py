@@ -342,22 +342,22 @@ def build_all():
         for v, suffix in enumerate("abc"):
             seed = 1000 + k * 10 + v
             m, mats = land_tile(terrain, seed) if terrain in LAND else liquid_tile(terrain, seed)
-            m.write("ground_%s_%s" % (terrain, suffix), mats)
+            m.write("terrain/ground_%s_%s" % (terrain, suffix), mats)
     for k, terrain in enumerate(OUTRANKING):
         edge = edge_piece(terrain, 2000 + k)
-        edge[0].write("edge_" + terrain, edge[1])
+        edge[0].write("terrain/edge_" + terrain, edge[1])
         mouth = edge_piece(terrain, 2100 + k, mouth=True)
-        mouth[0].write("edge_mouth_" + terrain, mouth[1])
+        mouth[0].write("terrain/edge_mouth_" + terrain, mouth[1])
         corner = corner_piece(terrain, 2200 + k)
-        corner[0].write("corner_" + terrain, corner[1])
+        corner[0].write("terrain/corner_" + terrain, corner[1])
     for k, terrain in enumerate(RIVER_BANKS):
         for s, shape in enumerate(RIVER_SHAPES):
             m, mats = river_piece(shape, terrain, 3000 + k * 10 + s)
-            m.write("river_%s_%s" % (shape, terrain), mats)
+            m.write("terrain/river_%s_%s" % (shape, terrain), mats)
     build_salt_flat()
 
 
 def build_salt_flat():
     for v, suffix in enumerate("abc"):
         m, mats = land_tile(SALT_FLAT, 1500 + v)
-        m.write("ground_%s_%s" % (SALT_FLAT, suffix), mats)
+        m.write("terrain/ground_%s_%s" % (SALT_FLAT, suffix), mats)

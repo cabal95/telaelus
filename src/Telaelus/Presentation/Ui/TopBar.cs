@@ -246,7 +246,7 @@ public partial class TopBar : HudOverlay
         }
 
         bool day = sim.Daylight > 0f;
-        _clockIcon.Texture = _icons.Icon(day ? "icon_sun" : "icon_moon");
+        _clockIcon.Texture = _icons.Icon(day ? "sun" : "moon");
         _clock.Text = ClockFor(sim.TimeOfDay);
 
         CapacityReading power = sim.Capacity(CapacityType.Power);
@@ -255,7 +255,7 @@ public partial class TopBar : HudOverlay
             CapacityReading reading = sim.Capacity(type);
             // Off the bar until the network has something to say about it (a Battery Bank counts for Power).
             entry.Visible = reading.Supply > 0f || reading.Demand > 0f || reading.StoreCapacity > 0f;
-            icon.Texture ??= type == CapacityType.Power ? _icons.Icon("icon_power") : _icons.For(type == CapacityType.Water ? ResourceType.Water : ResourceType.Sand);
+            icon.Texture ??= type == CapacityType.Power ? _icons.Icon("power") : _icons.For(type == CapacityType.Water ? ResourceType.Water : ResourceType.Sand);
             state.Visible = reading.State == CapacityState.Blackout;
             amount.Text = $"{Mathf.CeilToInt(reading.Demand)} / {Mathf.FloorToInt(reading.Supply)}";
             amount.AddThemeColorOverride("font_color", CapacityColor(reading.Demand, reading.Supply));

@@ -456,7 +456,7 @@ def build_all():
     for name, (fn, seeds) in list(DEPOSITS.items()) + list(TREES.items()):
         for suffix, seed in zip("abc", seeds):
             m, mats = fn(seed)
-            m.write("%s_%s" % (name, suffix), mats)
+            m.write("nature/%s_%s" % (name, suffix), mats)
     for name, fn in SITES.items():
         m, mats = fn()
-        m.write(name, mats)
+        m.write("nature/" + name, mats)

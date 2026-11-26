@@ -277,6 +277,8 @@ Newest last. One line each; open the file for the full spec.
   0.5 s hold; the crafting quantity uses them and loses its Shift step.
 - **2611242051-hold-mode** - A queueing processor can hold its output's stock at a target instead of
   running orders, chosen from a Mode picker in its panel.
+- **2611260835-model-folders** - Models are named by their folder with no kind prefix (`items/iron_ore`,
+  `icons/moon`), and the asset factory keeps its sources and previews in the same folders.
 
 ## Adding a changeset
 
