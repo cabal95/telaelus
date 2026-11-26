@@ -230,6 +230,12 @@ pausing it and stepping frame by frame.
   Smelter taking no new fuel while its burning unit burns out; the Electrolyzer, Brine Well, and
   Air Separator running without a queue and the Glassworks queueing; input choices kept per
   recipe; the queue and choices surviving a save; an older save loading with an empty queue.
+- `HoldTests`: entering Hold emptying the queue and stopping a cycle of another recipe (its Ore
+  back), or letting one of the held recipe run; a held Charcoal Kiln making up to its target,
+  idle "Holding: 2 Charcoal" taking no more Wood, and making more once Charcoal is used; a cycle
+  started under the target finishing past it; the target starting at the stock and at least one
+  cycle (two for Copper Wire); leaving Hold finishing the running cycle with an empty queue; a hold
+  surviving a save.
 - Sim tests that need a processor working queue an order large enough for the test
   (`SimTestHelpers.Order`).
 - `SeamTests`: the seam rule above.
@@ -284,7 +290,8 @@ pausing it and stepping frame by frame.
     scenario waits until the release; pushed through the viewport like real input), `clickUi`
     `{ id }` (moves the pointer over a registered UI control and clicks it, released the next
     frame), `hoverUi` `{ id }` (moves the pointer over one, so its hover state and tooltip
-    show), `holdUi` `{ id, frames }` (moves the pointer over one and holds the left button down
+    show), `selectUi` `{ id, item }` (picks a picker's item by its text, as choosing it from the
+    list does), `holdUi` `{ id, frames }` (moves the pointer over one and holds the left button down
     for the frames, released on the last; the scenario waits for the release; a control clipped by
     a scroll container must be hovered into view first), and `scrollUi` `{ id, ticks }` (turns the wheel over one: positive ticks down,
     negative up). When a scroll container clips the control, `clickUi` and `hoverUi` first scroll
@@ -352,7 +359,9 @@ pausing it and stepping frame by frame.
   `fuel` (the fuel picker's choice, or null), `output` (the Output picker's choice as shown, or
   null), `recipe` (the Recipe picker's choice, or null), `recipeNeeds` (the line under it: its
   `text` and the `short` inputs' names, or null), `input` (the input picker's `choice` and
-  `note`, or null), `order` (a queueing processor's `quantity` as shown and `canCraft`, or null),
+  `note`, or null), `order` (a queueing processor's `quantity` as shown and `canCraft`, or null; null in Hold),
+  `mode` (its Mode picker, "Queue" or "Hold", or null), `hold` (in Hold, the `target` as shown and the
+  storage `line`, or null),
   `queue` (its queue rows as shown, "Iron x 5 (crafting)" or "Queue empty", or null), `buyTruck` and `sellTruck` (a Depot's buttons: `text` and `enabled`, or null), `launch` (a
   Shipyard's Ship launch section: its `bill` ("have / need" per entry), the `button` text,
   `enabled`, the `note` saying why not or null, and `ships` ("Ships launched: n") or null; null for
@@ -371,7 +380,8 @@ pausing it and stepping frame by frame.
   `workedOut` (each worked-out map cell's `mapCell` and `deposit`); each building also has
   `producing` (a collector without a field's output, or null), `recipe` (the name of the
   recipe a processor runs, or null), `queue` (a queueing processor's orders, each `recipe` and
-  `remaining`, or null for any other building), `display` (the item its display stand shows, or null), and
+  `remaining`, or null for any other building), `hold` (a held processor's `recipe` and `target`, or
+  null), `display` (the item its display stand shows, or null), and
   `charge` (a Battery Bank's stored Power, or null);
   `hoveredBuilding` (the id of the building under the pointer outside build mode, or null);
   `focusedBuilding` (the id of the building the detail panel shows and outlines, or null);
@@ -554,6 +564,9 @@ pausing it and stepping frame by frame.
   the first order counting down and the Smelter idle when the queue is done; the line under the
   picker naming the recipe's needs, and its input short once storage runs out; windowed screenshots
   of the empty queue, the queue, and the end),
+  `hold-mode` (a Smelter switched to Hold from its Mode picker holding at the 2 Iron in storage;
+  "+" making one more and holding "Holding: 3 Iron"; Iron used elsewhere made back; "-" held down
+  to one cycle; back in Queue mode with an empty queue; windowed screenshots making and holding),
   `refining` (a Steel Mill's Auto input picker and its note and recipe text; an Electrolyzer on
   Hydrogen feeding a Fuel Plant to Rocket Fuel; no ship bill on the top bar),
   `menu` (the loading screen done and the menu showing its title and New Game, Demo, and Quit; `newGame`

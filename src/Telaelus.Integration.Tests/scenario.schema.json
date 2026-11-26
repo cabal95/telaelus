@@ -84,6 +84,7 @@
         { "$ref": "#/definitions/hoverUi" },
         { "$ref": "#/definitions/scrollUi" },
         { "$ref": "#/definitions/holdUi" },
+        { "$ref": "#/definitions/selectUi" },
         { "$ref": "#/definitions/wait" },
         { "$ref": "#/definitions/pause" },
         { "$ref": "#/definitions/resume" },
@@ -755,6 +756,24 @@
           "properties": {
             "id": { "type": "string" },
             "ticks": { "type": "integer" }
+          }
+        },
+        "comment": { "$ref": "#/definitions/comment" }
+      }
+    },
+    "selectUi": {
+      "description": "Pick an item of a named picker (dropdown) by its text, as choosing it from the list does.",
+      "type": "object",
+      "required": ["selectUi"],
+      "additionalProperties": false,
+      "properties": {
+        "selectUi": {
+          "type": "object",
+          "required": ["id", "item"],
+          "additionalProperties": false,
+          "properties": {
+            "id": { "type": "string" },
+            "item": { "type": "string" }
           }
         },
         "comment": { "$ref": "#/definitions/comment" }

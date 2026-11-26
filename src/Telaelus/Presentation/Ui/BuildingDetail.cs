@@ -62,6 +62,14 @@ public partial class BuildingDetail : Dialog
     private Button _craft = null!;
     private Label _queueLabel = null!;
     private VBoxContainer _queue = null!;
+    // A queueing processor's mode (Queue or Hold) and, in Hold, its target and storage line.
+    private Label _modeLabel = null!;
+    private OptionButton _mode = null!;
+    private HBoxContainer _holdRow = null!;
+    private StepButton _holdLess = null!;
+    private Label _holdLabel = null!;
+    private StepButton _holdMore = null!;
+    private RichTextLabel _holdLine = null!;
     private string _queueSignature = "";
     private int _queueRows;
     private Label _inputLabel = null!;
@@ -110,6 +118,12 @@ public partial class BuildingDetail : Dialog
     public IReadOnlyList<string>? QueueRows => _queue.Visible
         ? _queue.GetChildren().Select(row => row is Label label ? label.Text : row.GetChild<Label>(0).Text).ToList()
         : null;
+
+    /// <summary>The Mode picker's choice as shown ("Queue", "Hold"), or null when hidden.</summary>
+    public string? ModeText => _mode.Visible ? _mode.GetItemText(_mode.Selected) : null;
+
+    /// <summary>The hold target as shown ("50") and the storage line under it, or null when hidden.</summary>
+    public (string Target, string Line)? HoldShown => _holdRow.Visible ? (_holdLabel.Text, _holdLine.GetParsedText()) : null;
 
     /// <summary>The Recipe picker's choice as shown ("Copper"), or null when hidden.</summary>
     public string? RecipeChoiceText => _recipe.Visible && _recipe.Selected >= 0 ? _recipe.GetItemText(_recipe.Selected) : null;
@@ -215,6 +229,20 @@ public partial class BuildingDetail : Dialog
         _recipeNeeds.AddThemeColorOverride("default_color", UiTheme.TextDim);
         Body.AddChild(_recipeNeeds);
 
+        _modeLabel = UiTheme.MakeLabel("Mode", UiTheme.SmallSize, UiTheme.TextDim);
+        Body.AddChild(_modeLabel);
+        _mode = new OptionButton
+        {
+            Name = "Mode",
+            FocusMode = FocusModeEnum.None,
+            TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis
+        };
+        _mode.AddItem("Queue");
+        _mode.AddItem("Hold");
+        _mode.ItemSelected += OnModeSelected;
+        Body.AddChild(_mode);
+        Host.Register(Id + "/mode", _mode);
+
         _inputLabel = UiTheme.MakeLabel("Input", UiTheme.SmallSize, UiTheme.TextDim);
         Body.AddChild(_inputLabel);
         _input = new OptionButton
@@ -260,6 +288,40 @@ public partial class BuildingDetail : Dialog
         };
         _queue.AddThemeConstantOverride("separation", 2);
         Body.AddChild(_queue);
+
+        _holdRow = new HBoxContainer
+        {
+            Name = "HoldAt",
+            MouseFilter = MouseFilterEnum.Ignore
+        };
+        _holdRow.AddThemeConstantOverride("separation", UiTheme.Gap / 2);
+        Label holdAt = UiTheme.MakeLabel("Hold at", UiTheme.BodySize);
+        holdAt.VerticalAlignment = VerticalAlignment.Center;
+        _holdRow.AddChild(holdAt);
+        _holdLess = StepperButton("HoldLess", "-", "One cycle fewer. Hold to repeat.");
+        _holdLess.Step += () => StepHold(-1);
+        _holdRow.AddChild(_holdLess);
+        _holdLabel = UiTheme.MakeLabel("", UiTheme.BodySize);
+        _holdLabel.CustomMinimumSize = new Vector2(48f, 0f);
+        _holdLabel.HorizontalAlignment = HorizontalAlignment.Center;
+        _holdLabel.VerticalAlignment = VerticalAlignment.Center;
+        _holdRow.AddChild(_holdLabel);
+        _holdMore = StepperButton("HoldMore", "+", "One cycle more. Hold to repeat.");
+        _holdMore.Step += () => StepHold(1);
+        _holdRow.AddChild(_holdMore);
+        Body.AddChild(_holdRow);
+        _holdLine = new RichTextLabel
+        {
+            Name = "HoldLine",
+            BbcodeEnabled = true,
+            FitContent = true,
+            AutowrapMode = TextServer.AutowrapMode.WordSmart,
+            ScrollActive = false,
+            MouseFilter = MouseFilterEnum.Ignore
+        };
+        _holdLine.AddThemeFontSizeOverride("normal_font_size", UiTheme.SmallSize);
+        _holdLine.AddThemeColorOverride("default_color", UiTheme.TextDim);
+        Body.AddChild(_holdLine);
 
         _fuelLabel = UiTheme.MakeLabel("Fuel", UiTheme.SmallSize, UiTheme.TextDim);
         Body.AddChild(_fuelLabel);
@@ -648,10 +710,13 @@ public partial class BuildingDetail : Dialog
         }
     }
 
-    /// <summary>The recipe the pickers show: the one chosen to queue, or a running processor's own.</summary>
+    /// <summary>
+    /// The recipe the pickers show: a held processor's held recipe, the one chosen to queue, or a
+    /// running processor's own.
+    /// </summary>
     private int PickedIndex(Building building)
     {
-        return building.Queues ? _selected : building.PendingRecipe ?? building.RecipeIndex;
+        return building.Queues ? building.Hold?.RecipeIndex ?? _selected : building.PendingRecipe ?? building.RecipeIndex;
     }
 
     private Recipe? PickedRecipe(Building building)
@@ -669,11 +734,56 @@ public partial class BuildingDetail : Dialog
         {
             _selected = (int)index;
             _quantity = 0;
+            if (building.Hold is not null)
+            {
+                _sim.SetHold(building.Id, _selected, _sim.DefaultHoldTarget(building, _selected));
+            }
         }
         else
         {
             _sim.SetRecipe(building.Id, (int)index);
         }
+    }
+
+    private void OnModeSelected(long index)
+    {
+        if (Building is not Building building || !building.Queues)
+        {
+            return;
+        }
+        if (index == 1)
+        {
+            _sim.SetHold(building.Id, _selected, _sim.DefaultHoldTarget(building, _selected));
+        }
+        else
+        {
+            _sim.ClearHold(building.Id);
+        }
+        Refresh();
+    }
+
+    /// <summary>The highest hold target for a resource storage does not limit.</summary>
+    private const int MaxHoldTarget = 9999;
+
+    /// <summary>The most a hold's target can step up to: what storage holds of the output plus its room.</summary>
+    private int HoldMax(Building building, HoldOrder hold)
+    {
+        ResourceType output = building.Recipes[hold.RecipeIndex].Outputs[0].Type;
+        _sim.Stockpile.TryGetValue(output, out float held);
+        return (int)Mathf.Min(MaxHoldTarget, Mathf.Floor(held + _sim.RoomFor(output) + 0.001f));
+    }
+
+    private void StepHold(int direction)
+    {
+        if (Building is not Building building || building.Hold is not HoldOrder hold)
+        {
+            return;
+        }
+        int step = Simulation.PerCycle(building.Recipes[hold.RecipeIndex]);
+        int target = hold.Target + direction * step;
+        target = direction > 0 ? Mathf.Min(target, Mathf.Max(hold.Target, HoldMax(building, hold))) : Mathf.Max(target, step);
+        _sim.SetHold(building.Id, hold.RecipeIndex, target);
+        Refresh();
     }
 
     private void OnInputSelected(long index)
@@ -699,6 +809,10 @@ public partial class BuildingDetail : Dialog
     private void RefreshOrders(Building building)
     {
         bool queues = building.Queues;
+        _modeLabel.Visible = queues;
+        _mode.Visible = queues;
+        RefreshHold(building);
+        queues = queues && building.Hold is null;
         _orderRow.Visible = queues;
         _queueLabel.Visible = queues;
         _queue.Visible = queues;
@@ -760,6 +874,36 @@ public partial class BuildingDetail : Dialog
             row.AddChild(remove);
             Host.Register($"{Id}/queue/{i}", remove);
             _queue.AddChild(row);
+        }
+    }
+
+    /// <summary>A held processor's Mode picker, Hold at row, and storage line ("In storage: 32 / 50 Iron").</summary>
+    private void RefreshHold(Building building)
+    {
+        if (building.Queues)
+        {
+            _mode.Selected = building.Hold is null ? 0 : 1;
+        }
+        bool held = building.Queues && building.Hold is not null;
+        _holdRow.Visible = held;
+        _holdLine.Visible = held;
+        if (!held || building.Hold is not HoldOrder hold)
+        {
+            return;
+        }
+        Recipe recipe = building.Recipes[hold.RecipeIndex];
+        int step = Simulation.PerCycle(recipe);
+        _holdLabel.Text = hold.Target.ToString();
+        _holdLess.Disabled = hold.Target <= step;
+        _holdMore.Disabled = hold.Target + step > HoldMax(building, hold);
+        ResourceType output = recipe.Outputs[0].Type;
+        _sim.Stockpile.TryGetValue(output, out float stock);
+        int have = Mathf.FloorToInt(stock + 0.001f);
+        string count = have >= hold.Target ? $"[color=#{UiTheme.Text.ToHtml(false)}]{have}[/color]" : have.ToString();
+        string line = $"In storage: {count} / {hold.Target} {ResourceDefs.For(output).Name}";
+        if (_holdLine.Text != line)
+        {
+            _holdLine.Text = line;
         }
     }
 

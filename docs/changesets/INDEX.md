@@ -275,6 +275,8 @@ Newest last. One line each; open the file for the full spec.
   overlap, online over offline, with the placement ghost on top.
 - **2611241441-hold-to-repeat-steppers** - Up/down buttons step on press and repeat 15 a second after a
   0.5 s hold; the crafting quantity uses them and loses its Shift step.
+- **2611242051-hold-mode** - A queueing processor can hold its output's stock at a target instead of
+  running orders, chosen from a Mode picker in its panel.
 
 ## Adding a changeset
 

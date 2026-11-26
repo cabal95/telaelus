@@ -376,7 +376,19 @@ Recipes marked "(capacity only)" use only the Sand or Water they draw.
   - `CancelCraft(id, index)` removes an order. Removing the first while its cycle runs stops the
     cycle and returns what it took to storage, past limits.
   - A new processor, and one in a save from before the queue, starts with an empty queue (a cycle
-    loaded running finishes and delivers first). The recipe changes only between orders, so
+    loaded running finishes and delivers first).
+  - **Hold mode.** A queueing processor can instead hold a stock (`Building.Hold`, a `HoldOrder`:
+    a recipe and a target in items of its output). `SetHold(id, recipe, target)` empties the
+    queue; coming from Queue mode, a running cycle of another recipe stops and returns what it took,
+    while in Hold already a running cycle of the old recipe finishes first. In Hold it starts a
+    cycle (inputs at hand, as for an order) whenever storage holds less of the output than the
+    target (the stockpile; buffers do not count); a started cycle always finishes, so stock can end
+    up to a cycle's output over. At or over the target it starts nothing and is idle "Holding: 50
+    Iron", online and drawing its capacity like any idle processor (an idle fuel burner takes no
+    new fuel). `ClearHold(id)` returns it to Queue mode with an empty queue; a running cycle
+    finishes and delivers. `DefaultHoldTarget` is what storage holds of the output, and at least
+    one cycle's output (`PerCycle`). The three that run without a queue, and extractors, have no
+    Hold mode. The recipe changes only between orders, so
     `SetRecipe` and `PendingRecipe` are for the three that run without a queue: `SetRecipe`
     changes their recipe at once between cycles, or, during a cycle, when it finishes.
 - **Alternative inputs:** a recipe input may be filled by any of several types in the same amount

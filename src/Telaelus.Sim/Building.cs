@@ -32,6 +32,9 @@ public sealed class Building
     /// <summary>A queueing processor's orders, the first crafting; at most Simulation.MaxQueue.</summary>
     public List<CraftOrder> Queue { get; } = new();
 
+    /// <summary>A queueing processor's hold (Hold mode, with an empty queue), or null in Queue mode.</summary>
+    public HoldOrder? Hold { get; set; }
+
     /// <summary>
     /// The index of the recipe it runs: a queueing processor's first order's (or its last when the
     /// queue is empty), else the one chosen with Simulation.SetRecipe.

@@ -546,7 +546,11 @@ public sealed partial class Simulation
         {
             return new BuildingStatus(BuildingState.Idle, "Offline: outside the network");
         }
-        if (building.Queues && !building.Crafting && building.Queue.Count == 0)
+        if (building.Queues && !building.Crafting && building.Hold is HoldOrder hold && HoldReached(building, hold))
+        {
+            return new BuildingStatus(BuildingState.Idle, $"Holding: {hold.Target} {ResourceDefs.For(recipe.Outputs[0].Type).Name}");
+        }
+        if (building.Queues && !building.Crafting && building.Hold is null && building.Queue.Count == 0)
         {
             return new BuildingStatus(BuildingState.Idle, "Queue empty");
         }
@@ -923,9 +927,9 @@ public sealed partial class Simulation
         float speed = WorkSpeed(building);
         if (!building.Crafting)
         {
-            if (building.Queues && building.Queue.Count == 0)
+            if (building.Queues && !WantsCycle(building))
             {
-                // Idle with nothing queued: no new fuel, but the unit already burning burns out.
+                // Idle with nothing queued (or its stock held): no new fuel, but the unit already burning burns out.
                 building.BurnLeft = Math.Max(0f, building.BurnLeft - (float)dt);
                 return;
             }

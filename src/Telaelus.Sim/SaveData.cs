@@ -111,6 +111,9 @@ public sealed class BuildingData
     public List<int[]> InputChoices { get; set; } = new();
     /// <summary>The crafting queue as [recipe, remaining] in order; absent in older saves (an empty queue).</summary>
     public List<int[]> Queue { get; set; } = new();
+
+    /// <summary>A queueing processor's hold as [recipe, target], or null (Queue mode; older saves).</summary>
+    public int[]? Hold { get; set; }
     public List<AmountData> CycleInputs { get; set; } = new();
     public List<AmountData> Output { get; set; } = new();
     /// <summary>Only in older saves: an input buffer, moved to storage on load.</summary>

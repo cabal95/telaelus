@@ -55,17 +55,99 @@ public sealed partial class Simulation
         }
         if (index == 0 && building.Crafting)
         {
-            foreach (ResourceAmount input in building.CycleInputs)
-            {
-                AddToStockpile(input.Type, input.Amount);
-            }
-            building.CycleInputs.Clear();
-            building.Crafting = false;
-            building.Progress = 0f;
+            ReturnCycleInputs(building);
         }
         building.Queue.RemoveAt(index);
         FollowQueue(building);
         return true;
+    }
+
+    /// <summary>
+    /// Puts a queueing processor in Hold mode: it runs one recipe, making more of its output while
+    /// storage holds less than the target and idling once it holds that many. The queue empties;
+    /// coming from Queue mode, a running cycle of another recipe stops and returns what it took. In
+    /// Hold already, it changes the recipe or target, and a running cycle of the old recipe finishes
+    /// first. False for a building that does not queue, a recipe it lacks, or a target under 1.
+    /// </summary>
+    public bool SetHold(int id, int recipeIndex, int target)
+    {
+        Building? building = BuildingById(id);
+        if (building is null || !building.Queues || recipeIndex < 0 || recipeIndex >= building.Recipes.Count || target < 1)
+        {
+            return false;
+        }
+        if (building.Hold is null && building.Crafting && building.RecipeIndex != recipeIndex)
+        {
+            ReturnCycleInputs(building);
+        }
+        building.Queue.Clear();
+        building.Hold = new HoldOrder(recipeIndex, target);
+        FollowQueue(building);
+        return true;
+    }
+
+    /// <summary>
+    /// Puts a processor in Hold mode back in Queue mode, with an empty queue; a running cycle
+    /// finishes and delivers. False when it is not in Hold mode.
+    /// </summary>
+    public bool ClearHold(int id)
+    {
+        Building? building = BuildingById(id);
+        if (building?.Hold is null)
+        {
+            return false;
+        }
+        building.Hold = null;
+        return true;
+    }
+
+    /// <summary>
+    /// The target a hold of a recipe starts at: what storage holds of its output now, and at least
+    /// one cycle's output.
+    /// </summary>
+    public int DefaultHoldTarget(Building building, int recipeIndex)
+    {
+        Recipe recipe = building.Recipes[recipeIndex];
+        _stockpile.TryGetValue(recipe.Outputs[0].Type, out float held);
+        return Math.Max(PerCycle(recipe), (int)MathF.Floor(held + RoomTolerance));
+    }
+
+    /// <summary>Items one cycle of a recipe makes (its first output).</summary>
+    public static int PerCycle(Recipe recipe)
+    {
+        return Math.Max(1, (int)recipe.Outputs[0].Amount);
+    }
+
+    /// <summary>
+    /// Whether a queueing processor between cycles has work to start: its first order in Queue mode;
+    /// in Hold mode, storage holding less of the output than the target.
+    /// </summary>
+    private bool WantsCycle(Building building)
+    {
+        if (building.Hold is HoldOrder hold)
+        {
+            return !HoldReached(building, hold);
+        }
+        return building.Queue.Count > 0;
+    }
+
+    /// <summary>Whether storage holds at least a hold's target of its recipe's output.</summary>
+    private bool HoldReached(Building building, HoldOrder hold)
+    {
+        _stockpile.TryGetValue(building.Recipes[hold.RecipeIndex].Outputs[0].Type, out float held);
+        return held >= hold.Target - RoomTolerance;
+    }
+
+    /// <summary>Stops a running cycle and returns what it took to storage (past limits, as a refund).</summary>
+    private void ReturnCycleInputs(Building building)
+    {
+        foreach (ResourceAmount input in building.CycleInputs)
+        {
+            AddToStockpile(input.Type, input.Amount);
+        }
+        building.CycleInputs.Clear();
+        building.Crafting = false;
+        building.Progress = 0f;
     }
 
     /// <summary>The items a recipe makes in the fewest whole cycles that make at least a count.</summary>
@@ -75,10 +157,18 @@ public sealed partial class Simulation
         return (count + perCycle - 1) / perCycle * perCycle;
     }
 
-    /// <summary>Points a queueing processor between cycles at its first order's recipe.</summary>
+    /// <summary>Points a queueing processor between cycles at its held recipe, or its first order's.</summary>
     private static void FollowQueue(Building building)
     {
-        if (building.Queues && !building.Crafting && building.Queue.Count > 0)
+        if (!building.Queues || building.Crafting)
+        {
+            return;
+        }
+        if (building.Hold is HoldOrder hold)
+        {
+            building.RecipeIndex = hold.RecipeIndex;
+        }
+        else if (building.Queue.Count > 0)
         {
             building.RecipeIndex = building.Queue[0].RecipeIndex;
         }

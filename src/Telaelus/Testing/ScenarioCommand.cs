@@ -332,6 +332,12 @@ public sealed class ScenarioCommand
                     string id = Label(Required(arg, "id"), "id");
                     return e => e.ClickUi(id);
                 }
+            case "selectUi":
+                {
+                    string id = Label(Required(arg, "id"), "id");
+                    string item = Label(Required(arg, "item"), "item");
+                    return e => e.SelectUi(id, item);
+                }
             case "holdUi":
                 {
                     string id = Label(Required(arg, "id"), "id");

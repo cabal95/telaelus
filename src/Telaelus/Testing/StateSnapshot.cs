@@ -350,6 +350,14 @@ public static class StateSnapshot
                     ["canCraft"] = canCraft
                 }
                 : null;
+            ui["mode"] = root.BuildingDetail.ModeText;
+            ui["hold"] = root.BuildingDetail.HoldShown is (string holdTarget, string holdLine)
+                ? new JsonObject
+                {
+                    ["target"] = holdTarget,
+                    ["line"] = holdLine
+                }
+                : null;
             ui["queue"] = root.BuildingDetail.QueueRows is System.Collections.Generic.IReadOnlyList<string> queueRows
                 ? new JsonArray(queueRows.Select(r => (JsonNode?)r).ToArray())
                 : null;
@@ -599,6 +607,13 @@ public static class StateSnapshot
                         ["recipe"] = b.Recipes[o.RecipeIndex].Name,
                         ["remaining"] = o.Remaining
                     }).ToArray())
+                    : null,
+                ["hold"] = b.Hold is HoldOrder hold
+                    ? new JsonObject
+                    {
+                        ["recipe"] = b.Recipes[hold.RecipeIndex].Name,
+                        ["target"] = hold.Target
+                    }
                     : null,
                 ["display"] = DisplayStandViews.DisplayedOutput(sim, b)?.ToString(),
                 ["charge"] = b.Def.StoreCapacity > 0f ? Round(b.Charge) : null,

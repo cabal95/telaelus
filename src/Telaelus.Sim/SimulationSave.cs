@@ -209,6 +209,10 @@ public sealed partial class Simulation
             {
                 b.Queue.Add(new CraftOrder(order[0], order[1]));
             }
+            if (d.Hold is { Length: 2 } held)
+            {
+                b.Hold = new HoldOrder(held[0], held[1]);
+            }
             if (b.Queues)
             {
                 // An older save's queueing processor chose its recipe directly; its orders choose now.
@@ -487,6 +491,7 @@ public sealed partial class Simulation
             PendingRecipe = b.PendingRecipe,
             InputChoices = b.InputChoices.Select(p => new[] { p.Key.Recipe, p.Key.Input, (int)p.Value }).ToList(),
             Queue = b.Queue.Select(o => new[] { o.RecipeIndex, o.Remaining }).ToList(),
+            Hold = b.Hold is HoldOrder hold ? new[] { hold.RecipeIndex, hold.Target } : null,
             CycleInputs = b.CycleInputs.Select(a => new AmountData(a.Type, a.Amount)).ToList(),
             Output = Amounts(b.Output),
             Burning = b.Burning,

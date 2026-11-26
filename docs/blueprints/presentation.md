@@ -270,7 +270,15 @@ ui-style.md. There is no text HUD; the screen holds:
   Copper)" while a change waits for the running cycle. Right under the picker a dim line spells
   out the chosen recipe as the Recipe row does ("1 Iron Ore to 1 Iron, 16 s"), each input storage
   holds less than a cycle's worth of in `Danger` (an input with alternatives only when every one
-  is short). A queueing processor then has its order
+  is short). A queueing processor then has a Mode picker
+  (`buildingDetail/mode`: "Queue" or "Hold"; it stands in until a toggle control is decided).
+  Choosing Hold calls `SetHold` with the picked recipe and `DefaultHoldTarget`, and Queue calls
+  `ClearHold`. In Hold the Recipe picker picks the held recipe (a new one resets the target), and
+  in place of the order controls and queue there is a "Hold at" row: "-", the target, "+"
+  (`buildingDetail/holdLess`, `buildingDetail/holdMore`, step buttons stepping a cycle's output,
+  from one cycle's output up to what storage could hold of it, its stock plus `RoomFor`, at most
+  9999), and a dim line "In storage: 32 / 50 Iron", the count in `Text` once it reaches the
+  target. In Queue mode it has its order
   controls: a quantity in items between "-" and "+" step buttons (`buildingDetail/less`,
   `buildingDetail/more`; ui-style.md, repeating while held), each step a cycle of the chosen
   recipe, from one cycle (where it starts, and again on a new recipe) to 99; a Craft button (`buildingDetail/craft`, calling

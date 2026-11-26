@@ -673,6 +673,28 @@ public sealed class CommandExecutor
         return StepOutcome.Ok;
     }
 
+    /// <summary>
+    /// Picks an item of a registered picker (an OptionButton) by its text, as choosing it from the
+    /// picker's list does. Fails when the control is not a visible picker or has no such item.
+    /// </summary>
+    public StepOutcome SelectUi(string id, string item)
+    {
+        if (_root.Dialogs.Find(id) is not OptionButton picker)
+        {
+            return new StepOutcome(false, $"no visible picker '{id}'");
+        }
+        for (int i = 0; i < picker.ItemCount; i++)
+        {
+            if (picker.GetItemText(i) == item)
+            {
+                picker.Select(i);
+                picker.EmitSignal(OptionButton.SignalName.ItemSelected, (long)i);
+                return StepOutcome.Ok;
+            }
+        }
+        return new StepOutcome(false, $"picker '{id}' has no item '{item}'");
+    }
+
     /// <summary>Moves the pointer over a registered UI control (its hover state and tooltip follow).</summary>
     public StepOutcome HoverUi(string id)
     {
