@@ -49,13 +49,23 @@ Game; in a game, Escape opens the game menu (Resume, Save Game, Load Game, Train
 ### The format
 
 - `SaveFormat` (`src/Telaelus.Sim/SaveFormat.cs`) writes a `SaveFile` as gzip-compressed JSON
-  (`System.Text.Json`, enums by name): a `SaveHeader` (format version, the game's version
+  (`System.Text.Json`, enums by name): a `SaveHeader` (the save version, the game's version
   (`AppRoot.GameVersion`), the save time, play time in game seconds, the world seed, ships
   launched, and buildings), the sim's `SaveData`, and the presentation's object.
-- **Versioned:** `SaveFormat.Version` is 1. A save with a newer version is listed but cannot be
-  loaded ("Saved by a newer version"); a file that does not read is "The save is damaged". Both
-  are `SaveFormatException`s. A change to the saved state adds a migration from the previous
-  version.
+- **Versioned:** the header's `SaveVersion` is the save's version; a file without one is version 0
+  (every save from before save versions, which had a `FormatVersion` instead, now ignored).
+  `SaveFormat.Version` is 1, and the game and the demo writer write it. A save that cannot be read
+  is a `SaveFormatException` with a `Kind` (`SaveProblem`) and the reason shown: `Damaged`, "The
+  save is damaged"; `Newer`, "Saved by a newer version"; `Older`, "Saved by an older version".
+  Such a save is listed but cannot be loaded.
+- **No migrations:** a change to the saved state that older saves cannot be read into raises
+  `SaveFormat.Version`, and the older saves become `Older`; a change that only adds a field with a
+  safe default (absent in older saves) keeps the version.
+- **Outdated saves:** opening the load list (`SaveList.Open`, on the main menu's Load Game and the
+  Load Game dialog) with any `Older` saves (`SaveEntry.Outdated`) asks in the list's confirmation
+  row, "2 saves are from an older version and cannot be loaded. Delete them?": Delete removes them
+  and their thumbnails (autosaves too), Keep dismisses it until the list is next opened. Continue
+  loads the newest loadable save, so it never picks one.
 
 ### Where saves go
 
@@ -88,7 +98,8 @@ Game; in a game, Escape opens the game menu (Resume, Save Game, Load Game, Train
 ### The demo save
 
 - **What it is:** a working mining town shipped inside the game (`AppRoot.DemoSavePath`,
-  `res://assets/saves/demo.save`, with `demo.png` as its thumbnail). The main menu's **Demo** loads
+  `res://assets/saves/demo.save`, with `demo.png` as its thumbnail), written at the current save
+  version. The main menu's **Demo** loads
   it (`AppRoot.LoadDemo`) the way Load Game loads a save. Saving it makes a named save, so the demo
   never changes. The export presets include `assets/saves/*.save`, since Godot leaves out files it
   does not import.

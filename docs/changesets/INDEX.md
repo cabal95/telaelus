@@ -11,7 +11,11 @@ rules are in ../development.md.)
 Parked plans, not approved; see `future/`.
 
 - **tier-rework** - The tier rework plan: phases 1 (2611261421-tier-model) and 2
-  (2611261445-tier-pickers) are done; phase 3 looks at building quality levels.
+  (2611261445-tier-pickers) are done; phase 3 is planned in building-levels.
+- **building-levels** - Buildings merged into leveled families (Mine, Lumber Camp, Water Pump, Sand
+  Collector, Oil Well, Smelter, Kiln) at 4 x 4, each level unlocked by research and upgraded in
+  place; deep levels working the cells around them; research tree back to one screen with tier
+  sections; process speed research. Save version done (2611261642-save-version).
 - **graphics-settings** - A player graphics settings panel: the renderer (Forward+ or Mobile, on
   restart, with a first-launch default by GPU), display mode, render scale with FSR upscaling,
   vsync, and a frame cap, kept in a settings file in the player's data folder.
@@ -290,6 +294,9 @@ Newest last. One line each; open the file for the full spec.
 - **2611261445-tier-pickers** - The build menu and research tree show one tier at a time under a
   segmented tier picker (locked tiers disabled, completed research tiers checked), and the
   inventory under a new arrow picker, with undiscovered resources named and grayed.
+- **2611261642-save-version** - Saves carry a save version (1); older saves, including every save
+  from before this change, are listed as "Saved by an older version", and the load screen offers to
+  delete them.
 
 ## Adding a changeset
 

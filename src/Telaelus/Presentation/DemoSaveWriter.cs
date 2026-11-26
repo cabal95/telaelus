@@ -46,6 +46,7 @@ public partial class DemoSaveWriter : Node
         {
             Header = new SaveHeader
             {
+                SaveVersion = SaveFormat.Version,
                 GameVersion = AppRoot.GameVersion,
                 PlayTimeSeconds = DemoTown.RunSeconds,
                 Seed = sim.World.Seed,

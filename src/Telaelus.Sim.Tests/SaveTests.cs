@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Nodes;
 
 namespace Telaelus.Sim.Tests;
 
@@ -234,13 +235,14 @@ public class SaveTests
     }
 
     [Fact]
-    public void TheFile_RoundTrips_AndRefusesANewerVersionOrDamage()
+    public void TheFile_RoundTrips_AndRefusesANewerOrOlderVersionOrDamage()
     {
         Simulation sim = Busy();
         var file = new SaveFile
         {
             Header = new SaveHeader
             {
+                SaveVersion = SaveFormat.Version,
                 GameVersion = "test",
                 SavedAt = "2026-11-15T12:00:00",
                 PlayTimeSeconds = 12.5,
@@ -255,10 +257,49 @@ public class SaveTests
         Assert.Equal(12.5, read.Header.PlayTimeSeconds);
         Assert.Equal(SaveFormat.Json(file.Sim), SaveFormat.Json(read.Sim));
 
-        file.Header.FormatVersion = SaveFormat.Version + 1;
+        file.Header.SaveVersion = SaveFormat.Version + 1;
         var newer = Assert.Throws<SaveFormatException>(() => SaveFormat.Read(SaveFormat.Write(file)));
+        Assert.Equal(SaveProblem.Newer, newer.Kind);
         Assert.Equal("Saved by a newer version", newer.Message);
+        file.Header.SaveVersion = 0;
+        var older = Assert.Throws<SaveFormatException>(() => SaveFormat.Read(SaveFormat.Write(file)));
+        Assert.Equal(SaveProblem.Older, older.Kind);
+        Assert.Equal("Saved by an older version", older.Message);
         var damaged = Assert.Throws<SaveFormatException>(() => SaveFormat.Read(Encoding.UTF8.GetBytes("not a save")));
+        Assert.Equal(SaveProblem.Damaged, damaged.Kind);
         Assert.Equal("The save is damaged", damaged.Message);
+    }
+
+    [Fact]
+    public void ASaveFromBeforeVersions_ReadsAsVersion0_AndIsRefusedAsOlder()
+    {
+        // Every save before save versions had a FormatVersion of 1 in its header and its sim data, and no SaveVersion.
+        var sim = new Simulation();
+        sim.Debug.ResetToEmptyMap();
+        JsonObject file = JsonNode.Parse(System.Text.Json.JsonSerializer.Serialize(new SaveFile
+        {
+            Header = new SaveHeader(),
+            Sim = sim.Save()
+        }))!.AsObject();
+        JsonObject header = file["Header"]!.AsObject();
+        header.Remove("SaveVersion");
+        header["FormatVersion"] = 1;
+        file["Sim"]!.AsObject()["FormatVersion"] = 1;
+        byte[] bytes = Gzip(file.ToJsonString());
+
+        var old = Assert.Throws<SaveFormatException>(() => SaveFormat.Read(bytes));
+        Assert.Equal(SaveProblem.Older, old.Kind);
+        Assert.Equal("Saved by an older version", old.Message);
+    }
+
+    private static byte[] Gzip(string text)
+    {
+        using var memory = new System.IO.MemoryStream();
+        using (var zip = new System.IO.Compression.GZipStream(memory, System.IO.Compression.CompressionLevel.Optimal, leaveOpen: true))
+        {
+            byte[] raw = Encoding.UTF8.GetBytes(text);
+            zip.Write(raw, 0, raw.Length);
+        }
+        return memory.ToArray();
     }
 }

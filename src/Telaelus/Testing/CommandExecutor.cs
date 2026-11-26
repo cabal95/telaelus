@@ -380,10 +380,10 @@ public sealed class CommandExecutor
         return StepOutcome.Ok;
     }
 
-    /// <summary>Saves the game in play under a name, as the Save Game dialog does.</summary>
-    public StepOutcome SaveGame(string name)
+    /// <summary>Saves the game in play under a name, as the Save Game dialog does (at another save version to plant an old save).</summary>
+    public StepOutcome SaveGame(string name, int? version)
     {
-        _app.SaveGame(name);
+        _app.SaveGame(name, version);
         return StepOutcome.Ok;
     }
 

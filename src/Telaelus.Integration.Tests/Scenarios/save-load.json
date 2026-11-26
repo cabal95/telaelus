@@ -38,7 +38,7 @@
     { "clickUi": { "id": "gameMenu/LoadGame" } },
     { "wait": 2 },
     { "expect": "ui.open", "equals": "loadGame" },
-    { "expect": "ui.saves", "equals": [{ "name": "Save 1", "loadable": true }] },
+    { "expect": "ui.saves", "equals": [{ "name": "Save 1", "loadable": true, "outdated": false }] },
     { "screenshot": "load-dialog" },
     { "clickUi": { "id": "loadGame/Load" } },
     { "wait": 2 },

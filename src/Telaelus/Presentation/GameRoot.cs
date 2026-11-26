@@ -153,6 +153,7 @@ public partial class GameRoot : Node3D
         {
             Header = new SaveHeader
             {
+                SaveVersion = SaveFormat.Version,
                 GameVersion = AppRoot.GameVersion,
                 SavedAt = System.DateTime.Now.ToString("s", System.Globalization.CultureInfo.InvariantCulture),
                 PlayTimeSeconds = PlayTime,

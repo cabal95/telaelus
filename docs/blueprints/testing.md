@@ -198,7 +198,9 @@ pausing it and stepping frame by frame.
   loading with none; an older save's input buffer and fuel slot going to storage; an older save's
   2 x 2 Burner Generator growing to 4 x 4 around its center, or, with a building in the way,
   refunded in full and told on the next step; and the file
-  format's round trip, a newer version refused, and a damaged file refused.
+  format's round trip, a newer version refused (`Newer`), an older one (version 0) refused
+  (`Older`, "Saved by an older version"), and a damaged file refused (`Damaged`); a file written
+  before save versions (a `FormatVersion` and no `SaveVersion`) refused as `Older`.
 - `DemoTownTests`: the demo town (saving.md) built and run as the demo save is: every building
   online and working, power normal, four trucks, Material Transfer running; every collector on a
   field and the Smelters fed by truck; no truck waiting on storage and every Smelter working 15
@@ -270,7 +272,7 @@ pausing it and stepping frame by frame.
     does; a queueing processor refuses it), `queueCraft` `{ anchor, recipe, count }` (queues an
     order at the processor at that anchor, as its Craft button does; fails when it does not queue
     or its queue is full),
-    `newGame` `{ seed? }` (see above), `saveGame` `{ name }` (saves the game in play, as the save
+    `newGame` `{ seed? }` (see above), `saveGame` `{ name, version? }` (a version other than the current one plants an old or newer save; saves the game in play, as the save
     dialog does), `loadGame` `{ name }` (loads a save whatever the state; the next command runs
     once the loaded game is in play; fails when the save cannot be loaded), `loadDemo` (`{}`;
     loads the demo save, as the menu's Demo does), `setTimeOfDay` (a number from 0 up to 1, 0.5 midday), `placeRoad` and `placeBridge`
@@ -356,7 +358,7 @@ pausing it and stepping frame by frame.
   tooltip's lines or null, `worldTip`: the truck tooltip's lines outside build mode, or null,
   `playTime` (game seconds played) and `unsaved` (unsaved progress), while the game menu is open
   its `buttons`, `confirm` (the question shown, or null), and `status`, while the save dialog is
-  open its `name` and `confirm`, while the load dialog is open its `saves` (each `name` and
+  open its `name` and `confirm`, while the load dialog is open its `savesPrompt` (the list's question or null) and `saves` (each `name`, `outdated`, and
   `loadable`) and `confirm`, and while the build menu is open, its `tier` (1 to 4), `tiers` (each picker cell's `label`,
   `enabled`, and `checked`), and `cells`, the chosen tier's cells in display order (on Tier 1
   `Road` and `Bridge` sorted in by name), each `type`, `state` (`affordable` or `unaffordable`),
@@ -413,8 +415,8 @@ pausing it and stepping frame by frame.
   `motherlode` or null);
   `app` (`loading`, `menu`, or `game`; before a game the snapshot is only `app`, `loading` (the
   progress, 0 to 1), and `ui` with `open` (`mainMenu` on the menu) and `menu` (`title`, `buttons`:
-  the shown, enabled ones, and `saves`: the main menu's save list (each `name` and `loadable`)
-  while it shows, else null));
+  the shown, enabled ones, `saves`: the main menu's save list (each `name`, `loadable`, and
+  `outdated`) while it shows, else null, and `savesPrompt`, the list's question or null));
   `stockpile` (every resource); `capacity` (`power`, `water`, and `sand`, each with `supply`,
   `demand`, `speed`, and `state`: `normal`, `brownout`, or `blackout`, and once there is a Battery
   Bank, `stored`, `storeCapacity`, and `storeFlow`); `timeOfDay` and `daylight`; `research` (its
@@ -597,6 +599,9 @@ pausing it and stepping frame by frame.
   1" through the dialog; Load Game asking first with unsaved progress and bringing the saved
   stockpile back; `saveGame` and `loadGame`; Main Menu asking first, and the menu then showing
   Continue and Load Game; windowed screenshots of the game menu, the dialogs, and the menu),
+  `save-version` (two saves planted at version 0 listed as "Saved by an older version", not
+  loadable; opening Load Game asking to delete them; Keep dismissing it until the list is reopened;
+  Delete leaving only the current save, which loads),
   `demo` (the menu offering Demo; `loadDemo` opening the town at the widest zoom, powered, with
   Material Transfer running and four trucks, and its Iron still rising a minute later; windowed
   screenshots),

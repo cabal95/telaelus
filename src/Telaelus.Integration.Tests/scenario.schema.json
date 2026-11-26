@@ -304,7 +304,7 @@
       }
     },
     "saveGame": {
-      "description": "Save the game in play under a name (into the run's own saves folder), as the Save Game dialog does.",
+      "description": "Save the game in play under a name (into the run's own saves folder), as the Save Game dialog does. A version other than the current save version plants an old (or newer) save.",
       "type": "object",
       "required": ["saveGame"],
       "additionalProperties": false,
@@ -314,7 +314,8 @@
           "required": ["name"],
           "additionalProperties": false,
           "properties": {
-            "name": { "type": "string", "minLength": 1 }
+            "name": { "type": "string", "minLength": 1 },
+            "version": { "type": "integer", "minimum": 0 }
           }
         },
         "comment": { "$ref": "#/definitions/comment" }

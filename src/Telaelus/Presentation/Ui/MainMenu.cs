@@ -37,7 +37,10 @@ public partial class MainMenu : Node
         : new List<string>();
 
     /// <summary>The saves listed while Load Game shows them, else null, for the snapshot.</summary>
-    public IReadOnlyList<(string Name, bool Loadable)>? SaveRows => _loadPanel.Visible ? _saves.Rows : null;
+    public IReadOnlyList<(string Name, bool Loadable, bool Outdated)>? SaveRows => _loadPanel.Visible ? _saves.Rows : null;
+
+    /// <summary>The save list's question while Load Game shows it, else null, for the snapshot.</summary>
+    public string? SavesPrompt => _loadPanel.Visible ? _saves.Prompt : null;
 
     public override void _Ready()
     {
@@ -148,7 +151,7 @@ public partial class MainMenu : Node
     private void ShowLoad()
     {
         _problem.Text = "";
-        _saves.Refresh();
+        _saves.Open();
         _column.Visible = false;
         _loadPanel.Visible = true;
     }

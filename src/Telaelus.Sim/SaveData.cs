@@ -8,7 +8,6 @@ namespace Telaelus.Sim;
 
 public sealed class SaveData
 {
-    public int FormatVersion { get; set; } = SaveFormat.Version;
     public WorldData World { get; set; } = new();
     public List<ChunkData> Chunks { get; set; } = new();
     public List<FieldData> Fields { get; set; } = new();

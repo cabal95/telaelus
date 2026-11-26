@@ -176,7 +176,8 @@ public sealed class ScenarioCommand
             case "saveGame":
                 {
                     string save = Label(Required(arg, "name"), "saveGame");
-                    return e => e.SaveGame(save);
+                    int? version = arg.TryGetProperty("version", out JsonElement v) ? Int(v, "version") : null;
+                    return e => e.SaveGame(save, version);
                 }
             case "loadGame":
                 {

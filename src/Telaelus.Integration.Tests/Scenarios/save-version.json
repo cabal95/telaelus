@@ -1,0 +1,50 @@
+{
+  "$schema": "../scenario.schema.json",
+  "name": "save-version",
+  "description": "Saves carry a save version: two saves planted at version 0 (as every save from before versions reads) are listed as \"Saved by an older version\" and cannot be loaded; opening Load Game asks whether to delete them; Keep dismisses the question until the list is opened again; Delete leaves only the current save, which loads.",
+  "steps": [
+    { "newGame": {} },
+    { "seedStockpile": { "type": "Wood", "amount": 30 } },
+    { "saveGame": { "name": "Old 1", "version": 0 } },
+    { "saveGame": { "name": "Old 2", "version": 0 } },
+    { "wait": 2 },
+    { "saveGame": { "name": "Current" } },
+
+    { "press": "Escape" },
+    { "wait": 2 },
+    { "clickUi": { "id": "gameMenu/LoadGame" } },
+    { "wait": 2 },
+    { "expect": "ui.open", "equals": "loadGame" },
+    { "expect": "ui.saves[0]", "equals": { "name": "Current", "loadable": true, "outdated": false } },
+    { "expect": "ui.saves[1].loadable", "equals": false },
+    { "expect": "ui.saves[1].outdated", "equals": true },
+    { "expect": "ui.saves[2].outdated", "equals": true },
+    { "comment": "Opening the list with old saves asks once.", "expect": "ui.savesPrompt", "equals": "2 saves are from an older version and cannot be loaded. Delete them?" },
+    { "screenshot": "prompt" },
+
+    { "comment": "Keep dismisses it; the old saves stay.", "clickUi": { "id": "loadGame/CancelDelete" } },
+    { "wait": 2 },
+    { "expect": "ui.savesPrompt", "equals": null },
+    { "expect": "ui.saves[2].outdated", "equals": true },
+
+    { "comment": "Opened again, it asks again.", "press": "Escape" },
+    { "wait": 2 },
+    { "expect": "ui.open", "equals": null },
+    { "press": "Escape" },
+    { "wait": 2 },
+    { "clickUi": { "id": "gameMenu/LoadGame" } },
+    { "wait": 2 },
+    { "expect": "ui.open", "equals": "loadGame" },
+    { "expect": "ui.savesPrompt", "equals": "2 saves are from an older version and cannot be loaded. Delete them?" },
+
+    { "comment": "Delete removes both old saves.", "clickUi": { "id": "loadGame/ConfirmDelete" } },
+    { "wait": 2 },
+    { "expect": "ui.savesPrompt", "equals": null },
+    { "expect": "ui.saves", "equals": [{ "name": "Current", "loadable": true, "outdated": false }] },
+    { "screenshot": "after-delete" },
+
+    { "comment": "The current save loads.", "loadGame": { "name": "Current" } },
+    { "expect": "app", "equals": "game" },
+    { "expect": "stockpile.Wood", "equals": 30 }
+  ]
+}

@@ -126,8 +126,10 @@ The two kinds place themselves:
 - **Load dialog** (`LoadDialog`, "Load Game", id `loadGame`): the save list (`SaveList`), a row per
   save, newest first, with its thumbnail (128 x 72), name, "Saved <date time>   Played <time>", and
   "<n> buildings   <n> ships launched" (singular for one); a save that cannot be loaded is dimmed
-  with its reason. The selected row has an `Accent` outline; a double-click loads it. Under the
-  list, Load and Delete; Delete asks first. With unsaved progress, Load asks "Unsaved progress will
+  with its reason in `Warning` ("Saved by an older version"). The selected row has an `Accent`
+  outline; a double-click loads it. Under the list, Load and Delete; Delete asks first, in a
+  confirmation row ("Delete Save 2? It cannot be undone.", Delete and Keep). Opened with saves from
+  an older version, the same row asks whether to delete them all (saving.md). With unsaved progress, Load asks "Unsaved progress will
   be lost." with Load anyway and Cancel.
 
 - **Choice dialog** (`ChoiceDialog`, a modal, id `choice`): a question with two answers, 40 tall

@@ -11,6 +11,9 @@ namespace Telaelus.Presentation;
 public sealed record SaveEntry(string Name, SaveHeader? Header, string? Problem, DateTime Written)
 {
     public bool Loadable => Header is not null && Problem is null;
+
+    /// <summary>Saved by an older version: unsupported, and offered for deletion.</summary>
+    public bool Outdated { get; init; }
 }
 
 /// <summary>
@@ -49,7 +52,10 @@ public static class SaveStore
             }
             catch (SaveFormatException ex)
             {
-                entries.Add(new SaveEntry(name, null, ex.Message, written));
+                entries.Add(new SaveEntry(name, null, ex.Message, written)
+                {
+                    Outdated = ex.Kind == SaveProblem.Older
+                });
             }
             catch (IOException ex)
             {
@@ -81,7 +87,7 @@ public static class SaveStore
         string path = SavePath(name);
         if (!File.Exists(path))
         {
-            throw new SaveFormatException($"No save named {name}");
+            throw new SaveFormatException(SaveProblem.Damaged, $"No save named {name}");
         }
         return SaveFormat.Read(File.ReadAllBytes(path));
     }

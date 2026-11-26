@@ -215,6 +215,6 @@ public partial class LoadDialog : Dialog
     {
         base.OnOpened();
         _confirm.Visible = false;
-        _list.Refresh();
+        _list.Open();
     }
 }

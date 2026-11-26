@@ -9,8 +9,9 @@ namespace Telaelus.Presentation.Ui;
 /// <summary>
 /// The saves, newest first, as rows to pick from: each its thumbnail, its name, when it was saved and
 /// how long it was played, and a summary. A save that cannot be loaded is dimmed with the reason.
-/// Under the rows, Load and Delete act on the selected one (Delete asks first). Used by the in-game
-/// Load dialog and the main menu.
+/// Under the rows, Load and Delete act on the selected one (Delete asks first). Opened with any saves
+/// from an older version (unsupported), the same confirmation row offers to delete them all. Used by
+/// the in-game Load dialog and the main menu.
 /// </summary>
 public partial class SaveList : VBoxContainer
 {
@@ -25,14 +26,18 @@ public partial class SaveList : VBoxContainer
     private readonly Label _confirmText = UiTheme.MakeLabel("", UiTheme.BodySize, UiTheme.Warning);
     private readonly List<(SaveEntry Entry, PanelContainer Row, StyleBoxFlat Style)> _entries = new();
     private Action<string, Control>? _register;
+    private Action? _confirmed;
 
     /// <summary>Raised with a save's name when Load is pressed on it (or a row double-clicked).</summary>
     public event Action<string>? LoadRequested;
 
     public string? Selected { get; private set; }
 
-    /// <summary>The rows as shown (name, whether loadable), for the snapshot.</summary>
-    public IReadOnlyList<(string Name, bool Loadable)> Rows => _entries.Select(e => (e.Entry.Name, e.Entry.Loadable)).ToList();
+    /// <summary>The rows as shown (name, whether loadable, whether outdated), for the snapshot.</summary>
+    public IReadOnlyList<(string Name, bool Loadable, bool Outdated)> Rows => _entries.Select(e => (e.Entry.Name, e.Entry.Loadable, e.Entry.Outdated)).ToList();
+
+    /// <summary>The confirmation row's question while it shows, else null, for the snapshot.</summary>
+    public string? Prompt => _confirm.Visible ? _confirmText.Text : null;
 
     public SaveList()
     {
@@ -68,14 +73,18 @@ public partial class SaveList : VBoxContainer
         _delete.FocusMode = FocusModeEnum.None;
         _delete.Pressed += () =>
         {
-            _confirmText.Text = $"Delete {Selected}? It cannot be undone.";
-            _confirm.Visible = true;
+            if (Selected is string name)
+            {
+                Ask($"Delete {name}? It cannot be undone.", () => SaveStore.Delete(name));
+            }
         };
         buttons.AddChild(UiTheme.SizeToLabel(_delete));
 
         _confirm.AddThemeConstantOverride("separation", UiTheme.Gap);
         _confirm.Visible = false;
         AddChild(_confirm);
+        _confirmText.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+        _confirmText.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         _confirm.AddChild(_confirmText);
         var yes = new Button
         {
@@ -85,11 +94,9 @@ public partial class SaveList : VBoxContainer
         };
         yes.Pressed += () =>
         {
-            if (Selected is string name)
-            {
-                SaveStore.Delete(name);
-            }
-            _confirm.Visible = false;
+            Action? delete = _confirmed;
+            _confirmed = null;
+            delete?.Invoke();
             Refresh();
         };
         _confirm.AddChild(UiTheme.SizeToLabel(yes));
@@ -99,7 +106,11 @@ public partial class SaveList : VBoxContainer
             Text = "Keep",
             FocusMode = FocusModeEnum.None
         };
-        no.Pressed += () => _confirm.Visible = false;
+        no.Pressed += () =>
+        {
+            _confirmed = null;
+            _confirm.Visible = false;
+        };
         _confirm.AddChild(UiTheme.SizeToLabel(no));
         _deleteYes = yes;
         _deleteNo = no;
@@ -107,6 +118,36 @@ public partial class SaveList : VBoxContainer
 
     private readonly Button _deleteYes;
     private readonly Button _deleteNo;
+
+    // Shows the confirmation row with a question; Delete runs the action, Keep dismisses it.
+    private void Ask(string question, Action delete)
+    {
+        _confirmText.Text = question;
+        _confirmed = delete;
+        _confirm.Visible = true;
+    }
+
+    /// <summary>
+    /// Lists the saves as the load screen opens, and when any are from an older version, asks whether
+    /// to delete them ("2 saves are from an older version and cannot be loaded. Delete them?").
+    /// </summary>
+    public void Open()
+    {
+        Refresh();
+        List<string> outdated = _entries.Where(e => e.Entry.Outdated).Select(e => e.Entry.Name).ToList();
+        if (outdated.Count > 0)
+        {
+            string count = outdated.Count == 1 ? "1 save is" : $"{outdated.Count} saves are";
+            string them = outdated.Count == 1 ? "it" : "them";
+            Ask($"{count} from an older version and cannot be loaded. Delete {them}?", () =>
+            {
+                foreach (string name in outdated)
+                {
+                    SaveStore.Delete(name);
+                }
+            });
+        }
+    }
 
     private static string Count(int n, string noun)
     {
@@ -145,6 +186,7 @@ public partial class SaveList : VBoxContainer
             Selected = saves.FirstOrDefault()?.Name;
         }
         _empty.Visible = saves.Count == 0;
+        _confirmed = null;
         _confirm.Visible = false;
         UpdateSelection();
     }

@@ -10,7 +10,8 @@ namespace Telaelus.Sim;
 /// <summary>A save's header: what the load list shows without loading the game.</summary>
 public sealed class SaveHeader
 {
-    public int FormatVersion { get; set; } = SaveFormat.Version;
+    /// <summary>The save's version; 0 when the file has none (every save from before versions). Writers set <see cref="SaveFormat.Version"/>.</summary>
+    public int SaveVersion { get; set; }
     public string GameVersion { get; set; } = "";
     /// <summary>When it was saved, as an ISO 8601 local time.</summary>
     public string SavedAt { get; set; } = "";
@@ -29,16 +30,33 @@ public sealed class SaveFile
 }
 
 /// <summary>Why a save cannot be read.</summary>
+public enum SaveProblem
+{
+    /// <summary>The file does not read as a save.</summary>
+    Damaged,
+
+    /// <summary>Its version is above this build's.</summary>
+    Newer,
+
+    /// <summary>Its version is below this build's: an unsupported old save.</summary>
+    Older
+}
+
+/// <summary>Why a save cannot be read, as a <see cref="SaveProblem"/> and a message for the player.</summary>
 public sealed class SaveFormatException : Exception
 {
-    public SaveFormatException(string message, Exception? inner = null) : base(message, inner)
+    public SaveFormatException(SaveProblem kind, string message, Exception? inner = null) : base(message, inner)
     {
+        Kind = kind;
     }
+
+    public SaveProblem Kind { get; }
 }
 
 /// <summary>
 /// The save file: gzip-compressed JSON of a <see cref="SaveFile"/>, enums by name. <see cref="Version"/>
-/// is the format this build writes and reads; a newer one is refused ("Saved by a newer version").
+/// is the save version this build writes and reads; a newer one is refused ("Saved by a newer
+/// version"), and so is an older one ("Saved by an older version"): old saves are not migrated.
 /// </summary>
 public static class SaveFormat
 {
@@ -62,7 +80,7 @@ public static class SaveFormat
         return memory.ToArray();
     }
 
-    /// <summary>Reads a save; throws <see cref="SaveFormatException"/> for a damaged file or a newer format.</summary>
+    /// <summary>Reads a save; throws <see cref="SaveFormatException"/> for a damaged file or another version.</summary>
     public static SaveFile Read(byte[] bytes)
     {
         SaveFile? file;
@@ -74,15 +92,19 @@ public static class SaveFormat
         }
         catch (Exception ex) when (ex is JsonException or InvalidDataException or IOException or NotSupportedException)
         {
-            throw new SaveFormatException("The save is damaged", ex);
+            throw new SaveFormatException(SaveProblem.Damaged, "The save is damaged", ex);
         }
         if (file is null || file.Sim is null || file.Header is null)
         {
-            throw new SaveFormatException("The save is damaged");
+            throw new SaveFormatException(SaveProblem.Damaged, "The save is damaged");
         }
-        if (file.Header.FormatVersion > Version || file.Sim.FormatVersion > Version)
+        if (file.Header.SaveVersion > Version)
         {
-            throw new SaveFormatException("Saved by a newer version");
+            throw new SaveFormatException(SaveProblem.Newer, "Saved by a newer version");
+        }
+        if (file.Header.SaveVersion < Version)
+        {
+            throw new SaveFormatException(SaveProblem.Older, "Saved by an older version");
         }
         return file;
     }

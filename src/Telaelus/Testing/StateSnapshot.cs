@@ -34,7 +34,8 @@ public static class StateSnapshot
                         {
                             ["title"] = MainMenu.Title,
                             ["buttons"] = new JsonArray(menu.ButtonTexts.Select(t => (JsonNode)t).ToArray()),
-                            ["saves"] = Saves(menu.SaveRows)
+                            ["saves"] = Saves(menu.SaveRows),
+                            ["savesPrompt"] = menu.SavesPrompt
                         }
                         : null
                 }
@@ -172,14 +173,15 @@ public static class StateSnapshot
         };
     }
 
-    private static JsonArray? Saves(System.Collections.Generic.IReadOnlyList<(string Name, bool Loadable)>? rows)
+    private static JsonArray? Saves(System.Collections.Generic.IReadOnlyList<(string Name, bool Loadable, bool Outdated)>? rows)
     {
         return rows is null
             ? null
             : new JsonArray(rows.Select(r => (JsonNode)new JsonObject
             {
                 ["name"] = r.Name,
-                ["loadable"] = r.Loadable
+                ["loadable"] = r.Loadable,
+                ["outdated"] = r.Outdated
             }).ToArray());
     }
 
@@ -250,6 +252,7 @@ public static class StateSnapshot
         if (root.Dialogs.Current == root.LoadDialog)
         {
             ui["saves"] = Saves(root.LoadDialog.List.Rows);
+            ui["savesPrompt"] = root.LoadDialog.List.Prompt;
             ui["confirm"] = root.LoadDialog.Confirming ? "Unsaved progress will be lost." : null;
         }
         if (root.Dialogs.Current == root.FieldDetail && root.FieldDetail.Field is ResourceField field)

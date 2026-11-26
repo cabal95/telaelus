@@ -288,14 +288,19 @@ public partial class AppRoot : Node
         _pendingLoad = (save, LoadFrames);
     }
 
-    /// <summary>Saves the game in play under a name (its thumbnail from when the game menu opened).</summary>
-    public void SaveGame(string name)
+    /// <summary>
+    /// Saves the game in play under a name (its thumbnail from when the game menu opened). A version
+    /// other than the current one is only for tests, to stand in for an old save.
+    /// </summary>
+    public void SaveGame(string name, int? version = null)
     {
         if (Game is not GameRoot game)
         {
             throw new InvalidOperationException("no game to save");
         }
-        SaveStore.Write(name, game.MakeSave(), game.SaveThumbnail);
+        SaveFile save = game.MakeSave();
+        save.Header.SaveVersion = version ?? SaveFormat.Version;
+        SaveStore.Write(name, save, game.SaveThumbnail);
         game.MarkSaved();
     }
 

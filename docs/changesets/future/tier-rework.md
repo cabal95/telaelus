@@ -123,7 +123,8 @@ levels that only speed it up (25%, then 50%). This is its own design pass and ch
    shows what it can without the pickers.)
 2. **Visibility and pickers** (done: completed/2611261445-tier-pickers.md): raw resources grayed until found, items hidden until their tier
    then grayed until made; the build menu and inventory tier pickers; the research tree by tier.
-3. **Quality levels:** the merge or speed-boost design, then its build.
+3. **Quality levels:** the merge or speed-boost design, then its build (planned in
+   building-levels.md).
 
 ## Decisions
 
