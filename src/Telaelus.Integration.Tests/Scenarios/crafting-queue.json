@@ -38,7 +38,7 @@
     { "wait": 2 },
     { "expect": "ui.queue", "equals": ["Iron x 2 (crafting)"] },
     { "expect": "buildings[1].idleReason", "equals": null },
-    { "comment": "Coal burns, and works the Smelter 30% faster.", "expect": "ui.rows.burning", "equals": "Coal, 40 s left, +30% speed" },
+    { "comment": "Coal burns, and works the Smelter 30% faster.", "expect": "ui.strip[2]", "equals": { "id": "burning", "value": "40 s", "tone": "normal", "tip": "Coal, 40 s left, +30% speed" } },
 
     { "comment": "Copper, as the picker would choose it, then Iron again: a new order after the Copper.", "queueCraft": { "anchor": [48, 4], "recipe": 1, "count": 1 } },
     { "clickUi": { "id": "buildingDetail/craft" } },

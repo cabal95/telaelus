@@ -46,7 +46,11 @@ public partial class GameMenu : Dialog
     {
         // Resume does what Close does.
         CloseButton.Visible = false;
-        _actions = new VBoxContainer();
+        // The stack shares one width, twice its widest label's (StackWidth), centered.
+        _actions = new VBoxContainer
+        {
+            SizeFlagsHorizontal = SizeFlags.ShrinkCenter
+        };
         _actions.AddThemeConstantOverride("separation", UiTheme.Gap);
         Body.AddChild(_actions);
         AddButton("Resume", () => Host.Close(this));
@@ -55,6 +59,7 @@ public partial class GameMenu : Dialog
         AddButton("Trainer", () => TrainerRequested?.Invoke());
         AddButton("Main Menu", () => Leave(() => MainMenuRequested?.Invoke()));
         AddButton("Quit", () => Leave(() => QuitRequested?.Invoke()));
+        _actions.CustomMinimumSize = new Vector2(StackWidth(_buttons.Select(b => b.Text)), 0f);
 
         _confirm = new VBoxContainer
         {
@@ -83,7 +88,7 @@ public partial class GameMenu : Dialog
             ShowActions();
             then?.Invoke();
         };
-        row.AddChild(yes);
+        row.AddChild(UiTheme.SizeToLabel(yes));
         Host.Register(Id + "/Confirm", yes);
         var no = new Button
         {
@@ -92,12 +97,23 @@ public partial class GameMenu : Dialog
             FocusMode = FocusModeEnum.None
         };
         no.Pressed += ShowActions;
-        row.AddChild(no);
+        row.AddChild(UiTheme.SizeToLabel(no));
         Host.Register(Id + "/Cancel", no);
 
         _status = UiTheme.MakeLabel("", UiTheme.SmallSize, UiTheme.TextDim);
         _status.HorizontalAlignment = HorizontalAlignment.Center;
         Body.AddChild(_status);
+    }
+
+    /// <summary>
+    /// A menu stack's width: twice its widest button (label plus the theme's side padding, at least
+    /// <see cref="UiTheme.ButtonMinWidth"/>), so a short menu still reads as a menu.
+    /// </summary>
+    private static float StackWidth(IEnumerable<string> labels)
+    {
+        Font font = ThemeDB.FallbackFont;
+        float widest = labels.Max(label => font.GetStringSize(label, HorizontalAlignment.Left, -1, UiTheme.BodySize).X + 2 * UiTheme.Padding);
+        return 2f * Mathf.Max(widest, UiTheme.ButtonMinWidth);
     }
 
     private void AddButton(string text, Action pressed)
@@ -107,8 +123,7 @@ public partial class GameMenu : Dialog
             Name = text.Replace(" ", ""),
             Text = text,
             FocusMode = FocusModeEnum.None,
-            CustomMinimumSize = new Vector2(240f, 40f),
-            SizeFlagsHorizontal = SizeFlags.ShrinkCenter
+            CustomMinimumSize = new Vector2(UiTheme.ButtonMinWidth, 40f)
         };
         button.Pressed += pressed;
         _actions.AddChild(button);

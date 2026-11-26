@@ -167,6 +167,7 @@ or 1.05 for facet variation). A new material extends the table.
 | reactor_accent | 0.46, 0.42, 0.90 | Fission Reactor bands (a radiation blue-violet) |
 | sun | 1.00, 0.84, 0.30 | The sun icon |
 | moon | 0.86, 0.89, 0.96 | The moon icon |
+| icon_mono | 0.96, 0.96, 0.96 | Icons the UI tints by state (`power_switch`, `network`): a light neutral, so a tint shows true |
 | research_accent | 0.36, 0.86, 0.66 | Research Lab band and awning (a mint green) |
 | gravel | 0.56, 0.51, 0.43 | Road surface |
 | gravel_edge | 0.43, 0.39, 0.32 | Road verges, pebbles, and slab sides |
@@ -227,7 +228,12 @@ Emissive materials glow at half their base color. Mountains keep their own stone
   at the back with a white lip and a dark open top, a domed round reactor building, a turbine hall
   across the front, an intake pipe). Icons (`assets/models/icons/`): `sun` (a pale yellow
   disc with eight rays), `moon` (a pale crescent), `power` (a lightning bolt in
-  `power_accent`), flat shapes facing the game camera.
+  `power_accent`), `power_switch` (the power symbol: a ring broken at the top by a vertical bar)
+  and `network` (a hub mast on a base with a ring around its top and a round cap), flat shapes
+  facing the game camera. The last two are `icon_mono`, a light neutral the UI tints by state
+  (`Good` green on and online, `TextDim` off, `Warning` offline; ui-style.md); the green of
+  `Good` is the hubs' `hub_accent`. The detail panel's truck icon is the `units/truck` model
+  itself, drawn tight like an item icon.
 - Infrastructure (`assets/models/infrastructure/`, 2 x 2 tiles): road pieces are a gravel slab 0.03
   high with a darker verge along each closed edge and three pebbles at the same spots on every
   piece (patch, end, straight, corner, tee, crossing, authored open North first, then East); a

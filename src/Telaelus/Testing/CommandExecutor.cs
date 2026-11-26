@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json.Nodes;
 using Telaelus.Presentation;
+using Telaelus.Presentation.Ui;
 using Telaelus.Sim;
 using Godot;
 
@@ -674,11 +675,16 @@ public sealed class CommandExecutor
     }
 
     /// <summary>
-    /// Picks an item of a registered picker (an OptionButton) by its text, as choosing it from the
-    /// picker's list does. Fails when the control is not a visible picker or has no such item.
+    /// Picks an item of a registered picker (an OptionButton, or a segmented picker in either form) by
+    /// its text, as choosing it from the picker's list or clicking its cell does. Fails when the
+    /// control is not a visible picker or has no such item.
     /// </summary>
     public StepOutcome SelectUi(string id, string item)
     {
+        if (_root.Dialogs.Find(id) is SegmentedPicker segmented)
+        {
+            return segmented.Choose(item) ? StepOutcome.Ok : new StepOutcome(false, $"picker '{id}' has no item '{item}'");
+        }
         if (_root.Dialogs.Find(id) is not OptionButton picker)
         {
             return new StepOutcome(false, $"no visible picker '{id}'");

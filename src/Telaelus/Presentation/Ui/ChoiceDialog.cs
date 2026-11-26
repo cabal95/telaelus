@@ -44,7 +44,7 @@ public partial class ChoiceDialog : Dialog
         {
             Name = "Yes",
             FocusMode = FocusModeEnum.None,
-            CustomMinimumSize = new Vector2(150f, 40f)
+            CustomMinimumSize = new Vector2(UiTheme.ButtonMinWidth, 40f)
         };
         _yes.Pressed += () => Answer(_onYes);
         row.AddChild(_yes);
@@ -53,7 +53,7 @@ public partial class ChoiceDialog : Dialog
         {
             Name = "No",
             FocusMode = FocusModeEnum.None,
-            CustomMinimumSize = new Vector2(150f, 40f)
+            CustomMinimumSize = new Vector2(UiTheme.ButtonMinWidth, 40f)
         };
         _no.Pressed += () => Answer(_onNo);
         row.AddChild(_no);

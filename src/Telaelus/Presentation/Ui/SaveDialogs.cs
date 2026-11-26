@@ -56,7 +56,7 @@ public partial class SaveDialog : Dialog
             FocusMode = FocusModeEnum.None
         };
         save.Pressed += TrySave;
-        row.AddChild(save);
+        row.AddChild(UiTheme.SizeToLabel(save));
         Host.Register(Id + "/Save", save);
 
         _confirm = new HBoxContainer
@@ -78,7 +78,7 @@ public partial class SaveDialog : Dialog
             _confirm.Visible = false;
             SaveRequested?.Invoke(_name.Text.Trim());
         };
-        _confirm.AddChild(yes);
+        _confirm.AddChild(UiTheme.SizeToLabel(yes));
         Host.Register(Id + "/Overwrite", yes);
         var no = new Button
         {
@@ -87,7 +87,7 @@ public partial class SaveDialog : Dialog
             FocusMode = FocusModeEnum.None
         };
         no.Pressed += () => _confirm.Visible = false;
-        _confirm.AddChild(no);
+        _confirm.AddChild(UiTheme.SizeToLabel(no));
     }
 
     public override void OnOpened()
@@ -199,7 +199,7 @@ public partial class LoadDialog : Dialog
                 LoadRequested?.Invoke(name);
             }
         };
-        _confirm.AddChild(yes);
+        _confirm.AddChild(UiTheme.SizeToLabel(yes));
         Host.Register(Id + "/Confirm", yes);
         var no = new Button
         {
@@ -208,7 +208,7 @@ public partial class LoadDialog : Dialog
             FocusMode = FocusModeEnum.None
         };
         no.Pressed += () => _confirm.Visible = false;
-        _confirm.AddChild(no);
+        _confirm.AddChild(UiTheme.SizeToLabel(no));
     }
 
     public override void OnOpened()

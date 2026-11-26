@@ -290,15 +290,18 @@ pausing it and stepping frame by frame.
     scenario waits until the release; pushed through the viewport like real input), `clickUi`
     `{ id }` (moves the pointer over a registered UI control and clicks it, released the next
     frame), `hoverUi` `{ id }` (moves the pointer over one, so its hover state and tooltip
-    show), `selectUi` `{ id, item }` (picks a picker's item by its text, as choosing it from the
-    list does), `holdUi` `{ id, frames }` (moves the pointer over one and holds the left button down
+    show), `selectUi` `{ id, item }` (picks a picker's item by its text: a dropdown's, as choosing
+    it from the list does, or a segmented picker's in either of its forms, as clicking its cell
+    does), `holdUi` `{ id, frames }` (moves the pointer over one and holds the left button down
     for the frames, released on the last; the scenario waits for the release; a control clipped by
     a scroll container must be hovered into view first), and `scrollUi` `{ id, ticks }` (turns the wheel over one: positive ticks down,
     negative up). When a scroll container clips the control, `clickUi` and `hoverUi` first scroll
     it into view, as a player would, and act a frame later, once the layout has settled. Keys are Godot `Key` names (`R`, `E`, `B`, `Escape`). UI ids are a dialog's id and a
-    control's name: `buildMenu/<BuildingType>` for a cell (`buildMenu/Road` and `buildMenu/Bridge` for the line tools), `buildingDetail/toggle` and
-    `buildingDetail/destroy` for the detail panel's actions, `buildingDetail/siloResource` for the
-    Silo picker, `inventory/<ResourceType>` for an inventory row, `inventory/pin/<ResourceType>`
+    control's name: `buildMenu/<BuildingType>` for a cell (`buildMenu/Road` and `buildMenu/Bridge` for the line tools), `buildingDetail/toggle` (the on/off icon
+    toggle) and `buildingDetail/destroy` for the detail panel's actions, `buildingDetail/siloResource` for the
+    Silo picker, `buildingDetail/mode`, `buildingDetail/input`, and `buildingDetail/fuel` for its
+    segmented pickers (for `selectUi`) and `buildingDetail/mode/Hold` and the like for a picker's
+    cell (for `clickUi`), `inventory/<ResourceType>` for an inventory row, `inventory/pin/<ResourceType>`
     for a row's Pin toggle (shown only on discovered rows, and only clickable while the row is
     scrolled into view), `trainer` and `trainer/close` for the step card and its X, `choice/yes` and `choice/no` for the choice dialog's answers, `toast/<n>` for a notification (0 is the newest) and `toast/<n>/close` for its X, `topBar/<ResourceType>` for a top bar entry (top bar ids work while no dialog is
     open), and `<dialog>/close` for the Close button. Buttons act on release, the frame after a `clickUi`, so check their effect after
@@ -352,17 +355,22 @@ pausing it and stepping frame by frame.
   research tree is open, its `header`, its `cards` (each `project`, `running`, `progress` 0 to 1,
   `selected`, and `locked`), and its `drawer` (the selected `project`, its `state` as shown,
   `button`, `enabled`, `fee`, `time`, and `progress` 0 to 1); while the
-  detail panel is open, `building` (its id), `rows` (each shown status row, keyed in camel case:
-  `network`, `switch`, `power`, `water`, `sand`, `state`, `inRange`, `workingOn`, `recipe`, `buffer`,
-  `truck`, `burning`, `links`, `reach`, `trucks`, `truck1` to `truck4`, `site`, `plot`, `eats`,
-  `charge`, `research`),
+  detail panel is open, `building` (its id), `strip` (the status strip in order, each entry's
+  `id` (`switch` for the on/off toggle, then `network`, `power`, `water`, `sand`, `charge`,
+  `burning`, `truck`), `value` as shown ("-10", "+35", "53%", "22 s", or null), `tone`
+  (`normal`, `dim`, `good`, `warning`, or `danger`), and `tip`, its tooltip), `state` (the state
+  line, "Working" or "Idle: " and the reason, or null) and `stateTone`, `rows` (each shown status
+  row, keyed in camel case: `research`, `site`, `plot`, `eats`, `inRange`, `workingOn`, `recipe`,
+  `buffer`, `links`, `reach`), `trucks` (a Depot's bays in order, each `state`, its truck's state
+  in camel case or `empty`, and `tip`, as "Truck 2: Parked" or "Empty bay"; null for other
+  buildings),
   `fuel` (the fuel picker's choice, or null), `output` (the Output picker's choice as shown, or
   null), `recipe` (the Recipe picker's choice, or null), `recipeNeeds` (the line under it: its
   `text` and the `short` inputs' names, or null), `input` (the input picker's `choice` and
   `note`, or null), `order` (a queueing processor's `quantity` as shown and `canCraft`, or null; null in Hold),
   `mode` (its Mode picker, "Queue" or "Hold", or null), `hold` (in Hold, the `target` as shown and the
   storage `line`, or null),
-  `queue` (its queue rows as shown, "Iron x 5 (crafting)" or "Queue empty", or null), `buyTruck` and `sellTruck` (a Depot's buttons: `text` and `enabled`, or null), `launch` (a
+  `queue` (its queue rows as shown, "Iron x 5 (crafting)" or "Queue empty", or null), `buyTruck` and `sellTruck` (a Depot's buttons: `text`, `enabled`, and `tip`, its tooltip, or null), `launch` (a
   Shipyard's Ship launch section: its `bill` ("have / need" per entry), the `button` text,
   `enabled`, the `note` saying why not or null, and `ships` ("Ships launched: n") or null; null for
   other buildings), `adds` (what a storage building adds, by
@@ -559,14 +567,14 @@ pausing it and stepping frame by frame.
   then four Refineries push demand into a brownout at 57% and a blackout, on the top bar; the
   generator's panel shows its supply and Best fuel),
   `crafting-queue` (a Smelter idle "Queue empty"; its panel's "+" held 1.5 s climbing to 17
-  cycles, "-" held back to one, and a click stepping one cycle; Craft adding an order; its Burning row naming Coal's +30% speed; a later Iron order going after
+  cycles, "-" held back to one, and a click stepping one cycle; Craft adding an order; its status strip's burning entry naming Coal's +30% speed; a later Iron order going after
   a Copper one; an order's X removing it;
   the first order counting down and the Smelter idle when the queue is done; the line under the
   picker naming the recipe's needs, and its input short once storage runs out; windowed screenshots
   of the empty queue, the queue, and the end),
   `hold-mode` (a Smelter switched to Hold from its Mode picker holding at the 2 Iron in storage;
   "+" making one more and holding "Holding: 3 Iron"; Iron used elsewhere made back; "-" held down
-  to one cycle; back in Queue mode with an empty queue; windowed screenshots making and holding),
+  to one cycle; back in Queue mode, by clicking the Queue cell, with an empty queue; windowed screenshots making and holding),
   `refining` (a Steel Mill's Auto input picker and its note and recipe text; an Electrolyzer on
   Hydrogen feeding a Fuel Plant to Rocket Fuel; no ship bill on the top bar),
   `menu` (the loading screen done and the menu showing its title and New Game, Demo, and Quit; `newGame`
@@ -612,19 +620,21 @@ pausing it and stepping frame by frame.
   grown and then cutting; a Quarry beside a mountain; a Deep Mine on a Laterite producing Iron Ore,
   its panel's Site row and Output picker; a worked-out Crude Oil marker named on hover; a Rock
   Crusher supplying 4 Sand),
-  `trucks` (a new Depot online beside the HQ with one truck, buying a second from its panel,
+  `trucks` (a new Depot online beside the HQ with one truck, its panel showing a bay per truck
+  slot, buying a second from its panel,
   selling it for 8 Iron and 5 Wood back (the first then selling for nothing) and buying it again, a
   Mine linked by Small Hubs
   filled to 12 getting a truck that loads, carries it round to the HQ's pad, backs on, unloads it
   into storage there (hovering it reads Unloading), and parks, the
-  Mine's Truck row, hovering a parked truck),
+  Mine's truck entry in its status strip, hovering a parked truck),
   `capacity` (a Glassworks with no Sand is in a blackout, in `Danger` on the Sand readout beside Power; a Sand
   Collector on Sand supplies it and Glass is made; five Glassworks on four Collectors are a Sand
-  brownout at half speed, in `Warning`, shown in the Glassworks panel's Sand row and its recipe),
+  brownout at half speed, in `Warning`, shown in the Glassworks panel's Sand entry (in `Warning`)
+  and its recipe),
   `network` (a Mine out of reach is offline with the warning marker and makes nothing; E still
   collects what its buffer holds; N shows the overlay; one Small Hub in the HQ's link range brings it
   online and working; the placement tooltip's
-  online line; a selected hub shows only its own coverage),
+  online line; a selected hub's panel shows it online and only its own coverage),
   `storage` (Wood at the HQ's 100 shows full, in red, on the top bar and the harvest hint says Storage
   full; a Silo raises the limit to 400 and harvesting resumes; the inventory's Cargo row; a
   discovery pinning itself, unpinning and pinning again from the inventory in table order, and
@@ -632,7 +642,8 @@ pausing it and stepping frame by frame.
   `inventory` (on the empty map nothing is discovered or pinned and every row is darkened, through
   the last tier; a field in sight and a held resource are discovered, pinned, and move to the top
   of their tier),
-  `building-detail` (clicking a building opens its panel with the right status rows; the world
+  `building-detail` (clicking a building opens its panel with the on/off toggle and Network in
+  its status strip, the state line in its tone, and the right status rows; the world
   keeps its hover with it open; it turns the building off and on; clicking another building
   switches it; empty ground, B, and Escape close it; the panel is a third of the window wide; Destroy shows
   its refund on hover, asks once, then refunds half the cost),

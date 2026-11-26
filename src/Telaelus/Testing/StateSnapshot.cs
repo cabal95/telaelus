@@ -330,6 +330,15 @@ public static class StateSnapshot
                 rows[RowKey(name)] = value;
             }
             ui["building"] = building.Id;
+            ui["strip"] = new JsonArray(root.BuildingDetail.Strip.Select(entry => (JsonNode)new JsonObject
+            {
+                ["id"] = entry.Id,
+                ["value"] = entry.Value,
+                ["tone"] = Camel(entry.Tone.ToString()),
+                ["tip"] = entry.Tip
+            }).ToArray());
+            ui["state"] = root.BuildingDetail.State?.Text;
+            ui["stateTone"] = root.BuildingDetail.State is (_, Tone stateTone) ? Camel(stateTone.ToString()) : null;
             ui["rows"] = rows;
             ui["destroy"] = root.BuildingDetail.DestroyText;
             ui["destroyTip"] = root.BuildingDetail.DestroyText is null ? null : root.BuildingDetail.DestroyTip;
@@ -368,18 +377,27 @@ public static class StateSnapshot
                     ["note"] = note
                 }
                 : null;
-            ui["buyTruck"] = root.BuildingDetail.BuyTruck is (string text, bool enabled)
+            ui["trucks"] = root.BuildingDetail.Bays is { } bays
+                ? new JsonArray(bays.Select(bay => (JsonNode)new JsonObject
+                {
+                    ["state"] = bay.State,
+                    ["tip"] = bay.Tip
+                }).ToArray())
+                : null;
+            ui["buyTruck"] = root.BuildingDetail.BuyTruck is (string text, bool enabled, string buyTip)
                 ? new JsonObject
                 {
                     ["text"] = text,
-                    ["enabled"] = enabled
+                    ["enabled"] = enabled,
+                    ["tip"] = buyTip
                 }
                 : null;
-            ui["sellTruck"] = root.BuildingDetail.SellTruck is (string sellText, bool sellEnabled)
+            ui["sellTruck"] = root.BuildingDetail.SellTruck is (string sellText, bool sellEnabled, string sellTip)
                 ? new JsonObject
                 {
                     ["text"] = sellText,
-                    ["enabled"] = sellEnabled
+                    ["enabled"] = sellEnabled,
+                    ["tip"] = sellTip
                 }
                 : null;
             ui["launch"] = root.BuildingDetail.Launch is var (bill, button, launchEnabled, launchNote, ships)

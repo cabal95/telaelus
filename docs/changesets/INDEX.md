@@ -279,6 +279,9 @@ Newest last. One line each; open the file for the full spec.
   running orders, chosen from a Mode picker in its panel.
 - **2611260835-model-folders** - Models are named by their folder with no kind prefix (`items/iron_ore`,
   `icons/moon`), and the asset factory keeps its sources and previews in the same folders.
+- **2611261041-ui-patterns-and-detail-panel** - UI patterns for the whole game (status strip, segmented
+  picker, icon toggle, buttons sized to their labels, section headings), and the building detail
+  panel rebuilt with them.
 
 ## Adding a changeset
 

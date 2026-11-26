@@ -1,7 +1,7 @@
 {
   "$schema": "../scenario.schema.json",
   "name": "capacity",
-  "description": "Sand as capacity on the HQ network: a Glassworks with no Sand is in a blackout (danger on the top bar's Sand readout beside Power); a Sand Collector on Sand terrain supplies it and Glass is made; five Glassworks on four Collectors push Sand into a brownout at half speed (warning on the pin, and the Glassworks panel's Sand row).",
+  "description": "Sand as capacity on the HQ network: a Glassworks with no Sand is in a blackout (danger on the top bar's Sand readout beside Power); a Sand Collector on Sand terrain supplies it and Glass is made; five Glassworks on four Collectors push Sand into a brownout at half speed (warning on the pin, and the Glassworks panel's Sand entry in its status strip).",
   "steps": [
     { "newGame": {} },
     { "initMap": {} },
@@ -53,7 +53,7 @@
     { "click": {} },
     { "wait": 2 },
     { "expect": "ui.open", "equals": "buildingDetail" },
-    { "expect": "ui.rows.sand", "equals": "Draws 2 (running at 50%)" },
+    { "comment": "The Glassworks' Sand draw, in the warning color in a brownout.", "expect": "ui.strip[2]", "equals": { "id": "sand", "value": "-2", "tone": "warning", "tip": "Draws 2 Sand, running at 50%" } },
     { "expect": "ui.rows.recipe", "equals": "1 Glass, 12 s" },
     { "screenshot": "glassworks-detail" }
   ]

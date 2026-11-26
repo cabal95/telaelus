@@ -63,7 +63,7 @@
     { "click": {} },
     { "wait": 2 },
     { "expect": "ui.open", "equals": "buildingDetail" },
-    { "expect": "ui.rows.network", "equals": "Online" },
+    { "comment": "The strip shows the hub on and online.", "expect": "ui.strip[1]", "equals": { "id": "network", "value": null, "tone": "good", "tip": "Online: connected to the network" } },
     { "expect": "ui.rows.reach", "equals": "covers 11, links 22" },
     { "expect": "ui.network.shownHubs[0]", "exists": true },
     { "expect": "ui.network.shownHubs[1]", "exists": false },

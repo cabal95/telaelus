@@ -833,12 +833,44 @@ def icon_advanced_material_transfer(_rnd):
     return m, mat.mats
 
 
+def _ring(m, mat, cu, cv, r, width, a_from, a_to, segs, depth=0.1):
+    """A band along a circular arc from a_from to a_to (radians, a_from < a_to), as slabs."""
+    ri, ro = r - width / 2, r + width / 2
+    for k in range(segs):
+        a0 = a_from + (a_to - a_from) * k / segs
+        a1 = a_from + (a_to - a_from) * (k + 1) / segs
+        _slab(m, mat("icon_mono"), mat("icon_mono", 0.75),
+              [(cu + ro * math.cos(a0), cv + ro * math.sin(a0)), (cu + ro * math.cos(a1), cv + ro * math.sin(a1)),
+               (cu + ri * math.cos(a1), cv + ri * math.sin(a1)), (cu + ri * math.cos(a0), cv + ri * math.sin(a0))], depth)
+
+
+def icon_power_switch(_rnd):
+    """The power symbol in a light neutral (the UI tints it): a ring broken at the top by a vertical bar."""
+    m, mat = Mesh(), Materials()
+    _ring(m, mat, 0.0, -0.06, 0.44, 0.13, math.radians(90 + 38), math.radians(90 + 360 - 38), 20)
+    _slab(m, mat("icon_mono"), mat("icon_mono", 0.75), [(-0.065, -0.02), (0.065, -0.02), (0.065, 0.56), (-0.065, 0.56)])
+    return m, mat.mats
+
+
+def icon_network(_rnd):
+    """A hub mast in a light neutral (the UI tints it): a tapered mast on a base, a ring around its top, a cap."""
+    m, mat = Mesh(), Materials()
+    _slab(m, mat("icon_mono"), mat("icon_mono", 0.75), [(-0.34, -0.62), (0.34, -0.62), (0.24, -0.48), (-0.24, -0.48)])
+    _slab(m, mat("icon_mono"), mat("icon_mono", 0.75), [(-0.09, -0.48), (0.09, -0.48), (0.05, 0.3), (-0.05, 0.3)])
+    _ring(m, mat, 0.0, 0.2, 0.34, 0.09, 0.0, 2 * math.pi, 24)
+    cap = [(0.12 * math.cos(2 * math.pi * k / 12), 0.2 + 0.12 * math.sin(2 * math.pi * k / 12)) for k in range(12)]
+    _slab(m, mat("icon_mono"), mat("icon_mono", 0.75), cap)
+    return m, mat.mats
+
+
 ICONS = {
     "icon_sun": icon_sun,
     "icon_moon": icon_moon,
     "icon_power": icon_power,
     "icon_material_transfer": icon_material_transfer,
     "icon_advanced_material_transfer": icon_advanced_material_transfer,
+    "icon_power_switch": icon_power_switch,
+    "icon_network": icon_network,
 }
 
 

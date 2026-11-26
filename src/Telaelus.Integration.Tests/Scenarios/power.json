@@ -40,7 +40,8 @@
     { "click": {} },
     { "wait": 2 },
     { "expect": "ui.open", "equals": "buildingDetail" },
-    { "expect": "ui.rows.power", "equals": "Supplies 35" },
+    { "expect": "ui.strip[2]", "equals": { "id": "power", "value": "+35", "tone": "normal", "tip": "Supplies 35 Power" } },
+    { "expect": "ui.strip[3]", "equals": { "id": "burning", "value": "40 s", "tone": "normal", "tip": "Coal, 40 s left" } },
     { "expect": "ui.fuel", "equals": "Best" },
     { "screenshot": "generator-detail" }
   ]

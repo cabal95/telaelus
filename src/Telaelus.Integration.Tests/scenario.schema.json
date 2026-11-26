@@ -762,7 +762,7 @@
       }
     },
     "selectUi": {
-      "description": "Pick an item of a named picker (dropdown) by its text, as choosing it from the list does.",
+      "description": "Pick an item of a named picker by its text: a dropdown, as choosing it from the list does, or a segmented picker (in either form), as clicking its cell does.",
       "type": "object",
       "required": ["selectUi"],
       "additionalProperties": false,

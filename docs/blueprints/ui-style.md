@@ -4,8 +4,9 @@
 
 How every piece of on-screen UI looks and behaves: the three kinds of UI (modals, panels, and
 overlays) and how each routes input, the color and size tokens, the shared Godot theme, the UI
-scale, the layers, and the shared components (buttons, cells, tooltips, icons). All UI uses these
-rules and never sets its own colors or sizes. The code lives in `src/Telaelus/Presentation/Ui/`.
+scale, the layers, the patterns that say which control or display does which job, and the shared
+components (buttons, cells, tooltips, icons). All UI uses these rules and never sets its own colors
+or sizes. The code lives in `src/Telaelus/Presentation/Ui/`.
 
 ## Current state
 
@@ -58,7 +59,8 @@ were not there, and they may cover it.
 | `Accent` | 0.98, 0.80, 0.35 | Hover outline, title rule, tooltip headings |
 | `Short` | 1.00, 0.42, 0.38 | A cost amount the player lacks |
 | `Danger` | 0.85, 0.30, 0.25 | Destructive buttons; a capacity blackout (Power, Water, Sand); a full pin on the top bar |
-| `Warning` | 0.98, 0.66, 0.18 | Storage full (inventory, the harvest hint); a capacity brownout |
+| `Warning` | 0.98, 0.66, 0.18 | Storage full (inventory, the harvest hint); a capacity brownout; a status that is degraded or cut off |
+| `Good` | 0.30, 0.95, 0.70 | On and online (the on/off toggle, the Network entry); the hubs' glowing green |
 | `Backdrop` | black at 35% | Behind a modal |
 | `Silhouette` | 0.06, 0.07, 0.06 | Undiscovered building pictures |
 
@@ -110,7 +112,8 @@ The two kinds place themselves:
 
 - **Game menu** (`GameMenu`, a modal titled "Paused", id `gameMenu`): Escape opens it when nothing
   else takes Escape (no open dialog, not in build mode), and the frame behind it is kept as the
-  thumbnail for a save made from it. Buttons, 240 x 40 and centered: Resume, Save Game, Load Game,
+  thumbnail for a save made from it. Buttons, 40 tall, one centered stack twice as wide as its
+  widest button (the button pattern): Resume, Save Game, Load Game,
   Trainer (starts the trainer from its first step and closes the menu), Main Menu, and Quit; Resume takes the place of the Close button. Main Menu and Quit with unsaved
   progress swap the buttons for "Unsaved progress will be lost." in `Warning` with Leave without
   saving and Cancel. A status line under them in `TextDim` says what just happened ("Saved as
@@ -127,8 +130,8 @@ The two kinds place themselves:
   list, Load and Delete; Delete asks first. With unsaved progress, Load asks "Unsaved progress will
   be lost." with Load anyway and Cancel.
 
-- **Choice dialog** (`ChoiceDialog`, a modal, id `choice`): a question with two answers, 150 x 40
-  buttons side by side, no Close button (the second answer and Escape do what Close would); it
+- **Choice dialog** (`ChoiceDialog`, a modal, id `choice`): a question with two answers, 40 tall
+  buttons side by side, each its label's width (at least 96), no Close button (the second answer and Escape do what Close would); it
   stands the game still. The trainer's "Learn to play?" and "Stop the trainer?" use it.
 
 ### Overlays
@@ -188,10 +191,70 @@ The two kinds place themselves:
   cell) and the performance line, colored by headroom (see presentation.md). It never takes the
   mouse.
 
+### Patterns
+
+Which control or display does which job, so new UI picks from this list instead of inventing.
+
+1. **Status strip** (`StatusStrip`): small icons, each with a short value beside it (a number, a
+   percent, a time) or none, for **states and quantities the player checks at a glance**: on or
+   off, online or not, a capacity drawn or supplied, a charge, a fuel burning, a truck.
+   - Every icon has a tooltip with the full sentence ("Draws 10 Power, running at 80%").
+   - Values are signed where they flow: "-10" for a draw, "+35" for a supply.
+   - Color carries the state (`Tone`): `Text` normal, `TextDim` off or not applicable now,
+     `Warning` degraded or cut off (a brownout, offline, no truck can reach), `Danger` broken (a
+     blackout), `Good` on and online. With a value, the value takes the color (and a dim entry
+     dims its icon); without one, the icon does.
+   - Icons are 20 units, values `SmallSize`, a `Gap` between entries, 3 units from icon to value.
+   - It runs as a row, wrapping to a further line past its width, or as a column, wrapping into a
+     further column past its height (its wrap length, such as the picture beside it). The top bar
+     works this way as a row; the building detail panel has a column beside its picture.
+2. **Text rows** (`StatusRows`): for **values that need words**: lists ("Iron Ore 2 (500), Stone 1
+   (250)"), sentences, or names ("Growing: 2:10 left", "Laterite motherlode"). A row stays only
+   when an icon and a number cannot say it.
+3. **Segmented picker** (`SegmentedPicker`): a row of flat cells, no background, each with a 2
+   unit border, `TextDim` when not chosen and `Accent` when chosen, lightening on hover; exactly
+   one is chosen. Labels are `SmallSize` with 8 units of side padding, cells 32 tall and 4 apart.
+   For **mutually exclusive options with short labels (or icons), where seeing them all helps**:
+   Queue / Hold, Best / Coal / Charcoal / Wood, Auto / Coal / Charcoal, and later the tier pickers.
+4. **Dropdown** (`OptionButton`): for **choices whose options do not fit on one row**, and for
+   **recipes**, which are dropdowns on every building for consistency.
+   - **Segmented or dropdown: space decides.** A segmented picker's cells must fit the room it has
+     on one row, each label whole (no ellipsis, no wrapping); option counts are only a guide. At
+     14 with 8 units of padding Fuel's four options take about 252 units, fitting every side panel
+     but the narrowest (248 inside).
+   - A control chooses its form when it is built for a building or screen, not as the window
+     resizes, so it never changes form under the player. `SegmentedPicker` does this itself: given
+     its options and the room, it shows as cells, or as a dropdown when they do not fit.
+5. **Icon toggle** (`IconToggle`): one icon button with two looks, for **a binary that has a
+   natural icon and acts on the thing itself**: a building's on/off as the power symbol, `Good`
+   on and `TextDim` off (off is the player's choice, not a problem), with a tooltip ("On: click
+   to turn off", "Off: click to turn on"). A two-word binary like Queue / Hold is a segmented
+   picker instead.
+6. **Step buttons** (`StepButton`): for **a number the player sets**, between "-" and "+", the
+   value in the middle.
+7. **Buttons:** for **actions (verbs)** that do something once: Craft, Buy truck, Launch ship,
+   Destroy. A button never shows a state; a label that changes with state is a sign it should be
+   a toggle.
+   - **Sized to their label** (`UiTheme.SizeToLabel`), not stretched: the label plus the theme's 16
+     units of side padding, never narrower than `ButtonMinWidth` (96). In a narrow side panel a
+     button sits centered; in a wider panel or a modal it sits where the layout reads best.
+   - A **stack of buttons** (the game menu) shares one width, twice its widest button's, so a short
+     menu still reads as a menu; a button **in a
+     row with other controls** (Craft after the quantity, Buy and Sell truck side by side) takes
+     its label's width in that row.
+   - Small icon-like buttons (the queue's X, "-" and "+") keep their square size.
+8. **Notes** (dim `SmallSize` lines): **under a control**, saying what it does now ("Best: burns
+   Coal (40 s per unit)"), or why something cannot happen. Never on their own.
+9. **Section headings** (`SectionHeading`): a `SmallSize` `TextDim` caps label, letter-spaced (1
+   unit), over a 1 unit `PanelEdge` rule, grouping a panel's controls once it has more than one
+   kind (Production, Fuel, Trucks).
+
 ### Components
 
 - **Buttons:** `Cell` background with 16 px side padding; hover lightens to `CellHover` and draws
   the 2 px `Accent` outline; pressed darkens to `CellPressed`. Destructive buttons use `Danger`.
+  Action buttons size to their label, at least 96 units wide (`UiTheme.SizeToLabel`, the button
+  pattern above).
 - Buttons take no keyboard focus (`FocusMode` None): the UI is driven by the mouse, and Space
   belongs to the camera, so it must never press the last-clicked button again.
 - **Destructive buttons** ask once: the first click changes the label to a confirmation ("Confirm
@@ -204,6 +267,18 @@ The two kinds place themselves:
   "Iron (23)"; hovering a row lightens its background (`CellHover`). The inventory lists them.
 - **Status rows:** a two-column grid of 14 px label (in `TextDim`) and value (in `Text`) pairs;
   rows that do not apply are hidden.
+- **Status strip** (`StatusStrip`, a `FlowContainer`): entries (`StatusEntry`: an id, an icon, an
+  optional value, a `Tone`, the tooltip, and whether it is faint) laid out as a row or a column
+  with a wrap length; fixed controls added first (an `IconToggle`) stay ahead of them. `Show`
+  reuses the entry nodes, so it runs every frame. A faint entry draws its icon at 35% opacity
+  (an empty slot). `UiTheme.ColorOf` is the one table from `Tone` to color.
+- **Segmented picker** (`SegmentedPicker`): the cells of the pattern above, or its dropdown when
+  they do not fit the room given to `SetOptions`. Setting `Selected` from code raises nothing;
+  a player's choice raises `Chosen`. It registers itself at its id and each cell at
+  "id/label" (`selectUi` picks by label in either form).
+- **Icon toggle** (`IconToggle`): a flat 24-unit button with a 20-unit icon, tinted by `On`
+  through the button's icon colors; hover draws the `Accent` outline over `CellHover`.
+- **Section heading** (`SectionHeading`): the heading of the pattern above.
 - **Progress bars:** 8 units tall, a `Cell` track with an `Accent` fill, radius 3.
 - **Turntables** (`TurntableView`): a live 180-unit view of a building turning once every 18
   seconds on a `Cell` box, drawn from the same stage as the building pictures and only while

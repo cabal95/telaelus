@@ -1,7 +1,7 @@
 {
   "$schema": "../scenario.schema.json",
   "name": "hold-mode",
-  "description": "A Smelter in Hold mode keeps Iron in storage at its target: the target starts at the stock, + and - step it, the Smelter idles \"Holding\" once storage holds the target and starts again when Iron is used; back in Queue mode its queue is empty.",
+  "description": "A Smelter in Hold mode keeps Iron in storage at its target: the target starts at the stock, + and - step it, the Smelter idles \"Holding\" once storage holds the target and starts again when Iron is used; back in Queue mode (clicking the Mode picker's Queue cell) its queue is empty.",
   "steps": [
     { "newGame": {} },
     { "initMap": {} },
@@ -48,7 +48,7 @@
     { "wait": 2 },
     { "expect": "ui.hold.target", "equals": "1" },
 
-    { "comment": "Back to Queue mode: an empty queue.", "selectUi": { "id": "buildingDetail/mode", "item": "Queue" } },
+    { "comment": "Back to Queue mode by clicking its cell: an empty queue.", "clickUi": { "id": "buildingDetail/mode/Queue" } },
     { "wait": 2 },
     { "expect": "ui.mode", "equals": "Queue" },
     { "expect": "ui.hold", "equals": null },

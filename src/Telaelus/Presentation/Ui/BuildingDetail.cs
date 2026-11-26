@@ -6,53 +6,58 @@ using Godot;
 namespace Telaelus.Presentation.Ui;
 
 /// <summary>
-/// The detail panel for a placed building: its name as the title, a turning
-/// picture of it, its status rows (power, state, fields in range, what it is working
-/// on, its recipe, and its progress), for a storage building what it adds to storage
-/// (a Silo also picks its resource), and its actions (turn off or on, destroy with a
-/// confirming second click, and close; a storage building has no power to switch, and a
-/// permanent building, the HQ, cannot be destroyed). The
-/// rows refresh every frame; the panel closes itself when its building is gone.
+/// The detail panel for a placed building (presentation.md): its name as the title; a turning
+/// picture of it with the status strip as a column beside it (on/off, network, capacities, charge,
+/// the fuel burning, a collector's truck); the state line; the text rows that need words; the
+/// progress bar; then its controls in sections (Launch, Production, Output, Fuel, Storage, Trucks,
+/// Research), each only when it has something; and Destroy at the bottom (asking once; a permanent
+/// building, the HQ, cannot be destroyed). It refreshes every frame and closes itself when its
+/// building is gone.
 /// </summary>
 public partial class BuildingDetail : Dialog
 {
     /// <summary>How long the Destroy button waits for its confirming click.</summary>
     public const double ConfirmSeconds = 3.0;
 
+    /// <summary>Room kept beside the body for its scroll bar when choosing a picker's form.</summary>
+    private const float ScrollBarRoom = 12f;
+
+    /// <summary>
+    /// Idle reasons that are the player's choice or the normal course of things, shown dim; any
+    /// other reason is a problem, shown in the warning color.
+    /// </summary>
+    private static readonly string[] CalmIdle = { "Switched off", "Queue empty", "Holding:", "No research running", "Night:" };
+
     private Simulation _sim = null!;
-    private TurntableView _turntable = null!;
-    private StatusRows _rows = null!;
-    private IReadOnlyList<ResourceType> _fuels = System.Array.Empty<ResourceType>();
-    private ProgressBar _progress = null!;
-    private Label _progressLabel = null!;
-    private Button _toggle = null!;
-    private Button _destroy = null!;
-    private Label _addsLabel = null!;
-    private GridContainer _adds = null!;
-    private Label _siloLabel = null!;
-    private OptionButton _silo = null!;
-    private Label _fuelLabel = null!;
-    private OptionButton _fuel = null!;
-    private Label _fuelNote = null!;
-    private Button _buyTruck = null!;
-    private Button _sellTruck = null!;
     private ResourceIcons _icons = null!;
-    // The Shipyard's Ship launch section: its heading, a row per bill entry, the button, why it is off, and the ships launched.
+    private TurntableView _turntable = null!;
+    private StatusStrip _strip = null!;
+    private IconToggle _toggle = null!;
+    private Label _state = null!;
+    private StatusRows _rows = null!;
+    private ProgressBar _progress = null!;
+    private readonly List<VBoxContainer> _sections = new();
+    private float _room;
+
+    // Launch (the Shipyard): the button, why it is off, the ships launched, and a row per bill entry.
     private VBoxContainer _launchBox = null!;
     private readonly List<(ResourceType Type, float Need, TextureRect Icon, Label Amount)> _billRows = new();
     private Button _launch = null!;
     private Label _launchNote = null!;
     private Label _shipsLaunched = null!;
-    private Button _openResearch = null!;
 
-    /// <summary>Raised when the lab's button asks for the research tree.</summary>
-    public event System.Action? ResearchRequested;
+    // Production: the Recipe dropdown and its needs line, Mode, the input picker and its note, then a
+    // queueing processor's order row and queue, or in Hold its Hold at row and storage line.
     private Label _recipeLabel = null!;
     private OptionButton _recipe = null!;
     private RichTextLabel _recipeNeeds = null!;
     private string _recipeSignature = "";
-    // A queueing processor's order controls: the recipe the picker has chosen to queue, the quantity
-    // stepper and Craft, and a row per order with a button that removes it.
+    private IReadOnlyList<string> _recipeShort = new List<string>();
+    private SegmentedPicker _mode = null!;
+    private SegmentedPicker _input = null!;
+    private Label _inputNote = null!;
+    private int _inputIndex = -1;
+    // The recipe the picker has chosen to queue, and the quantity to queue.
     private int _selected;
     private int _quantity;
     private HBoxContainer _orderRow = null!;
@@ -62,34 +67,52 @@ public partial class BuildingDetail : Dialog
     private Button _craft = null!;
     private Label _queueLabel = null!;
     private VBoxContainer _queue = null!;
-    // A queueing processor's mode (Queue or Hold) and, in Hold, its target and storage line.
-    private Label _modeLabel = null!;
-    private OptionButton _mode = null!;
+    private string _queueSignature = "";
+    private int _queueRows;
     private HBoxContainer _holdRow = null!;
     private StepButton _holdLess = null!;
     private Label _holdLabel = null!;
     private StepButton _holdMore = null!;
     private RichTextLabel _holdLine = null!;
-    private string _queueSignature = "";
-    private int _queueRows;
-    private Label _inputLabel = null!;
-    private OptionButton _input = null!;
-    private Label _inputNote = null!;
-    private string _inputSignature = "";
-    private int _inputIndex = -1;
-    private Label _outputLabel = null!;
+
+    // Output: a collector's choice of what it makes.
     private OptionButton _output = null!;
     private string _outputSignature = "";
     private List<ResourceType> _outputChoices = new();
-    private Label _buyNote = null!;
+
+    // Fuel: what a burner burns, and the note naming what Best burns now.
+    private SegmentedPicker _fuel = null!;
+    private IReadOnlyList<ResourceType> _fuels = System.Array.Empty<ResourceType>();
+    private Label _fuelNote = null!;
+
+    // Storage: a Silo's resource, and what a storage building adds.
+    private Label _siloLabel = null!;
+    private OptionButton _silo = null!;
+    private Label _addsLabel = null!;
+    private GridContainer _adds = null!;
     private string _addsSignature = "";
+
+    // Trucks (a Depot): a bay per truck slot, Buy and Sell truck, and the buy note.
+    private StatusStrip _bays = null!;
+    private HBoxContainer _truckButtons = null!;
+    private Button _buyTruck = null!;
+    private Button _sellTruck = null!;
+    private Label _buyNote = null!;
+    private string _buyTip = "";
+    private string _sellTip = "";
+
+    private Button _openResearch = null!;
+    private Button _destroy = null!;
+    private double _confirmLeft;
+    private bool _destroyHovered;
 
     /// <summary>The Bulk resources a Silo can hold, in table order (the picker's items).</summary>
     private static readonly ResourceType[] SiloChoices = System.Enum.GetValues<ResourceType>()
         .Where(type => ResourceDefs.For(type).Storage.Class == StorageClass.Bulk)
         .ToArray();
-    private double _confirmLeft;
-    private bool _destroyHovered;
+
+    /// <summary>Raised when the lab's button asks for the research tree.</summary>
+    public event System.Action? ResearchRequested;
 
     public override DialogKind Kind => DialogKind.Panel;
 
@@ -101,8 +124,23 @@ public partial class BuildingDetail : Dialog
     /// <summary>The status rows as shown (label to value), for the snapshot.</summary>
     public IReadOnlyDictionary<string, string> Rows => _rows.Shown;
 
+    /// <summary>The status strip as shown, the on/off toggle first while it shows, for the snapshot.</summary>
+    public IReadOnlyList<StatusEntry> Strip => _toggle.Visible
+        ? _strip.Shown.Prepend(new StatusEntry("switch", null, null, _toggle.On ? Tone.Good : Tone.Dim, _toggle.Tip)).ToList()
+        : _strip.Shown;
+
+    /// <summary>The state line as shown and its tone, or null when hidden, for the snapshot.</summary>
+    public (string Text, Tone Tone)? State => _state.Visible ? (_state.Text, _stateTone) : null;
+
+    private Tone _stateTone;
+
+    /// <summary>A Depot's bays as shown (each truck's state, or "empty", and its tooltip), or null for any other building.</summary>
+    public IReadOnlyList<(string State, string Tip)>? Bays => _bays.Visible
+        ? _bays.Shown.Select(bay => (bay.Id, bay.Tip)).ToList()
+        : null;
+
     /// <summary>The fuel picker's choice as shown ("Best", "Coal"), or null when hidden.</summary>
-    public string? FuelText => _fuel.Visible ? _fuel.GetItemText(_fuel.Selected) : null;
+    public string? FuelText => _fuel.Visible ? _fuel.SelectedText : null;
 
     /// <summary>The Destroy button's text (it reads "Confirm destroy" while waiting), or null when hidden.</summary>
     public string? DestroyText => _destroy.Visible ? _destroy.Text : null;
@@ -110,7 +148,6 @@ public partial class BuildingDetail : Dialog
     /// <summary>The Destroy button's tooltip ("Refund: 13 Wood, 8 Stone").</summary>
     public string DestroyTip { get; private set; } = "";
 
-    /// <summary>The Buy truck button's text and whether it can be pressed, or null when hidden (not a Depot).</summary>
     /// <summary>The quantity to queue as shown ("5"), and whether Craft can be pressed; null when hidden.</summary>
     public (string Quantity, bool CanCraft)? Order => _orderRow.Visible ? (_quantityLabel.Text, !_craft.Disabled) : null;
 
@@ -120,7 +157,7 @@ public partial class BuildingDetail : Dialog
         : null;
 
     /// <summary>The Mode picker's choice as shown ("Queue", "Hold"), or null when hidden.</summary>
-    public string? ModeText => _mode.Visible ? _mode.GetItemText(_mode.Selected) : null;
+    public string? ModeText => _mode.Visible ? _mode.SelectedText : null;
 
     /// <summary>The hold target as shown ("50") and the storage line under it, or null when hidden.</summary>
     public (string Target, string Line)? HoldShown => _holdRow.Visible ? (_holdLabel.Text, _holdLine.GetParsedText()) : null;
@@ -134,18 +171,20 @@ public partial class BuildingDetail : Dialog
     /// </summary>
     public (string Text, IReadOnlyList<string> Short)? RecipeNeeds => _recipeNeeds.Visible ? (_recipeNeeds.GetParsedText(), _recipeShort) : null;
 
-    private IReadOnlyList<string> _recipeShort = new List<string>();
-
     /// <summary>The input picker's choice and note as shown ("Auto", "Auto: uses Coal (Coal 59, Charcoal 1)"), or null when hidden.</summary>
-    public (string Choice, string Note)? InputChoiceText => _input.Visible && _input.Selected >= 0 ? (_input.GetItemText(_input.Selected), _inputNote.Text) : null;
+    public (string Choice, string Note)? InputChoiceText => _input.Visible && _input.SelectedText is string choice ? (choice, _inputNote.Text) : null;
 
     /// <summary>The Output picker's choice as shown ("Iron Ore, every 5 s"), or null when hidden.</summary>
     public string? OutputText => _output.Visible && _output.Selected >= 0 ? _output.GetItemText(_output.Selected) : null;
 
-    public (string Text, bool Enabled)? BuyTruck => _buyTruck.Visible ? (_buyTruck.Text, !_buyTruck.Disabled) : null;
+    /// <summary>The Buy truck button's text, whether it can be pressed, and its tooltip, or null when hidden (not a Depot).</summary>
+    public (string Text, bool Enabled, string Tip)? BuyTruck => _buyTruck.Visible ? (_buyTruck.Text, !_buyTruck.Disabled, _buyTip) : null;
+
+    /// <summary>The Sell truck button as shown, with its tooltip (a Depot's panel only), for the snapshot.</summary>
+    public (string Text, bool Enabled, string Tip)? SellTruck => _sellTruck.Visible ? (_sellTruck.Text, !_sellTruck.Disabled, _sellTip) : null;
 
     /// <summary>
-    /// The Shipyard's Ship launch section as shown: each bill entry's "have / need", the button's text
+    /// The Shipyard's launch section as shown: each bill entry's "have / need", the button's text
     /// and whether it can be pressed, why it cannot (or null), and the ships launched (or null before
     /// the first); null for any other building. For the snapshot.
     /// </summary>
@@ -153,9 +192,6 @@ public partial class BuildingDetail : Dialog
         ? (_billRows.Select(r => r.Amount.Text).ToList(), _launch.Text, !_launch.Disabled,
             _launchNote.Visible ? _launchNote.Text : null, _shipsLaunched.Visible ? _shipsLaunched.Text : null)
         : null;
-
-    /// <summary>The Sell truck button as shown (a Depot's panel only), for the snapshot.</summary>
-    public (string Text, bool Enabled)? SellTruck => _sellTruck.Visible ? (_sellTruck.Text, !_sellTruck.Disabled) : null;
 
     /// <summary>What a storage building adds, as shown ("Wood", "+200"), for the snapshot.</summary>
     public IEnumerable<(string Resource, string Amount)> Adds => _adds.GetChildren().OfType<Label>()
@@ -172,230 +208,120 @@ public partial class BuildingDetail : Dialog
 
     protected override void Build()
     {
-        var center = new CenterContainer
-        {
-            MouseFilter = MouseFilterEnum.Ignore
-        };
-        Body.AddChild(center);
-        _turntable = new TurntableView();
-        center.AddChild(_turntable);
-
-        _rows = new StatusRows("Network", "Switch", "Power", "Water", "Sand", "Charge", "Research", "State", "Site", "Plot", "Eats", "In range", "Working on", "Recipe", "Buffer", "Truck", "Burning", "Links", "Reach",
-            "Trucks", "Truck 1", "Truck 2", "Truck 3", "Truck 4");
+        BuildTop();
+        _state = UiTheme.MakeLabel("", UiTheme.BodySize);
+        _state.Name = "State";
+        _state.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+        Body.AddChild(_state);
+        _rows = new StatusRows("Research", "Site", "Plot", "Eats", "In range", "Working on", "Recipe", "Buffer", "Links", "Reach");
         Body.AddChild(_rows);
-
-        _progressLabel = UiTheme.MakeLabel("Progress", UiTheme.SmallSize, UiTheme.TextDim);
-        Body.AddChild(_progressLabel);
         _progress = StatusRows.MakeProgressBar();
         Body.AddChild(_progress);
 
-        _siloLabel = UiTheme.MakeLabel("Holds", UiTheme.SmallSize, UiTheme.TextDim);
-        Body.AddChild(_siloLabel);
-        _silo = new OptionButton
-        {
-            Name = "SiloResource",
-            FocusMode = FocusModeEnum.None,
-            TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis
-        };
-        foreach (ResourceType type in SiloChoices)
-        {
-            _silo.AddItem(ResourceDefs.For(type).Name);
-        }
-        _silo.ItemSelected += OnSiloSelected;
-        Body.AddChild(_silo);
-        Host.Register(Id + "/siloResource", _silo);
+        BuildLaunch(Section("Launch"));
+        BuildProduction(Section("Production"));
+        BuildOutput(Section("Output"));
+        BuildFuel(Section("Fuel"));
+        BuildStorage(Section("Storage"));
+        BuildTrucks(Section("Trucks"));
+        BuildResearch(Section("Research"));
 
-        _recipeLabel = UiTheme.MakeLabel("Recipe", UiTheme.SmallSize, UiTheme.TextDim);
-        Body.AddChild(_recipeLabel);
-        _recipe = new OptionButton
+        Body.AddChild(new Control
         {
-            Name = "Recipe",
-            FocusMode = FocusModeEnum.None,
-            TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis
-        };
-        _recipe.ItemSelected += OnRecipeSelected;
-        Body.AddChild(_recipe);
-        Host.Register(Id + "/recipe", _recipe);
-        _recipeNeeds = new RichTextLabel
-        {
-            Name = "RecipeNeeds",
-            BbcodeEnabled = true,
-            FitContent = true,
-            AutowrapMode = TextServer.AutowrapMode.WordSmart,
-            ScrollActive = false,
+            CustomMinimumSize = new Vector2(0f, UiTheme.Gap),
             MouseFilter = MouseFilterEnum.Ignore
-        };
-        _recipeNeeds.AddThemeFontSizeOverride("normal_font_size", UiTheme.SmallSize);
-        _recipeNeeds.AddThemeColorOverride("default_color", UiTheme.TextDim);
-        Body.AddChild(_recipeNeeds);
-
-        _modeLabel = UiTheme.MakeLabel("Mode", UiTheme.SmallSize, UiTheme.TextDim);
-        Body.AddChild(_modeLabel);
-        _mode = new OptionButton
+        });
+        _destroy = UiTheme.SizeToLabel(new Button
         {
-            Name = "Mode",
-            FocusMode = FocusModeEnum.None,
-            TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis
-        };
-        _mode.AddItem("Queue");
-        _mode.AddItem("Hold");
-        _mode.ItemSelected += OnModeSelected;
-        Body.AddChild(_mode);
-        Host.Register(Id + "/mode", _mode);
-
-        _inputLabel = UiTheme.MakeLabel("Input", UiTheme.SmallSize, UiTheme.TextDim);
-        Body.AddChild(_inputLabel);
-        _input = new OptionButton
-        {
-            Name = "InputChoice",
-            FocusMode = FocusModeEnum.None,
-            TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis
-        };
-        _input.ItemSelected += OnInputSelected;
-        Body.AddChild(_input);
-        Host.Register(Id + "/input", _input);
-        _inputNote = UiTheme.MakeLabel("", UiTheme.SmallSize, UiTheme.TextDim);
-        Body.AddChild(_inputNote);
-
-        _orderRow = new HBoxContainer
-        {
-            Name = "Order",
-            MouseFilter = MouseFilterEnum.Ignore
-        };
-        _orderRow.AddThemeConstantOverride("separation", UiTheme.Gap / 2);
-        _less = StepperButton("Less", "-", "One cycle fewer. Hold to repeat.");
-        _less.Step += () => StepQuantity(-1);
-        _orderRow.AddChild(_less);
-        _quantityLabel = UiTheme.MakeLabel("", UiTheme.BodySize);
-        _quantityLabel.CustomMinimumSize = new Vector2(36f, 0f);
-        _quantityLabel.HorizontalAlignment = HorizontalAlignment.Center;
-        _quantityLabel.VerticalAlignment = VerticalAlignment.Center;
-        _orderRow.AddChild(_quantityLabel);
-        _more = StepperButton("More", "+", "One cycle more. Hold to repeat.");
-        _more.Step += () => StepQuantity(1);
-        _orderRow.AddChild(_more);
-        _craft = OrderButton("Craft", "Craft", null);
-        _craft.SizeFlagsHorizontal = SizeFlags.ExpandFill;
-        _craft.Pressed += OnCraft;
-        _orderRow.AddChild(_craft);
-        Body.AddChild(_orderRow);
-        _queueLabel = UiTheme.MakeLabel("Queue", UiTheme.SmallSize, UiTheme.TextDim);
-        Body.AddChild(_queueLabel);
-        _queue = new VBoxContainer
-        {
-            Name = "Queue",
-            MouseFilter = MouseFilterEnum.Ignore
-        };
-        _queue.AddThemeConstantOverride("separation", 2);
-        Body.AddChild(_queue);
-
-        _holdRow = new HBoxContainer
-        {
-            Name = "HoldAt",
-            MouseFilter = MouseFilterEnum.Ignore
-        };
-        _holdRow.AddThemeConstantOverride("separation", UiTheme.Gap / 2);
-        Label holdAt = UiTheme.MakeLabel("Hold at", UiTheme.BodySize);
-        holdAt.VerticalAlignment = VerticalAlignment.Center;
-        _holdRow.AddChild(holdAt);
-        _holdLess = StepperButton("HoldLess", "-", "One cycle fewer. Hold to repeat.");
-        _holdLess.Step += () => StepHold(-1);
-        _holdRow.AddChild(_holdLess);
-        _holdLabel = UiTheme.MakeLabel("", UiTheme.BodySize);
-        _holdLabel.CustomMinimumSize = new Vector2(48f, 0f);
-        _holdLabel.HorizontalAlignment = HorizontalAlignment.Center;
-        _holdLabel.VerticalAlignment = VerticalAlignment.Center;
-        _holdRow.AddChild(_holdLabel);
-        _holdMore = StepperButton("HoldMore", "+", "One cycle more. Hold to repeat.");
-        _holdMore.Step += () => StepHold(1);
-        _holdRow.AddChild(_holdMore);
-        Body.AddChild(_holdRow);
-        _holdLine = new RichTextLabel
-        {
-            Name = "HoldLine",
-            BbcodeEnabled = true,
-            FitContent = true,
-            AutowrapMode = TextServer.AutowrapMode.WordSmart,
-            ScrollActive = false,
-            MouseFilter = MouseFilterEnum.Ignore
-        };
-        _holdLine.AddThemeFontSizeOverride("normal_font_size", UiTheme.SmallSize);
-        _holdLine.AddThemeColorOverride("default_color", UiTheme.TextDim);
-        Body.AddChild(_holdLine);
-
-        _fuelLabel = UiTheme.MakeLabel("Fuel", UiTheme.SmallSize, UiTheme.TextDim);
-        Body.AddChild(_fuelLabel);
-        _fuel = new OptionButton
-        {
-            Name = "Fuel",
-            FocusMode = FocusModeEnum.None,
-            TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis
-        };
-        _fuel.ItemSelected += OnFuelSelected;
-        Body.AddChild(_fuel);
-        Host.Register(Id + "/fuel", _fuel);
-        _fuelNote = UiTheme.MakeLabel("", UiTheme.SmallSize, UiTheme.TextDim);
-        Body.AddChild(_fuelNote);
-
-
-        _outputLabel = UiTheme.MakeLabel("Output", UiTheme.SmallSize, UiTheme.TextDim);
-        Body.AddChild(_outputLabel);
-        _output = new OptionButton
-        {
-            Name = "Output",
-            FocusMode = FocusModeEnum.None,
-            TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis
-        };
-        _output.ItemSelected += OnOutputSelected;
-        Body.AddChild(_output);
-        Host.Register(Id + "/output", _output);
-
-        _buyTruck = new Button
-        {
-            Name = "BuyTruck",
+            Name = "Destroy",
             FocusMode = FocusModeEnum.None
-        };
-        _buyTruck.Pressed += OnBuyTruck;
-        Body.AddChild(_buyTruck);
-        Host.Register(Id + "/buyTruck", _buyTruck);
-        _openResearch = new Button
+        });
+        StyleBoxFlat danger = UiTheme.Box(UiTheme.Danger, UiTheme.CellRadius, padding: UiTheme.Gap);
+        danger.ContentMarginLeft = UiTheme.Padding;
+        danger.ContentMarginRight = UiTheme.Padding;
+        StyleBoxFlat dangerHover = (StyleBoxFlat)danger.Duplicate();
+        dangerHover.BgColor = UiTheme.Danger.Lightened(0.15f);
+        dangerHover.BorderColor = UiTheme.Accent;
+        dangerHover.SetBorderWidthAll(UiTheme.OutlineWidth);
+        _destroy.AddThemeStyleboxOverride("normal", danger);
+        _destroy.AddThemeStyleboxOverride("hover", dangerHover);
+        _destroy.AddThemeStyleboxOverride("pressed", danger);
+        _destroy.Pressed += OnDestroy;
+        _destroy.MouseEntered += () => _destroyHovered = true;
+        _destroy.MouseExited += () =>
         {
-            Name = "OpenResearch",
-            Text = "Research tree [T]",
-            FocusMode = FocusModeEnum.None
+            _destroyHovered = false;
+            Host.HideHover(_destroy);
         };
-        _openResearch.Pressed += () => ResearchRequested?.Invoke();
-        Body.AddChild(_openResearch);
-        Host.Register(Id + "/openResearch", _openResearch);
-        _buyNote = UiTheme.MakeLabel("", UiTheme.SmallSize, UiTheme.Short);
-        Body.AddChild(_buyNote);
-        _sellTruck = new Button
-        {
-            Name = "SellTruck",
-            FocusMode = FocusModeEnum.None
-        };
-        _sellTruck.Pressed += OnSellTruck;
-        Body.AddChild(_sellTruck);
-        Host.Register(Id + "/sellTruck", _sellTruck);
+        Body.AddChild(_destroy);
+        Host.Register(Id + "/destroy", _destroy);
+    }
 
+    /// <summary>The turntable, and the status strip as a column beside it that wraps at the picture's height.</summary>
+    private void BuildTop()
+    {
+        var top = new HBoxContainer
+        {
+            Name = "Top",
+            MouseFilter = MouseFilterEnum.Ignore
+        };
+        top.AddThemeConstantOverride("separation", UiTheme.Padding);
+        Body.AddChild(top);
+        _turntable = new TurntableView
+        {
+            SizeFlagsVertical = SizeFlags.ShrinkBegin
+        };
+        top.AddChild(_turntable);
+        _strip = new StatusStrip(Host, column: true, TurntableView.PictureSize)
+        {
+            Name = "Strip",
+            SizeFlagsHorizontal = SizeFlags.ExpandFill
+        };
+        top.AddChild(_strip);
+        _toggle = new IconToggle(Host, "On: click to turn off", "Off: click to turn on")
+        {
+            Name = "Toggle"
+        };
+        _toggle.Pressed += OnToggle;
+        _strip.AddChild(_toggle);
+        Host.Register(Id + "/toggle", _toggle);
+    }
+
+    /// <summary>A section under its heading; it shows while any of its controls does.</summary>
+    private VBoxContainer Section(string title)
+    {
+        var section = new VBoxContainer
+        {
+            Name = title,
+            MouseFilter = MouseFilterEnum.Ignore
+        };
+        section.AddThemeConstantOverride("separation", UiTheme.Gap);
+        section.AddChild(new SectionHeading(title));
+        Body.AddChild(section);
+        _sections.Add(section);
+        return section;
+    }
+
+    private void BuildLaunch(VBoxContainer section)
+    {
         _launchBox = new VBoxContainer
         {
             Name = "Launch",
             MouseFilter = MouseFilterEnum.Ignore
         };
         _launchBox.AddThemeConstantOverride("separation", UiTheme.Gap / 2);
-        _launchBox.AddChild(UiTheme.MakeLabel("Ship launch", UiTheme.SmallSize, UiTheme.TextDim));
         // The button first, then the bill, so Launch ship shows (disabled until it can launch) without scrolling.
-        _launch = new Button
+        _launch = UiTheme.SizeToLabel(new Button
         {
             Name = "LaunchShip",
             Text = "Launch ship",
             FocusMode = FocusModeEnum.None
-        };
+        });
         _launch.Pressed += OnLaunch;
         _launchBox.AddChild(_launch);
         Host.Register(Id + "/launch", _launch);
         _launchNote = UiTheme.MakeLabel("", UiTheme.SmallSize, UiTheme.TextDim);
+        _launchNote.HorizontalAlignment = HorizontalAlignment.Center;
         _launchBox.AddChild(_launchNote);
         _shipsLaunched = UiTheme.MakeLabel("", UiTheme.BodySize);
         _launchBox.AddChild(_shipsLaunched);
@@ -417,12 +343,128 @@ public partial class BuildingDetail : Dialog
             _launchBox.AddChild(line);
             _billRows.Add((cost.Type, cost.Amount, icon, amount));
         }
-        Body.AddChild(_launchBox);
-        // Right under the progress bar, above the recipe picker, so Launch ship shows without scrolling.
-        Body.MoveChild(_launchBox, _progress.GetIndex() + 1);
+        section.AddChild(_launchBox);
+    }
+
+    private void BuildProduction(VBoxContainer section)
+    {
+        _recipeLabel = UiTheme.MakeLabel("Recipe", UiTheme.SmallSize, UiTheme.TextDim);
+        section.AddChild(_recipeLabel);
+        _recipe = Dropdown("Recipe", OnRecipeSelected);
+        section.AddChild(_recipe);
+        Host.Register(Id + "/recipe", _recipe);
+        _recipeNeeds = NoteText("RecipeNeeds");
+        section.AddChild(_recipeNeeds);
+
+        _mode = new SegmentedPicker(Host, Id + "/mode");
+        _mode.Chosen += OnModeSelected;
+        section.AddChild(_mode);
+
+        _input = new SegmentedPicker(Host, Id + "/input");
+        _input.Chosen += OnInputSelected;
+        section.AddChild(_input);
+        _inputNote = UiTheme.MakeLabel("", UiTheme.SmallSize, UiTheme.TextDim);
+        _inputNote.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+        section.AddChild(_inputNote);
+
+        _orderRow = new HBoxContainer
+        {
+            Name = "Order",
+            MouseFilter = MouseFilterEnum.Ignore
+        };
+        _orderRow.AddThemeConstantOverride("separation", UiTheme.Gap / 2);
+        _less = StepperButton("Less", "-", "One cycle fewer. Hold to repeat.");
+        _less.Step += () => StepQuantity(-1);
+        _orderRow.AddChild(_less);
+        _quantityLabel = UiTheme.MakeLabel("", UiTheme.BodySize);
+        _quantityLabel.CustomMinimumSize = new Vector2(36f, 0f);
+        _quantityLabel.HorizontalAlignment = HorizontalAlignment.Center;
+        _quantityLabel.VerticalAlignment = VerticalAlignment.Center;
+        _orderRow.AddChild(_quantityLabel);
+        _more = StepperButton("More", "+", "One cycle more. Hold to repeat.");
+        _more.Step += () => StepQuantity(1);
+        _orderRow.AddChild(_more);
+        _orderRow.AddChild(new Control
+        {
+            CustomMinimumSize = new Vector2(UiTheme.Gap / 2, 0f),
+            MouseFilter = MouseFilterEnum.Ignore
+        });
+        _craft = UiTheme.SizeToLabel(new Button
+        {
+            Name = "Craft",
+            Text = "Craft",
+            FocusMode = FocusModeEnum.None
+        }, SizeFlags.ShrinkBegin);
+        _craft.Pressed += OnCraft;
+        _orderRow.AddChild(_craft);
+        Host.Register(Id + "/craft", _craft);
+        section.AddChild(_orderRow);
+        _queueLabel = UiTheme.MakeLabel("Queue", UiTheme.SmallSize, UiTheme.TextDim);
+        section.AddChild(_queueLabel);
+        _queue = new VBoxContainer
+        {
+            Name = "Queue",
+            MouseFilter = MouseFilterEnum.Ignore
+        };
+        _queue.AddThemeConstantOverride("separation", 2);
+        section.AddChild(_queue);
+
+        _holdRow = new HBoxContainer
+        {
+            Name = "HoldAt",
+            MouseFilter = MouseFilterEnum.Ignore
+        };
+        _holdRow.AddThemeConstantOverride("separation", UiTheme.Gap / 2);
+        Label holdAt = UiTheme.MakeLabel("Hold at", UiTheme.BodySize);
+        holdAt.VerticalAlignment = VerticalAlignment.Center;
+        _holdRow.AddChild(holdAt);
+        _holdLess = StepperButton("HoldLess", "-", "One cycle fewer. Hold to repeat.");
+        _holdLess.Step += () => StepHold(-1);
+        _holdRow.AddChild(_holdLess);
+        _holdLabel = UiTheme.MakeLabel("", UiTheme.BodySize);
+        _holdLabel.CustomMinimumSize = new Vector2(48f, 0f);
+        _holdLabel.HorizontalAlignment = HorizontalAlignment.Center;
+        _holdLabel.VerticalAlignment = VerticalAlignment.Center;
+        _holdRow.AddChild(_holdLabel);
+        _holdMore = StepperButton("HoldMore", "+", "One cycle more. Hold to repeat.");
+        _holdMore.Step += () => StepHold(1);
+        _holdRow.AddChild(_holdMore);
+        section.AddChild(_holdRow);
+        _holdLine = NoteText("HoldLine");
+        section.AddChild(_holdLine);
+    }
+
+    private void BuildOutput(VBoxContainer section)
+    {
+        _output = Dropdown("Output", OnOutputSelected);
+        section.AddChild(_output);
+        Host.Register(Id + "/output", _output);
+    }
+
+    private void BuildFuel(VBoxContainer section)
+    {
+        _fuel = new SegmentedPicker(Host, Id + "/fuel");
+        _fuel.Chosen += OnFuelSelected;
+        section.AddChild(_fuel);
+        _fuelNote = UiTheme.MakeLabel("", UiTheme.SmallSize, UiTheme.TextDim);
+        _fuelNote.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+        section.AddChild(_fuelNote);
+    }
+
+    private void BuildStorage(VBoxContainer section)
+    {
+        _siloLabel = UiTheme.MakeLabel("Holds", UiTheme.SmallSize, UiTheme.TextDim);
+        section.AddChild(_siloLabel);
+        _silo = Dropdown("SiloResource", OnSiloSelected);
+        foreach (ResourceType type in SiloChoices)
+        {
+            _silo.AddItem(ResourceDefs.For(type).Name);
+        }
+        section.AddChild(_silo);
+        Host.Register(Id + "/siloResource", _silo);
 
         _addsLabel = UiTheme.MakeLabel("Adds to storage", UiTheme.SmallSize, UiTheme.TextDim);
-        Body.AddChild(_addsLabel);
+        section.AddChild(_addsLabel);
         _adds = new GridContainer
         {
             Columns = 2,
@@ -430,45 +472,90 @@ public partial class BuildingDetail : Dialog
         };
         _adds.AddThemeConstantOverride("h_separation", UiTheme.Padding);
         _adds.AddThemeConstantOverride("v_separation", 2);
-        Body.AddChild(_adds);
+        section.AddChild(_adds);
+    }
 
-        Body.AddChild(new Control
+    private void BuildTrucks(VBoxContainer section)
+    {
+        // Bay icons are larger than the strip's: a truck seen from the game camera is long and low.
+        _bays = new StatusStrip(Host, column: false, 0f, iconSize: 32f)
         {
-            CustomMinimumSize = new Vector2(0f, UiTheme.Gap),
-            MouseFilter = MouseFilterEnum.Ignore
-        });
-        _toggle = new Button
-        {
-            Name = "Toggle",
-            FocusMode = FocusModeEnum.None
+            Name = "Bays"
         };
-        _toggle.Pressed += OnToggle;
-        Body.AddChild(_toggle);
-        Host.Register(Id + "/toggle", _toggle);
-
-        _destroy = new Button
+        section.AddChild(_bays);
+        _truckButtons = new HBoxContainer
         {
-            Name = "Destroy",
+            Name = "TruckButtons",
+            Alignment = BoxContainer.AlignmentMode.Center,
+            MouseFilter = MouseFilterEnum.Ignore
+        };
+        _truckButtons.AddThemeConstantOverride("separation", UiTheme.Gap);
+        section.AddChild(_truckButtons);
+        _buyTruck = TruckButton("BuyTruck", "Buy truck", () => _buyTip, OnBuyTruck);
+        _sellTruck = TruckButton("SellTruck", "Sell truck", () => _sellTip, OnSellTruck);
+        _buyNote = UiTheme.MakeLabel("", UiTheme.SmallSize, UiTheme.Short);
+        _buyNote.HorizontalAlignment = HorizontalAlignment.Center;
+        _buyNote.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+        section.AddChild(_buyNote);
+    }
+
+    /// <summary>Buy or Sell truck: sized to its label in the row, its tooltip saying what it costs or gives back.</summary>
+    private Button TruckButton(string name, string text, System.Func<string> tip, System.Action pressed)
+    {
+        Button button = UiTheme.SizeToLabel(new Button
+        {
+            Name = name,
+            Text = text,
+            FocusMode = FocusModeEnum.None
+        });
+        button.Pressed += pressed;
+        button.MouseEntered += () => Host.ShowHover(button, TipLine.Wrapped(tip()).ToList());
+        button.MouseExited += () => Host.HideHover(button);
+        _truckButtons.AddChild(button);
+        Host.Register(Id + "/" + char.ToLowerInvariant(name[0]) + name[1..], button);
+        return button;
+    }
+
+    private void BuildResearch(VBoxContainer section)
+    {
+        _openResearch = UiTheme.SizeToLabel(new Button
+        {
+            Name = "OpenResearch",
+            Text = "Research tree [T]",
+            FocusMode = FocusModeEnum.None
+        });
+        _openResearch.Pressed += () => ResearchRequested?.Invoke();
+        section.AddChild(_openResearch);
+        Host.Register(Id + "/openResearch", _openResearch);
+    }
+
+    private static OptionButton Dropdown(string name, System.Action<long> selected)
+    {
+        var picker = new OptionButton
+        {
+            Name = name,
             FocusMode = FocusModeEnum.None,
             TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis
         };
-        StyleBoxFlat danger = UiTheme.Box(UiTheme.Danger, UiTheme.CellRadius, padding: UiTheme.Gap);
-        StyleBoxFlat dangerHover = (StyleBoxFlat)danger.Duplicate();
-        dangerHover.BgColor = UiTheme.Danger.Lightened(0.15f);
-        dangerHover.BorderColor = UiTheme.Accent;
-        dangerHover.SetBorderWidthAll(UiTheme.OutlineWidth);
-        _destroy.AddThemeStyleboxOverride("normal", danger);
-        _destroy.AddThemeStyleboxOverride("hover", dangerHover);
-        _destroy.AddThemeStyleboxOverride("pressed", danger);
-        _destroy.Pressed += OnDestroy;
-        _destroy.MouseEntered += () => _destroyHovered = true;
-        _destroy.MouseExited += () =>
+        picker.ItemSelected += index => selected(index);
+        return picker;
+    }
+
+    /// <summary>A dim BBCode note line under a control (the recipe's needs, the hold's storage line).</summary>
+    private static RichTextLabel NoteText(string name)
+    {
+        var note = new RichTextLabel
         {
-            _destroyHovered = false;
-            Host.HideHover(_destroy);
+            Name = name,
+            BbcodeEnabled = true,
+            FitContent = true,
+            AutowrapMode = TextServer.AutowrapMode.WordSmart,
+            ScrollActive = false,
+            MouseFilter = MouseFilterEnum.Ignore
         };
-        Body.AddChild(_destroy);
-        Host.Register(Id + "/destroy", _destroy);
+        note.AddThemeFontSizeOverride("normal_font_size", UiTheme.SmallSize);
+        note.AddThemeColorOverride("default_color", UiTheme.TextDim);
+        return note;
     }
 
     /// <summary>The quantity's "-" or "+": a <see cref="StepButton"/> that repeats while held.</summary>
@@ -479,20 +566,6 @@ public partial class BuildingDetail : Dialog
             Name = name,
             Text = text,
             TooltipText = tip,
-            FocusMode = FocusModeEnum.None,
-            CustomMinimumSize = new Vector2(28f, 0f)
-        };
-        Host.Register(Id + "/" + char.ToLowerInvariant(name[0]) + name[1..], button);
-        return button;
-    }
-
-    private Button OrderButton(string name, string text, string? tip)
-    {
-        var button = new Button
-        {
-            Name = name,
-            Text = text,
-            TooltipText = tip ?? "",
             FocusMode = FocusModeEnum.None,
             CustomMinimumSize = new Vector2(28f, 0f)
         };
@@ -511,6 +584,9 @@ public partial class BuildingDetail : Dialog
         Building = building;
         _confirmLeft = 0;
         _addsSignature = "";
+        // The room the pickers choose their form by, fixed while this building shows: the panel's
+        // width (Dialog.Place) less its padding and the scroll bar.
+        _room = Mathf.Max(Host.UiSize.X / 3f, 280f) - 2 * UiTheme.Padding - ScrollBarRoom;
         TitleLabel.Text = building.Def.Name;
         _turntable.Show(building.Type);
         Host.Open(this);
@@ -533,24 +609,29 @@ public partial class BuildingDetail : Dialog
         }
 
         BuildingDef def = building.Def;
-        BuildingStatus status = _sim.BuildingStatusOf(building);
         bool storage = def.Storage != StorageRole.None;
-        _rows.Set("Switch", storage ? null : building.Enabled ? "On" : "Off");
-        foreach (CapacityType capacity in Simulation.CapacityTypes)
+        _toggle.Visible = !storage;
+        _toggle.On = building.Enabled;
+        _toggle.Icon ??= _icons.Icon("power_switch");
+        _strip.Show(StripEntries(building));
+
+        bool works = !storage && !def.IsHub;
+        _state.Visible = works;
+        if (works)
         {
-            _rows.Set(capacity.ToString(), CapacityRowText(building, capacity));
+            BuildingStatus status = _sim.BuildingStatusOf(building);
+            _state.Text = status.State == BuildingState.Working ? "Working" : "Idle: " + status.IdleReason;
+            _stateTone = status.State == BuildingState.Working ? Tone.Normal
+                : CalmIdle.Any(calm => status.IdleReason?.StartsWith(calm) == true) ? Tone.Dim
+                : Tone.Warning;
+            _state.AddThemeColorOverride("font_color", UiTheme.ColorOf(_stateTone));
         }
-        _rows.Set("Burning", BurningText(building));
-        _rows.Set("Charge", ChargeText(building));
+
         _rows.Set("Research", def.Researches ? ResearchText() : null);
         _openResearch.Visible = def.Researches;
         RefreshFuel(building);
-        bool works = !storage && !def.IsHub;
-        _rows.Set("State", works ? status.State == BuildingState.Working ? "Working" : "Idle: " + status.IdleReason : null);
         RefreshStorage(building);
-        _rows.Set("Network", building.Online ? "Online" : "Offline");
         _rows.Set("Buffer", BufferText(building));
-        _rows.Set("Truck", TruckText.CollectorRow(_sim, building));
         RefreshTrucks(building);
         RefreshLaunch(building);
         RefreshRenewables(building);
@@ -602,19 +683,55 @@ public partial class BuildingDetail : Dialog
             progress = building.Progress / _sim.UnitSeconds(building);
         }
         _progress.Value = Mathf.Clamp(progress, 0f, 1f);
-        bool hasProgress = works && (def.IsCollector || building.Recipe is not null) && !(building.Queues && building.Queue.Count == 0 && !building.Crafting);
-        _progressLabel.Visible = hasProgress;
-        _progress.Visible = hasProgress;
+        _progress.Visible = works && (def.IsCollector || building.Recipe is not null) && !(building.Queues && building.Queue.Count == 0 && !building.Crafting);
 
-        _toggle.Visible = !storage;
+        foreach (VBoxContainer section in _sections)
+        {
+            section.Visible = section.GetChildren().Skip(1).OfType<Control>().Any(control => control.Visible);
+        }
+
         _destroy.Visible = !def.Permanent;
-        _toggle.Text = building.Enabled ? "Turn off" : "Turn on";
         _destroy.Text = _confirmLeft > 0 ? "Confirm destroy" : "Destroy";
         DestroyTip = "Refund: " + RefundText(building);
         if (_destroyHovered)
         {
             Host.ShowHover(_destroy, TipLine.Wrapped(DestroyTip).ToList());
         }
+    }
+
+    /// <summary>
+    /// The status strip's entries, each only when it applies: Network, each capacity drawn or
+    /// supplied, a Battery Bank's charge, the fuel burning, and a collector's truck. (The on/off
+    /// toggle sits ahead of them.)
+    /// </summary>
+    private List<StatusEntry> StripEntries(Building building)
+    {
+        var entries = new List<StatusEntry>
+        {
+            building.Online
+                ? new StatusEntry("network", _icons.Icon("network"), null, Tone.Good, "Online: connected to the network")
+                : new StatusEntry("network", _icons.Icon("network"), null, Tone.Warning, "Offline: outside the network")
+        };
+        foreach (CapacityType capacity in Simulation.CapacityTypes)
+        {
+            if (CapacityEntry(building, capacity) is StatusEntry entry)
+            {
+                entries.Add(entry);
+            }
+        }
+        if (ChargeEntry(building) is StatusEntry charge)
+        {
+            entries.Add(charge);
+        }
+        if (BurningEntry(building) is StatusEntry burning)
+        {
+            entries.Add(burning);
+        }
+        if (TruckText.CollectorRow(_sim, building) is string truck)
+        {
+            entries.Add(new StatusEntry("truck", _icons.Icon("truck"), null, _sim.TruckFor(building) is null ? Tone.Warning : Tone.Normal, truck));
+        }
+        return entries;
     }
 
     public override void _Process(double delta)
@@ -674,28 +791,15 @@ public partial class BuildingDetail : Dialog
             }
         }
         bool alternative = _inputIndex >= 0;
-        _inputLabel.Visible = alternative;
         _input.Visible = alternative;
         _inputNote.Visible = alternative;
         if (!alternative)
         {
-            _inputSignature = "";
             return;
         }
         Recipe current = PickedRecipe(building)!;
         IReadOnlyList<ResourceType> options = current.OptionsFor(_inputIndex);
-        string inputSignature = current.Name + "|" + _inputIndex;
-        if (inputSignature != _inputSignature)
-        {
-            _inputSignature = inputSignature;
-            _input.Clear();
-            _input.AddItem("Auto");
-            foreach (ResourceType option in options)
-            {
-                _input.AddItem(ResourceDefs.For(option).Name);
-            }
-        }
-        _inputLabel.Text = current.InputName(_inputIndex);
+        _input.SetOptions(options.Select(option => ResourceDefs.For(option).Name).Prepend("Auto").ToList(), _room);
         ResourceType uses = _sim.ChosenInput(building, current, _inputIndex);
         if (building.InputChoices.TryGetValue((PickedIndex(building), _inputIndex), out ResourceType chosen))
         {
@@ -745,7 +849,7 @@ public partial class BuildingDetail : Dialog
         }
     }
 
-    private void OnModeSelected(long index)
+    private void OnModeSelected(int index)
     {
         if (Building is not Building building || !building.Queues)
         {
@@ -786,14 +890,14 @@ public partial class BuildingDetail : Dialog
         Refresh();
     }
 
-    private void OnInputSelected(long index)
+    private void OnInputSelected(int index)
     {
         if (Building is not Building building || PickedRecipe(building) is not Recipe recipe || _inputIndex < 0)
         {
             return;
         }
         IReadOnlyList<ResourceType> options = recipe.OptionsFor(_inputIndex);
-        _sim.SetInputChoice(building.Id, PickedIndex(building), _inputIndex, index <= 0 ? null : options[(int)index - 1]);
+        _sim.SetInputChoice(building.Id, PickedIndex(building), _inputIndex, index <= 0 ? null : options[index - 1]);
     }
 
     /// <summary>Items a cycle of the recipe chosen to queue makes (the quantity's step).</summary>
@@ -809,8 +913,11 @@ public partial class BuildingDetail : Dialog
     private void RefreshOrders(Building building)
     {
         bool queues = building.Queues;
-        _modeLabel.Visible = queues;
         _mode.Visible = queues;
+        if (queues)
+        {
+            _mode.SetOptions(new[] { "Queue", "Hold" }, _room);
+        }
         RefreshHold(building);
         queues = queues && building.Hold is null;
         _orderRow.Visible = queues;
@@ -961,7 +1068,6 @@ public partial class BuildingDetail : Dialog
 
         _outputChoices = def.ProduceSeconds > 0f ? _sim.OutputChoices(building).ToList() : new List<ResourceType>();
         bool show = _outputChoices.Count > 0;
-        _outputLabel.Visible = show;
         _output.Visible = show;
         if (!show)
         {
@@ -1014,42 +1120,63 @@ public partial class BuildingDetail : Dialog
         }
     }
 
+    /// <summary>How a truck's state colors its bay: dim parked, warning while it waits, else normal.</summary>
+    private static Tone TruckTone(TruckState state)
+    {
+        return state switch
+        {
+            TruckState.Parked => Tone.Dim,
+            TruckState.WaitingForPad or TruckState.WaitingForRoom => Tone.Warning,
+            _ => Tone.Normal
+        };
+    }
+
     /// <summary>
-    /// A Depot's Trucks row, a row per truck with its state, the Buy truck button with what it is
-    /// short of, and the Sell truck button with what selling gives back.
+    /// A Depot's bays (a truck icon per bay, colored by its truck's state, an empty bay faint), Buy
+    /// truck with what it costs or is short of under it, and Sell truck with what selling gives back.
     /// </summary>
     private void RefreshTrucks(Building building)
     {
         int slots = building.Def.TruckSlots;
-        var trucks = slots > 0 ? _sim.TrucksOf(building) : new List<Truck>();
-        _rows.Set("Trucks", slots > 0 ? $"{trucks.Count} / {slots}" : null);
-        for (int i = 0; i < 4; i++)
-        {
-            _rows.Set($"Truck {i + 1}", i < trucks.Count ? TruckText.State(trucks[i]) : null);
-        }
-        _buyTruck.Visible = slots > 0;
-        _sellTruck.Visible = slots > 0;
-        _buyNote.Visible = false;
+        _bays.Visible = slots > 0;
+        _truckButtons.Visible = slots > 0;
+        _buyNote.Visible = slots > 0;
         if (slots <= 0)
         {
             return;
         }
+        List<Truck> trucks = _sim.TrucksOf(building);
+        Texture2D? icon = _icons.Icon("truck");
+        var bays = new List<StatusEntry>();
+        for (int bay = 0; bay < slots; bay++)
+        {
+            bays.Add(trucks.Find(t => t.Bay == bay) is Truck truck
+                ? new StatusEntry(Camel(truck.State.ToString()), icon, null, TruckTone(truck.State), $"Truck {bay + 1}: {TruckText.State(truck)}")
+                : new StatusEntry("empty", icon, null, Tone.Dim, "Empty bay", Faint: true));
+        }
+        _bays.Show(bays);
+
+        string Amounts(IEnumerable<ResourceAmount> amounts) =>
+            string.Join(", ", amounts.Select(c => $"{(int)c.Amount} {ResourceDefs.For(c.Type).Name}"));
         Truck? toSell = _sim.TruckToSell(building);
         var back = toSell is null ? new List<ResourceAmount>() : Simulation.RefundOf(toSell).ToList();
-        _sellTruck.Text = toSell is null ? "Sell truck"
-            : back.Count == 0 ? "Sell truck (nothing back)"
-            : "Sell truck (" + string.Join(", ", back.Select(c => $"{(int)c.Amount} {ResourceDefs.For(c.Type).Name}")) + " back)";
+        _sellTip = toSell is null ? "No truck to sell"
+            : back.Count == 0 ? "Gives nothing back (the truck the Depot came with)"
+            : $"Gives back {Amounts(back)}";
         _sellTruck.Disabled = toSell is null;
-        _buyTruck.Text = "Buy truck (" + string.Join(", ", TruckDefs.Cost.Select(c => $"{(int)c.Amount} {ResourceDefs.For(c.Type).Name}")) + ")";
+        _buyTip = $"Costs {Amounts(TruckDefs.Cost)}";
         _buyTruck.Disabled = !_sim.CanBuyTruck(building);
-        string? note = trucks.Count >= slots
-            ? "Every bay is full"
-            : string.Join(", ", TruckDefs.Cost
-                .Where(c => (_sim.Stockpile.TryGetValue(c.Type, out float have) ? have : 0f) < c.Amount)
-                .Select(c => $"{(int)c.Amount} {ResourceDefs.For(c.Type).Name} (have {Mathf.FloorToInt(_sim.Stockpile.TryGetValue(c.Type, out float have) ? have : 0f)})"));
-        _buyNote.Visible = !string.IsNullOrEmpty(note);
-        _buyNote.Text = note ?? "";
-        _buyNote.AddThemeColorOverride("font_color", trucks.Count >= slots ? UiTheme.TextDim : UiTheme.Short);
+        var shortOf = TruckDefs.Cost.Where(c => _sim.Stockpile.GetValueOrDefault(c.Type) < c.Amount).ToList();
+        bool full = trucks.Count >= slots;
+        _buyNote.Text = full ? "Every bay is full"
+            : shortOf.Count == 0 ? _buyTip
+            : string.Join(", ", shortOf.Select(c => $"{(int)c.Amount} {ResourceDefs.For(c.Type).Name} (have {Mathf.FloorToInt(_sim.Stockpile.GetValueOrDefault(c.Type))})"));
+        _buyNote.AddThemeColorOverride("font_color", full || shortOf.Count == 0 ? UiTheme.TextDim : UiTheme.Short);
+    }
+
+    private static string Camel(string name)
+    {
+        return char.ToLowerInvariant(name[0]) + name[1..];
     }
 
     private void OnBuyTruck()
@@ -1126,6 +1253,7 @@ public partial class BuildingDetail : Dialog
         }
         string signature = string.Join("|", lines) + building.Online;
         _addsLabel.Visible = lines.Count > 0;
+        _adds.Visible = lines.Count > 0;
         _addsLabel.Text = building.Online ? "Adds to storage" : "Offline: adds nothing until connected";
         if (signature == _addsSignature)
         {
@@ -1162,36 +1290,49 @@ public partial class BuildingDetail : Dialog
     }
 
     /// <summary>
-    /// A capacity row (Power, Water, Sand): what a consumer draws and how fast that type runs, or
-    /// what a provider supplies (less when its own draws slow it), or null when it neither.
+    /// A capacity entry (Power, Water, Sand): a consumer's draw ("-10") in the capacity's state color
+    /// (warning offline or in a brownout, danger in a blackout), or a provider's supply ("+16", less
+    /// when its own draws or the daylight slow it; warning offline); dim while switched off; null
+    /// when it neither draws nor supplies.
     /// </summary>
-    private string? CapacityRowText(Building building, CapacityType capacity)
+    private StatusEntry? CapacityEntry(Building building, CapacityType capacity)
     {
         BuildingDef def = building.Def;
+        string id = Camel(capacity.ToString());
+        Texture2D? icon = capacity switch
+        {
+            CapacityType.Power => _icons.Icon("power"),
+            CapacityType.Water => _icons.For(ResourceType.Water),
+            _ => _icons.For(ResourceType.Sand)
+        };
         float draw = def.Draw(capacity);
         if (draw > 0f)
         {
+            string value = $"-{draw:0}";
             if (!building.Online)
             {
-                return $"No {capacity}: offline";
+                return new StatusEntry(id, icon, value, Tone.Warning, $"Draws {draw:0} {capacity}: offline, so it gets none");
             }
             CapacityReading reading = _sim.Capacity(capacity);
-            return reading.State switch
+            (Tone tone, string tip) = reading.State switch
             {
-                CapacityState.Blackout => $"Draws {draw:0}: blackout",
-                CapacityState.Brownout => $"Draws {draw:0} (running at {reading.Speed * 100f:0}%)",
-                _ => $"Draws {draw:0}"
+                CapacityState.Blackout => (Tone.Danger, $"Draws {draw:0} {capacity}: blackout"),
+                CapacityState.Brownout => (Tone.Warning, $"Draws {draw:0} {capacity}, running at {reading.Speed * 100f:0}%"),
+                _ => (Tone.Normal, $"Draws {draw:0} {capacity}")
             };
+            return new StatusEntry(id, icon, value, building.Enabled ? tone : Tone.Dim, tip);
         }
         float supply = def.Supply(capacity);
         if (supply > 0f)
         {
             if (!building.Online)
             {
-                return "Offline: supplies nothing";
+                return new StatusEntry(id, icon, "+0", Tone.Warning, $"Offline: supplies no {capacity}");
             }
             float speed = _sim.WorkSpeed(building) * (def.Solar ? _sim.Daylight : 1f);
-            return speed < 1f ? $"Supplies {supply * speed:0.#} of {supply:0}" : $"Supplies {supply:0}";
+            float supplied = supply * Mathf.Min(speed, 1f);
+            string tip = speed < 1f ? $"Supplies {supplied:0.#} of {supply:0} {capacity}" : $"Supplies {supply:0} {capacity}";
+            return new StatusEntry(id, icon, $"+{supplied:0.#}", building.Enabled && supplied > 0f ? Tone.Normal : Tone.Dim, tip);
         }
         return null;
     }
@@ -1208,8 +1349,11 @@ public partial class BuildingDetail : Dialog
         return $"{def.Name}, {Mathf.FloorToInt(percent)}%, speed {_sim.ResearchSpeed:0.##}x";
     }
 
-    /// <summary>A Battery Bank's Charge row: what it holds and whether it is charging, discharging, full, or holding.</summary>
-    private string? ChargeText(Building building)
+    /// <summary>
+    /// A Battery Bank's charge entry: how full it is ("53%"), its tooltip what it holds and whether it
+    /// is charging, discharging (in the warning color), full, or holding (dim while it cannot work).
+    /// </summary>
+    private StatusEntry? ChargeEntry(Building building)
     {
         BuildingDef def = building.Def;
         if (def.StoreCapacity <= 0f)
@@ -1222,19 +1366,21 @@ public partial class BuildingDetail : Dialog
             : live && flow > 0f ? "charging"
             : live && flow < 0f && building.Charge > 0f ? "discharging"
             : "holding";
-        return $"{Mathf.FloorToInt(building.Charge)} / {def.StoreCapacity:0}, {doing}";
+        Tone tone = !live ? Tone.Dim : doing == "discharging" ? Tone.Warning : Tone.Normal;
+        return new StatusEntry("charge", _icons.For(ResourceType.Battery), $"{Mathf.FloorToInt(100f * building.Charge / def.StoreCapacity)}%", tone,
+            $"{Mathf.FloorToInt(building.Charge)} / {def.StoreCapacity:0}, {doing}");
     }
 
-    /// <summary>The Burning row for a fuel burner: what burns and for how long.</summary>
-    private static string? BurningText(Building building)
+    /// <summary>The fuel burning in a burner: its icon and the seconds left ("22 s"), or null while nothing burns.</summary>
+    private StatusEntry? BurningEntry(Building building)
     {
-        if (!building.Def.BurnsFuel)
+        if (!building.Def.BurnsFuel || building.Burning is not ResourceType fuel || building.BurnLeft <= 0f)
         {
             return null;
         }
-        return building.Burning is ResourceType fuel && building.BurnLeft > 0f
-            ? $"{ResourceDefs.For(fuel).Name}, {Mathf.CeilToInt(building.BurnLeft)} s left{Boost(Simulation.FuelSpeed(building))}"
-            : "nothing";
+        int left = Mathf.CeilToInt(building.BurnLeft);
+        return new StatusEntry("burning", _icons.For(fuel), $"{left} s", Tone.Normal,
+            $"{ResourceDefs.For(fuel).Name}, {left} s left{Boost(Simulation.FuelSpeed(building))}");
     }
 
     /// <summary>", +30% speed" for a fuel speed over 1, else nothing.</summary>
@@ -1247,7 +1393,6 @@ public partial class BuildingDetail : Dialog
     private void RefreshFuel(Building building)
     {
         bool burns = building.Def.BurnsFuel;
-        _fuelLabel.Visible = burns;
         _fuel.Visible = burns;
         _fuelNote.Visible = burns;
         if (!burns)
@@ -1255,17 +1400,9 @@ public partial class BuildingDetail : Dialog
             return;
         }
         // The picker offers the fuels this building takes (a Fission Reactor's Fuel Rods, a fire's
-        // Coal, Charcoal, and Wood), rebuilt when the panel shows a building that takes others.
-        if (!ReferenceEquals(_fuels, building.Def.Fuels))
-        {
-            _fuels = building.Def.Fuels;
-            _fuel.Clear();
-            _fuel.AddItem("Best");
-            foreach (ResourceType fuel in _fuels)
-            {
-                _fuel.AddItem(ResourceDefs.For(fuel).Name);
-            }
-        }
+        // Coal, Charcoal, and Wood).
+        _fuels = building.Def.Fuels;
+        _fuel.SetOptions(_fuels.Select(fuel => ResourceDefs.For(fuel).Name).Prepend("Best").ToList(), _room);
         _fuel.Selected = building.FuelChoice is ResourceType chosen ? 1 + _fuels.ToList().IndexOf(chosen) : 0;
         _fuelNote.Text = building.FuelChoice is null
             ? _sim.BestFuelAt(building) is ResourceType best
@@ -1274,11 +1411,11 @@ public partial class BuildingDetail : Dialog
             : $"Burns only {ResourceDefs.For(building.FuelChoice.Value).Name}";
     }
 
-    private void OnFuelSelected(long index)
+    private void OnFuelSelected(int index)
     {
         if (Building is Building building)
         {
-            _sim.SetFuelChoice(building.Id, index == 0 ? null : _fuels[(int)index - 1]);
+            _sim.SetFuelChoice(building.Id, index == 0 ? null : _fuels[index - 1]);
         }
     }
 

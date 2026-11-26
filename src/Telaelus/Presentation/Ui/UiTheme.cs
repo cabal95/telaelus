@@ -21,6 +21,7 @@ public static class UiTheme
     public static readonly Color Short = new(1.00f, 0.42f, 0.38f);
     public static readonly Color Danger = new(0.85f, 0.30f, 0.25f);
     public static readonly Color Warning = new(0.98f, 0.66f, 0.18f);
+    public static readonly Color Good = new(0.30f, 0.95f, 0.70f);
     public static readonly Color Backdrop = new(0f, 0f, 0f, 0.35f);
     public static readonly Color Silhouette = new(0.06f, 0.07f, 0.06f);
 
@@ -35,6 +36,7 @@ public static class UiTheme
     public const int BodySize = 16;
     public const int SmallSize = 14;
     public const double TooltipDelay = 0.3;
+    public const int ButtonMinWidth = 96;
 
     private static Theme? _theme;
 
@@ -128,9 +130,43 @@ public static class UiTheme
         return label;
     }
 
+    /// <summary>The color that carries a tone (ui-style.md, status strip).</summary>
+    public static Color ColorOf(Tone tone)
+    {
+        return tone switch
+        {
+            Tone.Dim => TextDim,
+            Tone.Good => Good,
+            Tone.Warning => Warning,
+            Tone.Danger => Danger,
+            _ => Text
+        };
+    }
+
+    /// <summary>
+    /// Sizes a button to its label (the theme's 16 units of side padding around it), never narrower
+    /// than <see cref="ButtonMinWidth"/>, placed in its container instead of stretched across it.
+    /// </summary>
+    public static T SizeToLabel<T>(T button, Control.SizeFlags placement = Control.SizeFlags.ShrinkCenter) where T : Button
+    {
+        button.CustomMinimumSize = new Vector2(ButtonMinWidth, button.CustomMinimumSize.Y);
+        button.SizeFlagsHorizontal = placement;
+        return button;
+    }
+
     /// <summary>The hex form of a color for BBCode.</summary>
     public static string Hex(Color color)
     {
         return color.ToHtml(false);
     }
+}
+
+/// <summary>What a status shows as color: normal, off or not applicable now, on, degraded, or broken.</summary>
+public enum Tone
+{
+    Normal,
+    Dim,
+    Good,
+    Warning,
+    Danger
 }

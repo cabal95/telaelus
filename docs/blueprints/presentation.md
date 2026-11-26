@@ -243,85 +243,114 @@ ui-style.md. There is no text HUD; the screen holds:
   position it while materials build up; clicking an undiscovered cell does nothing. The cells
   refresh while the menu is open, so a cell turns from gray to color as the stock arrives.
 - **Building detail panel** (`BuildingDetail`, a panel): opened by clicking a placed building
-  outside build mode, and switched to another building by clicking it. Its title is the
-  building's name. Below it, a `TurntableView` shows the building turning about its center once
-  every 18 seconds in a 180-unit square: a live view of the picture stage (ui-style.md), drawn
-  only while visible. Then the status rows, refreshed every frame: Power (On or Off), State
-  ("Working" or "Idle: " and the reason), In range (extractors: the fields in the work area
-  counted by type, each followed by what those fields hold in all, as "Iron Ore 2 (500), Stone 1
-  (250)", or "none"), Working on (only for a building that works
-  more than one type: the current field's type and amount left, as "Stone (212 left)"), Recipe
-  (processors: "1 Iron Ore to 1 Iron, 16 s"), and a progress bar (toward the next unit, or
-  through the cycle). The first row is Network ("Online" or "Offline"), then Switch ("On" or "Off",
-  as Power was before it meant electricity), then one row per capacity type the building draws or
-  supplies (Power, Water, Sand): "Draws 10", "Draws 10 (running at 80%)", or "Draws 10: blackout"
-  for a consumer, "No Water: offline" offline; "Supplies 16", "Supplies 12.8 of 16" for a provider
-  slowed by its own draws or by the daylight (a Solar Array), or "Offline: supplies nothing". A
-  Battery Bank has a Charge row ("3200 / 6000, charging", or "discharging", "full", "holding"). A
-  recipe with no inputs reads "1 Glass,
-  12 s". A building with a fuel slot has a Burning row ("Coal,
-  22 s left", or "nothing"; a building that makes things adds a fuel's boost, "Coal, 22 s left,
-  +30% speed") and, below the rows, a Fuel picker (Best, then each fuel the building
-  takes, longest-burning first, rebuilt for a building that takes others; choosing calls
-  `SetFuelChoice`) with a dim note naming what it burns ("Best: burns Coal
-  (40 s per unit)", with ", +30% speed" on a building that makes things). A processor with several recipes has a Recipe picker. On a queueing
-  processor (buildings.md) it chooses what to queue, starting on the recipe the building runs; on
-  the three that run without a queue it calls `SetRecipe`, and the Recipe row adds "(next:
-  Copper)" while a change waits for the running cycle. Right under the picker a dim line spells
-  out the chosen recipe as the Recipe row does ("1 Iron Ore to 1 Iron, 16 s"), each input storage
-  holds less than a cycle's worth of in `Danger` (an input with alternatives only when every one
-  is short). A queueing processor then has a Mode picker
-  (`buildingDetail/mode`: "Queue" or "Hold"; it stands in until a toggle control is decided).
-  Choosing Hold calls `SetHold` with the picked recipe and `DefaultHoldTarget`, and Queue calls
-  `ClearHold`. In Hold the Recipe picker picks the held recipe (a new one resets the target), and
-  in place of the order controls and queue there is a "Hold at" row: "-", the target, "+"
-  (`buildingDetail/holdLess`, `buildingDetail/holdMore`, step buttons stepping a cycle's output,
-  from one cycle's output up to what storage could hold of it, its stock plus `RoomFor`, at most
-  9999), and a dim line "In storage: 32 / 50 Iron", the count in `Text` once it reaches the
-  target. In Queue mode it has its order
-  controls: a quantity in items between "-" and "+" step buttons (`buildingDetail/less`,
-  `buildingDetail/more`; ui-style.md, repeating while held), each step a cycle of the chosen
-  recipe, from one cycle (where it starts, and again on a new recipe) to 99; a Craft button (`buildingDetail/craft`, calling
-  `QueueCraft`; disabled when the queue is full and its last order is another recipe); and under
-  a dim "Queue" label a row per order ("Iron x 5", the first "(crafting)" while its cycle runs),
-  each with an X (`buildingDetail/queue/0` and on, calling `CancelCraft`), or "Queue empty". Its
-  Recipe row and progress bar show only while it has an order or a cycle. The pickers, order
-  controls, and queue come right under the progress bar (after a Shipyard's launch section), the
-  Fuel picker after them. A recipe whose
-  input has alternatives has an input picker for the picked recipe labeled with them ("Coal or
-  Charcoal": Auto, then each; choosing calls `SetInputChoice` for that recipe) over a dim note ("Auto: uses Coal
-  (Coal 58, Charcoal 4)", or "Uses only Charcoal"). The Recipe row names an alternative input as
-  all of them ("2 Iron + 1 Coal or Charcoal + 1 Limestone to 1 Steel, 20 s"), and the Buffer row
-  lists the inputs as resolved. The progress bar shows only for extractors and processors. An extractor or
-  processor a Buffer row ("Iron Ore 12 / 20", or "Iron 4 / 10"); a hub Links
-  (how many hubs it links to) and Reach ("covers 8, links 12") and no State or progress. An
-  extractor has a Truck row while a truck is on its way ("On its way") or loading ("Loading"), or
-  "No truck can reach". A Forester has a Plot row ("Growing: 2:10 left", "Grown: 112 / 150 Wood",
-  or "Replanting in 18 s"); a Deep Well or Deep Mine a Site row ("Worked-out Iron Ore", "Laterite
-  motherlode"); the Rock Crusher an Eats row ("1 Stone every 10 s; 230 in storage"); a collector
-  without a field a progress bar and, below the rows, an Output picker of its `OutputChoices` with
-  each rate ("Iron Ore, every 5 s"; disabled with one choice; choosing calls `SetOutputChoice`). A
-  Depot shows Trucks ("2 / 4") and a row per truck
-  (Truck 1 to Truck 4) with its state (`TruckText`: "Parked", "To Mine: Iron Ore", "Loading", "To
-  HQ: 20 Iron Ore", "Waiting for the pad", "Backing onto the pad", "Unloading", "Waiting: storage
-  full (Iron Ore)" (older saves only), "Heading home" (also while pulling off the pad)), then a "Buy truck (15 Iron, 10 Wood)" button, disabled unless `CanBuyTruck`, over a note
-  of what is short ("15 Iron (have 3)" in `Short`) or "Every bay is full" (dim), then a "Sell truck
-  (8 Iron, 5 Wood back)" button naming what selling the next truck (`TruckToSell`) gives back
-  ("Sell truck (nothing back)" for the one the Depot came with), disabled with no trucks. A Shipyard
-  shows a Ship launch section under its progress bar (above the recipe picker and order controls, so it shows without
-  scrolling): a Launch ship button, enabled only while this Shipyard is switched on and online and
-  the whole ship bill (`Simulation.LaunchCost`) is in storage, calling `TryLaunchShip`; under it
-  why not ("Needs the whole bill in storage", "This Shipyard is offline", "This Shipyard is
-  switched off"); "Ships launched: n" once one has; then a row per bill entry with its icon, name,
-  and "have / need", in `Short` until met. There is no key for it. A storage
-  building shows no Power, State, or progress; instead a Silo shows
-  "Holds" and a picker of the Bulk resources (choosing one calls `SetSiloResource`), and every
-  storage building lists "Adds to storage": one line per resource it adds to, with the amount
-  ("Wood   +300"), and "Cargo pool" for the HQ and a Warehouse, headed "Offline: adds nothing until
-  connected" while it is offline. Then its actions: Turn off / Turn
-  on (not for a storage building), and Destroy (not for the HQ), whose tooltip shows its refund
-  ("Refund: 13 Wood, 8 Stone", or "Refund: nothing") and which asks once: the first click changes it to "Confirm
-  destroy" for 3 seconds, and a second click in that time destroys the building. The panel closes
+  outside build mode, and switched to another building by clicking it. It is built from the UI
+  patterns (ui-style.md) and refreshes every frame. Top to bottom:
+  1. **Title:** the building's name.
+  2. **Top block:** a `TurntableView` showing the building turning about its center once every 18
+     seconds in a 180-unit square (a live view of the picture stage, drawn only while visible),
+     with the **status strip** as a column to its right that wraps into a further column past
+     the picture's height. Its entries, in order, each only when it applies: the **on/off icon
+     toggle** (`buildingDetail/toggle`, the power symbol, `Good` on and `TextDim` off, tooltip
+     "On: click to turn off" or "Off: click to turn on"; clicking calls `SetBuildingEnabled`; not
+     on a storage building); **Network** (the hub mast, `Good` "Online: connected to the network"
+     or `Warning` "Offline: outside the network"); one entry per capacity type the building draws
+     or supplies (**Power** as the bolt, **Water** and **Sand** as their item icons): a consumer's
+     draw as "-10", in `Text`, `Warning` in a brownout ("Draws 10 Power, running at 80%") or
+     offline ("Draws 10 Power: offline, so it gets none"), `Danger` in a blackout ("Draws 10 Power:
+     blackout"); a provider's supply as "+16" ("Supplies 16 Power", "Supplies 12.8 of 16 Power"
+     when its own draws or the daylight slow it, a Solar Array), `Warning` "+0" offline
+     ("Offline: supplies no Power"); dim while switched off or supplying nothing; a Battery Bank's
+     **charge** (the battery icon and "53%"; tooltip "3200 / 6000, charging", or "discharging" in
+     `Warning`, "full", "holding"); the **fuel burning** in a burner (the fuel's icon and "22 s";
+     tooltip "Coal, 22 s left", and on a building that makes things the fuel's boost, "Coal, 22 s
+     left, +30% speed"; no entry while nothing burns); and an extractor's **truck** (the truck
+     icon) while one is on its way ("On its way") or loading ("Loading"), or `Warning` "No truck
+     can reach".
+  3. **State line:** "Working" or "Idle: " and the reason in `BodySize`, in `Text` working,
+     `TextDim` while idle by choice or in the normal course of things (switched off, "Queue
+     empty", "Holding: 50 Iron", "No research running", "Night: supplies nothing"), and `Warning`
+     for any other reason (a problem: no power, offline, storage full, waiting for inputs or fuel).
+     Not on storage buildings or hubs.
+  4. **Text rows** (`StatusRows`): Research (a Research Lab's running project, "Material Transfer,
+     40%, speed 1x", or "No research running"), Site (a Deep Well or Deep Mine: "Worked-out Iron
+     Ore", "Laterite motherlode"), Plot (a Forester: "Growing: 2:10 left", "Grown: 112 / 150 Wood",
+     or "Replanting in 18 s"), Eats (the Rock Crusher: "1 Stone every 10 s; 230 in storage"), In
+     range (extractors: the fields in the work area counted by type, each followed by what those
+     fields hold in all, as "Iron Ore 2 (500), Stone 1 (250)", or "none"), Working on (only for a
+     building that works more than one type: the current field's type and amount left, as "Stone
+     (212 left)"), Recipe (processors: "1 Iron Ore to 1 Iron, 16 s"; "1 Glass, 12 s" with no
+     inputs; an alternative input as all of them, "2 Iron + 1 Coal or Charcoal + 1 Limestone to 1
+     Steel, 20 s"; "(next: Copper)" while a change waits for the running cycle; on a queueing
+     processor only while it has an order or a cycle), Buffer (an extractor's or processor's output
+     buffer, "Iron Ore 12 / 20", "Iron 4 / 10"), and a hub's Links (how many hubs it links to) and
+     Reach ("covers 8, links 12").
+  5. **Progress bar** toward the next unit or through the cycle, with no label: extractors,
+     collectors, and processors (a queueing processor only while it has an order or a cycle).
+  6. **Sections**, each under a section heading and only when it has something:
+     - **Launch** (a Shipyard): a Launch ship button (`buildingDetail/launch`), enabled only while
+       this Shipyard is switched on and online and the whole ship bill (`Simulation.LaunchCost`)
+       is in storage, calling `TryLaunchShip`; under it why not ("Needs the whole bill in
+       storage", "This Shipyard is offline", "This Shipyard is switched off"); "Ships launched: n"
+       once one has; then a row per bill entry with its icon, name, and "have / need", in `Short`
+       until met. It comes first, so it shows without scrolling. There is no key for it.
+     - **Production** (processors): a Recipe dropdown (`buildingDetail/recipe`) when the building
+       has several recipes. On a queueing processor (buildings.md) it chooses what to queue,
+       starting on the recipe the building runs; on the three that run without a queue it calls
+       `SetRecipe`. Under it a dim line spells out the chosen recipe ("1 Iron Ore to 1 Iron, 16
+       s"), each input storage holds less than a cycle's worth of in `Danger` (an input with
+       alternatives only when every one is short). A queueing processor then has Mode, a
+       segmented Queue / Hold (`buildingDetail/mode`): Hold calls `SetHold` with the picked recipe
+       and `DefaultHoldTarget`, and Queue calls `ClearHold`. A recipe whose input has
+       alternatives has a segmented input picker for the picked recipe (`buildingDetail/input`:
+       Auto, then each; choosing calls `SetInputChoice` for that recipe) over a dim note ("Auto:
+       uses Coal (Coal 58, Charcoal 4)", or "Uses only Charcoal"). In Queue mode come the order
+       controls: a quantity in items between "-" and "+" step buttons (`buildingDetail/less`,
+       `buildingDetail/more`; repeating while held), each step a cycle of the chosen recipe, from
+       one cycle (where it starts, and again on a new recipe) to 99, then Craft at its label's
+       width (`buildingDetail/craft`, calling `QueueCraft`; disabled when the queue is full and its
+       last order is another recipe); and under a dim "Queue" label a row per order ("Iron x 5",
+       the first "(crafting)" while its cycle runs), each with an X (`buildingDetail/queue/0` and
+       on, calling `CancelCraft`), or "Queue empty". In Hold the Recipe dropdown picks the held
+       recipe (a new one resets the target), and in place of the order controls and queue there
+       is a "Hold at" row: "-", the target, "+" (`buildingDetail/holdLess`,
+       `buildingDetail/holdMore`, step buttons stepping a cycle's output, from one cycle's output
+       up to what storage could hold of it, its stock plus `RoomFor`, at most 9999), and a dim
+       line "In storage: 32 / 50 Iron", the count in `Text` once it reaches the target.
+     - **Output** (a collector without a field, such as the Quarry or a building on a
+       motherlode): a dropdown of its `OutputChoices` with each rate ("Iron Ore, every 5 s";
+       disabled with one choice; choosing calls `SetOutputChoice`), a dropdown because its labels
+       are too long for cells.
+     - **Fuel** (a building with a fuel slot): a segmented picker (`buildingDetail/fuel`) of Best,
+       then each fuel the building takes, longest-burning first (Best / Coal / Charcoal / Wood, or
+       Best / Fuel Rod), a dropdown instead when its cells do not fit the panel; choosing calls
+       `SetFuelChoice`. Under it a dim note naming what it burns ("Best: burns Coal (40 s per
+       unit)", with ", +30% speed" on a building that makes things; "Best: no fuel at hand";
+       "Burns only Charcoal").
+     - **Storage** (storage buildings): a Silo's "Holds" dropdown of the Bulk resources
+       (`buildingDetail/siloResource`, calling `SetSiloResource`), and "Adds to storage": one line
+       per resource the building adds to, with the amount ("Wood   +300"), and "Cargo pool" for
+       the HQ and a Warehouse, headed "Offline: adds nothing until connected" while it is offline.
+     - **Trucks** (a Depot): a row of truck icons, one per bay, each colored by its truck's state
+       (`Text` driving, loading, or unloading; `TextDim` parked; `Warning` waiting for the pad, or
+       for room in older saves) with the state in its tooltip ("Truck 2: To HQ: 20 Iron Ore", by
+       `TruckText`: "Parked", "To Mine: Iron Ore", "Loading", "To HQ: 20 Iron Ore", "Waiting for
+       the pad", "Backing onto the pad", "Unloading", "Waiting: storage full (Iron Ore)" (older
+       saves only), "Heading home" (also while pulling off the pad)); an empty bay is the icon
+       faint ("Empty bay"). Then Buy truck and Sell truck side by side at their labels' widths:
+       Buy truck (`buildingDetail/buyTruck`, disabled unless `CanBuyTruck`, tooltip "Costs 15
+       Iron, 10 Wood") and Sell truck (`buildingDetail/sellTruck`, selling the next truck,
+       `TruckToSell`; disabled with no trucks; tooltip "Gives back 8 Iron, 5 Wood", or "Gives
+       nothing back (the truck the Depot came with)"). Under them a note: what is short ("15 Iron
+       (have 3)" in `Short`), "Every bay is full" (dim), or else the cost (dim).
+     - **Research** (a Research Lab): the Research tree [T] button (`buildingDetail/openResearch`),
+       sized to its label, opening the research tree.
+  7. **Destroy** (not for the HQ), alone at the bottom, sized to its label and centered, whose
+     tooltip shows its refund ("Refund: 13 Wood, 8 Stone", or "Refund: nothing") and which asks
+     once: the first click changes it to "Confirm destroy" for 3 seconds, and a second click in
+     that time destroys the building.
+
+  Pickers choose their form (segmented cells or a dropdown) when the panel shows a building, by
+  the panel's width then, so a picker never changes form under the player. The panel closes
   itself when its building is gone. While it is open, its building keeps the hover outline in
   the world.
 - **Network view** (`NetworkView`, in the world): hub coverage as one flat translucent plane whose

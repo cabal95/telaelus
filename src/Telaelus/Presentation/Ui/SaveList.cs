@@ -62,7 +62,7 @@ public partial class SaveList : VBoxContainer
                 LoadRequested?.Invoke(name);
             }
         };
-        buttons.AddChild(_load);
+        buttons.AddChild(UiTheme.SizeToLabel(_load));
         _delete.Name = "Delete";
         _delete.Text = "Delete";
         _delete.FocusMode = FocusModeEnum.None;
@@ -71,7 +71,7 @@ public partial class SaveList : VBoxContainer
             _confirmText.Text = $"Delete {Selected}? It cannot be undone.";
             _confirm.Visible = true;
         };
-        buttons.AddChild(_delete);
+        buttons.AddChild(UiTheme.SizeToLabel(_delete));
 
         _confirm.AddThemeConstantOverride("separation", UiTheme.Gap);
         _confirm.Visible = false;
@@ -92,7 +92,7 @@ public partial class SaveList : VBoxContainer
             _confirm.Visible = false;
             Refresh();
         };
-        _confirm.AddChild(yes);
+        _confirm.AddChild(UiTheme.SizeToLabel(yes));
         var no = new Button
         {
             Name = "CancelDelete",
@@ -100,7 +100,7 @@ public partial class SaveList : VBoxContainer
             FocusMode = FocusModeEnum.None
         };
         no.Pressed += () => _confirm.Visible = false;
-        _confirm.AddChild(no);
+        _confirm.AddChild(UiTheme.SizeToLabel(no));
         _deleteYes = yes;
         _deleteNo = no;
     }
