@@ -35,15 +35,15 @@ public static class PictureStage
     }
 
     /// <summary>Stages a building, its front toward the camera; returns the pivot it turns on.</summary>
-    public static Node3D Fill(Node parent, BuildingType type, bool silhouette)
+    public static Node3D Fill(Node parent, BuildingType type)
     {
         // The game camera looks from +X +Z, and models face -Z, so a South-facing model
         // turns its front to the camera.
-        return Fill(parent, "buildings/" + BuildingModels.FileName(type), ModelLibrary.EdgeYaw(Facing.South), silhouette, Framing.Loose);
+        return Fill(parent, "buildings/" + BuildingModels.FileName(type), ModelLibrary.EdgeYaw(Facing.South), Framing.Loose);
     }
 
     /// <summary>Stages any model by its path (as for <see cref="ModelLibrary.Instance(string)"/>); returns its pivot.</summary>
-    public static Node3D Fill(Node parent, string modelPath, float yawDegrees, bool silhouette, Framing framing)
+    public static Node3D Fill(Node parent, string modelPath, float yawDegrees, Framing framing)
     {
         var sun = new DirectionalLight3D
         {
@@ -59,14 +59,6 @@ public static class PictureStage
         parent.AddChild(pivot);
         Node3D model = ModelLibrary.Instance(modelPath, yawDegrees);
         pivot.AddChild(model);
-        if (silhouette)
-        {
-            Paint(model, new StandardMaterial3D
-            {
-                AlbedoColor = UiTheme.Silhouette,
-                ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded
-            });
-        }
 
         var camera = new Camera3D
         {
@@ -239,15 +231,4 @@ public static class PictureStage
         }
     }
 
-    private static void Paint(Node node, Material material)
-    {
-        if (node is GeometryInstance3D geometry)
-        {
-            geometry.MaterialOverride = material;
-        }
-        foreach (Node child in node.GetChildren())
-        {
-            Paint(child, material);
-        }
-    }
 }

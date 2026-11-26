@@ -52,7 +52,7 @@ public partial class TurntableView : PanelContainer
         {
             child.QueueFree();
         }
-        _pivot = PictureStage.Fill(_view, type, false);
+        _pivot = PictureStage.Fill(_view, type);
     }
 
     public override void _Process(double delta)

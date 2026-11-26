@@ -209,40 +209,41 @@ ui-style.md. There is no text HUD; the screen holds:
   to, or what would work it. A growing Forester field's trees stand at a third of full height when
   planted and rise to full (its batch rebuilds each tenth of its growth).
 - **Inventory** (`InventoryPanel`, a panel titled "Inventory"): I opens and closes it. First the
-  Cargo pool, "Cargo (40 / 150)" (in `Warning` when full); then every resource, under tier headings
-  in `TextDim` (Raw, then Tier 1 to Tier 4), each over a thin rule. Within a heading the
-  discovered resources come first, then the undiscovered, each group in table order; rows move as
-  resources are discovered. A discovered row is its icon, "Wood (45 / 100)" (the amount alone for
+  Cargo pool, "Cargo (40 / 150)" (in `Warning` when full); then an arrow picker (`inventory/tier`,
+  ui-style.md) over "Resources" (the raw resources), then "Tier 1" to "Tier 4", a tier not yet
+  unlocked hidden (its items cannot be made); then the chosen one's resources. The discovered come
+  first, then the undiscovered, each group in table order; rows move as resources are discovered.
+  The panel reopens on the last choice viewed ("Resources" the first time); the choice is not
+  saved and starts again with a new game or a load. A discovered row is its icon, "Wood (45 / 100)" (the amount alone for
   a Cargo or unlimited resource, as "Iron (23)"; demand over supply for Sand and Water, as "Water
   (2 / 4)", colored by its state), including those at 0, in `Warning` when storage has no room for
   another unit, and a Pin toggle at the right ("Pin", or "Pinned" when on the top
   bar) that pins or unpins it, disabled with "The top bar holds 8: unpin one first" while 8 are
-  pinned and it is not one (none for Sand and Water, which have their own top bar readouts); an undiscovered row is darkened like an undiscovered building in the build
-  menu: its icon tinted `Silhouette` and "Undiscovered" in `TextDim`, with no name, amount, or
-  pin. The
+  pinned and it is not one (none for Sand and Water, which have their own top bar readouts); an
+  undiscovered row is darkened: its icon tinted `Silhouette` and its name in `TextDim`, with no
+  amount or pin, and a tooltip, "Not yet found" for a raw resource or "Not yet made" for an item. The
   body scrolls. Like every panel, opening it closes a building's detail panel and the other way
   round.
 - **Research tree** (`ResearchTree`, a modal titled "Research"): T opens it; see research.md for
   its cards, link lines, and buttons. The Research Lab's detail panel adds a Research row and a
   "Research tree [T]" button.
 - **Build menu** (`BuildMenu`, a modal titled "Buildings"): B opens it (leaving build
-  mode) and B, Escape, the Close button, or a click on the backdrop closes it. Its body is a grid
-  of 112-unit square cells, as many columns as fit, scrolling when taller than the panel allows.
-  At the top, under a dim "Infrastructure" heading, a grid holds the Road and Bridge cells, so they
-  are found without scrolling past the buildings, which follow under a dim "Buildings" heading
-  (the Road and Bridge cells have pictures drawn from `road_cross` and `bridge_deck` as UI icons, in color when one
-  tile is affordable on plain ground, grayscale when not; a hover names the tool and its price);
-  clicking one closes the menu and selects that line tool (buildings.md).
-  It lists every buildable type (not the HQ). Discovered buildings (`IsUnlocked`: a tier unlocked
-  by research, buildings.md) come first, then undiscovered ones, each group by name.
-  A discovered cell shows the building's picture and name, in full color when affordable and in
-  grayscale when not; an undiscovered cell shows its silhouette labeled "Undiscovered" in the dim
-  text color. Hovering a cell outlines it; a discovered cell also shows its tooltip, its description
-  (buildings.md) in `TextDim` broken into lines of about 44 characters (`TipLine.Wrapped`), then
-  its cost, while an undiscovered one shows none, so what it does and its cost stay a mystery. Clicking a discovered cell,
-  affordable or not, closes the menu and selects the building for placement, so the player can
-  position it while materials build up; clicking an undiscovered cell does nothing. The cells
-  refresh while the menu is open, so a cell turns from gray to color as the stock arrives.
+  mode) and B, Escape, the Close button, or a click on the backdrop closes it. At its top a
+  segmented tier picker (`buildMenu/tier`: "Tier 1" to "Tier 4"); a tier not yet unlocked
+  (research.md) is a disabled cell whose tooltip names its research ("Unlocked by Steel Works
+  research"). The menu opens on the tier last viewed, the highest unlocked the first time; the
+  choice is not saved and starts again with a new game or a load. Below, a grid of 112-unit square
+  cells, as many columns as fit, scrolling when taller than the panel allows: the chosen tier's
+  buildings (never the HQ) by name, and on Tier 1 the Road and Bridge cells sorted in among them
+  (pictures drawn from `road_cross` and `bridge_deck` as UI icons, in color when one tile is
+  affordable on plain ground, grayscale when not; a hover names the tool and its price; clicking
+  one closes the menu and selects that line tool, buildings.md). A building's cell shows its
+  picture and name, in full color when affordable and in grayscale when not. Hovering a cell
+  outlines it and shows its tooltip: its description (buildings.md) in `TextDim` broken into lines
+  of about 44 characters (`TipLine.Wrapped`), then its cost. Clicking a cell, affordable or not,
+  closes the menu and selects the building for placement, so the player can position it while
+  materials build up. The cells refresh while the menu is open, so a cell turns from gray to color
+  as the stock arrives.
 - **Building detail panel** (`BuildingDetail`, a panel): opened by clicking a placed building
   outside build mode, and switched to another building by clicking it. It is built from the UI
   patterns (ui-style.md) and refreshes every frame. Top to bottom:

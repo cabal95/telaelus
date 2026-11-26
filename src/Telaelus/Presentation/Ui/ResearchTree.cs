@@ -8,9 +8,11 @@ namespace Telaelus.Presentation.Ui;
 
 /// <summary>
 /// The research tree (T): a modal covering the screen below the top bar, a margin of world left round
-/// it. The research speed heads it. On the left the tree: each project a small card (its icon, its
-/// name, and while it runs an indicator and a thin progress bar) on a grid by its column and row,
-/// with a line from each prerequisite to the project it opens. On the right a drawer shows the
+/// it. The research speed heads it. On the left a tier picker ("Tier 1" to "Tier 4": a locked tier
+/// disabled with the research that unlocks it as its tooltip, a tier whose projects are all complete
+/// marked with a green check) over that tier's tree: each project a small card (its icon, its name,
+/// and while it runs an indicator and a thin progress bar) on a grid by its column and row within
+/// the tier, with a line from each prerequisite in the same tier to the project it opens. On the right a drawer shows the
 /// selected project: its state, what it does and transfers, its fee, its time, its progress, and the
 /// button that starts, pauses, or resumes it. Clicking a card selects it.
 /// </summary>
@@ -31,6 +33,8 @@ public partial class ResearchTree : Dialog
     private Label _header = null!;
     private HBoxContainer _split = null!;
     private TreeCanvas _canvas = null!;
+    private SegmentedPicker _tierPicker = null!;
+    private int _tier = 1;
     private readonly Dictionary<ResearchProject, Card> _cards = new();
     private Drawer _drawer = null!;
 
@@ -41,13 +45,28 @@ public partial class ResearchTree : Dialog
     /// <summary>The project the drawer shows.</summary>
     public ResearchProject Selected { get; private set; }
 
+    /// <summary>The tier shown, 1 to 4 (for the snapshot).</summary>
+    public int Tier => _tier;
+
+    /// <summary>The tier picker's cells (label, enabled, checked: every project complete), for the snapshot.</summary>
+    public IReadOnlyList<(string Label, bool Enabled, bool Checked)> TierCells => Enumerable.Range(0, ResourceDefs.MaxTier)
+        .Select(i => (BuildMenu.TierLabel(i + 1), _tierPicker.IsEnabled(i), TierComplete(_sim, i + 1)))
+        .ToList();
+
+    /// <summary>Whether every project of a tier is complete (false for a tier with none).</summary>
+    public static bool TierComplete(Simulation sim, int tier)
+    {
+        var projects = ResearchDefs.All.Where(p => ResearchDefs.For(p).Tier == tier).ToList();
+        return projects.Count > 0 && projects.All(sim.IsResearched);
+    }
+
     /// <summary>The header as shown, for the snapshot.</summary>
     public string HeaderText => _header.Text;
 
-    /// <summary>Each card as shown (project, whether it shows running, its progress 0 to 1, selected, locked), for the snapshot.</summary>
-    public IEnumerable<(ResearchProject Project, bool Running, float Progress, bool Selected, bool Locked)> Cards =>
+    /// <summary>Each card as shown (project, whether it shows running, its progress 0 to 1, selected, locked, shown in the chosen tier), for the snapshot.</summary>
+    public IEnumerable<(ResearchProject Project, bool Running, float Progress, bool Selected, bool Locked, bool Shown)> Cards =>
         ResearchDefs.All.Select(p => (p, _cards[p].Indicator.Visible, (float)_cards[p].Bar.Value, p == Selected,
-            _sim.StateOf(p) == ResearchState.Locked));
+            _sim.StateOf(p) == ResearchState.Locked, _cards[p].Visible));
 
     /// <summary>The drawer as shown (project, state, button text and whether enabled, fee, time, progress 0 to 1), for the snapshot.</summary>
     public (ResearchProject Project, string State, string Button, bool Enabled, string Fee, string Time, float Progress) DrawerShown =>
@@ -74,6 +93,19 @@ public partial class ResearchTree : Dialog
         _split.AddThemeConstantOverride("separation", UiTheme.Gap);
         Body.AddChild(_split);
 
+        var treeSide = new VBoxContainer
+        {
+            SizeFlagsHorizontal = SizeFlags.ExpandFill,
+            SizeFlagsVertical = SizeFlags.ExpandFill
+        };
+        treeSide.AddThemeConstantOverride("separation", UiTheme.Gap);
+        _split.AddChild(treeSide);
+        _tierPicker = new SegmentedPicker(Host, Id + "/tier")
+        {
+            SizeFlagsHorizontal = SizeFlags.ShrinkBegin
+        };
+        _tierPicker.Chosen += index => ShowTier(index + 1);
+        treeSide.AddChild(_tierPicker);
         var treeScroll = new ScrollContainer
         {
             SizeFlagsHorizontal = SizeFlags.ExpandFill,
@@ -81,13 +113,9 @@ public partial class ResearchTree : Dialog
             HorizontalScrollMode = ScrollContainer.ScrollMode.Auto,
             VerticalScrollMode = ScrollContainer.ScrollMode.Auto
         };
-        _split.AddChild(treeScroll);
-        int columns = ResearchDefs.All.Max(p => ResearchDefs.For(p).Column) + 1;
-        int rows = ResearchDefs.All.Max(p => ResearchDefs.For(p).Row) + 1;
+        treeSide.AddChild(treeScroll);
         _canvas = new TreeCanvas(this)
         {
-            CustomMinimumSize = new Vector2(2 * UiTheme.Padding + columns * CardWidth + (columns - 1) * ColumnGap,
-                2 * UiTheme.Padding + rows * CardHeight + (rows - 1) * RowGap),
             MouseFilter = MouseFilterEnum.Pass
         };
         treeScroll.AddChild(_canvas);
@@ -119,6 +147,41 @@ public partial class ResearchTree : Dialog
         // Open on the running project, else the first that can be worked on, else the first.
         Selected = _sim.ActiveResearch
             ?? ResearchDefs.All.FirstOrDefault(p => _sim.StateOf(p) is ResearchState.Available or ResearchState.Paused, ResearchDefs.All[0]);
+        // On the tier of the project it selects.
+        _tier = ResearchDefs.For(Selected).Tier;
+        LayOutTier();
+    }
+
+    // Picking a tier shows its tree and selects its first project.
+    private void ShowTier(int tier)
+    {
+        _tier = tier;
+        LayOutTier();
+        ResearchProject? first = ResearchDefs.All
+            .Where(p => ResearchDefs.For(p).Tier == tier)
+            .OrderBy(p => ResearchDefs.For(p).Column)
+            .ThenBy(p => ResearchDefs.For(p).Row)
+            .Cast<ResearchProject?>()
+            .FirstOrDefault();
+        if (first is ResearchProject project)
+        {
+            Selected = project;
+        }
+        Refresh();
+    }
+
+    // Shows the chosen tier's cards and sizes the canvas to its grid.
+    private void LayOutTier()
+    {
+        var defs = ResearchDefs.All.Where(p => ResearchDefs.For(p).Tier == _tier).Select(ResearchDefs.For).ToList();
+        int columns = defs.Count == 0 ? 1 : defs.Max(d => d.Column) + 1;
+        int rows = defs.Count == 0 ? 1 : defs.Max(d => d.Row) + 1;
+        _canvas.CustomMinimumSize = new Vector2(2 * UiTheme.Padding + columns * CardWidth + (columns - 1) * ColumnGap,
+            2 * UiTheme.Padding + rows * CardHeight + (rows - 1) * RowGap);
+        foreach ((ResearchProject project, Card card) in _cards)
+        {
+            card.Visible = ResearchDefs.For(project).Tier == _tier;
+        }
     }
 
     public override void OnKey(Key key)
@@ -145,6 +208,16 @@ public partial class ResearchTree : Dialog
 
     public override void Refresh()
     {
+        _tierPicker.SetOptions(Enumerable.Range(1, ResourceDefs.MaxTier).Select(BuildMenu.TierLabel).ToList(), float.MaxValue,
+            Enumerable.Range(1, ResourceDefs.MaxTier).Count(tier => TierComplete(_sim, tier)));
+        for (int tier = 1; tier <= ResourceDefs.MaxTier; tier++)
+        {
+            bool unlocked = tier <= _sim.UnlockedTier;
+            _tierPicker.SetEnabled(tier - 1, unlocked, unlocked ? null : BuildMenu.UnlockedBy(tier));
+            _tierPicker.SetIcon(tier - 1, TierComplete(_sim, tier) ? _icons.Icon("check") : null, UiTheme.Good);
+        }
+        _tierPicker.Selected = _tier - 1;
+
         int labs = _sim.WorkingLabs.Count;
         if (labs == 0)
         {
@@ -227,8 +300,13 @@ public partial class ResearchTree : Dialog
             foreach (ResearchProject project in ResearchDefs.All)
             {
                 ResearchDef def = ResearchDefs.For(project);
+                if (def.Tier != _tree._tier)
+                {
+                    continue;
+                }
                 Vector2 to = CardPosition(def) + new Vector2(0f, CardHeight / 2f);
-                foreach (ResearchProject before in def.Prerequisites)
+                // A prerequisite in another tier shows in the drawer ("Needs Steel Works"), not as a line.
+                foreach (ResearchProject before in def.Prerequisites.Where(b => ResearchDefs.For(b).Tier == def.Tier))
                 {
                     Vector2 from = CardPosition(ResearchDefs.For(before)) + new Vector2(CardWidth, CardHeight / 2f);
                     Color color = _tree._sim.IsResearched(before) ? UiTheme.Accent : UiTheme.PanelEdge;

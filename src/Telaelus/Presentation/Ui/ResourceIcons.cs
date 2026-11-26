@@ -70,10 +70,10 @@ public partial class ResourceIcons : Node
     {
         var stages = Enum.GetValues<ResourceType>()
             .Select(type => (type, (Action<Node>)(view =>
-                PictureStage.Fill(view, ModelPath(type), 0f, false, PictureStage.Framing.Tight))));
+                PictureStage.Fill(view, ModelPath(type), 0f, PictureStage.Framing.Tight))));
         _icons = await PictureStage.RenderOnce(this, stages, IconSize);
         var iconStages = UiIconNames.Select(name => (name, (Action<Node>)(view =>
-            PictureStage.Fill(view, IconModel(name), 0f, false, PictureStage.Framing.Tight))));
+            PictureStage.Fill(view, IconModel(name), 0f, PictureStage.Framing.Tight))));
         _uiIcons = await PictureStage.RenderOnce(this, iconStages, IconSize);
         IsReady = true;
         IconsReady?.Invoke();

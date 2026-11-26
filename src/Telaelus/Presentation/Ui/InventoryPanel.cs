@@ -7,26 +7,30 @@ using Godot;
 namespace Telaelus.Presentation.Ui;
 
 /// <summary>
-/// The inventory (I): a panel listing the Cargo pool ("Cargo (40 / 150)"), then every resource
-/// under tier headings (Raw, then Tier 1 to Tier 4). Within a heading the discovered resources
-/// come first, then the undiscovered, each group in table order. A discovered row shows its
-/// icon, "Wood (45 / 100)" (the amount alone for a Cargo or unlimited resource) in the warning
-/// color when storage is full, and a Pin toggle for the top bar; an undiscovered row shows its
-/// icon as a silhouette and "Undiscovered" in the dim text color, so the player sees how much is
-/// left to find but not what it is. Hovering a row highlights it. The rows refresh and reorder
-/// every frame while it is open; the body scrolls.
+/// The inventory (I): a panel listing the Cargo pool ("Cargo (40 / 150)"), then an arrow picker
+/// ("Resources" for the raw resources, then "Tier 1" to "Tier 4", a tier not yet unlocked skipped)
+/// over the chosen one's resources: the discovered first, then the undiscovered, each group in table
+/// order. A discovered row shows its icon, "Wood (45 / 100)" (the amount alone for a Cargo or
+/// unlimited resource) in the warning color when storage is full, and a Pin toggle for the top bar;
+/// an undiscovered row shows its icon as a silhouette and its name in the dim text color, with a
+/// tooltip ("Not yet found" for a raw resource, "Not yet made" for an item). Hovering a row
+/// highlights it. The panel reopens on the last choice viewed ("Resources" the first time). The rows
+/// refresh and reorder every frame while it is open; the body scrolls.
 /// </summary>
 public partial class InventoryPanel : Dialog
 {
     public const float IconSize = 22f;
-    public const string UndiscoveredLabel = "Undiscovered";
+    public const string NotFound = "Not yet found";
+    public const string NotMade = "Not yet made";
 
     private Simulation _sim = null!;
     private ResourceIcons _icons = null!;
     private ResourcePins _pins = null!;
     private Label _cargo = null!;
     private readonly Dictionary<ResourceType, Row> _rows = new();
-    private readonly Dictionary<int, VBoxContainer> _sections = new();
+    private VBoxContainer _list = null!;
+    private ArrowPicker _picker = null!;
+    private int _choice;
 
     private sealed record Row(PanelContainer Panel, TextureRect Icon, Label Label, Button Pin);
 
@@ -34,12 +38,20 @@ public partial class InventoryPanel : Dialog
 
     public override string Id => "inventory";
 
-    /// <summary>The rows in display order (type, amount, section, discovered, its own limit or null, pinned), for the snapshot.</summary>
-    public IEnumerable<(ResourceType Type, int Amount, string Section, bool Discovered, int? Limit, bool Pinned)> Rows =>
-        Enumerable.Range(0, ResourceDefs.MaxTier + 1)
-            .SelectMany(Ordered)
-            .Select(type => (type, HudOverlay.Whole(_sim, type), SectionId(Tier(type)), _sim.IsDiscovered(type),
+    /// <summary>The shown rows in display order (type, its label, amount, section, discovered, its own limit or null, pinned), for the snapshot.</summary>
+    public IEnumerable<(ResourceType Type, string Name, int Amount, string Section, bool Discovered, int? Limit, bool Pinned)> Rows =>
+        Ordered(_choice)
+            .Select(type => (type, _rows[type].Label.Text, HudOverlay.Whole(_sim, type), SectionId(Tier(type)), _sim.IsDiscovered(type),
                 HudOverlay.WholeLimit(_sim, type), _pins.IsPinned(type)));
+
+    /// <summary>The arrow picker's choice as shown ("Resources", "Tier 1"), for the snapshot.</summary>
+    public string Choice => Label(_choice);
+
+    /// <summary>Whether the arrow picker can step back and forward, for the snapshot.</summary>
+    public (bool Prev, bool Next) CanStep => (_picker.CanStep(-1), _picker.CanStep(1));
+
+    /// <summary>The arrow picker's layout (current cell width, right arrow x), for the snapshot.</summary>
+    public (float CurrentWidth, float NextX) PickerLayout => _picker.Layout;
 
     /// <summary>The Cargo row as shown, for the snapshot.</summary>
     public string CargoText => _cargo.Text;
@@ -48,7 +60,7 @@ public partial class InventoryPanel : Dialog
 
     private static string SectionId(int tier) => tier == 0 ? "raw" : "tier" + tier;
 
-    private static string Heading(int tier) => tier == 0 ? "Raw" : "Tier " + tier;
+    private static string Label(int tier) => tier == 0 ? "Resources" : BuildMenu.TierLabel(tier);
 
     /// <summary>A tier's resources: discovered first, then undiscovered, each in table order.</summary>
     private IEnumerable<ResourceType> Ordered(int tier)
@@ -71,30 +83,29 @@ public partial class InventoryPanel : Dialog
         _cargo.MouseFilter = MouseFilterEnum.Ignore;
         Body.AddChild(_cargo);
 
-        for (int tier = 0; tier <= ResourceDefs.MaxTier; tier++)
+        _picker = new ArrowPicker(Host, Id + "/tier")
         {
-            Label heading = UiTheme.MakeLabel(Heading(tier), UiTheme.SmallSize);
-            heading.AddThemeColorOverride("font_color", UiTheme.TextDim);
-            heading.MouseFilter = MouseFilterEnum.Ignore;
-            Body.AddChild(heading);
-            Body.AddChild(new ColorRect
-            {
-                Color = UiTheme.PanelEdge,
-                CustomMinimumSize = new Vector2(0f, 1f),
-                MouseFilter = MouseFilterEnum.Ignore
-            });
-            var section = new VBoxContainer
-            {
-                Name = SectionId(tier),
-                MouseFilter = MouseFilterEnum.Ignore
-            };
-            section.AddThemeConstantOverride("separation", UiTheme.Gap);
-            Body.AddChild(section);
-            _sections[tier] = section;
-            foreach (ResourceType type in Enum.GetValues<ResourceType>().Where(type => Tier(type) == tier))
-            {
-                section.AddChild(MakeRow(type));
-            }
+            SizeFlagsHorizontal = SizeFlags.ShrinkCenter
+        };
+        _picker.SetOptions(Enumerable.Range(0, ResourceDefs.MaxTier + 1).Select(Label).ToList());
+        _picker.Selected = _choice;
+        _picker.Chosen += index =>
+        {
+            _choice = index;
+            Refresh();
+        };
+        Body.AddChild(_picker);
+
+        _list = new VBoxContainer
+        {
+            Name = "Rows",
+            MouseFilter = MouseFilterEnum.Ignore
+        };
+        _list.AddThemeConstantOverride("separation", UiTheme.Gap);
+        Body.AddChild(_list);
+        foreach (ResourceType type in Enum.GetValues<ResourceType>())
+        {
+            _list.AddChild(MakeRow(type));
         }
     }
 
@@ -110,8 +121,19 @@ public partial class InventoryPanel : Dialog
         StyleBoxFlat hover = (StyleBoxFlat)normal.Duplicate();
         hover.BgColor = UiTheme.CellHover;
         row.AddThemeStyleboxOverride("panel", normal);
-        row.MouseEntered += () => row.AddThemeStyleboxOverride("panel", hover);
-        row.MouseExited += () => row.AddThemeStyleboxOverride("panel", normal);
+        row.MouseEntered += () =>
+        {
+            row.AddThemeStyleboxOverride("panel", hover);
+            if (!_sim.IsDiscovered(type))
+            {
+                Host.ShowHover(row, new[] { new TipLine(Tier(type) == 0 ? NotFound : NotMade) });
+            }
+        };
+        row.MouseExited += () =>
+        {
+            row.AddThemeStyleboxOverride("panel", normal);
+            Host.HideHover(row);
+        };
 
         var line = new HBoxContainer
         {
@@ -148,20 +170,27 @@ public partial class InventoryPanel : Dialog
         _cargo.Text = $"Cargo ({Mathf.FloorToInt(used)} / {Mathf.FloorToInt(pool)})";
         _cargo.AddThemeColorOverride("font_color", pool - used < 1f ? UiTheme.Warning : UiTheme.Text);
 
-        for (int tier = 0; tier <= ResourceDefs.MaxTier; tier++)
+        // A tier not yet unlocked is skipped: its items cannot be made.
+        for (int tier = 1; tier <= ResourceDefs.MaxTier; tier++)
         {
-            VBoxContainer section = _sections[tier];
-            int index = 0;
-            foreach (ResourceType type in Ordered(tier))
+            _picker.SetVisible(tier, tier <= _sim.UnlockedTier);
+        }
+        _picker.Selected = _choice;
+
+        int index = 0;
+        foreach (ResourceType type in Ordered(_choice))
+        {
+            Row row = _rows[type];
+            if (row.Panel.GetIndex() != index)
             {
-                Row row = _rows[type];
-                if (row.Panel.GetIndex() != index)
-                {
-                    section.MoveChild(row.Panel, index);
-                }
-                index++;
-                RefreshRow(type, row);
+                _list.MoveChild(row.Panel, index);
             }
+            index++;
+            RefreshRow(type, row);
+        }
+        foreach ((ResourceType type, Row row) in _rows)
+        {
+            row.Panel.Visible = Tier(type) == _choice;
         }
     }
 
@@ -184,7 +213,7 @@ public partial class InventoryPanel : Dialog
         else
         {
             row.Icon.Modulate = UiTheme.Silhouette;
-            row.Label.Text = UndiscoveredLabel;
+            row.Label.Text = ResourceDefs.For(type).Name;
             row.Label.AddThemeColorOverride("font_color", UiTheme.TextDim);
         }
     }

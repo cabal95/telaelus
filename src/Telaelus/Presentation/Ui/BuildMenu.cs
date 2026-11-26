@@ -14,17 +14,15 @@ public enum BuildCellState
     Affordable,
 
     /// <summary>Discovered, but short of its cost right now: grayscale.</summary>
-    Unaffordable,
-
-    /// <summary>Not unlocked yet: an off-black silhouette labeled "Undiscovered".</summary>
-    Undiscovered
+    Unaffordable
 }
 
 /// <summary>
-/// The build menu (B): a modal with a grid of every building. Discovered
-/// buildings come first, then undiscovered ones, each group by name. Hovering a
-/// discovered cell shows its cost; clicking it closes the menu and selects the
-/// building for placement, affordable or not.
+/// The build menu (B): a modal with a tier picker ("Tier 1" to "Tier 4") over a grid of the chosen
+/// tier's buildings by name; Road and Bridge are tier 1 cells among them. A tier not yet unlocked is a
+/// disabled cell whose tooltip names the research that unlocks it. The menu reopens on the last tier
+/// viewed (the highest unlocked the first time). Hovering a cell shows its description and cost;
+/// clicking it closes the menu and selects the building (or line tool) for placement, affordable or not.
 /// </summary>
 public partial class BuildMenu : Dialog
 {
@@ -36,7 +34,8 @@ public partial class BuildMenu : Dialog
     private BuildingPictures _pictures = null!;
     private ResourceIcons _icons = null!;
     private GridContainer _grid = null!;
-    private GridContainer _infraGrid = null!;
+    private SegmentedPicker _tierPicker = null!;
+    private int _tier;
     private readonly Dictionary<LineTool, InfraCell> _infra = new();
     private readonly Dictionary<BuildingType, Cell> _cells = new();
     private string _signature = "";
@@ -45,13 +44,35 @@ public partial class BuildMenu : Dialog
 
     public override string Id => "buildMenu";
 
-    /// <summary>The cells in display order, the Infrastructure tools then the buildings, with their state and label (for the snapshot).</summary>
-    public IReadOnlyList<(string Type, BuildCellState State, string Label)> Cells => _infra
-        .Select(p => (p.Key.ToString(), p.Value.State, p.Value.Label.Text))
-        .Concat(_order.Select(type => (type.ToString(), _cells[type].State, _cells[type].Label.Text)))
+    /// <summary>The chosen tier's cells in display order, with their state and label (for the snapshot).</summary>
+    public IReadOnlyList<(string Type, BuildCellState State, string Label)> Cells => _order
+        .Select(key => (key, StateOf(key), LabelOf(key)))
         .ToList();
 
-    private List<BuildingType> _order = new();
+    /// <summary>The tier shown, 1 to 4 (for the snapshot).</summary>
+    public int Tier => _tier;
+
+    /// <summary>The tier picker's cells (label, enabled, and never checked here), for the snapshot.</summary>
+    public IReadOnlyList<(string Label, bool Enabled, bool Checked)> TierCells => Enumerable.Range(0, ResourceDefs.MaxTier)
+        .Select(i => (TierLabel(i + 1), _tierPicker.IsEnabled(i), false))
+        .ToList();
+
+    // The shown cells' keys: a LineTool's or BuildingType's name.
+    private List<string> _order = new();
+
+    /// <summary>"Tier 2".</summary>
+    public static string TierLabel(int tier) => "Tier " + tier;
+
+    /// <summary>"Unlocked by Steel Works research": the tooltip on a locked tier's cell.</summary>
+    public static string UnlockedBy(int tier)
+    {
+        ResearchProject project = ResearchDefs.All.First(p => ResearchDefs.For(p).Unlocks == tier);
+        return $"Unlocked by {ResearchDefs.For(project).Name} research";
+    }
+
+    private BuildCellState StateOf(string key) => Enum.TryParse(key, out LineTool tool) ? _infra[tool].State : _cells[Enum.Parse<BuildingType>(key)].State;
+
+    private string LabelOf(string key) => Enum.TryParse(key, out LineTool tool) ? _infra[tool].Label.Text : _cells[Enum.Parse<BuildingType>(key)].Label.Text;
 
     public void Initialize(Simulation sim, BuildController builder, BuildingPictures pictures, ResourceIcons icons)
     {
@@ -64,25 +85,17 @@ public partial class BuildMenu : Dialog
 
     protected override void Build()
     {
-        // Roads and bridges first, under their own heading, so they are found without scrolling past
-        // every building; then the buildings.
-        Body.AddChild(Heading("Infrastructure"));
-        _infraGrid = new GridContainer
+        _tierPicker = new SegmentedPicker(Host, Id + "/tier")
         {
-            Columns = 4,
             SizeFlagsHorizontal = SizeFlags.ShrinkCenter
         };
-        _infraGrid.AddThemeConstantOverride("h_separation", UiTheme.Gap);
-        Body.AddChild(_infraGrid);
-        foreach (LineTool tool in Enum.GetValues<LineTool>())
+        _tierPicker.Chosen += index =>
         {
-            var cell = new InfraCell(this, tool);
-            _infra[tool] = cell;
-            _infraGrid.AddChild(cell);
-            Host.Register(Id + "/" + tool, cell);
-        }
+            _tier = index + 1;
+            Refresh();
+        };
+        Body.AddChild(_tierPicker);
 
-        Body.AddChild(Heading("Buildings"));
         _grid = new GridContainer
         {
             Columns = 4,
@@ -92,6 +105,13 @@ public partial class BuildMenu : Dialog
         _grid.AddThemeConstantOverride("v_separation", UiTheme.Gap);
         Body.AddChild(_grid);
 
+        foreach (LineTool tool in Enum.GetValues<LineTool>())
+        {
+            var cell = new InfraCell(this, tool);
+            _infra[tool] = cell;
+            _grid.AddChild(cell);
+            Host.Register(Id + "/" + tool, cell);
+        }
         foreach (BuildingType type in Enum.GetValues<BuildingType>().Where(type => BuildingDefs.For(type).Buildable))
         {
             var cell = new Cell(this, type);
@@ -101,11 +121,13 @@ public partial class BuildMenu : Dialog
         }
     }
 
-    private static Label Heading(string text)
+    public override void OnOpened()
     {
-        Label heading = UiTheme.MakeLabel(text, UiTheme.SmallSize, UiTheme.TextDim);
-        heading.HorizontalAlignment = HorizontalAlignment.Center;
-        return heading;
+        base.OnOpened();
+        if (_tier == 0)
+        {
+            _tier = _sim.UnlockedTier;
+        }
     }
 
     public override void OnKey(Key key)
@@ -122,12 +144,18 @@ public partial class BuildMenu : Dialog
         float inner = ModalWidth(Host.UiSize) - 2 * UiTheme.Padding;
         _grid.Columns = Math.Max(1, (int)((inner + UiTheme.Gap) / (CellSize + UiTheme.Gap)));
 
-        var states = new Dictionary<BuildingType, BuildCellState>();
-        foreach (BuildingType type in _cells.Keys)
+        _tierPicker.SetOptions(Enumerable.Range(1, ResourceDefs.MaxTier).Select(TierLabel).ToList(), inner);
+        for (int tier = 1; tier <= ResourceDefs.MaxTier; tier++)
         {
-            states[type] = !_sim.IsUnlocked(type) ? BuildCellState.Undiscovered
-                : _sim.CanAfford(type) ? BuildCellState.Affordable
-                : BuildCellState.Unaffordable;
+            bool unlocked = tier <= _sim.UnlockedTier;
+            _tierPicker.SetEnabled(tier - 1, unlocked, unlocked ? null : UnlockedBy(tier));
+        }
+        _tierPicker.Selected = _tier - 1;
+
+        var states = new Dictionary<BuildingType, BuildCellState>();
+        foreach (BuildingType type in _cells.Keys.Where(type => BuildingDefs.For(type).Tier == _tier))
+        {
+            states[type] = _sim.CanAfford(type) ? BuildCellState.Affordable : BuildCellState.Unaffordable;
         }
 
         foreach (InfraCell cell in _infra.Values)
@@ -142,21 +170,32 @@ public partial class BuildMenu : Dialog
         }
         _signature = signature;
 
-        _order = states.Keys
-            .OrderBy(type => states[type] == BuildCellState.Undiscovered ? 1 : 0)
-            .ThenBy(type => BuildingDefs.For(type).Name, StringComparer.Ordinal)
-            .ToList();
-        for (int i = 0; i < _order.Count; i++)
+        // Road and Bridge are tier 1 cells, sorted in with the buildings by name.
+        var shown = states.Keys.Select(type => (Key: type.ToString(), Name: BuildingDefs.For(type).Name, Cell: (Control)_cells[type]));
+        if (_tier == 1)
         {
-            Cell cell = _cells[_order[i]];
-            _grid.MoveChild(cell, i);
-            cell.Apply(states[_order[i]], _pictures);
+            shown = shown.Concat(_infra.Select(p => (Key: p.Key.ToString(), Name: p.Value.Label.Text, Cell: (Control)p.Value)));
+        }
+        var ordered = shown.OrderBy(entry => entry.Name, StringComparer.Ordinal).ToList();
+        _order = ordered.Select(entry => entry.Key).ToList();
+        foreach (Control cell in _cells.Values.Concat<Control>(_infra.Values))
+        {
+            cell.Visible = false;
+        }
+        for (int i = 0; i < ordered.Count; i++)
+        {
+            ordered[i].Cell.Visible = true;
+            _grid.MoveChild(ordered[i].Cell, i);
+            if (ordered[i].Cell is Cell building)
+            {
+                building.Apply(states[Enum.Parse<BuildingType>(ordered[i].Key)], _pictures);
+            }
         }
     }
 
-    private static string Signature(Dictionary<BuildingType, BuildCellState> states)
+    private string Signature(Dictionary<BuildingType, BuildCellState> states)
     {
-        var text = new StringBuilder();
+        var text = new StringBuilder().Append(_tier).Append('|');
         foreach ((BuildingType type, BuildCellState state) in states)
         {
             text.Append(type).Append(':').Append(state).Append(';');
@@ -303,7 +342,7 @@ public partial class BuildMenu : Dialog
 
         public Label Label { get; }
 
-        public BuildCellState State { get; private set; } = BuildCellState.Undiscovered;
+        public BuildCellState State { get; private set; } = BuildCellState.Affordable;
 
         public Cell(BuildMenu menu, BuildingType type)
         {
@@ -346,23 +385,17 @@ public partial class BuildMenu : Dialog
         public void Apply(BuildCellState state, BuildingPictures pictures)
         {
             State = state;
-            bool discovered = state != BuildCellState.Undiscovered;
-            Label.Text = discovered ? BuildingDefs.For(_type).Name : "Undiscovered";
-            Label.AddThemeColorOverride("font_color", discovered ? UiTheme.Text : UiTheme.TextDim);
-            _picture.Texture = discovered ? pictures.Color(_type) : pictures.Silhouette(_type);
+            Label.Text = BuildingDefs.For(_type).Name;
+            _picture.Texture = pictures.Color(_type);
             _picture.Material = state == BuildCellState.Unaffordable ? BuildingPictures.GrayscaleMaterial : null;
         }
 
         private void OnEnter()
         {
             AddThemeStyleboxOverride("panel", _hover);
-            // An undiscovered building keeps what it does and its cost a mystery.
-            if (State != BuildCellState.Undiscovered)
-            {
-                var lines = new List<TipLine>(TipLine.Wrapped(BuildingDefs.DescriptionOf(_type), UiTheme.TextDim));
-                lines.AddRange(CostLines(_menu._sim, _type));
-                _menu.Host.ShowHover(this, lines);
-            }
+            var lines = new List<TipLine>(TipLine.Wrapped(BuildingDefs.DescriptionOf(_type), UiTheme.TextDim));
+            lines.AddRange(CostLines(_menu._sim, _type));
+            _menu.Host.ShowHover(this, lines);
         }
 
         private void OnExit()

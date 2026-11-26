@@ -55,14 +55,14 @@ were not there, and they may cover it.
 | `Cell` | 0.14, 0.17, 0.15 at 90% | Grid cell and button background |
 | `CellHover` / `CellPressed` | 0.19, 0.23, 0.20 / 0.10, 0.12, 0.11 at 95% | Hovered and pressed cells and buttons |
 | `Text` | 0.92, 0.94, 0.92 | Body text |
-| `TextDim` | 0.60, 0.64, 0.61 | Secondary text, hints, "Undiscovered" |
+| `TextDim` | 0.60, 0.64, 0.61 | Secondary text, hints, undiscovered resources' names |
 | `Accent` | 0.98, 0.80, 0.35 | Hover outline, title rule, tooltip headings |
 | `Short` | 1.00, 0.42, 0.38 | A cost amount the player lacks |
 | `Danger` | 0.85, 0.30, 0.25 | Destructive buttons; a capacity blackout (Power, Water, Sand); a full pin on the top bar |
 | `Warning` | 0.98, 0.66, 0.18 | Storage full (inventory, the harvest hint); a capacity brownout; a status that is degraded or cut off |
 | `Good` | 0.30, 0.95, 0.70 | On and online (the on/off toggle, the Network entry); the hubs' glowing green |
 | `Backdrop` | black at 35% | Behind a modal |
-| `Silhouette` | 0.06, 0.07, 0.06 | Undiscovered building pictures |
+| `Silhouette` | 0.06, 0.07, 0.06 | Undiscovered resource icons (a tint) |
 
 The accent is a warm amber that reads against both the green ground and the dark panel.
 
@@ -215,7 +215,12 @@ Which control or display does which job, so new UI picks from this list instead 
    unit border, `TextDim` when not chosen and `Accent` when chosen, lightening on hover; exactly
    one is chosen. Labels are `SmallSize` with 8 units of side padding, cells 32 tall and 4 apart.
    For **mutually exclusive options with short labels (or icons), where seeing them all helps**:
-   Queue / Hold, Best / Coal / Charcoal / Wood, Auto / Coal / Charcoal, and later the tier pickers.
+   Queue / Hold, Best / Coal / Charcoal / Wood, Auto / Coal / Charcoal, and the build menu's and
+   research tree's tier pickers.
+   - A cell that cannot be chosen now is **disabled**: its label `TextDim`, its border darker, and
+     a tooltip saying why ("Unlocked by Steel Works research").
+   - A cell may carry a **small mark** after its label (14 units), such as the `check` icon in
+     `Good` on a research tier whose projects are all complete.
 4. **Dropdown** (`OptionButton`): for **choices whose options do not fit on one row**, and for
    **recipes**, which are dropdowns on every building for consistency.
    - **Segmented or dropdown: space decides.** A segmented picker's cells must fit the room it has
@@ -225,14 +230,20 @@ Which control or display does which job, so new UI picks from this list instead 
    - A control chooses its form when it is built for a building or screen, not as the window
      resizes, so it never changes form under the player. `SegmentedPicker` does this itself: given
      its options and the room, it shows as cells, or as a dropdown when they do not fit.
-5. **Icon toggle** (`IconToggle`): one icon button with two looks, for **a binary that has a
+5. **Arrow picker** (`ArrowPicker`): a left arrow, the current choice drawn like a segmented
+   picker's chosen cell, and a right arrow, for **stepping through a short ordered list in little
+   space**, where seeing every option at once is not needed: the inventory's Resources, Tier 1 to
+   Tier 4. The current cell is as wide as the widest choice, shorter ones centered, so the arrows
+   never move. An arrow is disabled (a darker border, `TextDim` glyph) at its end; nothing wraps.
+   A choice that does not apply now (a locked tier) is hidden, and the arrows skip it.
+6. **Icon toggle** (`IconToggle`): one icon button with two looks, for **a binary that has a
    natural icon and acts on the thing itself**: a building's on/off as the power symbol, `Good`
    on and `TextDim` off (off is the player's choice, not a problem), with a tooltip ("On: click
    to turn off", "Off: click to turn on"). A two-word binary like Queue / Hold is a segmented
    picker instead.
-6. **Step buttons** (`StepButton`): for **a number the player sets**, between "-" and "+", the
+7. **Step buttons** (`StepButton`): for **a number the player sets**, between "-" and "+", the
    value in the middle.
-7. **Buttons:** for **actions (verbs)** that do something once: Craft, Buy truck, Launch ship,
+8. **Buttons:** for **actions (verbs)** that do something once: Craft, Buy truck, Launch ship,
    Destroy. A button never shows a state; a label that changes with state is a sign it should be
    a toggle.
    - **Sized to their label** (`UiTheme.SizeToLabel`), not stretched: the label plus the theme's 16
@@ -243,9 +254,9 @@ Which control or display does which job, so new UI picks from this list instead 
      row with other controls** (Craft after the quantity, Buy and Sell truck side by side) takes
      its label's width in that row.
    - Small icon-like buttons (the queue's X, "-" and "+") keep their square size.
-8. **Notes** (dim `SmallSize` lines): **under a control**, saying what it does now ("Best: burns
+9. **Notes** (dim `SmallSize` lines): **under a control**, saying what it does now ("Best: burns
    Coal (40 s per unit)"), or why something cannot happen. Never on their own.
-9. **Section headings** (`SectionHeading`): a `SmallSize` `TextDim` caps label, letter-spaced (1
+10. **Section headings** (`SectionHeading`): a `SmallSize` `TextDim` caps label, letter-spaced (1
    unit), over a 1 unit `PanelEdge` rule, grouping a panel's controls once it has more than one
    kind (Production, Fuel, Trucks).
 
@@ -275,7 +286,14 @@ Which control or display does which job, so new UI picks from this list instead 
 - **Segmented picker** (`SegmentedPicker`): the cells of the pattern above, or its dropdown when
   they do not fit the room given to `SetOptions`. Setting `Selected` from code raises nothing;
   a player's choice raises `Chosen`. It registers itself at its id and each cell at
-  "id/label" (`selectUi` picks by label in either form).
+  "id/label" (`selectUi` picks by label in either form). `SetEnabled(index, enabled, tooltip)`
+  disables a cell (or dropdown item) with its tooltip; `SetIcon(index, texture, tint)` puts a
+  14-unit icon after a cell's label, and `SetOptions` takes how many icons to leave room for.
+- **Arrow picker** (`ArrowPicker`): two 32-unit square arrow buttons ("<" and ">", a `TextDim`
+  border) either side of the current choice's cell, 4 apart. `SetOptions` sizes the cell to the
+  widest label; `SetVisible` hides or shows a choice; `Step(direction)` is an arrow's press.
+  Setting `Selected` from code raises nothing; a step raises `Chosen`. It registers at its id,
+  with "id/prev", "id/next", and "id/current".
 - **Icon toggle** (`IconToggle`): a flat 24-unit button with a 20-unit icon, tinted by `On`
   through the button's icon colors; hover draws the `Accent` outline over `CellHover`.
 - **Section heading** (`SectionHeading`): the heading of the pattern above.
@@ -300,7 +318,7 @@ Which control or display does which job, so new UI picks from this list instead 
   two frames), because Direct3D 12 runs out of sampler descriptors when every icon and picture
   draws in one frame. Headless runs draw nothing, so there are no pictures or icons there.
 - **Building pictures** (`BuildingPictures`): each building is rendered once at startup into a
-  256 px texture, in color and as a `Silhouette`, with its front toward the viewer. Grayscale (at
+  256 px texture, in color, with its front toward the viewer. Grayscale (at
   70% brightness, for "not now") is a canvas shader on the color picture.
 - **Resource icons** (`ResourceIcons`): each resource's item model (art-style.md) is rendered
   once at startup into a 64 px texture, shown at 20 to 24 UI units, so it stays sharp up to the

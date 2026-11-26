@@ -357,10 +357,12 @@ pausing it and stepping frame by frame.
   `playTime` (game seconds played) and `unsaved` (unsaved progress), while the game menu is open
   its `buttons`, `confirm` (the question shown, or null), and `status`, while the save dialog is
   open its `name` and `confirm`, while the load dialog is open its `saves` (each `name` and
-  `loadable`) and `confirm`, and while the build menu is open, its `cells` in display order (`Road` and `Bridge`, then the buildings), each
-  `type`, `state` (`affordable`, `unaffordable`, or `undiscovered`), and `label`; while the
-  research tree is open, its `header`, its `cards` (each `project`, `running`, `progress` 0 to 1,
-  `selected`, and `locked`), and its `drawer` (the selected `project`, its `state` as shown,
+  `loadable`) and `confirm`, and while the build menu is open, its `tier` (1 to 4), `tiers` (each picker cell's `label`,
+  `enabled`, and `checked`), and `cells`, the chosen tier's cells in display order (on Tier 1
+  `Road` and `Bridge` sorted in by name), each `type`, `state` (`affordable` or `unaffordable`),
+  and `label`; while the research tree is open, its `header`, `tier`, `tiers` (as the build
+  menu's, `checked` when every project of the tier is complete), its `cards` (every project, each
+  `project`, `running`, `progress` 0 to 1, `selected`, `locked`, and `shown`, in the chosen tier), and its `drawer` (the selected `project`, its `state` as shown,
   `button`, `enabled`, `fee`, `time`, and `progress` 0 to 1); while the
   detail panel is open, `building` (its id), `strip` (the status strip in order, each entry's
   `id` (`switch` for the on/off toggle, then `network`, `power`, `water`, `sand`, `charge`,
@@ -384,9 +386,13 @@ pausing it and stepping frame by frame.
   resource name, as "+300"), `destroy` (the Destroy button's text, or null when hidden), `destroyTip`
   (its tooltip, "Refund: 13 Wood, 8 Stone", or null when hidden), and
   `turnDegrees`; while the field detail panel is open, `field` (its id), `title`, and `rows`
-  (`remaining`, `workedBy`); while the inventory is open, `inventory`: its rows in display order,
-  each `type`, `amount`, `limit` (null for a Cargo or unlimited resource), `section` (`raw`,
-  `tier1` to `tier4`), `discovered`, and `pinned`, and `cargo`, the Cargo row's text); `buildings` (`id`, `type`, `anchor`, `facing`, `width`, `depth`,
+  (`remaining`, `workedBy`); while the inventory is open, `inventory`: the chosen choice's rows in
+  display order, each `type`, `name` (its label as shown, "Wood (30 / 100)" or "Coal"), `amount`,
+  `limit` (null for a Cargo or unlimited resource), `section` (`raw`, `tier1` to `tier4`),
+  `discovered`, and `pinned`, `inventoryChoice` ("Resources", "Tier 1"), `inventoryArrows`
+  (`prev` and `next`, whether each arrow can step), `inventoryPicker` (`currentWidth`, the current
+  cell's width, and `nextX`, the right arrow's x in the picker), and `cargo`, the Cargo row's
+  text); `buildings` (`id`, `type`, `anchor`, `facing`, `width`, `depth`,
   `currentField`, `enabled`, `online`, and `output` (amounts by type),
   `burning` (the fuel burning, or null), `status`
   (`working`, `idle`, or `off`), and `idleReason` or null);
@@ -594,14 +600,15 @@ pausing it and stepping frame by frame.
   `demo` (the menu offering Demo; `loadDemo` opening the town at the widest zoom, powered, with
   Material Transfer running and four trucks, and its Iron still rising a minute later; windowed
   screenshots),
-  `roads` (the menu's Road tool laying an L of tiles by drag and taking their Stone, a Shift drag
+  `roads` (Bridge first and Road among the menu's Tier 1 cells; the menu's Road tool laying an L of tiles by drag and taking their Stone, a Shift drag
   removing three for half back, a right drag panning instead, Escape leaving build mode; a Mine across a strip of ShallowWater out
   of a truck's reach until the Bridge tool spans it, then the truck hauling its ore home over it),
-  `research` (a Research Lab; T opening the tree on Material Transfer with Advanced Material
-  Transfer locked, selecting its card showing it disabled in the drawer; starting Material
-  Transfer from the drawer taking its fee; pausing keeping progress; resuming without a second fee; the
-  project completing, Advanced Material Transfer staying locked until Steel Works unlocks tier 2
-  and then turning available, and an online Mine's Iron Ore reaching storage),
+  `research` (a Research Lab; T opening the tree on Material Transfer in Tier 1, Tier 2 disabled;
+  selecting Steel Works showing it in the drawer; starting Material Transfer from the drawer taking
+  its fee; pausing keeping progress; resuming without a second fee; the project completing,
+  Advanced Material Transfer staying locked until Steel Works unlocks tier 2; then Tier 1 checked,
+  Tier 2 chosen showing and selecting Advanced Material Transfer, available; and an online Mine's
+  Iron Ore reaching storage),
   `power-consumers` (at midday a Solar Array's 60 Power charging a Battery Bank at 50, with the
   clock, power, and store readouts; at night the bank carrying a Drill Rig at Normal; a Fission
   Reactor on Fuel Rods and Water adding 400),
@@ -647,18 +654,23 @@ pausing it and stepping frame by frame.
   full; a Silo raises the limit to 400 and harvesting resumes; the inventory's Cargo row; a
   discovery pinning itself, unpinning and pinning again from the inventory in table order, and
   the bar filling at 8 so a ninth discovery does not pin itself; the Silo's detail lists what it adds),
-  `inventory` (on the empty map nothing is discovered or pinned and every row is darkened, through
-  the last tier; a field in sight and a held resource are discovered, pinned, and move to the top
-  of their tier),
+  `inventory` (it opens on Resources, every raw row named and darkened with "Not yet found";
+  a field in sight and a held resource are discovered, pinned, and move to the top; the right
+  arrow steps to Tier 1, whose rows say "Not yet made", and stops there while Tier 2 is locked; it
+  reopens on Tier 1; after Steel Works the arrow reaches Tier 2's 13 rows),
+  `arrow-picker` (the current cell keeping one width so the right arrow never moves; each arrow
+  disabled at its end; hidden locked tiers skipped until research shows them),
   `building-detail` (clicking a building opens its panel with the on/off toggle and Network in
   its status strip, the state line in its tone, and the right status rows; the world
   keeps its hover with it open; it turns the building off and on; clicking another building
   switches it; empty ground, B, and Escape close it; the panel is a third of the window wide; Destroy shows
   its refund on hover, asks once, then refunds half the cost),
-  `build-menu` (B opens the menu with discovered buildings first, every tier 1 building from the
-  start, affordable in color and short ones gray, then undiscovered ones (higher tiers); the modal menu stops the world; a hover shows the description
-  and then the cost, none for an undiscovered cell, which ignores clicks; B, Escape, and Close close it; clicking an
-  unaffordable discovered cell selects it with the placement tooltip),
+  `build-menu` (B opens the menu on Tier 1, Road and Bridge sorted in with the buildings,
+  affordable in color and short ones gray; a locked tier's cell disabled, its tooltip naming the
+  research, a click on it doing nothing; after Steel Works Tier 2 showing its 20 buildings and the
+  menu reopening on the tier last viewed; the modal menu stops the world; a hover shows the
+  description and then the cost; B, Escape, and Close close it; clicking an unaffordable cell
+  selects it with the placement tooltip),
   `build-rotate` (R rotates the Refinery ghost 2 x 3 to 3 x 2 and back), `place-at-mouse` (aim and
   click places a Mine at the expected anchor; the ghost counts an Iron Ore field in range),
   `walk` (a right click walks there with the destination ring, and Ctrl + left the same; a left

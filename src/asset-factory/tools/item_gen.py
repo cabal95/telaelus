@@ -890,6 +890,22 @@ def icon_power_switch(_rnd):
     return m, mat.mats
 
 
+def icon_check(_rnd):
+    """A check mark in a light neutral (the UI tints it): a short stroke down to the corner, a long one up."""
+    m, mat = Mesh(), Materials()
+    w = 0.17
+    corner = (0.12, -0.5)
+    for end in ((0.56, -0.04), (-0.6, 0.56)):
+        dx, dy = end[0] - corner[0], end[1] - corner[1]
+        n = math.hypot(dx, dy)
+        ox, oy = -dy / n * w / 2, dx / n * w / 2
+        poly = [(corner[0] + ox, corner[1] + oy), (end[0] + ox, end[1] + oy), (end[0] - ox, end[1] - oy), (corner[0] - ox, corner[1] - oy)]
+        if (poly[1][0] - poly[0][0]) * (poly[2][1] - poly[0][1]) - (poly[1][1] - poly[0][1]) * (poly[2][0] - poly[0][0]) < 0:
+            poly.reverse()
+        _slab(m, mat("icon_mono"), mat("icon_mono", 0.75), poly)
+    return m, mat.mats
+
+
 def icon_network(_rnd):
     """A hub mast in a light neutral (the UI tints it): a tapered mast on a base, a ring around its top, a cap."""
     m, mat = Mesh(), Materials()
@@ -912,6 +928,7 @@ ICONS = {
     "icon_computers": icon_computers,
     "icon_power_switch": icon_power_switch,
     "icon_network": icon_network,
+    "icon_check": icon_check,
 }
 
 

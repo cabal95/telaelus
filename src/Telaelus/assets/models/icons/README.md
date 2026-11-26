@@ -19,4 +19,5 @@ Every file is required: the game throws if one is missing.
 | Electronics | `electronics.glb` | A green circuit board with a black chip and gold pins | Its research tree card and toasts |
 | Computers | `computers.glb` | A monitor on a stand, its screen lit | Its research tree card and toasts |
 | Power switch | `power_switch.glb` | The power symbol: a ring broken at the top by a vertical bar, in a light neutral the UI tints | The detail panel's on/off toggle (`Good` on, `TextDim` off) |
+| Check | `check.glb` | A check mark in a light neutral the UI tints | A segmented picker cell's mark, in `Good` (the research tree's completed tier) |
 | Network | `network.glb` | A hub mast on a base, a ring around its top and a round cap, in a light neutral the UI tints | The detail panel's Network entry (`Good` online, `Warning` offline) |

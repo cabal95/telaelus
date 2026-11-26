@@ -7,26 +7,23 @@ using Godot;
 namespace Telaelus.Presentation.Ui;
 
 /// <summary>
-/// Renders every building once, at startup, into two pictures: in color, and as an
-/// off-black silhouette, from the game camera's angle on the <see cref="PictureStage"/>,
-/// cached as textures, so menus never hold live 3D views. Grayscale is a shader on the
-/// color picture (<see cref="GrayscaleMaterial"/>). Without a renderer (headless runs)
-/// there are no pictures and <see cref="Color"/> and <see cref="Silhouette"/> return null.
+/// Renders every building once, at startup, into a picture from the game camera's angle on the
+/// <see cref="PictureStage"/>, cached as textures, so menus never hold live 3D views. Grayscale is
+/// a shader on the picture (<see cref="GrayscaleMaterial"/>). Without a renderer (headless runs)
+/// there are no pictures and <see cref="Color"/> returns null.
 /// </summary>
 public partial class BuildingPictures : Node
 {
     public const int PictureSize = 256;
 
-    private Dictionary<(BuildingType Type, bool Silhouette), Texture2D> _pictures = new();
+    private Dictionary<BuildingType, Texture2D> _pictures = new();
 
     /// <summary>Raised once the pictures are ready.</summary>
     public event Action? PicturesReady;
 
     public bool IsReady { get; private set; }
 
-    public Texture2D? Color(BuildingType type) => _pictures.GetValueOrDefault((type, false));
-
-    public Texture2D? Silhouette(BuildingType type) => _pictures.GetValueOrDefault((type, true));
+    public Texture2D? Color(BuildingType type) => _pictures.GetValueOrDefault(type);
 
     private static ShaderMaterial? _grayscale;
 
@@ -58,8 +55,7 @@ public partial class BuildingPictures : Node
     private async void RenderAll()
     {
         var stages = Enum.GetValues<BuildingType>()
-            .SelectMany(type => new[] { false, true }.Select(silhouette =>
-                ((type, silhouette), (Action<Node>)(view => PictureStage.Fill(view, type, silhouette)))));
+            .Select(type => (type, (Action<Node>)(view => PictureStage.Fill(view, type))));
         _pictures = await PictureStage.RenderOnce(this, stages, PictureSize);
         IsReady = true;
         PicturesReady?.Invoke();

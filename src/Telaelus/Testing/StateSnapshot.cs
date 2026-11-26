@@ -266,11 +266,12 @@ public static class StateSnapshot
         if (root.Dialogs.Current == root.Inventory)
         {
             var rows = new JsonArray();
-            foreach ((ResourceType type, int amount, string section, bool discovered, int? limit, bool pinned) in root.Inventory.Rows)
+            foreach ((ResourceType type, string name, int amount, string section, bool discovered, int? limit, bool pinned) in root.Inventory.Rows)
             {
                 rows.Add(new JsonObject
                 {
                     ["type"] = type.ToString(),
+                    ["name"] = name,
                     ["amount"] = amount,
                     ["limit"] = limit,
                     ["section"] = section,
@@ -279,12 +280,25 @@ public static class StateSnapshot
                 });
             }
             ui["inventory"] = rows;
+            ui["inventoryChoice"] = root.Inventory.Choice;
+            (bool prev, bool next) = root.Inventory.CanStep;
+            ui["inventoryArrows"] = new JsonObject
+            {
+                ["prev"] = prev,
+                ["next"] = next
+            };
+            (float currentWidth, float nextX) = root.Inventory.PickerLayout;
+            ui["inventoryPicker"] = new JsonObject
+            {
+                ["currentWidth"] = Round(currentWidth),
+                ["nextX"] = Round(nextX)
+            };
             ui["cargo"] = root.Inventory.CargoText;
         }
         if (root.Dialogs.Current == root.ResearchTree)
         {
             var cards = new JsonArray();
-            foreach ((ResearchProject project, bool running, float progress, bool selected, bool locked) in root.ResearchTree.Cards)
+            foreach ((ResearchProject project, bool running, float progress, bool selected, bool locked, bool visible) in root.ResearchTree.Cards)
             {
                 cards.Add(new JsonObject
                 {
@@ -292,9 +306,12 @@ public static class StateSnapshot
                     ["running"] = running,
                     ["progress"] = Round(progress),
                     ["selected"] = selected,
-                    ["locked"] = locked
+                    ["locked"] = locked,
+                    ["shown"] = visible
                 });
             }
+            ui["tier"] = root.ResearchTree.Tier;
+            ui["tiers"] = Tiers(root.ResearchTree.TierCells);
             (ResearchProject shown, string state, string button, bool enabled, string fee, string time, float done) = root.ResearchTree.DrawerShown;
             ui["header"] = root.ResearchTree.HeaderText;
             ui["cards"] = cards;
@@ -322,6 +339,8 @@ public static class StateSnapshot
                 });
             }
             ui["cells"] = cells;
+            ui["tier"] = root.BuildMenu.Tier;
+            ui["tiers"] = Tiers(root.BuildMenu.TierCells);
         }
         if (root.Dialogs.Current == root.BuildingDetail && root.BuildingDetail.Building is Building building)
         {
@@ -550,6 +569,22 @@ public static class StateSnapshot
                 }
                 : null
         };
+    }
+
+    // A tier picker's cells: label, whether it can be chosen, and whether it shows the check mark.
+    private static JsonArray Tiers(System.Collections.Generic.IReadOnlyList<(string Label, bool Enabled, bool Checked)> cells)
+    {
+        var list = new JsonArray();
+        foreach ((string label, bool enabled, bool isChecked) in cells)
+        {
+            list.Add(new JsonObject
+            {
+                ["label"] = label,
+                ["enabled"] = enabled,
+                ["checked"] = isChecked
+            });
+        }
+        return list;
     }
 
     private static JsonArray Unlocked(Simulation sim)

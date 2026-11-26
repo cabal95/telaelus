@@ -33,8 +33,8 @@ public enum ResearchState
 
 /// <summary>
 /// A project's definition: its name and what it does, its work in game seconds at one lab's speed,
-/// its fee (paid once, to begin), the projects it needs first, its place in the tree (a column and
-/// row), its tier (it can start once that tier is unlocked), the tier it unlocks if it is a tier's
+/// its fee (paid once, to begin), the projects it needs first, its place in its tier's tree (a
+/// column and row within the tier), its tier (it can start once that tier is unlocked), the tier it unlocks if it is a tier's
 /// unlock project, and for a transfer project the raw resources the network then carries from
 /// collectors.
 /// </summary>
@@ -97,7 +97,7 @@ public static class ResearchDefs
             {
                 ResearchProject.MaterialTransfer
             },
-            1,
+            0,
             0)
         {
             Tier = 2,
@@ -142,7 +142,7 @@ public static class ResearchDefs
             {
                 ResearchProject.SteelWorks
             },
-            1,
+            0,
             1)
         {
             Tier = 2,
@@ -163,8 +163,8 @@ public static class ResearchDefs
             {
                 ResearchProject.Electronics
             },
-            2,
-            1)
+            0,
+            0)
         {
             Tier = 3,
             Unlocks = 4

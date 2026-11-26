@@ -786,7 +786,8 @@ of what it makes or gives and what it needs, shown in the build menu's tooltip (
   placement tooltip names the tool and, during a drag, the tiles and cost ("Road: 7 tiles, 28
   Stone", short amounts marked) or what is wrong with a bridge, and the keys ("Drag to lay
   Shift-drag to remove   Esc cancel").
-- The build menu lists every building (discovered first, then undiscovered silhouettes), and
+- The build menu lists the buildings one tier at a time (a tier picker; Road and Bridge among Tier
+  1's), and
   while placing, a tooltip beside the pointer shows the building's name, its cost, and for an
   extractor, the count of fields in range. A cost amount the stockpile is short of shows what it
   holds, as "15 Stone (have 3)". See presentation.md and ui-style.md.

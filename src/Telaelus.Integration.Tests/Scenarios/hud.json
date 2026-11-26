@@ -1,7 +1,7 @@
 {
   "$schema": "../scenario.schema.json",
   "name": "hud",
-  "description": "The screen UI: the debug overlay starts hidden and F3 toggles it; the top bar shows the six starting deposits with name tooltips, and no Power, Water, Sand, or ship bill with none on the network; the hint overlay shows the harvest hint and its bar; I opens and closes the inventory, grouped by tier with discovered resources first; the inventory and a building's detail panel replace each other; a panel covers the debug overlay.",
+  "description": "The screen UI: the debug overlay starts hidden and F3 toggles it; the top bar shows the six starting deposits with name tooltips, and no Power, Water, Sand, or ship bill with none on the network; the hint overlay shows the harvest hint and its bar; I opens and closes the inventory on its Resources choice, discovered resources first; the inventory and a building's detail panel replace each other; a panel covers the debug overlay.",
   "steps": [
     { "newGame": {} },
     { "initMap": {} },
@@ -49,10 +49,10 @@
     { "press": "I" },
     { "wait": 2 },
     { "expect": "ui.open", "equals": "inventory" },
-    { "expect": "ui.inventory[0]", "equals": { "type": "Wood", "amount": 30, "limit": 100, "section": "raw", "discovered": true, "pinned": true } },
-    { "comment": "Undiscovered raw resources follow the discovered ones; Lithium is the last raw row.", "expect": "ui.inventory[16]", "equals": { "type": "Lithium", "amount": 0, "limit": 0, "section": "raw", "discovered": false, "pinned": false } },
-    { "expect": "ui.inventory[17]", "equals": { "type": "Iron", "amount": 12, "limit": null, "section": "tier1", "discovered": true, "pinned": true } },
-    { "expect": "ui.inventory[18]", "equals": { "type": "Copper", "amount": 0, "limit": null, "section": "tier1", "discovered": false, "pinned": false } },
+    { "comment": "It opens on the raw resources.", "expect": "ui.inventoryChoice", "equals": "Resources" },
+    { "expect": "ui.inventory[0]", "equals": { "type": "Wood", "name": "Wood (30 / 100)", "amount": 30, "limit": 100, "section": "raw", "discovered": true, "pinned": true } },
+    { "comment": "Undiscovered raw resources follow the discovered ones, named; Lithium is the last raw row.", "expect": "ui.inventory[16]", "equals": { "type": "Lithium", "name": "Lithium", "amount": 0, "limit": 0, "section": "raw", "discovered": false, "pinned": false } },
+    { "expect": "ui.inventory[17]", "exists": false },
     { "comment": "12 Iron take 12 of the HQ's 150 Cargo.", "expect": "ui.cargo", "equals": "Cargo (12 / 150)" },
     { "press": "F3" },
     { "wait": 2 },

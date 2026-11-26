@@ -10,9 +10,8 @@ rules are in ../development.md.)
 
 Parked plans, not approved; see `future/`.
 
-- **tier-rework** - The tier rework plan: phase 1 (2611261421-tier-model) is done; phase 2 adds the
-  tier pickers, the inventory stepper, and grayed and hidden rows; phase 3 looks at building
-  quality levels.
+- **tier-rework** - The tier rework plan: phases 1 (2611261421-tier-model) and 2
+  (2611261445-tier-pickers) are done; phase 3 looks at building quality levels.
 - **graphics-settings** - A player graphics settings panel: the renderer (Forward+ or Mobile, on
   restart, with a first-launch default by GPU), display mode, render scale with FSR upscaling,
   vsync, and a frame cap, kept in a settings file in the player's data folder.
@@ -288,6 +287,9 @@ Newest last. One line each; open the file for the full spec.
 - **2611261421-tier-model** - Buildings, items, and research share four tiers: tier 1 buildable from
   the start, tiers 2 to 4 unlocked by the Steel Works, Electronics, and Computers research, in
   place of unlocking a building by holding its cost.
+- **2611261445-tier-pickers** - The build menu and research tree show one tier at a time under a
+  segmented tier picker (locked tiers disabled, completed research tiers checked), and the
+  inventory under a new arrow picker, with undiscovered resources named and grayed.
 
 ## Adding a changeset
 
