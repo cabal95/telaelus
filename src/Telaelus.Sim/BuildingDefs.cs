@@ -38,8 +38,8 @@ public sealed record BuildingDef(
     IReadOnlyList<ResourceType> Works,
     float WorkRadius)
 {
-    /// <summary>The speed of a base-level building: slower than the player by hand.</summary>
-    public const float BaseSpeed = 0.75f;
+    /// <summary>The speed of a level 1 building, the base every speed part adds to (100%).</summary>
+    public const float BaseSpeed = 1f;
 
     public float Speed { get; init; } = BaseSpeed;
 
@@ -219,7 +219,7 @@ public static class BuildingDefs
     }, 3f)
     {
         Tier = 2,
-        Speed = 1.3f,
+        Speed = 1.75f,
         OutputBuffer = 20f,
         Draws = new Dictionary<CapacityType, float>
         {
@@ -374,7 +374,7 @@ public static class BuildingDefs
     }, 8f)
     {
         Tier = 2,
-        Speed = 1.3f,
+        Speed = 1.75f,
         OutputBuffer = 40f,
         Draws = new Dictionary<CapacityType, float>
         {
@@ -393,7 +393,7 @@ public static class BuildingDefs
     }, 8f)
     {
         Tier = 3,
-        Speed = 1.6f,
+        Speed = 2.15f,
         OutputBuffer = 40f,
         Draws = new Dictionary<CapacityType, float>
         {
@@ -422,7 +422,7 @@ public static class BuildingDefs
     }, 8f)
     {
         Tier = 2,
-        Speed = 1.3f,
+        Speed = 1.75f,
         OutputBuffer = 40f,
         Draws = new Dictionary<CapacityType, float>
         {
@@ -616,7 +616,7 @@ public static class BuildingDefs
     }, 3f)
     {
         Tier = 3,
-        Speed = 1.6f,
+        Speed = 2.15f,
         DeepSites = new[]
         {
             ResourceType.CrudeOil
@@ -652,7 +652,7 @@ public static class BuildingDefs
     }, 8f)
     {
         Tier = 3,
-        Speed = 1.6f,
+        Speed = 2.15f,
         DeepSites = new[]
         {
             ResourceType.IronOre,

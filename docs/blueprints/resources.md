@@ -14,22 +14,23 @@ buildings.md). A single global stockpile holds all amounts, within storage limit
   and then catalog order. `ResourceDefs.For(type)` gives each a display name, a `Kind`, a **tier**
   (0 for raw, 1 to 4 for made goods, the tier of the buildings that make them, buildings.md;
   `ResourceDefs.MaxTier` is 4), whether the player can harvest
-  it by hand, and for a deposit, its gather time (`GatherSeconds`: the seconds to gather one unit
-  by hand, which reads as how hard the material is to work; an extractor divides it by its speed,
-  see buildings.md); rules read this table, not the enum:
+  it by hand, and for a deposit, its gather time (`GatherSeconds`: the seconds a level 1 extractor
+  takes for one unit, which reads as how hard the material is to work; an extractor divides it by
+  its speed, and the player by hand by `HandGatherSpeed`, 4/3; see buildings.md); rules read this
+  table, not the enum:
 
   | Type | Kind | Hand-harvest | Gather time | Source |
   |---|---|---|---|---|
-  | Wood | Deposit | yes | 3 s | Wood fields (trees) |
-  | Stone | Deposit | yes | 4.5 s | Stone fields (boulders) |
-  | IronOre | Deposit | yes | 6 s | Iron Ore fields |
-  | CopperOre | Deposit | yes | 6 s | Copper Ore fields |
-  | Coal | Deposit | yes | 4.5 s | Coal fields |
-  | CrudeOil | Deposit | no | 3 s | Crude Oil fields (oil seeps), by an Oil Well only |
-  | Bauxite, Quartz | Deposit | yes | 6 s | fields (Mine, Drill Rig) |
-  | Limestone, Sulfur | Deposit | yes | 4.5 s | fields (Mine, Drill Rig) |
-  | TitaniumOre | Deposit | yes | 7.5 s | fields (Mine, Drill Rig) |
-  | RareEarths, UraniumOre, Crystals | Deposit | no | 9 s | fields (Drill Rig only) |
+  | Wood | Deposit | yes | 4 s | Wood fields (trees) |
+  | Stone | Deposit | yes | 6 s | Stone fields (boulders) |
+  | IronOre | Deposit | yes | 8 s | Iron Ore fields |
+  | CopperOre | Deposit | yes | 8 s | Copper Ore fields |
+  | Coal | Deposit | yes | 6 s | Coal fields |
+  | CrudeOil | Deposit | no | 4 s | Crude Oil fields (oil seeps), by an Oil Well only |
+  | Bauxite, Quartz | Deposit | yes | 8 s | fields (Mine, Drill Rig) |
+  | Limestone, Sulfur | Deposit | yes | 6 s | fields (Mine, Drill Rig) |
+  | TitaniumOre | Deposit | yes | 10 s | fields (Mine, Drill Rig) |
+  | RareEarths, UraniumOre, Crystals | Deposit | no | 12 s | fields (Drill Rig only) |
   | Sand | TerrainSourced | no | | capacity from a Sand Collector or Sand Dredge on Sand (buildings.md) |
   | Water | TerrainSourced | no | | capacity from a Water Pump or Pumping Station beside water (buildings.md) |
   | Lithium | TerrainSourced | no | | a Brine Well on a salt flat (buildings.md) |
@@ -232,7 +233,8 @@ buildings.md). A single global stockpile holds all amounts, within storage limit
 - Each tick the simulation finds the nearest hand-harvestable field within `HarvestRange` (1.5
   units) of the player, by distance to the field's square, as the `HarvestTarget`; a Crude Oil
   field is never a target. Gathering is one unit at a time: while the player
-  holds the harvest intent, `HarvestProgress` grows from 0 toward 1 over the target's gather time;
+  holds the harvest intent, `HarvestProgress` grows from 0 toward 1 over the target's gather time
+  over `HandGatherSpeed` (4/3, so Iron Ore takes 6 s by hand);
   at 1 one unit moves from the field to the stockpile and progress starts over. Releasing the
   intent or a change of target (walking away, or a nearer field) drops the partial progress. A
   depleted field is removed.

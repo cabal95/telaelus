@@ -195,7 +195,7 @@ public class PowerTests
         sim.Debug.PlaceBuilding(BuildingType.BurnerGenerator, 53, 13, Facing.North);
         Assert.True(rig.Online);
 
-        // Iron Ore takes 6 s by hand; at the Drill Rig's speed 1.3 that is 4.6 s a unit: 3 units in 14 s.
+        // Iron Ore takes 8 s at a level 1 extractor; at the Drill Rig's 175% that is 4.6 s a unit: 3 units in 14 s.
         SimTestHelpers.Seconds(sim, 14.0);
 
         Assert.Equal(3f, rig.Output[ResourceType.IronOre]);

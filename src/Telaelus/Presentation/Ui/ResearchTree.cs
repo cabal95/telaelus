@@ -96,11 +96,15 @@ public partial class ResearchTree : Dialog
         _pictures = pictures;
     }
 
-    /// <summary>A project's picture: its icon model, or for a project that unlocks a level, that level's building picture.</summary>
+    /// <summary>
+    /// A project's picture: its icon model; for a project that unlocks a level, that level's building
+    /// picture; for a speed project, its family's level 1 picture.
+    /// </summary>
     public static Texture2D? Picture(ResearchProject project, ResourceIcons icons, BuildingPictures pictures)
     {
-        return ResearchDefs.For(project).UnlocksLevel is (BuildingType type, int level)
-            ? pictures.Color(type, level)
+        ResearchDef def = ResearchDefs.For(project);
+        return def.UnlocksLevel is (BuildingType type, int level) ? pictures.Color(type, level)
+            : def.Speeds is (BuildingType family, _) ? pictures.Color(family, 1)
             : icons.Icon(ResearchIconName(project));
     }
 

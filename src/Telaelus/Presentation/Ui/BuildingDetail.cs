@@ -694,7 +694,7 @@ public partial class BuildingDetail : Dialog
                 : null);
             if (field is not null && ResourceDefs.For(field.Type).GatherSeconds is float seconds)
             {
-                progress = building.Progress / (seconds / def.Speed);
+                progress = building.Progress / seconds;
             }
             _rows.Set("Recipe", null);
         }
@@ -762,6 +762,10 @@ public partial class BuildingDetail : Dialog
         if (BurningEntry(building) is StatusEntry burning)
         {
             entries.Add(burning);
+        }
+        if (SpeedEntry(building) is StatusEntry speed)
+        {
+            entries.Add(speed);
         }
         if (TruckText.CollectorRow(_sim, building) is string truck)
         {
@@ -1417,6 +1421,61 @@ public partial class BuildingDetail : Dialog
         int left = Mathf.CeilToInt(building.BurnLeft);
         return new StatusEntry("burning", _icons.For(fuel), $"{left} s", Tone.Normal,
             $"{ResourceDefs.For(fuel).Name}, {left} s left{Boost(Simulation.FuelSpeed(building))}");
+    }
+
+    /// <summary>
+    /// A working building's speed against the 100% base ("+100%"), hidden at exactly 100%. Its
+    /// tooltip names each part ("+75% from level 2 building, +25% from Better Mining I"), then a
+    /// shortage as the share it lets through and the total ("x60% from Power brownout: +20%"). Good
+    /// without a shortage, a warning with one.
+    /// </summary>
+    private StatusEntry? SpeedEntry(Building building)
+    {
+        BuildingDef def = building.Def;
+        if (def.Storage != StorageRole.None || def.IsHub)
+        {
+            return null;
+        }
+        SpeedParts parts = _sim.SpeedPartsOf(building);
+        int total = Mathf.RoundToInt((parts.Total - 1f) * 100f);
+        if (Mathf.IsEqualApprox(parts.Total, 1f))
+        {
+            return null;
+        }
+        var lines = new List<string>();
+        if (parts.Level != 0f)
+        {
+            lines.Add($"{Percent(parts.Level)} from level {building.Level} building");
+        }
+        if (parts.ResearchFrom is ResearchProject project)
+        {
+            lines.Add($"{Percent(parts.Research)} from {ResearchDefs.For(project).Name}");
+        }
+        if (parts.FuelFrom is ResourceType fuel)
+        {
+            lines.Add($"{Percent(parts.Fuel)} from {ResourceDefs.For(fuel).Name}");
+        }
+        bool slowed = parts.Shortage < 1f;
+        if (slowed)
+        {
+            string why = parts.ShortOf is CapacityType capacity && building.Online
+                ? $"{capacity} {_sim.Capacity(capacity).State.ToString().ToLowerInvariant()}"
+                : "being offline";
+            lines.Add($"x{Mathf.RoundToInt(parts.Shortage * 100f)}% from {why}");
+        }
+        string tip = string.Join(", ", lines) + (slowed ? $": {Signed(total)}%" : "");
+        return new StatusEntry("speed", _icons.Icon("speed"), $"{Signed(total)}%", slowed ? Tone.Warning : Tone.Good, tip);
+    }
+
+    /// <summary>"+25%" or "-40%" for a part.</summary>
+    private static string Percent(float part)
+    {
+        return $"{Signed(Mathf.RoundToInt(part * 100f))}%";
+    }
+
+    private static string Signed(int value)
+    {
+        return value >= 0 ? "+" + value : value.ToString();
     }
 
     /// <summary>", +30% speed" for a fuel speed over 1, else nothing.</summary>

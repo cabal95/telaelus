@@ -167,7 +167,9 @@ The level model changes saved buildings enough that old saves are not carried ov
    removed the models they replaced.
 3. **Deep levels:** done, folded into phase 1.
 4. **Research tree sections:** done (completed/2611261650-research-tree-sections.md).
-5. **Process speed research:** the speed model and the eight projects.
+5. **Process speed research:** done (completed/2611262034-process-speed-research.md), with the first steps a tier
+   earlier than planned (tier 1 and 2; the Oil Well's 2 and 3) and speeds restated as parts over
+   a 100% level 1 base.
 6. **Save version:** done (completed/2611261642-save-version.md). Phase 1 raised
    `SaveFormat.Version` to 2.
 

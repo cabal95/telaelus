@@ -1,0 +1,44 @@
+{
+  "$schema": "../scenario.schema.json",
+  "name": "process-speed",
+  "description": "A building's Speed entry in its detail panel's status strip: a level 1 Mine at the 100% base shows none; after Better Mining I it reads +25% in green with the research named; a Drill Rig in a blackout reads -100% in the warning tone, its tooltip adding its level and research parts and the blackout's share; powered, it reads +100% in green.",
+  "steps": [
+    { "newGame": {} },
+    { "initMap": {} },
+    { "comment": "Iron Ore in range of both buildings; Small Hubs from the HQ put them online.", "placeResource": { "type": "IronOre", "mapCell": [10, 9] } },
+    { "placeBuilding": { "type": "SmallHub", "anchor": [50, 20] } },
+    { "placeBuilding": { "type": "SmallHub", "anchor": [46, 30] } },
+    { "placeBuilding": { "type": "SmallHub", "anchor": [37, 30] } },
+    { "placeBuilding": { "type": "Mine", "anchor": [44, 34] } },
+    { "wait": 2 },
+    { "aimAt": { "world": [46, 36] } },
+    { "wait": 2 },
+    { "click": {} },
+    { "wait": 2 },
+    { "comment": "At 100% there is no Speed entry: the toggle and the network only.", "expect": "ui.strip[1].id", "equals": "network" },
+    { "expect": "ui.strip[2]", "exists": false },
+
+    { "setResearchProgress": { "project": "BetterMining1", "seconds": 600 } },
+    { "wait": 2 },
+    { "expect": "ui.strip[2]", "equals": { "id": "speed", "value": "+25%", "tone": "good", "tip": "+25% from Better Mining I" } },
+    { "screenshot": "mine-speed" },
+    { "press": "Escape" },
+    { "wait": 1 },
+
+    { "comment": "A Drill Rig with no Power supply is in a blackout.", "placeBuilding": { "type": "Mine", "anchor": [34, 34], "level": 2 } },
+    { "wait": 2 },
+    { "aimAt": { "world": [36, 36] } },
+    { "wait": 2 },
+    { "click": {} },
+    { "wait": 2 },
+    { "expect": "ui.title", "equals": "Drill Rig" },
+    { "expect": "ui.strip[3]", "equals": { "id": "speed", "value": "-100%", "tone": "warning", "tip": "+75% from level 2 building, +25% from Better Mining I, x0% from Power blackout: -100%" } },
+    { "screenshot": "rig-blackout" },
+
+    { "comment": "A Burner Generator on Coal powers it: 200%.", "seedStockpile": { "type": "Coal", "amount": 20 } },
+    { "placeBuilding": { "type": "BurnerGenerator", "anchor": [40, 30] } },
+    { "wait": 2 },
+    { "expect": "ui.strip[3]", "equals": { "id": "speed", "value": "+100%", "tone": "good", "tip": "+75% from level 2 building, +25% from Better Mining I" } },
+    { "screenshot": "rig-powered" }
+  ]
+}

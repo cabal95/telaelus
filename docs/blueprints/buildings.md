@@ -59,15 +59,16 @@ ship from a Shipyard, which closes the on-planet loop.
   intended path is a Lumber Camp from hand-gathered Wood, a Mine from hand-gathered Stone, a
   Smelter from the Mine's Stone, then the oil chain from the Smelter's Iron. Copper Ore and Coal
   are in no cost yet.
-- **Speed**: every building is base level today, `BuildingDef.BaseSpeed` 0.75, so a base extractor
-  is slower than the player by hand. Its benefit is that it works unattended; two together
-  out-gather the player. Higher levels would raise the speed.
+- **Speed**: a level 1 building is the base, 100% (`BuildingDef.BaseSpeed` 1). The player gathers
+  by hand at +33% (`Simulation.HandGatherSpeed`, 4/3), so a level 1 extractor is slower than the
+  player; its benefit is that it works unattended, and two together out-gather the player. A
+  building's speed is a sum of parts over that base (Capacity, below).
 
 - A `Recipe` has inputs, outputs (each a `ResourceAmount`), and a cycle time. Recipes are defined
   centrally:
   - Extractors (Mine, Lumber Camp, Oil Well): no recipe; each takes one unit at a time at the
-    deposit's gather time divided by its speed (at base speed: Wood 4 s, Stone and Coal 6 s, Iron
-    Ore and Copper Ore 8 s, Crude Oil 4 s).
+    deposit's gather time over its speed (at 100%: Wood 4 s, Stone and Coal 6 s, Iron Ore and
+    Copper Ore 8 s, Crude Oil 4 s).
   - Smelter: 1 Iron Ore to 1 Iron, or 1 Copper Ore to 1 Copper, cycle 16 s (burns fuel).
   - Refinery: 1 Crude Oil to 1 Kerosene, cycle 8 s (Rocket Fuel is made from it in the Fuel Plant).
   - Glassworks: no inputs to 1 Glass, cycle 12 s (its Sand is capacity, below).
@@ -91,19 +92,19 @@ Recipes marked "(capacity only)" use only the Sand or Water they draw.
 
 | Building | Tier | Size | Build cost | Draws | Supplies | Burns / eats | Makes |
 |---|---|---|---|---|---|---|---|
-| Mine | 1 | 4 x 4 | 25 Wood, 15 Stone |  |  |  | works Iron Ore, Copper Ore, Coal, Stone, Bauxite, Quartz, Limestone, Sulfur, Titanium Ore (radius 6, speed 0.75) |
-| Drill Rig | 2 | 4 x 4 | 25 Wood, 20 Stone, 30 Iron | 10 Power |  |  | works Iron Ore, Copper Ore, Coal, Stone, Bauxite, Quartz, Limestone, Sulfur, Titanium Ore, Rare Earths, Uranium Ore, Crystals (radius 8, speed 1.3) |
-| Deep Mine | 3 | 4 x 4 | 25 Wood, 20 Stone, 30 Iron, 60 Steel, 30 Concrete | 30 Power |  |  | works Iron Ore, Copper Ore, Coal, Stone, Bauxite, Quartz, Limestone, Sulfur, Titanium Ore, Rare Earths, Uranium Ore, Crystals (radius 8, speed 1.6)<br>with no live field in range, 1 unit every 20 s from a worked-out Iron Ore, Copper Ore, Bauxite, Titanium Ore, Quartz, or Limestone cell or a motherlode beside it |
-| Lumber Camp | 1 | 4 x 4 | 10 Wood |  |  |  | works Wood (radius 6, speed 0.75) |
-| Lumber Mill | 2 | 4 x 4 | 30 Wood, 20 Iron | 5 Power |  |  | works Wood (radius 8, speed 1.3) |
-| Advanced Lumber Mill | 3 | 4 x 4 | 40 Wood, 20 Iron, 30 Steel | 10 Power |  |  | works Wood (radius 8, speed 1.6) |
+| Mine | 1 | 4 x 4 | 25 Wood, 15 Stone |  |  |  | works Iron Ore, Copper Ore, Coal, Stone, Bauxite, Quartz, Limestone, Sulfur, Titanium Ore (radius 6, speed 1) |
+| Drill Rig | 2 | 4 x 4 | 25 Wood, 20 Stone, 30 Iron | 10 Power |  |  | works Iron Ore, Copper Ore, Coal, Stone, Bauxite, Quartz, Limestone, Sulfur, Titanium Ore, Rare Earths, Uranium Ore, Crystals (radius 8, speed 1.75) |
+| Deep Mine | 3 | 4 x 4 | 25 Wood, 20 Stone, 30 Iron, 60 Steel, 30 Concrete | 30 Power |  |  | works Iron Ore, Copper Ore, Coal, Stone, Bauxite, Quartz, Limestone, Sulfur, Titanium Ore, Rare Earths, Uranium Ore, Crystals (radius 8, speed 2.15)<br>with no live field in range, 1 unit every 20 s from a worked-out Iron Ore, Copper Ore, Bauxite, Titanium Ore, Quartz, or Limestone cell or a motherlode beside it |
+| Lumber Camp | 1 | 4 x 4 | 10 Wood |  |  |  | works Wood (radius 6, speed 1) |
+| Lumber Mill | 2 | 4 x 4 | 30 Wood, 20 Iron | 5 Power |  |  | works Wood (radius 8, speed 1.75) |
+| Advanced Lumber Mill | 3 | 4 x 4 | 40 Wood, 20 Iron, 30 Steel | 10 Power |  |  | works Wood (radius 8, speed 2.15) |
 | Smelter | 1 | 4 x 4 | 40 Stone, 15 Wood |  |  | fuel: Coal, Charcoal, Wood | 1 Iron Ore → 1 Iron (16 s)<br>1 Copper Ore → 1 Copper (16 s) |
 | Steel Mill | 2 | 4 x 4 | 60 Stone, 15 Wood, 40 Iron | 20 Power |  |  | 1 Iron Ore → 1 Iron (16 s)<br>1 Copper Ore → 1 Copper (16 s)<br>2 Iron + 1 Coal or Charcoal + 1 Limestone → 1 Steel (20 s) |
 | Electric Smelter | 2 | 4 x 4 | 60 Stone, 15 Wood, 40 Iron, 50 Steel, 20 Copper | 60 Power |  |  | 1 Iron Ore → 1 Iron (16 s)<br>1 Copper Ore → 1 Copper (16 s)<br>2 Iron + 1 Coal or Charcoal + 1 Limestone → 1 Steel (20 s)<br>2 Bauxite → 1 Aluminum (20 s)<br>1 Quartz + 1 Coal or Charcoal → 1 Silicon (15 s)<br>2 Titanium Ore → 1 Titanium (20 s) |
 | Refinery | 2 | 2 x 3 | 40 Iron, 30 Stone, 20 Wood | 25 Power, 2 Water |  |  | 1 Crude Oil → 1 Kerosene (8 s) |
-| Oil Well | 2 | 4 x 4 | 25 Iron, 20 Stone, 10 Wood |  |  |  | works Crude Oil (radius 3, speed 0.75) |
-| Oil Rig | 2 | 4 x 4 | 25 Iron, 20 Stone, 10 Wood, 30 Steel | 10 Power |  |  | works Crude Oil (radius 3, speed 1.3) |
-| Deep Well | 3 | 4 x 4 | 25 Iron, 20 Stone, 10 Wood, 50 Steel, 30 Concrete | 15 Power |  |  | works Crude Oil (radius 3, speed 1.6)<br>with no live field in range, 1 Crude Oil every 26.67 s from a worked-out oil cell or Salt Dome beside it |
+| Oil Well | 2 | 4 x 4 | 25 Iron, 20 Stone, 10 Wood |  |  |  | works Crude Oil (radius 3, speed 1) |
+| Oil Rig | 2 | 4 x 4 | 25 Iron, 20 Stone, 10 Wood, 30 Steel | 10 Power |  |  | works Crude Oil (radius 3, speed 1.75) |
+| Deep Well | 3 | 4 x 4 | 25 Iron, 20 Stone, 10 Wood, 50 Steel, 30 Concrete | 15 Power |  |  | works Crude Oil (radius 3, speed 2.15)<br>with no live field in range, 1 Crude Oil every 26.67 s from a worked-out oil cell or Salt Dome beside it |
 | HQ | 1 | 6 x 10 | placed by the world |  |  |  | network: covers 38, links 44 units<br>raises storage limits |
 | Silo | 1 | 2 x 2 | 30 Wood |  |  |  | raises storage limits |
 | Stockyard | 1 | 3 x 3 | 40 Wood, 20 Iron |  |  |  | raises storage limits |
@@ -204,11 +205,11 @@ Recipes marked "(capacity only)" use only the Sand or Water they draw.
 
   | Family | Level 1 | Level 2 | Level 3 |
   |---|---|---|---|
-  | Mine | Mine (tier 1): unpowered, radius 6, speed 0.75 | Drill Rig (2): 10 Power, radius 8, speed 1.3, adds Rare Earths, Uranium Ore, Crystals | Deep Mine (3): 30 Power, speed 1.6, deep (below) |
-  | Lumber Camp | Lumber Camp (1): radius 6, speed 0.75 | Lumber Mill (2): 5 Power, radius 8, speed 1.3 | Advanced Lumber Mill (3): 10 Power, speed 1.6 |
+  | Mine | Mine (tier 1): unpowered, radius 6, 100% | Drill Rig (2): 10 Power, radius 8, +75%, adds Rare Earths, Uranium Ore, Crystals | Deep Mine (3): 30 Power, +115%, deep (below) |
+  | Lumber Camp | Lumber Camp (1): radius 6, 100% | Lumber Mill (2): 5 Power, radius 8, +75% | Advanced Lumber Mill (3): 10 Power, +115% |
   | Water Pump | Water Pump (1): 4 Water | Pumping Station (2): 5 Power, 10 Water | Advanced Pumping Station (3): 10 Power, 16 Water |
   | Sand Collector | Sand Collector (1): 2 Sand | Sand Sifter (2): 5 Power, 4 Sand | Sand Dredge (3): 10 Power, 8 Sand |
-  | Oil Well | Oil Well (2): radius 3, speed 0.75 | Oil Rig (2): 10 Power, speed 1.3 | Deep Well (3): 15 Power, speed 1.6, deep (below) |
+  | Oil Well | Oil Well (2): radius 3, 100% | Oil Rig (2): 10 Power, +75% | Deep Well (3): 15 Power, +115%, deep (below) |
   | Smelter | Smelter (1): burns fuel; Iron, Copper | Steel Mill (2): 20 Power, no fuel; adds Steel | Electric Smelter (2): 60 Power; adds Aluminum, Silicon, Titanium |
   | Kiln | Charcoal Kiln (1): Charcoal | Cement Kiln (1): burns fuel; adds Cement | Tile Kiln (3): 30 Power, no fuel; adds Ceramic Tile |
 
@@ -283,10 +284,19 @@ Recipes marked "(capacity only)" use only the Sand or Water they draw.
   with demand and no supply. The type's speed is 1 when Normal, 1 less twice the overload in a
   Brownout (0.8 at 10% over, 0.5 at 25%), 0 in a Blackout. A processor with an empty crafting
   queue is a consumer like any other: it draws while switched on, idle or not.
-- A building's speed (`WorkSpeed`) is the slowest speed of the types it draws (1 when it draws
-  none), and 0 offline, times its fuel speed (`FuelSpeed`): for a fuel-burning building that is not
-  a provider (the Smelter, Glassworks, Cement Kiln), the speed of the fuel burning now (Coal 1.3,
-  Charcoal 1.15, Wood 1; resources.md), else 1. A provider supplies the same on any fuel. Burn time
+- A building's speed (`WorkSpeed`) is the total of its **speed parts** (`SpeedPartsOf`, a
+  `SpeedParts`): parts added to the 100% base, then a shortage multiplying the sum,
+  `(1 + level + research + fuel) x shortage`.
+  - **Level:** an extractor working a field adds its level's speed over the base
+    (`BuildingDef.Speed` less `BaseSpeed`): +75% at level 2, +115% at level 3. A Smelter's levels
+    and a deep level's site add nothing.
+  - **Research:** its family's process speed research (`Simulation.ResearchBonusOf`, research.md):
+    +25% after a family's first step, +50% after its second, which replaces the first.
+  - **Fuel:** for a fuel-burning building that is not a provider (the Smelter, Glassworks, Kiln),
+    the fuel burning now (`FuelSpeed` less 1: Coal +30%, Charcoal +15%, Wood 0; resources.md).
+  - **Shortage:** the slowest speed of the types it draws (1 when it draws none), and 0 offline.
+  So a Drill Rig with Better Mining I works at 200%, and at 120% in a 60% brownout. A provider
+  supplies the same on any fuel. Burn time
   runs on game time whatever the speed, so a better fuel both lasts longer and makes more per unit. A consumer's extractor progress and processor cycle advance at their speed
   times it; at 0 they do not start or advance. A provider that draws capacity supplies times its
   speed: a Pumping Station in a power brownout at 80% supplies 12.8 Water, and none in a power
@@ -307,8 +317,8 @@ Recipes marked "(capacity only)" use only the Sand or Water they draw.
 
 | Consumer | Footprint | Cost | Draws | Speed | Works | Buffer |
 |---|---|---|---|---|---|---|
-| Lumber Mill (Lumber Camp level 2) | 4 x 4 | 30 Wood, 20 Iron | 5 Power | 1.3 | Wood, radius 8 | 40 |
-| Drill Rig (Mine level 2) | 4 x 4 | 25 Wood, 20 Stone, 30 Iron | 10 Power | 1.3 | the Mine's deposits and Rare Earths, Uranium Ore, Crystals, radius 8 | 40 |
+| Lumber Mill (Lumber Camp level 2) | 4 x 4 | 30 Wood, 20 Iron | 5 Power | +75% | Wood, radius 8 | 40 |
+| Drill Rig (Mine level 2) | 4 x 4 | 25 Wood, 20 Stone, 30 Iron | 10 Power | +75% | the Mine's deposits and Rare Earths, Uranium Ore, Crystals, radius 8 | 40 |
 | Refinery | 2 x 3 | as above | 25 Power, 2 Water (its cooling) |  |  | 10 |
 | Glassworks | 3 x 6 | 40 Stone, 20 Wood | 2 Sand |  |  | 10 |
 
@@ -547,8 +557,8 @@ And seven buildings, all processors (output buffer 10):
 | Quarry | 3 x 3 | 40 Iron, 30 Wood | 2; 10 Power | BesideMountain | 1 Stone (or Limestone) every 6 s; buffer 40 |
 | Charcoal Kiln (Kiln level 1) | 4 x 4 | 30 Stone, 10 Wood | 1 | Standard | Its recipe above; buffer 10 |
 | Rock Crusher | 3 x 3 | 30 Iron, 10 Steel, 20 Stone | 2; 15 Power | Standard | A Sand provider (Capacity, above) |
-| Deep Well (Oil Well level 3) | 4 x 4 | 25 Iron, 20 Stone, 10 Wood, 50 Steel, 30 Concrete | 3; 15 Power | Standard | Live Crude Oil in radius 3 at speed 1.6, else a worked-out oil cell or Salt Dome beside it, 1 Crude Oil every 26.7 s; buffer 20 |
-| Deep Mine (Mine level 3) | 4 x 4 | 25 Wood, 20 Stone, 30 Iron, 60 Steel, 30 Concrete | 3; 30 Power | Standard | The Drill Rig's fields in radius 8 at speed 1.6, else a worked-out Iron Ore, Copper Ore, Bauxite, Titanium Ore, Quartz, or Limestone cell or a motherlode beside it, 1 unit every 20 s; buffer 40 |
+| Deep Well (Oil Well level 3) | 4 x 4 | 25 Iron, 20 Stone, 10 Wood, 50 Steel, 30 Concrete | 3; 15 Power | Standard | Live Crude Oil in radius 3 at +115%, else a worked-out oil cell or Salt Dome beside it, 1 Crude Oil every 26.7 s; buffer 20 |
+| Deep Mine (Mine level 3) | 4 x 4 | 25 Wood, 20 Stone, 30 Iron, 60 Steel, 30 Concrete | 3; 30 Power | Standard | The Drill Rig's fields in radius 8 at +115%, else a worked-out Iron Ore, Copper Ore, Bauxite, Titanium Ore, Quartz, or Limestone cell or a motherlode beside it, 1 unit every 20 s; buffer 40 |
 
 - **The Forester's plot:** placed, it plants a Wood field of 150 on its own map cell
   (`ResourceField.Owner` is the Forester, `Growing` with `GrowLeft` 180 s). Growth advances at its
@@ -626,7 +636,8 @@ And seven buildings, all processors (output buffer 10):
   non-depleted field of any type it works within its work area (distance from its footprint center
   to the field's square, at most the work radius). It works toward one unit of that field's type
   (`Progress`, in seconds, reset when it takes up a new field), puts the unit into its **output
-  buffer** at the gather time over its speed (collectors never deliver to storage themselves;
+  buffer** at the gather time over its speed (`Progress` grows at its speed and a unit takes the
+  gather time; collectors never deliver to storage themselves;
   the player collects by hand, resources.md), and clears its current field when that
   field depletes. When the buffer has no room for the unit, the unit waits at the field: progress
   holds at the gather time and the unit is taken as soon as there is room. Several extractors may work the same field. With no

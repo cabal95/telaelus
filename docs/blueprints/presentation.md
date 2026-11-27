@@ -271,7 +271,13 @@ ui-style.md. There is no text HUD; the screen holds:
      **charge** (the battery icon and "53%"; tooltip "3200 / 6000, charging", or "discharging" in
      `Warning`, "full", "holding"); the **fuel burning** in a burner (the fuel's icon and "22 s";
      tooltip "Coal, 22 s left", and on a building that makes things the fuel's boost, "Coal, 22 s
-     left, +30% speed"; no entry while nothing burns); and an extractor's **truck** (the truck
+     left, +30% speed"; no entry while nothing burns); **Speed** (the `speed` gauge icon, not on a
+     storage building or hub, and only while its speed is not exactly 100%; buildings.md,
+     Capacity): the change from the 100% base, "+100%" or "-100%", `Good` with no shortage and
+     `Warning` while one applies (a brownout, a blackout, or being offline); its tooltip names each
+     part in turn, then a shortage as the share it lets through and the total: "+75% from level 2
+     building, +25% from Better Mining I", "..., x60% from Power brownout: +20%"; and an
+     extractor's **truck** (the truck
      icon) while one is on its way ("On its way") or loading ("Loading"), or `Warning` "No truck
      can reach".
   3. **State line:** "Working" or "Idle: " and the reason in `BodySize`, in `Text` working,

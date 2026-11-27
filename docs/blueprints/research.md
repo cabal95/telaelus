@@ -19,7 +19,8 @@ storage only by hand or by truck.
   tier's tree (`Column`, `Row`, within the tier), its **tier** (`Tier`, 1 to 4: it is locked while that tier is), the
   building tier it unlocks if it is a tier's unlock project (`Unlocks`), the building level it
   unlocks if it is a level project (`UnlocksLevel`, a type and level; `ResearchDefs.UnlockingLevel`
-  finds it), and for a transfer project the raw resources it carries (`Transfers`).
+  finds it), the family and research part if it is a speed project (`Speeds`), and for a transfer
+  project the raw resources it carries (`Transfers`).
 
 | Project | Tier | Work | Fee | Prerequisites | Place | Unlocks or transfers |
 |---|---|---|---|---|---|---|
@@ -28,9 +29,9 @@ storage only by hand or by truck.
 | Steel Works | 1 | 1200 s (two game days) | 60 Iron, 60 Copper, 40 Glass, 80 Wood | none | column 0, row 1 | unlocks Tier 2 |
 | Electronics | 2 | 1800 s (three game days) | 60 Steel, 60 Plastic, 40 Aluminum, 120 Wood | Steel Works | column 0, row 1 | unlocks Tier 3 |
 | Computers | 3 | 2700 s (four and a half game days) | 60 Circuit, 20 Electric Motor, 40 Steel, 200 Wood | Electronics | column 0, row 1 | unlocks Tier 4 |
-| Powered Mining | 2 | 900 s | 40 Steel, 30 Copper | none | column 0, row 2 | Mine level 2, Drill Rig |
+| Powered Mining | 2 | 900 s | 40 Steel, 30 Copper | none | column 1, row 2 | Mine level 2, Drill Rig |
 | Deep Mining | 3 | 1500 s | 60 Steel, 30 Concrete, 10 Electric Motor | Powered Mining | column 0, row 2 | Mine level 3, Deep Mine |
-| Powered Logging | 2 | 900 s | 30 Steel, 40 Wood | none | column 0, row 3 | Lumber Camp level 2, Lumber Mill |
+| Powered Logging | 2 | 900 s | 30 Steel, 40 Wood | none | column 1, row 3 | Lumber Camp level 2, Lumber Mill |
 | Advanced Logging | 3 | 1500 s | 40 Steel, 20 Electric Motor | Powered Logging | column 0, row 3 | Lumber Camp level 3, Advanced Lumber Mill |
 | Powered Pumping | 2 | 900 s | 30 Steel, 20 Copper | none | column 0, row 4 | Water Pump level 2, Pumping Station |
 | Advanced Pumping | 3 | 1500 s | 40 Steel, 20 Concrete, 10 Electric Motor | Powered Pumping | column 0, row 4 | Water Pump level 3, Advanced Pumping Station |
@@ -38,8 +39,8 @@ storage only by hand or by truck.
 | Dredging | 3 | 1500 s | 40 Steel, 10 Electric Motor | Sand Sifting | column 0, row 5 | Sand Collector level 3, Sand Dredge |
 | Oil Rigs | 2 | 900 s | 40 Steel, 20 Copper | none | column 0, row 6 | Oil Well level 2, Oil Rig |
 | Deep Drilling | 3 | 1500 s | 60 Steel, 20 Concrete, 10 Electric Motor | Oil Rigs | column 0, row 6 | Oil Well level 3, Deep Well |
-| Steelmaking | 2 | 900 s | 60 Iron, 30 Copper, 40 Stone | none | column 0, row 7 | Smelter level 2, Steel Mill |
-| Electric Smelting | 2 | 1200 s | 60 Steel, 30 Copper, 20 Glass | Steelmaking | column 1, row 7 | Smelter level 3, Electric Smelter |
+| Steelmaking | 2 | 900 s | 60 Iron, 30 Copper, 40 Stone | none | column 1, row 7 | Smelter level 2, Steel Mill |
+| Electric Smelting | 2 | 1200 s | 60 Steel, 30 Copper, 20 Glass | Steelmaking | column 2, row 7 | Smelter level 3, Electric Smelter |
 | Cement | 1 | 600 s | 30 Iron, 40 Stone, 40 Wood | none | column 0, row 8 | Kiln level 2, Cement Kiln |
 | Tile Firing | 3 | 1500 s | 40 Concrete, 20 Silicon, 20 Steel | Cement | column 0, row 8 | Kiln level 3, Tile Kiln |
 
@@ -51,6 +52,27 @@ because they will later gain prerequisites of their own.)
   Steelmaking is paid in tier 1 items, since Steel is made only once it is done; the other tier 2
   level fees take Steel. Its card, drawer, and toast show the level's building picture
   (`ResearchTree.Picture`) in place of an icon model.
+- **Speed projects** make a family work faster at every level, level 1 included (buildings.md,
+  Capacity): two steps per family, the second needing the first and replacing its part, not
+  adding to it. Each is described as "Mines work 25% faster, at every level." (the second "...,
+  in place of Better Mining I's 25%."; the Smelter's "at every level and on every recipe"). The
+  first step needs nothing but its tier. Its card, drawer, and toast show the family's level 1
+  building picture.
+
+  | Project | Tier | Work | Fee | Prerequisites | Place | Speeds |
+  |---|---|---|---|---|---|---|
+  | Better Mining I | 1 | 600 s | 40 Iron, 20 Copper | none | column 0, row 2 | Mine +25% |
+  | Better Mining II | 2 | 900 s | 60 Steel, 20 Concrete | Better Mining I | column 0, row 2 | Mine +50% |
+  | Better Logging I | 1 | 600 s | 30 Iron, 40 Wood | none | column 0, row 3 | Lumber Camp +25% |
+  | Better Logging II | 2 | 900 s | 40 Steel, 40 Lumber | Better Logging I | column 0, row 3 | Lumber Camp +50% |
+  | Better Smelting I | 1 | 600 s | 40 Iron, 20 Glass | none | column 0, row 7 | Smelter +25% |
+  | Better Smelting II | 2 | 900 s | 60 Steel, 30 Copper | Better Smelting I | column 0, row 7 | Smelter +50% |
+  | Better Drilling I | 2 | 900 s | 40 Steel, 20 Copper | none | column 0, row 9 | Oil Well +25% |
+  | Better Drilling II | 3 | 1500 s | 60 Steel, 20 Concrete, 10 Electric Motor | Better Drilling I | column 0, row 9 | Oil Well +50% |
+
+  A speed chain sits first on its row in each section, so its line runs straight from one
+  section to the next; the Oil Well's has a row of its own (row 9), since its level projects
+  span the same tiers.
 
 ### Tiers
 

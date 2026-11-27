@@ -24,7 +24,15 @@ public enum ResearchProject
     AdvancedPumping,
     Dredging,
     DeepDrilling,
-    TileFiring
+    TileFiring,
+    BetterMining1,
+    BetterLogging1,
+    BetterSmelting1,
+    BetterMining2,
+    BetterLogging2,
+    BetterSmelting2,
+    BetterDrilling1,
+    BetterDrilling2
 }
 
 /// <summary>Where a project stands for the player.</summary>
@@ -71,6 +79,12 @@ public sealed record ResearchDef(
 
     /// <summary>The building level completing it unlocks (a leveled family above level 1), or null.</summary>
     public (BuildingType Type, int Level)? UnlocksLevel { get; init; }
+
+    /// <summary>
+    /// The family it speeds up and its research part (0.25 or 0.5), or null. A family's part is its
+    /// largest complete project's, never a sum.
+    /// </summary>
+    public (BuildingType Family, float Bonus)? Speeds { get; init; }
 }
 
 public static class ResearchDefs
@@ -202,7 +216,7 @@ public static class ResearchDefs
                 new(ResourceType.Stone, 40f)
             },
             Array.Empty<ResearchProject>(),
-            0,
+            1,
             7),
         [ResearchProject.ElectricSmelting] = LevelProject("Electric Smelting", BuildingType.Smelter, 3, 1200f, new ResourceAmount[]
             {
@@ -214,7 +228,7 @@ public static class ResearchDefs
             {
                 ResearchProject.Steelmaking
             },
-            1,
+            2,
             7),
         [ResearchProject.PoweredMining] = LevelProject("Powered Mining", BuildingType.Mine, 2, 900f, new ResourceAmount[]
             {
@@ -222,7 +236,7 @@ public static class ResearchDefs
                 new(ResourceType.Copper, 30f)
             },
             Array.Empty<ResearchProject>(),
-            0,
+            1,
             2),
         [ResearchProject.PoweredLogging] = LevelProject("Powered Logging", BuildingType.LumberCamp, 2, 900f, new ResourceAmount[]
             {
@@ -230,7 +244,7 @@ public static class ResearchDefs
                 new(ResourceType.Wood, 40f)
             },
             Array.Empty<ResearchProject>(),
-            0,
+            1,
             3),
         [ResearchProject.PoweredPumping] = LevelProject("Powered Pumping", BuildingType.WaterPump, 2, 900f, new ResourceAmount[]
             {
@@ -325,7 +339,84 @@ public static class ResearchDefs
                 ResearchProject.Cement
             },
             0,
-            8)
+            8),
+        [ResearchProject.BetterMining1] = SpeedProject("Better Mining I", BuildingType.Mine, "Mines", 0.25f, 1, 600f, new ResourceAmount[]
+            {
+                new(ResourceType.Iron, 40f),
+                new(ResourceType.Copper, 20f)
+            },
+            Array.Empty<ResearchProject>(),
+            0,
+            2),
+        [ResearchProject.BetterLogging1] = SpeedProject("Better Logging I", BuildingType.LumberCamp, "Lumber Camps", 0.25f, 1, 600f, new ResourceAmount[]
+            {
+                new(ResourceType.Iron, 30f),
+                new(ResourceType.Wood, 40f)
+            },
+            Array.Empty<ResearchProject>(),
+            0,
+            3),
+        [ResearchProject.BetterSmelting1] = SpeedProject("Better Smelting I", BuildingType.Smelter, "Smelters", 0.25f, 1, 600f, new ResourceAmount[]
+            {
+                new(ResourceType.Iron, 40f),
+                new(ResourceType.Glass, 20f)
+            },
+            Array.Empty<ResearchProject>(),
+            0,
+            7),
+        [ResearchProject.BetterMining2] = SpeedProject("Better Mining II", BuildingType.Mine, "Mines", 0.5f, 2, 900f, new ResourceAmount[]
+            {
+                new(ResourceType.Steel, 60f),
+                new(ResourceType.Concrete, 20f)
+            },
+            new[]
+            {
+                ResearchProject.BetterMining1
+            },
+            0,
+            2),
+        [ResearchProject.BetterLogging2] = SpeedProject("Better Logging II", BuildingType.LumberCamp, "Lumber Camps", 0.5f, 2, 900f, new ResourceAmount[]
+            {
+                new(ResourceType.Steel, 40f),
+                new(ResourceType.Lumber, 40f)
+            },
+            new[]
+            {
+                ResearchProject.BetterLogging1
+            },
+            0,
+            3),
+        [ResearchProject.BetterSmelting2] = SpeedProject("Better Smelting II", BuildingType.Smelter, "Smelters", 0.5f, 2, 900f, new ResourceAmount[]
+            {
+                new(ResourceType.Steel, 60f),
+                new(ResourceType.Copper, 30f)
+            },
+            new[]
+            {
+                ResearchProject.BetterSmelting1
+            },
+            0,
+            7),
+        [ResearchProject.BetterDrilling1] = SpeedProject("Better Drilling I", BuildingType.OilWell, "Oil Wells", 0.25f, 2, 900f, new ResourceAmount[]
+            {
+                new(ResourceType.Steel, 40f),
+                new(ResourceType.Copper, 20f)
+            },
+            Array.Empty<ResearchProject>(),
+            0,
+            9),
+        [ResearchProject.BetterDrilling2] = SpeedProject("Better Drilling II", BuildingType.OilWell, "Oil Wells", 0.5f, 3, 1500f, new ResourceAmount[]
+            {
+                new(ResourceType.Steel, 60f),
+                new(ResourceType.Concrete, 20f),
+                new(ResourceType.ElectricMotor, 10f)
+            },
+            new[]
+            {
+                ResearchProject.BetterDrilling1
+            },
+            0,
+            9)
     };
 
     // A project that unlocks a level: in that level's tier, described by what the level is.
@@ -338,6 +429,21 @@ public static class ResearchDefs
         {
             Tier = def.Tier,
             UnlocksLevel = (type, level)
+        };
+    }
+
+    // A project that speeds up a family at every level; a second step replaces the first's part.
+    private static ResearchDef SpeedProject(string name, BuildingType family, string plural, float bonus, int tier, float work,
+        IReadOnlyList<ResourceAmount> fee, IReadOnlyList<ResearchProject> needs, int column, int row)
+    {
+        string percent = $"{bonus * 100f:0}%";
+        string description = needs.Count == 0
+            ? $"{plural} work {percent} faster, at every level{(family == BuildingType.Smelter ? " and on every recipe" : "")}."
+            : $"{plural} work {percent} faster, at every level{(family == BuildingType.Smelter ? " and on every recipe" : "")}, in place of {name[..^1]}'s 25%.";
+        return new ResearchDef(name, description, work, fee, needs, column, row)
+        {
+            Tier = tier,
+            Speeds = (family, bonus)
         };
     }
 

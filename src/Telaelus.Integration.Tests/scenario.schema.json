@@ -249,7 +249,7 @@
         "comment": { "$ref": "#/definitions/comment" }
       }
     },
-    "research": { "enum": ["MaterialTransfer", "AdvancedMaterialTransfer", "SteelWorks", "Electronics", "Computers", "Cement", "Steelmaking", "ElectricSmelting", "PoweredMining", "PoweredLogging", "PoweredPumping", "SandSifting", "OilRigs", "DeepMining", "AdvancedLogging", "AdvancedPumping", "Dredging", "DeepDrilling", "TileFiring"] },
+    "research": { "enum": ["MaterialTransfer", "AdvancedMaterialTransfer", "SteelWorks", "Electronics", "Computers", "Cement", "Steelmaking", "ElectricSmelting", "PoweredMining", "PoweredLogging", "PoweredPumping", "SandSifting", "OilRigs", "DeepMining", "AdvancedLogging", "AdvancedPumping", "Dredging", "DeepDrilling", "TileFiring", "BetterMining1", "BetterLogging1", "BetterSmelting1", "BetterMining2", "BetterLogging2", "BetterSmelting2", "BetterDrilling1", "BetterDrilling2"] },
     "startResearch": {
       "description": "Start (or resume) a research project, paying its fee the first time; fails if it cannot start.",
       "type": "object",

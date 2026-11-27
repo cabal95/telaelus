@@ -864,13 +864,19 @@ public sealed partial class Simulation
             return;
         }
 
-        HarvestProgress += (float)dt / GatherSeconds(field.Type);
+        HarvestProgress += (float)dt * HandGatherSpeed / GatherSeconds(field.Type);
         if (HarvestProgress >= 1f)
         {
             HarvestProgress = 0f;
             TakeUnit(field);
         }
     }
+
+    /// <summary>
+    /// How much faster the player gathers by hand than a level 1 extractor (whose time per unit is
+    /// the resource's gather time).
+    /// </summary>
+    public const float HandGatherSpeed = 4f / 3f;
 
     private static float GatherSeconds(ResourceType type)
     {
@@ -959,7 +965,7 @@ public sealed partial class Simulation
         }
 
         building.Progress += (float)dt * WorkSpeed(building);
-        float perUnit = GatherSeconds(field.Type) / building.Def.Speed;
+        float perUnit = GatherSeconds(field.Type);
         if (building.Progress < perUnit)
         {
             return;

@@ -8,13 +8,17 @@ public class ExtractorTests
     private const int NearOreZ = 34;
 
     [Fact]
-    public void BaseBuildings_AreSlowerThanThePlayer_AndPoweredOnesFaster()
+    public void ALevel1Extractor_IsTheBase_TheLevelsFaster_AndThePlayerFasterByHand()
     {
-        foreach (BuildingType type in System.Enum.GetValues<BuildingType>())
+        foreach ((BuildingType type, int level) in BuildingDefs.AllLevels())
         {
-            BuildingDef def = BuildingDefs.For(type);
-            Assert.True((def.IsExtractor && def.Draws.ContainsKey(CapacityType.Power) ? 2f : 0.75f) == def.Speed, type.ToString());
+            BuildingDef def = BuildingDefs.For(type, level);
+            if (def.IsExtractor)
+            {
+                Assert.True((level switch { 2 => 1.75f, 3 => 2.15f, _ => 1f }) == def.Speed, def.Name);
+            }
         }
+        Assert.Equal(4f / 3f, Simulation.HandGatherSpeed);
     }
 
     [Fact]
@@ -24,7 +28,7 @@ public class ExtractorTests
         SimTestHelpers.PlaceOnline(sim, BuildingType.Mine, NearOreX, NearOreZ);
         Building mine = Assert.Single(SimTestHelpers.Placed(sim));
 
-        // Iron Ore takes 6 s by hand, so 8 s at speed 0.75.
+        // Iron Ore takes 8 s at a level 1 extractor (6 s by hand, at +33%).
         SimTestHelpers.Seconds(sim, 7.9);
         Assert.Same(SimTestHelpers.FieldAtMapCell(sim, 10, 9), mine.CurrentField);
         Assert.Equal(0f, SimTestHelpers.Gathered(sim, ResourceType.IronOre));

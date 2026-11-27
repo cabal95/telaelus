@@ -56,14 +56,14 @@ public class ResourceTests
     }
 
     [Theory]
-    [InlineData(ResourceType.Limestone, 4.5f, true)]
-    [InlineData(ResourceType.Sulfur, 4.5f, true)]
-    [InlineData(ResourceType.Bauxite, 6f, true)]
-    [InlineData(ResourceType.Quartz, 6f, true)]
-    [InlineData(ResourceType.TitaniumOre, 7.5f, true)]
-    [InlineData(ResourceType.RareEarths, 9f, false)]
-    [InlineData(ResourceType.UraniumOre, 9f, false)]
-    [InlineData(ResourceType.Crystals, 9f, false)]
+    [InlineData(ResourceType.Limestone, 6f, true)]
+    [InlineData(ResourceType.Sulfur, 6f, true)]
+    [InlineData(ResourceType.Bauxite, 8f, true)]
+    [InlineData(ResourceType.Quartz, 8f, true)]
+    [InlineData(ResourceType.TitaniumOre, 10f, true)]
+    [InlineData(ResourceType.RareEarths, 12f, false)]
+    [InlineData(ResourceType.UraniumOre, 12f, false)]
+    [InlineData(ResourceType.Crystals, 12f, false)]
     public void NewDeposits_HaveTheirGatherTimes(ResourceType type, float seconds, bool byHand)
     {
         ResourceDef def = ResourceDefs.For(type);

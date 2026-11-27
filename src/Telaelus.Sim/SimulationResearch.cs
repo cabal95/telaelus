@@ -46,6 +46,21 @@ public sealed partial class Simulation
         return _researched.Contains(project);
     }
 
+    /// <summary>A family's research part and the complete project it comes from (the largest), or null.</summary>
+    public (ResearchProject From, float Bonus)? ResearchBonusOf(BuildingType family)
+    {
+        (ResearchProject From, float Bonus)? best = null;
+        foreach (ResearchProject project in _researched)
+        {
+            if (ResearchDefs.For(project).Speeds is (BuildingType speeds, float bonus) && speeds == family
+                && (best is null || bonus > best.Value.Bonus))
+            {
+                best = (project, bonus);
+            }
+        }
+        return best;
+    }
+
     public ResearchState StateOf(ResearchProject project)
     {
         if (_researched.Contains(project))

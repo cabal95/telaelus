@@ -917,6 +917,27 @@ def icon_network(_rnd):
     return m, mat.mats
 
 
+def icon_speed(_rnd):
+    """A gauge in a light neutral (the UI tints it): a half dial with three ticks, its needle pointing right (fast)."""
+    m, mat = Mesh(), Materials()
+    cu, cv = 0.0, -0.24
+    _ring(m, mat, cu, cv, 0.56, 0.12, 0.0, math.pi, 16)
+    for a in (math.pi / 4, math.pi / 2, 3 * math.pi / 4):
+        ca, sa = math.cos(a), math.sin(a)
+        nu, nv = -sa * 0.035, ca * 0.035
+        _slab(m, mat("icon_mono"), mat("icon_mono", 0.75),
+              [(cu + 0.4 * ca - nu, cv + 0.4 * sa - nv), (cu + 0.5 * ca - nu, cv + 0.5 * sa - nv),
+               (cu + 0.5 * ca + nu, cv + 0.5 * sa + nv), (cu + 0.4 * ca + nu, cv + 0.4 * sa + nv)])
+    a = math.radians(162)  # u runs right to left as the camera sees it, so this points right
+    ca, sa = math.cos(a), math.sin(a)
+    nu, nv = -sa * 0.075, ca * 0.075
+    _slab(m, mat("icon_mono"), mat("icon_mono", 0.75),
+          [(cu - nu, cv - nv), (cu + 0.44 * ca, cv + 0.44 * sa), (cu + nu, cv + nv)])
+    hub = [(cu + 0.11 * math.cos(2 * math.pi * k / 12), cv + 0.11 * math.sin(2 * math.pi * k / 12)) for k in range(12)]
+    _slab(m, mat("icon_mono"), mat("icon_mono", 0.75), hub)
+    return m, mat.mats
+
+
 ICONS = {
     "icon_sun": icon_sun,
     "icon_moon": icon_moon,
@@ -929,6 +950,7 @@ ICONS = {
     "icon_power_switch": icon_power_switch,
     "icon_network": icon_network,
     "icon_check": icon_check,
+    "icon_speed": icon_speed,
 }
 
 

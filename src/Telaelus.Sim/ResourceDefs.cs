@@ -45,27 +45,27 @@ public static class ResourceDefs
 
     private static readonly Dictionary<ResourceType, ResourceDef> Table = new()
     {
-        [ResourceType.Wood] = Deposit("Wood", 3f, ResourceStorage.Bulk(100f, 300f, 200f)) with
+        [ResourceType.Wood] = Deposit("Wood", 4f, ResourceStorage.Bulk(100f, 300f, 200f)) with
         {
             BurnSeconds = 10f
         },
-        [ResourceType.Stone] = Deposit("Stone", 4.5f, ResourceStorage.Bulk(100f, 300f, 200f)),
-        [ResourceType.IronOre] = Deposit("Iron Ore", 6f, ResourceStorage.Bulk(60f, 200f, 120f)),
-        [ResourceType.CopperOre] = Deposit("Copper Ore", 6f, ResourceStorage.Bulk(60f, 200f, 120f)),
-        [ResourceType.Coal] = Deposit("Coal", 4.5f, ResourceStorage.Bulk(60f, 200f, 120f)) with
+        [ResourceType.Stone] = Deposit("Stone", 6f, ResourceStorage.Bulk(100f, 300f, 200f)),
+        [ResourceType.IronOre] = Deposit("Iron Ore", 8f, ResourceStorage.Bulk(60f, 200f, 120f)),
+        [ResourceType.CopperOre] = Deposit("Copper Ore", 8f, ResourceStorage.Bulk(60f, 200f, 120f)),
+        [ResourceType.Coal] = Deposit("Coal", 6f, ResourceStorage.Bulk(60f, 200f, 120f)) with
         {
             BurnSeconds = 40f,
             FuelSpeed = 1.3f
         },
-        [ResourceType.CrudeOil] = Deposit("Crude Oil", 3f, ResourceStorage.Fluid(300f), handHarvestable: false),
-        [ResourceType.Bauxite] = Deposit("Bauxite", 6f, ResourceStorage.Bulk(0f, 150f, 80f)),
-        [ResourceType.Limestone] = Deposit("Limestone", 4.5f, ResourceStorage.Bulk(60f, 200f, 120f)),
-        [ResourceType.Quartz] = Deposit("Quartz", 6f, ResourceStorage.Bulk(0f, 150f, 80f)),
-        [ResourceType.TitaniumOre] = Deposit("Titanium Ore", 7.5f, ResourceStorage.Bulk(0f, 150f, 80f)),
-        [ResourceType.Sulfur] = Deposit("Sulfur", 4.5f, ResourceStorage.Bulk(0f, 150f, 80f)),
-        [ResourceType.RareEarths] = Deposit("Rare Earths", 9f, ResourceStorage.Secure(50f), handHarvestable: false),
-        [ResourceType.UraniumOre] = Deposit("Uranium Ore", 9f, ResourceStorage.Secure(30f), handHarvestable: false),
-        [ResourceType.Crystals] = Deposit("Crystals", 9f, ResourceStorage.Secure(30f), handHarvestable: false),
+        [ResourceType.CrudeOil] = Deposit("Crude Oil", 4f, ResourceStorage.Fluid(300f), handHarvestable: false),
+        [ResourceType.Bauxite] = Deposit("Bauxite", 8f, ResourceStorage.Bulk(0f, 150f, 80f)),
+        [ResourceType.Limestone] = Deposit("Limestone", 6f, ResourceStorage.Bulk(60f, 200f, 120f)),
+        [ResourceType.Quartz] = Deposit("Quartz", 8f, ResourceStorage.Bulk(0f, 150f, 80f)),
+        [ResourceType.TitaniumOre] = Deposit("Titanium Ore", 10f, ResourceStorage.Bulk(0f, 150f, 80f)),
+        [ResourceType.Sulfur] = Deposit("Sulfur", 6f, ResourceStorage.Bulk(0f, 150f, 80f)),
+        [ResourceType.RareEarths] = Deposit("Rare Earths", 12f, ResourceStorage.Secure(50f), handHarvestable: false),
+        [ResourceType.UraniumOre] = Deposit("Uranium Ore", 12f, ResourceStorage.Secure(30f), handHarvestable: false),
+        [ResourceType.Crystals] = Deposit("Crystals", 12f, ResourceStorage.Secure(30f), handHarvestable: false),
         [ResourceType.Sand] = TerrainSourced("Sand", ResourceStorage.Unlimited),
         [ResourceType.Water] = TerrainSourced("Water", ResourceStorage.Unlimited),
         [ResourceType.Lithium] = TerrainSourced("Lithium", ResourceStorage.Bulk(0f, 100f, 50f)),

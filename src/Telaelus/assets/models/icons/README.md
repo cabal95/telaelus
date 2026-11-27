@@ -21,3 +21,4 @@ Every file is required: the game throws if one is missing.
 | Power switch | `power_switch.glb` | The power symbol: a ring broken at the top by a vertical bar, in a light neutral the UI tints | The detail panel's on/off toggle (`Good` on, `TextDim` off) |
 | Check | `check.glb` | A check mark in a light neutral the UI tints | A research tree section's heading once its tier is complete, in `Good` |
 | Network | `network.glb` | A hub mast on a base, a ring around its top and a round cap, in a light neutral the UI tints | The detail panel's Network entry (`Good` online, `Warning` offline) |
+| Speed | `speed.glb` | A gauge: a half dial with three ticks, its needle pointing right (fast) from a round hub, in a light neutral the UI tints | The detail panel's status strip |

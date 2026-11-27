@@ -17,7 +17,8 @@ Parked plans, not approved; see `future/`.
   place; deep levels working the cells around them; research tree back to one screen with tier
   sections; process speed research. Save version (2611261642-save-version), research tree
   sections (2611261650-research-tree-sections), level models (2611261712-level-models), and
-  leveled buildings with deep levels (2611261944-leveled-buildings) done; process speed research remains.
+  leveled buildings with deep levels (2611261944-leveled-buildings), and process speed research
+  (2611262034-process-speed-research) done.
 - **graphics-settings** - A player graphics settings panel: the renderer (Forward+ or Mobile, on
   restart, with a first-launch default by GPU), display mode, render scale with FSR upscaling,
   vsync, and a frame cap, kept in a settings file in the player's data folder.
@@ -309,6 +310,9 @@ Newest last. One line each; open the file for the full spec.
   Well, Smelter, Kiln) merged into leveled types at 4 x 4, each level above 1 unlocked by its own
   research and built directly or upgraded in place; deep levels work the cells around them; the
   Air Separator and Aluminum Smelter dropped; save version 2.
+- **2611262034-process-speed-research** - Eight speed research projects (Better Mining, Logging, Smelting, and Drilling,
+  two steps each, +25% then +50%) and speed as parts added to a 100% level 1 base, scaled by any
+  shortage, shown in the detail panel's Speed entry.
 
 ## Adding a changeset
 

@@ -152,7 +152,8 @@ pausing it and stepping frame by frame.
   no new deposit.
 - `HarvestTests`: edge-based harvest range, one whole unit at the gather time, partial progress
   dropped on release or a new target, and field removal reopening cells.
-- `ExtractorTests`: base speed, one unit per gather time over speed, nearest field, moving on
+- `ExtractorTests`: a level 1 extractor at the 100% base, the levels at 175% and 215%, and the
+  player by hand at 4/3; one unit per gather time over speed, nearest field, moving on
   after depletion, idling, resource type filtering, and two extractors sharing a field.
 - `ProductionTests`: Smelter and Refinery cycles, waiting for inputs, and recipe definitions.
 - `BuildingControlTests`: switching off (an extractor drops its unit in hand; a processor returns
@@ -213,6 +214,12 @@ pausing it and stepping frame by frame.
   nothing above its tier; each tier's gateways built from the tier below; a tier N building making
   tier N items (Lithium excepted, and a level judged by the recipes it adds); each unlock project
   in the tier below the one it unlocks and paid in its own tier.
+- `ProcessSpeedTests`: each speed project's family, part, tier, place, and needs; a level 1 Mine
+  at today's rate and 25% faster after Better Mining I; Better Mining II replacing I (150%, not
+  175%); a Drill Rig with Better Mining I at 200%, gathering 3 units in a little over 12 s; a Deep
+  Mine with Better Mining II at 265% on a field; a brownout scaling the whole sum; a Smelter on
+  Coal with Better Smelting I at 155%; a faster Steel Mill drawing the same Power; a second step
+  locked until its first is done; a save keeping the boost.
 - `LevelTests`: each family's level names, tiers, 4 x 4 footprints, and unlocking projects; the
   Smelter's and Kiln's recipes by level, each level keeping the one below's in order; a level
   above 1 locked with its tier open until its project is done, and still locked while the tier is
@@ -380,7 +387,7 @@ pausing it and stepping frame by frame.
   `button`, `enabled`, `fee`, `time`, and `progress` 0 to 1); while the
   detail panel is open, `building` (its id), `strip` (the status strip in order, each entry's
   `id` (`switch` for the on/off toggle, then `network`, `power`, `water`, `sand`, `charge`,
-  `burning`, `truck`), `value` as shown ("-10", "+35", "53%", "22 s", or null), `tone`
+  `burning`, `speed`, `truck`), `value` as shown ("-10", "+35", "53%", "22 s", or null), `tone`
   (`normal`, `dim`, `good`, `warning`, or `danger`), and `tip`, its tooltip), `state` (the state
   line, "Working" or "Idle: " and the reason, or null) and `stateTone`, `title` (the panel's
   title, the building's level name), `rows` (each shown status
@@ -691,6 +698,9 @@ pausing it and stepping frame by frame.
   showing its 12 open buildings and 7 locked levels and the menu reopening on the tier last viewed; the modal menu stops the world; a hover shows the
   description and then the cost; B, Escape, and Close close it; clicking an unaffordable cell
   selects it with the placement tooltip),
+  `process-speed` (a level 1 Mine with no Speed entry, then "+25%" in green after Better Mining I;
+  a Drill Rig in a blackout at "-100%" in the warning tone, its tooltip naming its level and
+  research parts and the blackout's share; powered, "+100%" in green),
   `building-upgrade` (a Mine's Upgrade to Drill Rig disabled and naming Powered Mining while
   locked, then marking the short amounts, then enabled; pressing it pays the difference, keeps the
   id and anchor, makes a level 2 Drill Rig whose panel title and picture follow, offers Upgrade to

@@ -142,18 +142,41 @@ public sealed partial class Simulation
         return (banks.Sum(b => b.Charge), banks.Sum(b => b.Def.StoreCapacity), seconds > 0f ? moved / seconds : 0f);
     }
 
-    /// <summary>
-    /// How fast a building works this tick: the slowest speed of the types it draws (1 for none), 0
-    /// offline, times its <see cref="FuelSpeed"/>.
-    /// </summary>
+    /// <summary>How fast a building works this tick: its <see cref="SpeedPartsOf"/> total.</summary>
     public float WorkSpeed(Building building)
     {
-        float speed = 1f;
+        return SpeedPartsOf(building).Total;
+    }
+
+    /// <summary>
+    /// What a building's speed is made of: its level's part (an extractor working a field), its
+    /// family's research part, and its fuel's part, added to the 100% base, then the shortage (the
+    /// slowest speed of the types it draws, 0 offline) multiplying the sum.
+    /// </summary>
+    public SpeedParts SpeedPartsOf(Building building)
+    {
+        float shortage = 1f;
+        CapacityType? shortOf = null;
         foreach (CapacityType type in building.Def.Draws.Keys)
         {
-            speed = Math.Min(speed, building.Online ? Capacity(type).Speed : 0f);
+            float speed = building.Online ? Capacity(type).Speed : 0f;
+            if (speed < shortage)
+            {
+                shortage = speed;
+                shortOf = type;
+            }
         }
-        return speed * FuelSpeed(building);
+        float level = building.Def.IsExtractor && building.CurrentField is not null ? building.Def.Speed - BuildingDef.BaseSpeed : 0f;
+        (ResearchProject From, float Bonus)? research = ResearchBonusOf(building.Type);
+        float fuel = FuelSpeed(building) - 1f;
+        return new SpeedParts(
+            level,
+            research?.Bonus ?? 0f,
+            research?.From,
+            fuel,
+            fuel != 0f ? building.Burning : null,
+            shortage,
+            shortOf);
     }
 
     /// <summary>
@@ -260,4 +283,20 @@ public sealed partial class Simulation
         building.FuelChoice = choice;
         return best;
     }
+}
+
+/// <summary>
+/// A building's speed in parts: <see cref="Level"/>, <see cref="Research"/>, and <see cref="Fuel"/>
+/// added to the 100% base, then <see cref="Shortage"/> (1 with none) multiplying the sum.
+/// </summary>
+public readonly record struct SpeedParts(
+    float Level,
+    float Research,
+    ResearchProject? ResearchFrom,
+    float Fuel,
+    ResourceType? FuelFrom,
+    float Shortage,
+    CapacityType? ShortOf)
+{
+    public float Total => (1f + Level + Research + Fuel) * Shortage;
 }
