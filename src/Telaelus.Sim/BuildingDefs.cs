@@ -119,11 +119,18 @@ public sealed record BuildingDef(
     /// <summary>How many trucks it holds (a Depot); its first comes with it.</summary>
     public int TruckSlots { get; init; }
 
-    /// <summary>Seconds per unit for a collector with no field (the Quarry; the Deep Well and Deep Mine on a worked-out cell).</summary>
+    /// <summary>Seconds per unit for a collector with no field (the Quarry; a deep level on a worked-out cell or motherlode).</summary>
     public float ProduceSeconds { get; init; }
 
-    /// <summary>The worked-out deposits an <see cref="Placement.OverSite"/> building may stand over.</summary>
-    public IReadOnlyList<ResourceType> Sites { get; init; } = Array.Empty<ResourceType>();
+    /// <summary>
+    /// A deep level's worked-out deposits (the Deep Mine, the Deep Well): with no live field in range, it
+    /// works a worked-out cell of one of these, or a motherlode it works, beside it (see
+    /// Simulation.DeepSiteAround), one unit every <see cref="ProduceSeconds"/>.
+    /// </summary>
+    public IReadOnlyList<ResourceType> DeepSites { get; init; } = Array.Empty<ResourceType>();
+
+    /// <summary>A deep level: an extractor that falls back to the worked-out cells and motherlodes around it.</summary>
+    public bool IsDeep => IsExtractor && ProduceSeconds > 0f;
 
     /// <summary>What a provider eats from storage while it runs: one unit of the type every so many seconds (the Rock Crusher).</summary>
     public (ResourceType Type, float Seconds)? Eats { get; init; }
@@ -154,7 +161,8 @@ public sealed record BuildingDef(
 /// <summary>The definition table for every building type.</summary>
 public static class BuildingDefs
 {
-    private static readonly BuildingDef Mine = new("Mine", 2, 2, new ResourceAmount[]
+    // The Mine family: Mine, Drill Rig, Deep Mine.
+    private static readonly BuildingDef Mine = new("Mine", 4, 4, new ResourceAmount[]
     {
         new(ResourceType.Wood, 25f),
         new(ResourceType.Stone, 15f)
@@ -173,9 +181,10 @@ public static class BuildingDefs
     {
         OutputBuffer = 20f
     };
-    private static readonly BuildingDef LumberCamp = new("Lumber Camp", 2, 2, new ResourceAmount[]
+    // The Lumber Camp family: Lumber Camp, Lumber Mill, Advanced Lumber Mill.
+    private static readonly BuildingDef LumberCamp = new("Lumber Camp", 4, 4, new ResourceAmount[]
     {
-        new(ResourceType.Wood, 15f)
+        new(ResourceType.Wood, 10f)
     }, new[]
     {
         ResourceType.Wood
@@ -183,7 +192,8 @@ public static class BuildingDefs
     {
         OutputBuffer = 20f
     };
-    private static readonly BuildingDef OilWell = new("Oil Well", 2, 2, new ResourceAmount[]
+    // The Oil Well family: Oil Well, Oil Rig, Deep Well.
+    private static readonly BuildingDef OilWell = new("Oil Well", 4, 4, new ResourceAmount[]
     {
         new(ResourceType.Iron, 25f),
         new(ResourceType.Stone, 20f),
@@ -196,7 +206,28 @@ public static class BuildingDefs
         Tier = 2,
         OutputBuffer = 20f
     };
-    private static readonly BuildingDef Smelter = new("Smelter", 3, 3, new ResourceAmount[]
+
+    private static readonly BuildingDef OilRig = new("Oil Rig", 4, 4, new ResourceAmount[]
+    {
+        new(ResourceType.Iron, 25f),
+        new(ResourceType.Stone, 20f),
+        new(ResourceType.Wood, 10f),
+        new(ResourceType.Steel, 30f)
+    }, new[]
+    {
+        ResourceType.CrudeOil
+    }, 3f)
+    {
+        Tier = 2,
+        Speed = 1.3f,
+        OutputBuffer = 20f,
+        Draws = new Dictionary<CapacityType, float>
+        {
+            [CapacityType.Power] = 10f
+        }
+    };
+    // The Smelter family: Smelter, Steel Mill, Electric Smelter.
+    private static readonly BuildingDef Smelter = new("Smelter", 4, 4, new ResourceAmount[]
     {
         new(ResourceType.Stone, 40f),
         new(ResourceType.Wood, 15f)
@@ -333,7 +364,7 @@ public static class BuildingDefs
         },
         BurnsFuel = true
     };
-    private static readonly BuildingDef LumberMill = new("Lumber Mill", 3, 3, new ResourceAmount[]
+    private static readonly BuildingDef LumberMill = new("Lumber Mill", 4, 4, new ResourceAmount[]
     {
         new(ResourceType.Wood, 30f),
         new(ResourceType.Iron, 20f)
@@ -343,17 +374,37 @@ public static class BuildingDefs
     }, 8f)
     {
         Tier = 2,
-        Speed = 2f,
+        Speed = 1.3f,
         OutputBuffer = 40f,
         Draws = new Dictionary<CapacityType, float>
         {
             [CapacityType.Power] = 5f
         }
     };
-    private static readonly BuildingDef DrillRig = new("Drill Rig", 3, 3, new ResourceAmount[]
+
+    private static readonly BuildingDef AdvancedLumberMill = new("Advanced Lumber Mill", 4, 4, new ResourceAmount[]
     {
-        new(ResourceType.Iron, 30f),
-        new(ResourceType.Stone, 20f)
+        new(ResourceType.Wood, 40f),
+        new(ResourceType.Iron, 20f),
+        new(ResourceType.Steel, 30f)
+    }, new[]
+    {
+        ResourceType.Wood
+    }, 8f)
+    {
+        Tier = 3,
+        Speed = 1.6f,
+        OutputBuffer = 40f,
+        Draws = new Dictionary<CapacityType, float>
+        {
+            [CapacityType.Power] = 10f
+        }
+    };
+    private static readonly BuildingDef DrillRig = new("Drill Rig", 4, 4, new ResourceAmount[]
+    {
+        new(ResourceType.Wood, 25f),
+        new(ResourceType.Stone, 20f),
+        new(ResourceType.Iron, 30f)
     }, new[]
     {
         ResourceType.IronOre,
@@ -371,7 +422,7 @@ public static class BuildingDefs
     }, 8f)
     {
         Tier = 2,
-        Speed = 2f,
+        Speed = 1.3f,
         OutputBuffer = 40f,
         Draws = new Dictionary<CapacityType, float>
         {
@@ -379,7 +430,8 @@ public static class BuildingDefs
         }
     };
 
-    private static readonly BuildingDef WaterPump = new("Water Pump", 2, 2, new ResourceAmount[]
+    // The Water Pump family: Water Pump, Pumping Station, Advanced Pumping Station.
+    private static readonly BuildingDef WaterPump = new("Water Pump", 4, 4, new ResourceAmount[]
     {
         new(ResourceType.Wood, 20f),
         new(ResourceType.Stone, 10f)
@@ -391,25 +443,48 @@ public static class BuildingDefs
         },
         Placement = Placement.BesideWater
     };
-    private static readonly BuildingDef PumpingStation = new("Pumping Station", 3, 3, new ResourceAmount[]
+    private static readonly BuildingDef PumpingStation = new("Pumping Station", 4, 4, new ResourceAmount[]
     {
+        new(ResourceType.Wood, 20f),
+        new(ResourceType.Stone, 20f),
         new(ResourceType.Iron, 30f),
-        new(ResourceType.Steel, 10f),
-        new(ResourceType.Stone, 20f)
+        new(ResourceType.Steel, 10f)
     }, Array.Empty<ResourceType>(), 0f)
     {
         Tier = 2,
         Supplies = new Dictionary<CapacityType, float>
         {
+            [CapacityType.Water] = 10f
+        },
+        Placement = Placement.BesideWater,
+        Draws = new Dictionary<CapacityType, float>
+        {
+            [CapacityType.Power] = 5f
+        }
+    };
+
+    private static readonly BuildingDef AdvancedPumpingStation = new("Advanced Pumping Station", 4, 4, new ResourceAmount[]
+    {
+        new(ResourceType.Wood, 20f),
+        new(ResourceType.Stone, 20f),
+        new(ResourceType.Iron, 30f),
+        new(ResourceType.Steel, 40f),
+        new(ResourceType.Concrete, 20f)
+    }, Array.Empty<ResourceType>(), 0f)
+    {
+        Tier = 3,
+        Supplies = new Dictionary<CapacityType, float>
+        {
             [CapacityType.Water] = 16f
         },
+        Placement = Placement.BesideWater,
         Draws = new Dictionary<CapacityType, float>
         {
             [CapacityType.Power] = 10f
-        },
-        Placement = Placement.BesideWater
+        }
     };
-    private static readonly BuildingDef SandCollector = new("Sand Collector", 2, 2, new ResourceAmount[]
+    // The Sand Collector family: Sand Collector, Sand Sifter, Sand Dredge.
+    private static readonly BuildingDef SandCollector = new("Sand Collector", 4, 4, new ResourceAmount[]
     {
         new(ResourceType.Wood, 20f),
         new(ResourceType.Stone, 10f)
@@ -421,23 +496,45 @@ public static class BuildingDefs
         },
         Placement = Placement.OnSand
     };
-    private static readonly BuildingDef SandDredge = new("Sand Dredge", 3, 3, new ResourceAmount[]
+
+    private static readonly BuildingDef SandSifter = new("Sand Sifter", 4, 4, new ResourceAmount[]
     {
-        new(ResourceType.Iron, 30f),
-        new(ResourceType.Steel, 10f),
-        new(ResourceType.Stone, 20f)
+        new(ResourceType.Wood, 20f),
+        new(ResourceType.Stone, 10f),
+        new(ResourceType.Iron, 20f),
+        new(ResourceType.Steel, 10f)
     }, Array.Empty<ResourceType>(), 0f)
     {
         Tier = 2,
         Supplies = new Dictionary<CapacityType, float>
         {
+            [CapacityType.Sand] = 4f
+        },
+        Placement = Placement.OnSand,
+        Draws = new Dictionary<CapacityType, float>
+        {
+            [CapacityType.Power] = 5f
+        }
+    };
+    private static readonly BuildingDef SandDredge = new("Sand Dredge", 4, 4, new ResourceAmount[]
+    {
+        new(ResourceType.Wood, 20f),
+        new(ResourceType.Stone, 10f),
+        new(ResourceType.Iron, 20f),
+        new(ResourceType.Steel, 40f),
+        new(ResourceType.Concrete, 20f)
+    }, Array.Empty<ResourceType>(), 0f)
+    {
+        Tier = 3,
+        Supplies = new Dictionary<CapacityType, float>
+        {
             [CapacityType.Sand] = 8f
         },
+        Placement = Placement.OnSand,
         Draws = new Dictionary<CapacityType, float>
         {
             [CapacityType.Power] = 10f
-        },
-        Placement = Placement.OnSand
+        }
     };
 
     private static readonly BuildingDef Depot = new("Depot", 4, 4, new ResourceAmount[]
@@ -479,13 +576,14 @@ public static class BuildingDefs
         ProduceSeconds = 6f,
         OutputBuffer = 40f
     };
-    private static readonly BuildingDef CharcoalKiln = new("Charcoal Kiln", 2, 2, new ResourceAmount[]
+    // The Kiln family: Charcoal Kiln, Cement Kiln, Tile Kiln.
+    private static readonly BuildingDef CharcoalKiln = new("Charcoal Kiln", 4, 4, new ResourceAmount[]
     {
         new(ResourceType.Stone, 30f),
         new(ResourceType.Wood, 10f)
     }, Array.Empty<ResourceType>(), 0f)
     {
-        OutputBuffer = 10f,
+        OutputBuffer = 10f
     };
     private static readonly BuildingDef RockCrusher = new("Rock Crusher", 3, 3, new ResourceAmount[]
     {
@@ -507,13 +605,19 @@ public static class BuildingDefs
     };
     private static readonly BuildingDef DeepWell = new("Deep Well", 4, 4, new ResourceAmount[]
     {
-        new(ResourceType.Steel, 40f),
-        new(ResourceType.Stone, 30f)
-    }, Array.Empty<ResourceType>(), 0f)
+        new(ResourceType.Iron, 25f),
+        new(ResourceType.Stone, 20f),
+        new(ResourceType.Wood, 10f),
+        new(ResourceType.Steel, 50f),
+        new(ResourceType.Concrete, 30f)
+    }, new[]
     {
-        Tier = 2,
-        Placement = Placement.OverSite,
-        Sites = new[]
+        ResourceType.CrudeOil
+    }, 3f)
+    {
+        Tier = 3,
+        Speed = 1.6f,
+        DeepSites = new[]
         {
             ResourceType.CrudeOil
         },
@@ -526,13 +630,30 @@ public static class BuildingDefs
     };
     private static readonly BuildingDef DeepMine = new("Deep Mine", 4, 4, new ResourceAmount[]
     {
+        new(ResourceType.Wood, 25f),
+        new(ResourceType.Stone, 20f),
+        new(ResourceType.Iron, 30f),
         new(ResourceType.Steel, 60f),
         new(ResourceType.Concrete, 30f)
-    }, Array.Empty<ResourceType>(), 0f)
+    }, new[]
+    {
+        ResourceType.IronOre,
+        ResourceType.CopperOre,
+        ResourceType.Coal,
+        ResourceType.Stone,
+        ResourceType.Bauxite,
+        ResourceType.Quartz,
+        ResourceType.Limestone,
+        ResourceType.Sulfur,
+        ResourceType.TitaniumOre,
+        ResourceType.RareEarths,
+        ResourceType.UraniumOre,
+        ResourceType.Crystals
+    }, 8f)
     {
         Tier = 3,
-        Placement = Placement.OverSite,
-        Sites = new[]
+        Speed = 1.6f,
+        DeepSites = new[]
         {
             ResourceType.IronOre,
             ResourceType.CopperOre,
@@ -549,9 +670,10 @@ public static class BuildingDefs
         OutputBuffer = 40f
     };
 
-    private static readonly BuildingDef SteelMill = new("Steel Mill", 4, 6, new ResourceAmount[]
+    private static readonly BuildingDef SteelMill = new("Steel Mill", 4, 4, new ResourceAmount[]
     {
         new(ResourceType.Stone, 60f),
+        new(ResourceType.Wood, 15f),
         new(ResourceType.Iron, 40f)
     }, Array.Empty<ResourceType>(), 0f)
     {
@@ -603,21 +725,11 @@ public static class BuildingDefs
             [CapacityType.Water] = 2f
         }
     };
-    private static readonly BuildingDef AluminumSmelter = new("Aluminum Smelter", 3, 8, new ResourceAmount[]
+    private static readonly BuildingDef ElectricSmelter = new("Electric Smelter", 4, 4, new ResourceAmount[]
     {
-        new(ResourceType.Steel, 50f),
-        new(ResourceType.Stone, 30f)
-    }, Array.Empty<ResourceType>(), 0f)
-    {
-        Tier = 2,
-        OutputBuffer = 10f,
-        Draws = new Dictionary<CapacityType, float>
-        {
-            [CapacityType.Power] = 60f
-        }
-    };
-    private static readonly BuildingDef ElectricFurnace = new("Electric Furnace", 4, 4, new ResourceAmount[]
-    {
+        new(ResourceType.Stone, 60f),
+        new(ResourceType.Wood, 15f),
+        new(ResourceType.Iron, 40f),
         new(ResourceType.Steel, 50f),
         new(ResourceType.Copper, 20f)
     }, Array.Empty<ResourceType>(), 0f)
@@ -626,7 +738,7 @@ public static class BuildingDefs
         OutputBuffer = 10f,
         Draws = new Dictionary<CapacityType, float>
         {
-            [CapacityType.Power] = 40f
+            [CapacityType.Power] = 60f
         }
     };
 
@@ -658,9 +770,12 @@ public static class BuildingDefs
             [CapacityType.Water] = 2f
         }
     };
-    private static readonly BuildingDef TileKiln = new("Tile Kiln", 3, 7, new ResourceAmount[]
+    private static readonly BuildingDef TileKiln = new("Tile Kiln", 4, 4, new ResourceAmount[]
     {
         new(ResourceType.Stone, 40f),
+        new(ResourceType.Wood, 10f),
+        new(ResourceType.Iron, 20f),
+        new(ResourceType.Lumber, 20f),
         new(ResourceType.Steel, 20f)
     }, Array.Empty<ResourceType>(), 0f)
     {
@@ -708,9 +823,10 @@ public static class BuildingDefs
     {
         OutputBuffer = 10f,
     };
-    private static readonly BuildingDef CementKiln = new("Cement Kiln", 3, 7, new ResourceAmount[]
+    private static readonly BuildingDef CementKiln = new("Cement Kiln", 4, 4, new ResourceAmount[]
     {
         new(ResourceType.Stone, 40f),
+        new(ResourceType.Wood, 10f),
         new(ResourceType.Iron, 20f),
         new(ResourceType.Lumber, 20f)
     }, Array.Empty<ResourceType>(), 0f)
@@ -761,20 +877,6 @@ public static class BuildingDefs
         {
             [CapacityType.Power] = 40f,
             [CapacityType.Water] = 4f
-        }
-    };
-    private static readonly BuildingDef AirSeparator = new("Air Separator", 4, 5, new ResourceAmount[]
-    {
-        new(ResourceType.Steel, 30f),
-        new(ResourceType.Concrete, 20f),
-        new(ResourceType.ElectricMotor, 6f)
-    }, Array.Empty<ResourceType>(), 0f)
-    {
-        Tier = 3,
-        OutputBuffer = 10f,
-        Draws = new Dictionary<CapacityType, float>
-        {
-            [CapacityType.Power] = 40f
         }
     };
     private static readonly BuildingDef EnrichmentPlant = new("Enrichment Plant", 6, 7, new ResourceAmount[]
@@ -878,37 +980,25 @@ public static class BuildingDefs
         [BuildingType.Relay] = "Links far-off hubs back to the HQ's network over a long distance.",
         [BuildingType.WaterWheel] = "Makes Power with no fuel; build it across a straight river.",
         [BuildingType.BurnerGenerator] = "Makes lots of Power by burning Coal, Charcoal, or Wood.",
-        [BuildingType.LumberMill] = "A faster, powered Lumber Camp: cuts nearby Wood; needs Power.",
-        [BuildingType.DrillRig] = "Powered Mine: digs ores plus Rare Earths, Uranium Ore, Crystals.",
         [BuildingType.WaterPump] = "Supplies a little Water; build it beside water.",
-        [BuildingType.PumpingStation] = "Supplies four Pumps' worth of Water beside water; needs Power.",
         [BuildingType.SandCollector] = "Supplies a little Sand; build it on sand.",
-        [BuildingType.SandDredge] = "Supplies four Collectors' worth of Sand on sand; needs Power.",
         [BuildingType.Glassworks] = "Makes Glass from Sand; burns fuel.",
         [BuildingType.Depot] = "Its trucks haul resources from collectors back to the HQ.",
         [BuildingType.Forester] = "Plants a Wood field that regrows on open grass; needs Power, Water.",
         [BuildingType.Quarry] = "Cuts Stone (or Limestone) beside a mountain; needs Power.",
-        [BuildingType.CharcoalKiln] = "Turns Wood into Charcoal for fuel and steelmaking.",
+        [BuildingType.Kiln] = "Turns Wood into Charcoal for fuel and steelmaking.",
         [BuildingType.RockCrusher] = "Supplies Sand anywhere by crushing Stone; needs Power.",
-        [BuildingType.DeepWell] = "Pumps Crude Oil from a worked-out oil site or Salt Dome; needs Power.",
-        [BuildingType.DeepMine] = "Keeps mining a worked-out ore site or a motherlode; needs Power.",
-        [BuildingType.SteelMill] = "Makes Steel from Iron, Coal or Charcoal, and Limestone; needs Power.",
         [BuildingType.Electrolyzer] = "Makes Hydrogen or Liquid Oxygen from Water; needs Power.",
         [BuildingType.FuelPlant] = "Makes Rocket Fuel from Kerosene and Hydrogen; needs Power.",
         [BuildingType.ChemicalPlant] = "Makes Plastic, Rubber, and more from Crude Oil and Sulfur; needs Power.",
-        [BuildingType.AluminumSmelter] = "Makes Aluminum from Bauxite; needs lots of Power.",
-        [BuildingType.ElectricFurnace] = "Makes Silicon from Quartz or Titanium from Titanium Ore; needs Power.",
         [BuildingType.Fabricator] = "Makes parts such as Hull Plate and Steel Beam from metals; needs Power.",
         [BuildingType.ElectronicsWorks] = "Makes Copper Wire and Circuits from Copper and Plastic; needs Power.",
-        [BuildingType.TileKiln] = "Fires Silicon and Aluminum into Ceramic Tile; needs Power.",
         [BuildingType.AssemblyPlant] = "Assembles advanced parts such as Control Module and Fuel Tank.",
         [BuildingType.Shipyard] = "Builds Hull Sections and Engines, and launches your ship.",
         [BuildingType.Sawmill] = "Saws Wood into Lumber.",
-        [BuildingType.CementKiln] = "Bakes Limestone into Cement; burns fuel.",
         [BuildingType.ConcreteMixer] = "Mixes Cement into Concrete; needs Power, Sand, and Water.",
         [BuildingType.BrineWell] = "Draws Lithium from desert salt flats; needs Power and Water.",
         [BuildingType.SemiconductorFab] = "Makes Silicon Wafers, Processors, and Solar Cells; needs Power.",
-        [BuildingType.AirSeparator] = "Makes Liquid Oxygen from the air; needs Power.",
         [BuildingType.EnrichmentPlant] = "Turns Uranium Ore into Enriched Uranium and Fuel Rods; needs Power.",
         [BuildingType.SolarArray] = "Makes Power from sunlight, none at night; no fuel.",
         [BuildingType.BatteryBank] = "Stores spare Power and gives it back during shortages.",
@@ -916,10 +1006,69 @@ public static class BuildingDefs
         [BuildingType.ResearchLab] = "Speeds up research; each extra lab adds more. Needs Power."
     };
 
-    /// <summary>A building's one-line description, or "" for one that cannot be built (the HQ).</summary>
-    public static string DescriptionOf(BuildingType type)
+    /// <summary>The descriptions of the leveled families' higher levels (level 1's is in <see cref="Descriptions"/>).</summary>
+    private static readonly Dictionary<(BuildingType Type, int Level), string> LevelDescriptions = new()
     {
-        return Descriptions.GetValueOrDefault(type, "");
+        [(BuildingType.Mine, 2)] = "Powered Mine: digs ores plus Rare Earths, Uranium Ore, Crystals.",
+        [(BuildingType.Mine, 3)] = "Mines on past worked-out ore and motherlodes beside it; needs Power.",
+        [(BuildingType.LumberCamp, 2)] = "A faster, powered Lumber Camp: cuts nearby Wood; needs Power.",
+        [(BuildingType.LumberCamp, 3)] = "The fastest Lumber Camp: cuts nearby Wood; needs Power.",
+        [(BuildingType.WaterPump, 2)] = "Supplies more Water beside water; needs Power.",
+        [(BuildingType.WaterPump, 3)] = "Supplies four Pumps' worth of Water beside water; needs Power.",
+        [(BuildingType.SandCollector, 2)] = "Supplies two Collectors' worth of Sand on sand; needs Power.",
+        [(BuildingType.SandCollector, 3)] = "Supplies four Collectors' worth of Sand on sand; needs Power.",
+        [(BuildingType.OilWell, 2)] = "A faster, powered Oil Well: pumps Crude Oil from a seep.",
+        [(BuildingType.OilWell, 3)] = "Pumps on past worked-out oil and Salt Domes beside it; needs Power.",
+        [(BuildingType.Smelter, 2)] = "Smelts Iron and Copper, and makes Steel; runs on Power.",
+        [(BuildingType.Smelter, 3)] = "Adds Aluminum, Silicon, and Titanium; needs lots of Power.",
+        [(BuildingType.Kiln, 2)] = "Adds Cement from Limestone; burns fuel.",
+        [(BuildingType.Kiln, 3)] = "Adds Ceramic Tile from Silicon and Aluminum; runs on Power."
+    };
+
+    /// <summary>A building's one-line description at a level, or "" for one that cannot be built (the HQ).</summary>
+    public static string DescriptionOf(BuildingType type, int level = 1)
+    {
+        return level > 1 ? LevelDescriptions.GetValueOrDefault((type, level), "") : Descriptions.GetValueOrDefault(type, "");
+    }
+
+    /// <summary>The leveled families' definitions by level, level 1 first.</summary>
+    private static readonly Dictionary<BuildingType, BuildingDef[]> LevelTable = new()
+    {
+        [BuildingType.Mine] = new[] { Mine, DrillRig, DeepMine },
+        [BuildingType.LumberCamp] = new[] { LumberCamp, LumberMill, AdvancedLumberMill },
+        [BuildingType.WaterPump] = new[] { WaterPump, PumpingStation, AdvancedPumpingStation },
+        [BuildingType.SandCollector] = new[] { SandCollector, SandSifter, SandDredge },
+        [BuildingType.OilWell] = new[] { OilWell, OilRig, DeepWell },
+        [BuildingType.Smelter] = new[] { Smelter, SteelMill, ElectricSmelter },
+        [BuildingType.Kiln] = new[] { CharcoalKiln, CementKiln, TileKiln }
+    };
+
+    /// <summary>How many levels a type has: 3 for a leveled family, 1 for every other building.</summary>
+    public static int Levels(BuildingType type)
+    {
+        return LevelTable.TryGetValue(type, out BuildingDef[]? levels) ? levels.Length : 1;
+    }
+
+    /// <summary>A type's definition at a level (1 to <see cref="Levels"/>); level 1 is <see cref="For(BuildingType)"/>.</summary>
+    public static BuildingDef For(BuildingType type, int level)
+    {
+        if (level < 1 || level > Levels(type))
+        {
+            throw new ArgumentOutOfRangeException(nameof(level), level, $"{type} has levels 1 to {Levels(type)}");
+        }
+        return LevelTable.TryGetValue(type, out BuildingDef[]? levels) ? levels[level - 1] : For(type);
+    }
+
+    /// <summary>Every buildable type and level, level by level within a type, in enum order.</summary>
+    public static IEnumerable<(BuildingType Type, int Level)> AllLevels()
+    {
+        foreach (BuildingType type in Enum.GetValues<BuildingType>())
+        {
+            for (int level = 1; level <= Levels(type); level++)
+            {
+                yield return (type, level);
+            }
+        }
     }
 
     public static BuildingDef For(BuildingType type)
@@ -941,37 +1090,25 @@ public static class BuildingDefs
             BuildingType.Relay => Relay,
             BuildingType.WaterWheel => WaterWheel,
             BuildingType.BurnerGenerator => BurnerGenerator,
-            BuildingType.LumberMill => LumberMill,
-            BuildingType.DrillRig => DrillRig,
             BuildingType.WaterPump => WaterPump,
-            BuildingType.PumpingStation => PumpingStation,
             BuildingType.SandCollector => SandCollector,
-            BuildingType.SandDredge => SandDredge,
             BuildingType.Glassworks => Glassworks,
             BuildingType.Depot => Depot,
             BuildingType.Forester => Forester,
             BuildingType.Quarry => Quarry,
-            BuildingType.CharcoalKiln => CharcoalKiln,
+            BuildingType.Kiln => CharcoalKiln,
             BuildingType.RockCrusher => RockCrusher,
-            BuildingType.DeepWell => DeepWell,
-            BuildingType.DeepMine => DeepMine,
-            BuildingType.SteelMill => SteelMill,
             BuildingType.Electrolyzer => Electrolyzer,
             BuildingType.FuelPlant => FuelPlant,
             BuildingType.ChemicalPlant => ChemicalPlant,
-            BuildingType.AluminumSmelter => AluminumSmelter,
-            BuildingType.ElectricFurnace => ElectricFurnace,
             BuildingType.Fabricator => Fabricator,
             BuildingType.ElectronicsWorks => ElectronicsWorks,
-            BuildingType.TileKiln => TileKiln,
             BuildingType.AssemblyPlant => AssemblyPlant,
             BuildingType.Shipyard => Shipyard,
             BuildingType.Sawmill => Sawmill,
-            BuildingType.CementKiln => CementKiln,
             BuildingType.ConcreteMixer => ConcreteMixer,
             BuildingType.BrineWell => BrineWell,
             BuildingType.SemiconductorFab => SemiconductorFab,
-            BuildingType.AirSeparator => AirSeparator,
             BuildingType.EnrichmentPlant => EnrichmentPlant,
             BuildingType.SolarArray => SolarArray,
             BuildingType.BatteryBank => BatteryBank,

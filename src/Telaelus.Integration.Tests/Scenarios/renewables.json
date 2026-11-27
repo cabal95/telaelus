@@ -1,7 +1,7 @@
 {
   "$schema": "../scenario.schema.json",
   "name": "renewables",
-  "description": "Renewables beside the HQ: a Forester on Water and Power grows its trees (they rise as they grow) and a Lumber Camp cuts them once grown; a Quarry beside a mountain yields Stone; a Deep Mine on a Laterite motherlode yields its chosen resource and its panel shows the site and the Output picker; a worked-out Crude Oil cell shows its marker and names it on hover; a Rock Crusher supplies Sand from Stone.",
+  "description": "Renewables beside the HQ: a Forester on Water and Power grows its trees (they rise as they grow) and a Lumber Camp cuts them once grown; a Quarry beside a mountain yields Stone; a Deep Mine beside a Laterite motherlode yields its chosen resource and its panel shows the site and the Output picker; a worked-out Crude Oil cell shows its marker and names it on hover; a Rock Crusher supplies Sand from Stone.",
   "steps": [
     { "newGame": {} },
     { "initMap": {} },
@@ -9,12 +9,12 @@
     { "seedStockpile": { "type": "Stone", "amount": 20 } },
     { "comment": "Power and Water: a Burner Generator, and two Water Pumps on the pond at map cell (13, 4).", "placeBuilding": { "type": "BurnerGenerator", "anchor": [52, 8] } },
     { "changeTiles": { "type": "ShallowWater", "cells": [[13, 4]] } },
-    { "placeBuilding": { "type": "WaterPump", "anchor": [52, 14] } },
-    { "placeBuilding": { "type": "WaterPump", "anchor": [54, 14] } },
+    { "placeBuilding": { "type": "WaterPump", "anchor": [52, 12] } },
+    { "placeBuilding": { "type": "WaterPump", "anchor": [56, 16] } },
     { "teleportPlayer": { "x": 42, "z": 22 } },
 
     { "comment": "The Forester's plot is map cell (12, 3); a Lumber Camp stands beside it.", "placeBuilding": { "type": "Forester", "anchor": [48, 12] } },
-    { "placeBuilding": { "type": "LumberCamp", "anchor": [45, 15] } },
+    { "placeBuilding": { "type": "LumberCamp", "anchor": [44, 16] } },
     { "wait": 2 },
     { "expect": "fields[0].growing", "equals": true },
     { "expect": "buildings[4].online", "equals": true },
@@ -23,11 +23,11 @@
 
     { "comment": "A mountain at map cell (11, 2) and a Quarry beside it.", "changeTiles": { "feature": "Mountain", "cells": [[11, 2]] } },
     { "placeBuilding": { "type": "Quarry", "anchor": [48, 8] } },
-    { "comment": "A Laterite at map cells (9..10, 1..2) and a Deep Mine on its center; a Small Hub brings it online.", "placeMotherlode": { "kind": "Laterite", "mapCell": [9, 1] } },
-    { "placeBuilding": { "type": "DeepMine", "anchor": [38, 6] } },
+    { "comment": "A Laterite at map cells (9..10, 1..2) and a Deep Mine beside it to the east; a Small Hub brings it online.", "placeMotherlode": { "kind": "Laterite", "mapCell": [9, 1] } },
+    { "placeBuilding": { "type": "Mine", "anchor": [44, 4], "level": 3 } },
     { "placeBuilding": { "type": "SmallHub", "anchor": [45, 13] } },
     { "setWorkedOut": { "mapCell": [8, 5], "deposit": "CrudeOil" } },
-    { "placeBuilding": { "type": "RockCrusher", "anchor": [56, 14] } },
+    { "placeBuilding": { "type": "RockCrusher", "anchor": [48, 16] } },
     { "comment": "A second Burner Generator: the Forester, Quarry, Deep Mine, and Rock Crusher draw 57 Power.", "placeBuilding": { "type": "BurnerGenerator", "anchor": [52, 0] } },
     { "wait": 2700 },
     { "comment": "Half grown at 90 s.", "expect": "fields[0].growing", "equals": true },
@@ -44,7 +44,7 @@
     { "expect": "fields[1].motherlode", "equals": "Laterite" },
     { "screenshot": "grown" },
 
-    { "aimAt": { "world": [40, 8] } },
+    { "aimAt": { "world": [46, 6] } },
     { "wait": 1 },
     { "click": {} },
     { "wait": 2 },

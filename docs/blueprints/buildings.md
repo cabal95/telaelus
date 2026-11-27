@@ -10,19 +10,16 @@ ship from a Shipyard, which closes the on-planet loop.
 
 ### Building types and definitions
 
-- `BuildingType` has fifty-one values: **Mine**, **Lumber Camp**, **Smelter**, **Refinery**,
-  **Oil Well**, the **HQ**, the storage buildings **Silo**, **Stockyard**, **Tank Farm**,
-  **Warehouse**, and **Vault**, the hubs **Small Hub** and **Relay**, the generators **Water
-  Wheel** and **Burner Generator**, the powered extractors **Lumber Mill** and **Drill Rig**, the
-  Water and Sand providers **Water Pump**, **Pumping Station**, **Sand Collector**, and **Sand
-  Dredge**, the **Glassworks**, the **Depot**, and the renewables **Forester**, **Quarry**,
-  **Charcoal Kiln**, **Rock Crusher**, **Deep Well**, and **Deep Mine**, and the powered refining
-  **Steel Mill**, **Electrolyzer**, **Fuel Plant**, **Chemical Plant**, **Aluminum Smelter**, and
-  **Electric Furnace**, and the parts buildings **Fabricator**, **Electronics Works**, **Tile
-  Kiln**, **Assembly Plant**, and **Shipyard**, and the later tiers' **Sawmill**, **Cement
-  Kiln**, **Concrete Mixer**, **Brine Well**, **Semiconductor Fab**, **Air Separator**, and
-  **Enrichment Plant**, and the power buildings **Solar Array**, **Battery Bank**, and **Fission
-  Reactor**, and the **Research Lab**.
+- `BuildingType` has thirty-nine values: the leveled families **Mine**, **Lumber Camp**,
+  **Smelter**, **Oil Well**, **Water Pump**, **Sand Collector**, and **Kiln** (three levels each,
+  Levels below), the **Refinery**, the **HQ**, the storage buildings **Silo**, **Stockyard**,
+  **Tank Farm**, **Warehouse**, and **Vault**, the hubs **Small Hub** and **Relay**, the generators
+  **Water Wheel** and **Burner Generator**, the **Glassworks**, the **Depot**, the renewables
+  **Forester**, **Quarry**, and **Rock Crusher**, the powered refining **Electrolyzer**, **Fuel
+  Plant**, and **Chemical Plant**, the parts buildings **Fabricator**, **Electronics Works**,
+  **Assembly Plant**, and **Shipyard**, the later tiers' **Sawmill**, **Concrete Mixer**, **Brine
+  Well**, **Semiconductor Fab**, and **Enrichment Plant**, the power buildings **Solar Array**,
+  **Battery Bank**, and **Fission Reactor**, and the **Research Lab**.
 - Each type has a `BuildingDef` (in `BuildingDefs`): a display name, a footprint in fine cells
   (width along X, depth along Z when facing North), a cost, a speed, and for an extractor, the
   deposit types it works (`Works`; a building is an extractor when the list is not empty) and its
@@ -35,14 +32,14 @@ ship from a Shipyard, which closes the on-planet loop.
   (maps from `CapacityType` to amount; `Draw(type)` and `Supply(type)` read 0 for a type not
   listed, and `IsProvider` when it supplies any), `BurnsFuel` (it burns fuel from storage), and
   its `Placement` rule (Standard, AcrossStraightRiver, BesideWater, OnSand,
-  OnSaltFlat, or the renewables' three).
+  OnSaltFlat, or the renewables' two).
 
   | Type        | Footprint | Cost                       | Works                             | Work radius |
   |-------------|-----------|----------------------------|-----------------------------------|-------------|
-  | Lumber Camp | 2 x 2     | 15 Wood                    | Wood                              | 6 units     |
-  | Mine        | 2 x 2     | 25 Wood, 15 Stone          | Iron Ore, Copper Ore, Coal, Stone, Bauxite, Quartz, Limestone, Sulfur, Titanium Ore | 6 units     |
-  | Smelter     | 3 x 3     | 40 Stone, 15 Wood          |                                   |             |
-  | Oil Well    | 2 x 2     | 25 Iron, 20 Stone, 10 Wood | Crude Oil                         | 3 units     |
+  | Lumber Camp | 4 x 4     | 10 Wood                    | Wood                              | 6 units     |
+  | Mine        | 4 x 4     | 25 Wood, 15 Stone          | Iron Ore, Copper Ore, Coal, Stone, Bauxite, Quartz, Limestone, Sulfur, Titanium Ore | 6 units     |
+  | Smelter     | 4 x 4     | 40 Stone, 15 Wood          |                                   |             |
+  | Oil Well    | 4 x 4     | 25 Iron, 20 Stone, 10 Wood | Crude Oil                         | 3 units     |
   | Refinery    | 2 x 3     | 40 Iron, 30 Stone, 20 Wood |                                   |             |
 
   The storage buildings (what each adds is in resources.md):
@@ -94,11 +91,19 @@ Recipes marked "(capacity only)" use only the Sand or Water they draw.
 
 | Building | Tier | Size | Build cost | Draws | Supplies | Burns / eats | Makes |
 |---|---|---|---|---|---|---|---|
-| Mine | 1 | 2 x 2 | 25 Wood, 15 Stone |  |  |  | works Iron Ore, Copper Ore, Coal, Stone, Bauxite, Quartz, Limestone, Sulfur, Titanium Ore (radius 6, speed 0.75) |
-| Lumber Camp | 1 | 2 x 2 | 15 Wood |  |  |  | works Wood (radius 6, speed 0.75) |
-| Smelter | 1 | 3 x 3 | 40 Stone, 15 Wood |  |  | fuel: Coal, Charcoal, Wood | 1 Iron Ore → 1 Iron (16 s)<br>1 Copper Ore → 1 Copper (16 s) |
+| Mine | 1 | 4 x 4 | 25 Wood, 15 Stone |  |  |  | works Iron Ore, Copper Ore, Coal, Stone, Bauxite, Quartz, Limestone, Sulfur, Titanium Ore (radius 6, speed 0.75) |
+| Drill Rig | 2 | 4 x 4 | 25 Wood, 20 Stone, 30 Iron | 10 Power |  |  | works Iron Ore, Copper Ore, Coal, Stone, Bauxite, Quartz, Limestone, Sulfur, Titanium Ore, Rare Earths, Uranium Ore, Crystals (radius 8, speed 1.3) |
+| Deep Mine | 3 | 4 x 4 | 25 Wood, 20 Stone, 30 Iron, 60 Steel, 30 Concrete | 30 Power |  |  | works Iron Ore, Copper Ore, Coal, Stone, Bauxite, Quartz, Limestone, Sulfur, Titanium Ore, Rare Earths, Uranium Ore, Crystals (radius 8, speed 1.6)<br>with no live field in range, 1 unit every 20 s from a worked-out Iron Ore, Copper Ore, Bauxite, Titanium Ore, Quartz, or Limestone cell or a motherlode beside it |
+| Lumber Camp | 1 | 4 x 4 | 10 Wood |  |  |  | works Wood (radius 6, speed 0.75) |
+| Lumber Mill | 2 | 4 x 4 | 30 Wood, 20 Iron | 5 Power |  |  | works Wood (radius 8, speed 1.3) |
+| Advanced Lumber Mill | 3 | 4 x 4 | 40 Wood, 20 Iron, 30 Steel | 10 Power |  |  | works Wood (radius 8, speed 1.6) |
+| Smelter | 1 | 4 x 4 | 40 Stone, 15 Wood |  |  | fuel: Coal, Charcoal, Wood | 1 Iron Ore → 1 Iron (16 s)<br>1 Copper Ore → 1 Copper (16 s) |
+| Steel Mill | 2 | 4 x 4 | 60 Stone, 15 Wood, 40 Iron | 20 Power |  |  | 1 Iron Ore → 1 Iron (16 s)<br>1 Copper Ore → 1 Copper (16 s)<br>2 Iron + 1 Coal or Charcoal + 1 Limestone → 1 Steel (20 s) |
+| Electric Smelter | 2 | 4 x 4 | 60 Stone, 15 Wood, 40 Iron, 50 Steel, 20 Copper | 60 Power |  |  | 1 Iron Ore → 1 Iron (16 s)<br>1 Copper Ore → 1 Copper (16 s)<br>2 Iron + 1 Coal or Charcoal + 1 Limestone → 1 Steel (20 s)<br>2 Bauxite → 1 Aluminum (20 s)<br>1 Quartz + 1 Coal or Charcoal → 1 Silicon (15 s)<br>2 Titanium Ore → 1 Titanium (20 s) |
 | Refinery | 2 | 2 x 3 | 40 Iron, 30 Stone, 20 Wood | 25 Power, 2 Water |  |  | 1 Crude Oil → 1 Kerosene (8 s) |
-| Oil Well | 2 | 2 x 2 | 25 Iron, 20 Stone, 10 Wood |  |  |  | works Crude Oil (radius 3, speed 0.75) |
+| Oil Well | 2 | 4 x 4 | 25 Iron, 20 Stone, 10 Wood |  |  |  | works Crude Oil (radius 3, speed 0.75) |
+| Oil Rig | 2 | 4 x 4 | 25 Iron, 20 Stone, 10 Wood, 30 Steel | 10 Power |  |  | works Crude Oil (radius 3, speed 1.3) |
+| Deep Well | 3 | 4 x 4 | 25 Iron, 20 Stone, 10 Wood, 50 Steel, 30 Concrete | 15 Power |  |  | works Crude Oil (radius 3, speed 1.6)<br>with no live field in range, 1 Crude Oil every 26.67 s from a worked-out oil cell or Salt Dome beside it |
 | HQ | 1 | 6 x 10 | placed by the world |  |  |  | network: covers 38, links 44 units<br>raises storage limits |
 | Silo | 1 | 2 x 2 | 30 Wood |  |  |  | raises storage limits |
 | Stockyard | 1 | 3 x 3 | 40 Wood, 20 Iron |  |  |  | raises storage limits |
@@ -109,37 +114,31 @@ Recipes marked "(capacity only)" use only the Sand or Water they draw.
 | Relay | 1 | 2 x 2 | 5 Wood, 10 Stone, 5 Iron |  |  |  | network: covers 3, links 90 units |
 | Water Wheel | 1 | 4 x 2 | 40 Wood, 20 Stone |  | 5 Power |  |  |
 | Burner Generator | 1 | 4 x 4 | 60 Stone, 40 Iron |  | 35 Power | fuel: Coal, Charcoal, Wood |  |
-| Lumber Mill | 2 | 3 x 3 | 30 Wood, 20 Iron | 5 Power |  |  | works Wood (radius 8, speed 2) |
-| Drill Rig | 2 | 3 x 3 | 30 Iron, 20 Stone | 10 Power |  |  | works Iron Ore, Copper Ore, Coal, Stone, Bauxite, Quartz, Limestone, Sulfur, Titanium Ore, Rare Earths, Uranium Ore, Crystals (radius 8, speed 2) |
-| Water Pump | 1 | 2 x 2 | 20 Wood, 10 Stone |  | 4 Water |  |  |
-| Pumping Station | 2 | 3 x 3 | 30 Iron, 10 Steel, 20 Stone | 10 Power | 16 Water |  |  |
-| Sand Collector | 1 | 2 x 2 | 20 Wood, 10 Stone |  | 2 Sand |  |  |
-| Sand Dredge | 2 | 3 x 3 | 30 Iron, 10 Steel, 20 Stone | 10 Power | 8 Sand |  |  |
+| Water Pump | 1 | 4 x 4 | 20 Wood, 10 Stone |  | 4 Water |  |  |
+| Pumping Station | 2 | 4 x 4 | 20 Wood, 20 Stone, 30 Iron, 10 Steel | 5 Power | 10 Water |  |  |
+| Advanced Pumping Station | 3 | 4 x 4 | 20 Wood, 20 Stone, 30 Iron, 40 Steel, 20 Concrete | 10 Power | 16 Water |  |  |
+| Sand Collector | 1 | 4 x 4 | 20 Wood, 10 Stone |  | 2 Sand |  |  |
+| Sand Sifter | 2 | 4 x 4 | 20 Wood, 10 Stone, 20 Iron, 10 Steel | 5 Power | 4 Sand |  |  |
+| Sand Dredge | 3 | 4 x 4 | 20 Wood, 10 Stone, 20 Iron, 40 Steel, 20 Concrete | 10 Power | 8 Sand |  |  |
 | Glassworks | 1 | 3 x 6 | 40 Stone, 20 Wood | 2 Sand |  | fuel: Coal, Charcoal, Wood | (capacity only) → 1 Glass (12 s) |
 | Depot | 1 | 4 x 4 | 40 Wood, 20 Stone |  |  |  | 4 truck bays |
 | Forester | 2 | 4 x 4 | 30 Wood, 20 Stone | 2 Power, 5 Water |  |  | grows 150 Wood in 180 s, bare 30 s after cutting |
 | Quarry | 2 | 3 x 3 | 40 Iron, 30 Wood | 10 Power |  |  | 1 Stone every 6 s (or Limestone beside a Highlands mountain), beside a mountain |
-| Charcoal Kiln | 1 | 2 x 2 | 30 Stone, 10 Wood |  |  |  | 3 Wood → 1 Charcoal (15 s) |
+| Charcoal Kiln | 1 | 4 x 4 | 30 Stone, 10 Wood |  |  |  | 3 Wood → 1 Charcoal (15 s) |
+| Cement Kiln | 1 | 4 x 4 | 40 Stone, 10 Wood, 20 Iron, 20 Lumber |  |  | fuel: Coal, Charcoal, Wood | 3 Wood → 1 Charcoal (15 s)<br>2 Limestone → 1 Cement (12 s) |
+| Tile Kiln | 3 | 4 x 4 | 40 Stone, 10 Wood, 20 Iron, 20 Lumber, 20 Steel | 30 Power |  |  | 3 Wood → 1 Charcoal (15 s)<br>2 Limestone → 1 Cement (12 s)<br>1 Silicon + 1 Aluminum → 2 Ceramic Tile (15 s) |
 | Rock Crusher | 2 | 3 x 3 | 30 Iron, 10 Steel, 20 Stone | 15 Power | 4 Sand | 1 Stone every 10 s |  |
-| Deep Well | 2 | 4 x 4 | 40 Steel, 30 Stone | 15 Power |  |  | 1 Crude Oil every 26.67 s (worked-out oil site or Salt Dome) |
-| Deep Mine | 3 | 4 x 4 | 60 Steel, 30 Concrete | 30 Power |  |  | 1 unit every 20 s on a worked-out Iron Ore, Copper Ore, Bauxite, Titanium Ore, Quartz, or Limestone cell, or a motherlode |
-| Steel Mill | 2 | 4 x 6 | 60 Stone, 40 Iron | 20 Power |  |  | 2 Iron + 1 Coal or Charcoal + 1 Limestone → 1 Steel (20 s) |
 | Electrolyzer | 2 | 4 x 5 | 40 Iron, 20 Copper | 50 Power, 4 Water |  |  | (capacity only) → 1 Hydrogen (6 s)<br>(capacity only) → 1 Liquid Oxygen (6 s) |
 | Fuel Plant | 2 | 4 x 5 | 40 Steel, 20 Copper | 20 Power |  |  | 1 Kerosene + 1 Hydrogen → 1 Rocket Fuel (8 s) |
 | Chemical Plant | 2 | 5 x 6 | 40 Steel, 20 Copper | 25 Power, 2 Water |  |  | 2 Crude Oil → 1 Plastic (10 s)<br>1 Crude Oil + 1 Sulfur → 1 Rubber (12 s)<br>2 Plastic → 1 Carbon Fiber (15 s)<br>1 Sulfur → 2 Sulfuric Acid (8 s) |
-| Aluminum Smelter | 2 | 3 x 8 | 50 Steel, 30 Stone | 60 Power |  |  | 2 Bauxite → 1 Aluminum (20 s) |
-| Electric Furnace | 2 | 4 x 4 | 50 Steel, 20 Copper | 40 Power |  |  | 1 Quartz + 1 Coal or Charcoal → 1 Silicon (15 s)<br>2 Titanium Ore → 1 Titanium (20 s) |
 | Fabricator | 3 | 4 x 6 | 40 Steel, 20 Copper | 30 Power |  |  | 2 Steel → 1 Hull Plate (12 s)<br>3 Steel → 1 Steel Beam (15 s)<br>2 Aluminum → 1 Aluminum Frame (12 s)<br>2 Steel + 1 Rubber → 1 Machine Parts (15 s)<br>2 Carbon Fiber + 1 Aluminum → 1 Composite Panel (20 s)<br>1 Rare Earths + 1 Iron → 2 Magnet (12 s)<br>1 Steel + 2 Copper Wire + 1 Magnet → 1 Electric Motor (15 s)<br>2 Steel + 1 Titanium → 1 Armor Plate (15 s) |
 | Electronics Works | 3 | 4 x 5 | 30 Steel, 30 Copper, 10 Glass | 20 Power, 2 Water |  |  | 1 Copper → 2 Copper Wire (6 s)<br>2 Copper Wire + 1 Plastic → 1 Circuit (10 s)<br>2 Copper Wire + 1 Rubber → 2 Insulated Cable (8 s)<br>1 Lithium + 1 Copper + 1 Plastic → 1 Battery (15 s) |
-| Tile Kiln | 3 | 3 x 7 | 40 Stone, 20 Steel | 30 Power |  |  | 1 Silicon + 1 Aluminum → 2 Ceramic Tile (15 s) |
 | Assembly Plant | 4 | 6 x 8 | 20 Steel Beam, 20 Hull Plate, 10 Circuit | 40 Power |  |  | 4 Circuit + 2 Hull Plate + 2 Glass → 1 Control Module (40 s)<br>4 Titanium + 2 Machine Parts + 6 Ceramic Tile → 1 Thruster Assembly (45 s)<br>4 Aluminum Frame + 4 Composite Panel → 1 Fuel Tank (40 s)<br>2 Processor + 2 Circuit + 2 Insulated Cable → 1 Computer (40 s)<br>6 Ceramic Tile + 2 Composite Panel → 1 Heat Shield (40 s)<br>2 Electric Motor + 2 Machine Parts + 2 Glass → 1 Life Support Unit (45 s)<br>1 Processor + 2 Magnet + 2 Glass → 1 Sensor Array (40 s) |
 | Shipyard | 4 | 8 x 12 | 40 Steel Beam, 20 Hull Plate, 10 Circuit | 50 Power |  |  | 4 Hull Plate + 2 Steel Beam → 1 Hull Section (60 s)<br>2 Thruster Assembly + 2 Fuel Tank + 4 Machine Parts → 1 Engine (90 s) |
 | Sawmill | 1 | 3 x 5 | 30 Wood, 20 Stone |  |  |  | 2 Wood → 1 Lumber (8 s) |
-| Cement Kiln | 1 | 3 x 7 | 40 Stone, 20 Iron, 20 Lumber |  |  | fuel: Coal, Charcoal, Wood | 2 Limestone → 1 Cement (12 s) |
 | Concrete Mixer | 2 | 3 x 4 | 30 Iron, 20 Lumber | 10 Power, 2 Sand, 2 Water |  |  | 1 Cement → 2 Concrete (10 s) |
 | Brine Well | 2 | 4 x 6 | 30 Steel, 20 Concrete | 15 Power, 2 Water |  |  | (capacity only) → 1 Lithium (10 s) |
 | Semiconductor Fab | 3 | 5 x 6 | 40 Steel, 30 Concrete, 20 Glass | 40 Power, 4 Water |  |  | 1 Silicon → 2 Silicon Wafer (10 s)<br>2 Silicon Wafer + 1 Circuit + 1 Sulfuric Acid → 1 Processor (20 s)<br>1 Silicon Wafer + 1 Glass + 2 Copper Wire → 1 Solar Cell (15 s) |
-| Air Separator | 3 | 4 x 5 | 30 Steel, 20 Concrete, 6 Electric Motor | 40 Power |  |  | (capacity only) → 1 Liquid Oxygen (5 s) |
 | Enrichment Plant | 4 | 6 x 7 | 40 Concrete, 20 Armor Plate, 10 Electric Motor, 10 Computer | 80 Power, 2 Water |  |  | 2 Uranium Ore + 1 Sulfuric Acid → 1 Enriched Uranium (30 s)<br>2 Enriched Uranium + 2 Steel → 1 Fuel Rod (40 s) |
 | Solar Array | 3 | 6 x 6 | 20 Solar Cell, 10 Aluminum Frame, 10 Concrete |  | 60 Power (daylight) |  |  |
 | Battery Bank | 3 | 3 x 4 | 20 Battery, 20 Steel, 10 Concrete |  | stores 6000 Power |  |  |
@@ -170,37 +169,75 @@ Recipes marked "(capacity only)" use only the Sand or Water they draw.
   DeepWater, or river channel; OnSand adds that every footprint cell is Sand terrain;
   OnSaltFlat (the Brine Well's) adds that every cell is SaltFlat terrain (terrain.md); and
   AcrossStraightRiver is the Water Wheel's own rule (Capacity, below). The renewables add three
-  (Renewables, below): BesideMountain (the standard rule, with a cell edge-adjacent to a mountain),
-  OpenGrassCell (the footprint is exactly one map cell, all Grass), and OverSite (the footprint is
-  exactly a worked-out map cell of a deposit in the definition's `Sites`, or exactly a motherlode's
-  center 4 x 4 when the motherlode's kind is worked by this type; on a motherlode the cells need
-  only be walkable). `SnapAnchor` gives the ghost's anchor for the last two: the map cell's
-  corner, or a motherlode's center.
+  (Renewables, below): BesideMountain (the standard rule, with a cell edge-adjacent to a mountain)
+  and OpenGrassCell (the footprint is exactly one map cell, all Grass). `SnapAnchor` gives the
+  ghost's anchor for the last: the map cell's corner. The deep levels place by the standard rule
+  and work what is beside them (Levels, above).
 - An extractor may be placed with no matching field in its work area; it idles until one is in
   range. This allows planning ahead and later lets resources be created around a building.
-- **Unlocking**: a building is unlocked (`IsUnlocked`) when it is buildable (never the HQ) and its
-  tier is at or below the unlocked tier (`UnlockedTier`, research.md): tier 1 from the start, and
-  each higher tier once its unlock research is complete. Holding a building's cost does not unlock
-  it. A building of a locked tier that is already placed (from an older save) keeps working and
+- **Unlocking**: a building is unlocked (`IsUnlocked(type, level)`) when it is buildable (never the
+  HQ) and its tier is at or below the unlocked tier (`UnlockedTier`, research.md): tier 1 from the
+  start, and each higher tier once its unlock research is complete. A leveled family's level above
+  1 also needs its level project complete (Levels, below). Holding a building's cost does not
+  unlock it. A building of a locked tier that is already placed (from an older save) keeps working and
   can be destroyed, but no more can be placed. `CanAfford` is whether the stockpile holds the
   whole cost now.
 - **Tiers**: buildings, items (resources.md), and research share four tiers, and a tier N building
-  makes tier N items (two exceptions: the Brine Well's Lithium is raw, and the Air Separator is a
-  tier 3 source of tier 2 Liquid Oxygen). The player sees only "Tier 1" to "Tier 4"; the names
-  below are for docs and code. Each higher tier opens with **gateways** built from the tier below;
-  its other buildings may cost its own items.
+  makes tier N items (the exception: the Brine Well's Lithium is raw; a level is judged by the
+  recipes it adds). The player sees only "Tier 1" to "Tier 4"; the names below are for docs and
+  code. Each higher tier opens with **gateways** built from the tier below; its other buildings
+  may cost its own items. A leveled family's levels are listed in their own tiers.
 
-  | Tier | Name | Buildings |
+  | Tier | Name | Buildings (and levels) |
   |---|---|---|
-  | 1 | Settlement | Mine, Lumber Camp, Smelter, Glassworks, Charcoal Kiln, Sawmill, Cement Kiln, Water Wheel, Burner Generator, Water Pump, Sand Collector, Depot, Silo, Stockyard, Warehouse, Small Hub, Relay, Research Lab (and the HQ, roads, and bridges) |
-  | 2 | Industry | Gateways: Steel Mill, Refinery, Oil Well, Drill Rig. Then Tank Farm, Vault, Lumber Mill, Pumping Station, Sand Dredge, Rock Crusher, Quarry, Forester, Deep Well, Concrete Mixer, Chemical Plant, Electrolyzer, Fuel Plant, Aluminum Smelter, Electric Furnace, Brine Well |
-  | 3 | Components | Gateways: Fabricator, Electronics Works. Then Tile Kiln, Semiconductor Fab, Air Separator, Deep Mine, Solar Array, Battery Bank |
+  | 1 | Settlement | Mine, Lumber Camp, Smelter, Glassworks, Charcoal Kiln and Cement Kiln (Kiln levels 1 and 2), Sawmill, Water Wheel, Burner Generator, Water Pump, Sand Collector, Depot, Silo, Stockyard, Warehouse, Small Hub, Relay, Research Lab (and the HQ, roads, and bridges) |
+  | 2 | Industry | Gateways: Steel Mill (Smelter level 2), Refinery, Oil Well, Drill Rig (Mine level 2). Then Electric Smelter (Smelter level 3), Oil Rig (Oil Well level 2), Lumber Mill, Pumping Station, Sand Sifter (each a level 2), Tank Farm, Vault, Rock Crusher, Quarry, Forester, Concrete Mixer, Chemical Plant, Electrolyzer, Fuel Plant, Brine Well |
+  | 3 | Components | Gateways: Fabricator, Electronics Works. Then Deep Mine, Deep Well, Advanced Lumber Mill, Advanced Pumping Station, Sand Dredge, Tile Kiln (each a level 3), Semiconductor Fab, Solar Array, Battery Bank |
   | 4 | Assembly | Gateway: Assembly Plant. Then Enrichment Plant, Fission Reactor, Shipyard |
-- `TryPlaceBuilding(type, anchorX, anchorZ, facing)` is placement as the player does it: the spot
-  must pass `CanPlace` and the building must be unlocked and affordable. It deducts the cost, adds
+- **Levels**: seven families are one building type with three **levels** each, every level its
+  own definition (`BuildingDefs.For(type, level)`; `Levels(type)` is 3 for them and 1 for every
+  other type; `AllLevels()` lists each type and level). Every level of a family is 4 x 4, keeps
+  the family's placement rule (the Water Pump beside water, the Sand Collector on sand), and keeps
+  the level below's recipes in order, adding its own after them (`Recipes.For(type, level)`), so a
+  recipe index holds through an upgrade. A placed building has its `Level`, and its `Def` and
+  `Recipes` are that level's. Its model is `buildings/<family>_<level>`.
+
+  | Family | Level 1 | Level 2 | Level 3 |
+  |---|---|---|---|
+  | Mine | Mine (tier 1): unpowered, radius 6, speed 0.75 | Drill Rig (2): 10 Power, radius 8, speed 1.3, adds Rare Earths, Uranium Ore, Crystals | Deep Mine (3): 30 Power, speed 1.6, deep (below) |
+  | Lumber Camp | Lumber Camp (1): radius 6, speed 0.75 | Lumber Mill (2): 5 Power, radius 8, speed 1.3 | Advanced Lumber Mill (3): 10 Power, speed 1.6 |
+  | Water Pump | Water Pump (1): 4 Water | Pumping Station (2): 5 Power, 10 Water | Advanced Pumping Station (3): 10 Power, 16 Water |
+  | Sand Collector | Sand Collector (1): 2 Sand | Sand Sifter (2): 5 Power, 4 Sand | Sand Dredge (3): 10 Power, 8 Sand |
+  | Oil Well | Oil Well (2): radius 3, speed 0.75 | Oil Rig (2): 10 Power, speed 1.3 | Deep Well (3): 15 Power, speed 1.6, deep (below) |
+  | Smelter | Smelter (1): burns fuel; Iron, Copper | Steel Mill (2): 20 Power, no fuel; adds Steel | Electric Smelter (2): 60 Power; adds Aluminum, Silicon, Titanium |
+  | Kiln | Charcoal Kiln (1): Charcoal | Cement Kiln (1): burns fuel; adds Cement | Tile Kiln (3): 30 Power, no fuel; adds Ceramic Tile |
+
+  Costs per level are in the At a glance table. Each level's cost includes everything the level
+  below costs (a test holds this), so building a level directly costs the same as building level
+  1 and upgrading: the Drill Rig is the Mine's 25 Wood and 15 Stone plus its 30 Iron and 5 Stone.
+  A level above 1 is unlocked by its own research project (research.md).
+- **Upgrading** (`TryUpgrade(id)`, checked by `CanUpgrade`): a leveled building below its top level
+  goes up one level in place once the next level is unlocked and storage holds its price
+  (`UpgradePrice`: the next level's cost less this level's, per resource, which is exactly the
+  step since each level's cost includes the one below's). It pays
+  the price and takes the next level's definition and recipes; its id, position, facing, on/off,
+  queue or hold, input choices, and buffers stay, a running cycle finishes at the new speed, and a
+  level that burns no fuel puts out its fire (the unit burning was spent when taken). The network
+  recounts its draws. `Building.Paid` keeps what it has cost in all (its level's cost when placed,
+  plus each upgrade's price).
+- **Deep levels** (`BuildingDef.IsDeep`: the Deep Mine and the Deep Well) are extractors that,
+  with no live field in range, work a site **around** them (`DeepSiteAround`): a motherlode of a
+  kind their family works (`MotherlodeDef.WorkedBy`) or a worked-out cell of one of their
+  `DeepSites`, among the map cells their footprint touches or borders, a motherlode first. They
+  work it at the deep rate (`ProduceSeconds`: 1 unit every 20 s for the Mine, 26.7 s for the Well,
+  a motherlode by its share), as `SiteMotherlode` or `SiteDeposit`, and go back to a live field
+  when one is in range. Any number of them may work the same site, so four Deep Mines, one on each
+  edge, all work one worked-out cell.
+- `TryPlaceBuilding(type, anchorX, anchorZ, facing, level)` is placement as the player does it (at
+  level 1 by default): the spot must pass `CanPlace` and the level must be unlocked and affordable. It deducts the cost, adds
   the building, and marks every footprint cell occupied; a refused placement changes nothing.
-  There is no demolish yet, so no refund. `Debug.PlaceBuilding` places by `CanPlace` alone, free
-  and whether or not unlocked. A building blocks player movement on its cells
+  `Debug.PlaceBuilding(type, anchorX, anchorZ, facing, level)` places by `CanPlace` alone, free and
+  whether or not unlocked. A building blocks player movement on its cells
   for as long as it stands.
 
 ### Hubs and the HQ network
@@ -260,16 +297,18 @@ Recipes marked "(capacity only)" use only the Sand or Water they draw.
 |---|---|---|---|---|---|
 | Water Wheel | 4 x 2 | 40 Wood, 20 Stone | 5 Power |  | Across a Straight river map cell (below); runs whenever it stands |
 | Burner Generator | 4 x 4 | 60 Stone, 40 Iron | 35 Power |  | Standard; burns fuel whenever switched on |
-| Water Pump | 2 x 2 | 20 Wood, 10 Stone | 4 Water |  | BesideWater |
-| Pumping Station | 3 x 3 | 30 Iron, 10 Steel, 20 Stone | 16 Water | 10 Power | BesideWater |
-| Sand Collector | 2 x 2 | 20 Wood, 10 Stone | 2 Sand |  | OnSand |
-| Sand Dredge | 3 x 3 | 30 Iron, 10 Steel, 20 Stone | 8 Sand | 10 Power | OnSand |
+| Water Pump (level 1) | 4 x 4 | 20 Wood, 10 Stone | 4 Water |  | BesideWater |
+| Pumping Station (level 2) | 4 x 4 | 20 Wood, 20 Stone, 30 Iron, 10 Steel | 10 Water | 5 Power | BesideWater |
+| Advanced Pumping Station (level 3) | 4 x 4 | 20 Wood, 20 Stone, 30 Iron, 40 Steel, 20 Concrete | 16 Water | 10 Power | BesideWater |
+| Sand Collector (level 1) | 4 x 4 | 20 Wood, 10 Stone | 2 Sand |  | OnSand |
+| Sand Sifter (level 2) | 4 x 4 | 20 Wood, 10 Stone, 20 Iron, 10 Steel | 4 Sand | 5 Power | OnSand |
+| Sand Dredge (level 3) | 4 x 4 | 20 Wood, 10 Stone, 20 Iron, 40 Steel, 20 Concrete | 8 Sand | 10 Power | OnSand |
 | Rock Crusher | 3 x 3 | 30 Iron, 10 Steel, 20 Stone | 4 Sand | 15 Power | Standard; eats 1 Stone every 10 s (`Eats`) |
 
 | Consumer | Footprint | Cost | Draws | Speed | Works | Buffer |
 |---|---|---|---|---|---|---|
-| Lumber Mill | 3 x 3 | 30 Wood, 20 Iron | 5 Power | 2.0 | Wood, radius 8 | 40 |
-| Drill Rig | 3 x 3 | 30 Iron, 20 Stone | 10 Power | 2.0 | the Mine's deposits and Rare Earths, Uranium Ore, Crystals, radius 8 | 40 |
+| Lumber Mill (Lumber Camp level 2) | 4 x 4 | 30 Wood, 20 Iron | 5 Power | 1.3 | Wood, radius 8 | 40 |
+| Drill Rig (Mine level 2) | 4 x 4 | 25 Wood, 20 Stone, 30 Iron | 10 Power | 1.3 | the Mine's deposits and Rare Earths, Uranium Ore, Crystals, radius 8 | 40 |
 | Refinery | 2 x 3 | as above | 25 Power, 2 Water (its cooling) |  |  | 10 |
 | Glassworks | 3 x 6 | 40 Stone, 20 Wood | 2 Sand |  |  | 10 |
 
@@ -377,7 +416,7 @@ Recipes marked "(capacity only)" use only the Sand or Water they draw.
   else); every recipe has one output, named for it in a picker (`Recipe.Name`). A building runs one
   at a time (`RecipeIndex`, `Building.Recipe`).
 - **The crafting queue.** Every processor but the three that make from nothing and burn no fuel
-  (the Electrolyzer, Brine Well, and Air Separator) crafts from a queue (`Building.Queues`,
+  (the Electrolyzer and the Brine Well) crafts from a queue (`Building.Queues`,
   `Building.Queue`): an ordered list of orders (`CraftOrder`: a recipe and the items still to make).
   It crafts the first order's recipe; each finished cycle takes the recipe's output off that
   order, and an order at 0 leaves the queue for the next. With the queue empty it starts no cycle
@@ -417,12 +456,11 @@ Recipes marked "(capacity only)" use only the Sand or Water they draw.
 
 | Building | Footprint | Cost | Draws | Recipes (inputs to 1 output, cycle) |
 |---|---|---|---|---|
-| Steel Mill | 4 x 6 | 60 Stone, 40 Iron | 20 Power | Steel: 2 Iron, 1 Coal or Charcoal, 1 Limestone, 20 s |
+| Steel Mill (Smelter level 2) | 4 x 4 | 60 Stone, 15 Wood, 40 Iron | 20 Power | Iron and Copper as the Smelter; Steel: 2 Iron, 1 Coal or Charcoal, 1 Limestone, 20 s |
 | Electrolyzer | 4 x 5 | 40 Iron, 20 Copper | 50 Power, 4 Water | Hydrogen: no inputs, 6 s; Liquid Oxygen: no inputs, 6 s |
 | Fuel Plant | 4 x 5 | 40 Steel, 20 Copper | 20 Power | Rocket Fuel: 1 Kerosene, 1 Hydrogen, 8 s |
 | Chemical Plant | 5 x 6 | 40 Steel, 20 Copper | 25 Power, 2 Water | Plastic: 2 Crude Oil, 10 s; Rubber: 1 Crude Oil, 1 Sulfur, 12 s; Carbon Fiber: 2 Plastic, 15 s |
-| Aluminum Smelter | 3 x 8 | 50 Steel, 30 Stone | 60 Power | Aluminum: 2 Bauxite, 20 s |
-| Electric Furnace | 4 x 4 | 50 Steel, 20 Copper | 40 Power | Silicon: 1 Quartz, 1 Coal or Charcoal, 15 s; Titanium: 2 Titanium Ore, 20 s |
+| Electric Smelter (Smelter level 3) | 4 x 4 | 60 Stone, 15 Wood, 40 Iron, 50 Steel, 20 Copper | 60 Power | the Steel Mill's; Aluminum: 2 Bauxite, 20 s; Silicon: 1 Quartz, 1 Coal or Charcoal, 15 s; Titanium: 2 Titanium Ore, 20 s |
 
 - All six are tier 2 with an output buffer of 10. Steel is the gate:
   the Steel Mill is built from Stone and Iron, the rest of the tier from Steel (the Electrolyzer
@@ -437,7 +475,7 @@ Shipyard builds the Hull Section and Engine. A recipe may make more than one uni
 |---|---|---|---|---|---|
 | Fabricator | 4 x 6 | 40 Steel, 20 Copper | 3 | 30 Power | Hull Plate: 2 Steel, 12 s; Steel Beam: 3 Steel, 15 s; Aluminum Frame: 2 Aluminum, 12 s; Machine Parts: 2 Steel, 1 Rubber, 15 s; Composite Panel: 2 Carbon Fiber, 1 Aluminum, 20 s |
 | Electronics Works | 4 x 5 | 30 Steel, 30 Copper, 10 Glass | 3 | 20 Power, 2 Water | 2 Copper Wire: 1 Copper, 6 s; Circuit: 2 Copper Wire, 1 Plastic, 10 s |
-| Tile Kiln | 3 x 7 | 40 Stone, 20 Steel | 3 | 30 Power | 2 Ceramic Tile: 1 Silicon, 1 Aluminum, 15 s |
+| Tile Kiln (Kiln level 3) | 4 x 4 | 40 Stone, 10 Wood, 20 Iron, 20 Lumber, 20 Steel | 3 | 30 Power | the Cement Kiln's; 2 Ceramic Tile: 1 Silicon, 1 Aluminum, 15 s |
 | Assembly Plant | 6 x 8 | 20 Steel Beam, 20 Hull Plate, 10 Circuit | 4 | 40 Power | Control Module: 4 Circuit, 2 Hull Plate, 2 Glass, 40 s; Thruster Assembly: 4 Titanium, 2 Machine Parts, 6 Ceramic Tile, 45 s; Fuel Tank: 4 Aluminum Frame, 4 Composite Panel, 40 s |
 | Shipyard | 8 x 12 | 40 Steel Beam, 20 Hull Plate, 10 Circuit | 4 | 50 Power | Hull Section: 4 Hull Plate, 2 Steel Beam, 60 s; Engine: 2 Thruster Assembly, 2 Fuel Tank, 4 Machine Parts, 90 s |
 
@@ -462,17 +500,16 @@ And seven buildings, all processors (output buffer 10):
 | Building | Footprint | Cost | Tier | Draws | Recipes (inputs to output, cycle) |
 |---|---|---|---|---|---|
 | Sawmill | 3 x 5 | 30 Wood, 20 Stone | 1 |  | Lumber: 2 Wood, 8 s |
-| Cement Kiln | 3 x 7 | 40 Stone, 20 Iron, 20 Lumber | 1 | burns fuel | Cement: 2 Limestone, 12 s |
+| Cement Kiln (Kiln level 2) | 4 x 4 | 40 Stone, 10 Wood, 20 Iron, 20 Lumber | 1 | burns fuel | Charcoal as the Charcoal Kiln; Cement: 2 Limestone, 12 s |
 | Concrete Mixer | 3 x 4 | 30 Iron, 20 Lumber | 2 | 10 Power, 2 Sand, 2 Water | 2 Concrete: 1 Cement, 10 s |
 | Brine Well | 4 x 6 | 30 Steel, 20 Concrete | 2 | 15 Power, 2 Water | Lithium: no inputs, 10 s |
 | Semiconductor Fab | 5 x 6 | 40 Steel, 30 Concrete, 20 Glass | 3 | 40 Power, 4 Water | 2 Silicon Wafer: 1 Silicon, 10 s; Processor: 2 Silicon Wafer, 1 Circuit, 1 Sulfuric Acid, 20 s; Solar Cell: 1 Silicon Wafer, 1 Glass, 2 Copper Wire, 15 s |
-| Air Separator | 4 x 5 | 30 Steel, 20 Concrete, 6 Electric Motor | 3 | 40 Power | Liquid Oxygen: no inputs, 5 s |
 | Enrichment Plant | 6 x 7 | 40 Concrete, 20 Armor Plate, 10 Electric Motor, 10 Computer | 4 | 80 Power, 2 Water | Enriched Uranium: 2 Uranium Ore, 1 Sulfuric Acid, 30 s; Fuel Rod: 2 Enriched Uranium, 2 Steel, 40 s |
 
-- The Cement Kiln burns fuel like the Glassworks (Coal, Charcoal, or Wood, Best by default) and
-  needs no Power, so Cement and Concrete come early. The Brine Well stands on a salt flat
-  (OnSaltFlat) and the Air Separator anywhere; both make their output from nothing, as the
-  Electrolyzer does, which keeps its Liquid Oxygen recipe beside the Air Separator.
+- The Cement Kiln (the Kiln's level 2) burns fuel like the Glassworks (Coal, Charcoal, or Wood,
+  Best by default) and needs no Power, so Cement and Concrete come early. The Brine Well stands on
+  a salt flat (OnSaltFlat) and makes its Lithium from nothing, as the Electrolyzer makes its gases;
+  the Electrolyzer is the only source of Liquid Oxygen.
 - The new buildings' costs use the new materials: Lumber, Concrete, Electric Motors, Armor Plate,
   and Computers. The power buildings (below) take Batteries, Solar Cells, Heat Shields, Sensor
   Arrays, and Fuel Rods; Life Support Units have no consumer yet (they wait for Part B's crewed
@@ -508,10 +545,10 @@ And seven buildings, all processors (output buffer 10):
 |---|---|---|---|---|---|
 | Forester | 4 x 4 | 30 Wood, 20 Stone | 2; 2 Power, 5 Water | OpenGrassCell | Grows a 150-Wood field on its own cell (`Plot`) |
 | Quarry | 3 x 3 | 40 Iron, 30 Wood | 2; 10 Power | BesideMountain | 1 Stone (or Limestone) every 6 s; buffer 40 |
-| Charcoal Kiln | 2 x 2 | 30 Stone, 10 Wood | 1 | Standard | Its recipe above; buffer 10 |
+| Charcoal Kiln (Kiln level 1) | 4 x 4 | 30 Stone, 10 Wood | 1 | Standard | Its recipe above; buffer 10 |
 | Rock Crusher | 3 x 3 | 30 Iron, 10 Steel, 20 Stone | 2; 15 Power | Standard | A Sand provider (Capacity, above) |
-| Deep Well | 4 x 4 | 40 Steel, 30 Stone | 2; 15 Power | OverSite: worked-out Crude Oil, or a Salt Dome | 1 Crude Oil every 26.7 s on a worked-out cell; buffer 20 |
-| Deep Mine | 4 x 4 | 60 Steel, 30 Concrete | 3; 30 Power | OverSite: worked-out Iron Ore, Copper Ore, Bauxite, Titanium Ore, Quartz, or Limestone, or a solid motherlode | 1 unit every 20 s on a worked-out cell; buffer 40 |
+| Deep Well (Oil Well level 3) | 4 x 4 | 25 Iron, 20 Stone, 10 Wood, 50 Steel, 30 Concrete | 3; 15 Power | Standard | Live Crude Oil in radius 3 at speed 1.6, else a worked-out oil cell or Salt Dome beside it, 1 Crude Oil every 26.7 s; buffer 20 |
+| Deep Mine (Mine level 3) | 4 x 4 | 25 Wood, 20 Stone, 30 Iron, 60 Steel, 30 Concrete | 3; 30 Power | Standard | The Drill Rig's fields in radius 8 at speed 1.6, else a worked-out Iron Ore, Copper Ore, Bauxite, Titanium Ore, Quartz, or Limestone cell or a motherlode beside it, 1 unit every 20 s; buffer 40 |
 
 - **The Forester's plot:** placed, it plants a Wood field of 150 on its own map cell
   (`ResourceField.Owner` is the Forester, `Growing` with `GrowLeft` 180 s). Growth advances at its
@@ -626,10 +663,18 @@ of what it makes or gives and what it needs, shown in the build menu's tooltip (
   | Building | Description |
   |---|---|
   | Mine | Digs Iron Ore, Copper Ore, Coal, Stone, and other ore deposits nearby. |
+  | Drill Rig (Mine level 2) | Powered Mine: digs ores plus Rare Earths, Uranium Ore, Crystals. |
+  | Deep Mine (Mine level 3) | Mines on past worked-out ore and motherlodes beside it; needs Power. |
   | Lumber Camp | Cuts Wood from nearby forests. |
+  | Lumber Mill (Lumber Camp level 2) | A faster, powered Lumber Camp: cuts nearby Wood; needs Power. |
+  | Advanced Lumber Mill (Lumber Camp level 3) | The fastest Lumber Camp: cuts nearby Wood; needs Power. |
   | Smelter | Smelts Iron Ore or Copper Ore into Iron or Copper; burns fuel. |
+  | Steel Mill (Smelter level 2) | Smelts Iron and Copper, and makes Steel; runs on Power. |
+  | Electric Smelter (Smelter level 3) | Adds Aluminum, Silicon, and Titanium; needs lots of Power. |
   | Refinery | Refines Crude Oil into Kerosene; needs Power and Water. |
   | Oil Well | Pumps Crude Oil; build it right beside an oil seep. |
+  | Oil Rig (Oil Well level 2) | A faster, powered Oil Well: pumps Crude Oil from a seep. |
+  | Deep Well (Oil Well level 3) | Pumps on past worked-out oil and Salt Domes beside it; needs Power. |
   | Silo | Raises the storage limit of one chosen Bulk resource, such as Wood. |
   | Stockyard | Raises the Wood, Stone, ore, and other Bulk storage limits. |
   | Tank Farm | Raises the Crude Oil, Kerosene, and other Fluid storage limits. |
@@ -639,37 +684,31 @@ of what it makes or gives and what it needs, shown in the build menu's tooltip (
   | Relay | Links far-off hubs back to the HQ's network over a long distance. |
   | Water Wheel | Makes Power with no fuel; build it across a straight river. |
   | Burner Generator | Makes lots of Power by burning Coal, Charcoal, or Wood. |
-  | Lumber Mill | A faster, powered Lumber Camp: cuts nearby Wood; needs Power. |
-  | Drill Rig | Powered Mine: digs ores plus Rare Earths, Uranium Ore, Crystals. |
   | Water Pump | Supplies a little Water; build it beside water. |
-  | Pumping Station | Supplies four Pumps' worth of Water beside water; needs Power. |
+  | Pumping Station (Water Pump level 2) | Supplies more Water beside water; needs Power. |
+  | Advanced Pumping Station (Water Pump level 3) | Supplies four Pumps' worth of Water beside water; needs Power. |
   | Sand Collector | Supplies a little Sand; build it on sand. |
-  | Sand Dredge | Supplies four Collectors' worth of Sand on sand; needs Power. |
+  | Sand Sifter (Sand Collector level 2) | Supplies two Collectors' worth of Sand on sand; needs Power. |
+  | Sand Dredge (Sand Collector level 3) | Supplies four Collectors' worth of Sand on sand; needs Power. |
   | Glassworks | Makes Glass from Sand; burns fuel. |
   | Depot | Its trucks haul resources from collectors back to the HQ. |
   | Forester | Plants a Wood field that regrows on open grass; needs Power, Water. |
   | Quarry | Cuts Stone (or Limestone) beside a mountain; needs Power. |
   | Charcoal Kiln | Turns Wood into Charcoal for fuel and steelmaking. |
+  | Cement Kiln (Kiln level 2) | Adds Cement from Limestone; burns fuel. |
+  | Tile Kiln (Kiln level 3) | Adds Ceramic Tile from Silicon and Aluminum; runs on Power. |
   | Rock Crusher | Supplies Sand anywhere by crushing Stone; needs Power. |
-  | Deep Well | Pumps Crude Oil from a worked-out oil site or Salt Dome; needs Power. |
-  | Deep Mine | Keeps mining a worked-out ore site or a motherlode; needs Power. |
-  | Steel Mill | Makes Steel from Iron, Coal or Charcoal, and Limestone; needs Power. |
   | Electrolyzer | Makes Hydrogen or Liquid Oxygen from Water; needs Power. |
   | Fuel Plant | Makes Rocket Fuel from Kerosene and Hydrogen; needs Power. |
   | Chemical Plant | Makes Plastic, Rubber, and more from Crude Oil and Sulfur; needs Power. |
-  | Aluminum Smelter | Makes Aluminum from Bauxite; needs lots of Power. |
-  | Electric Furnace | Makes Silicon from Quartz or Titanium from Titanium Ore; needs Power. |
   | Fabricator | Makes parts such as Hull Plate and Steel Beam from metals; needs Power. |
   | Electronics Works | Makes Copper Wire and Circuits from Copper and Plastic; needs Power. |
-  | Tile Kiln | Fires Silicon and Aluminum into Ceramic Tile; needs Power. |
   | Assembly Plant | Assembles advanced parts such as Control Module and Fuel Tank. |
   | Shipyard | Builds Hull Sections and Engines, and launches your ship. |
   | Sawmill | Saws Wood into Lumber. |
-  | Cement Kiln | Bakes Limestone into Cement; burns fuel. |
   | Concrete Mixer | Mixes Cement into Concrete; needs Power, Sand, and Water. |
   | Brine Well | Draws Lithium from desert salt flats; needs Power and Water. |
   | Semiconductor Fab | Makes Silicon Wafers, Processors, and Solar Cells; needs Power. |
-  | Air Separator | Makes Liquid Oxygen from the air; needs Power. |
   | Enrichment Plant | Turns Uranium Ore into Enriched Uranium and Fuel Rods; needs Power. |
   | Solar Array | Makes Power from sunlight, none at night; no fuel. |
   | Battery Bank | Stores spare Power and gives it back during shortages. |

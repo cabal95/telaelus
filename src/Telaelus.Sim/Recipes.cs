@@ -56,7 +56,6 @@ public static class Recipes
     private static readonly Recipe EnrichedUranium = Make(30f, ResourceType.EnrichedUranium,
         (ResourceType.UraniumOre, 2f), (ResourceType.SulfuricAcid, 1f));
     private static readonly Recipe Lithium = Make(10f, ResourceType.Lithium);
-    private static readonly Recipe SeparatedOxygen = Make(5f, ResourceType.LiquidOxygen);
 
     // Tier 2: components.
     private static readonly Recipe HullPlate = Make(12f, ResourceType.HullPlate, (ResourceType.Steel, 2f));
@@ -102,7 +101,24 @@ public static class Recipes
     private static readonly Recipe Engine = Make(90f, ResourceType.Engine,
         (ResourceType.ThrusterAssembly, 2f), (ResourceType.FuelTank, 2f), (ResourceType.MachineParts, 4f));
 
-    /// <summary>The recipes a building type runs, default first; empty for one that is not a processor.</summary>
+    /// <summary>
+    /// The recipes a building type runs at a level, default first; empty for one that is not a
+    /// processor. A higher level keeps every recipe of the level below, in the same order, and adds
+    /// its own after them, so a recipe's index holds through an upgrade.
+    /// </summary>
+    public static IReadOnlyList<Recipe> For(BuildingType type, int level)
+    {
+        return (type, level) switch
+        {
+            (BuildingType.Smelter, 2) => new[] { Iron, Copper, SteelWithFuel },
+            (BuildingType.Smelter, 3) => new[] { Iron, Copper, SteelWithFuel, Aluminum, SiliconWithFuel, Titanium },
+            (BuildingType.Kiln, 2) => new[] { Charcoal, Cement },
+            (BuildingType.Kiln, 3) => new[] { Charcoal, Cement, CeramicTile },
+            _ => For(type)
+        };
+    }
+
+    /// <summary>The recipes a building type runs at level 1, default first; empty for one that is not a processor.</summary>
     public static IReadOnlyList<Recipe> For(BuildingType type)
     {
         return type switch
@@ -110,24 +126,18 @@ public static class Recipes
             BuildingType.Smelter => new[] { Iron, Copper },
             BuildingType.Refinery => new[] { Kerosene },
             BuildingType.Glassworks => new[] { Glass },
-            BuildingType.CharcoalKiln => new[] { Charcoal },
-            BuildingType.SteelMill => new[] { SteelWithFuel },
+            BuildingType.Kiln => new[] { Charcoal },
             BuildingType.Electrolyzer => new[] { Hydrogen, LiquidOxygen },
             BuildingType.FuelPlant => new[] { RocketFuel },
             BuildingType.ChemicalPlant => new[] { Plastic, Rubber, CarbonFiber, SulfuricAcid },
-            BuildingType.AluminumSmelter => new[] { Aluminum },
-            BuildingType.ElectricFurnace => new[] { SiliconWithFuel, Titanium },
             BuildingType.Fabricator => new[] { HullPlate, SteelBeam, AluminumFrame, MachineParts, CompositePanel, Magnet, ElectricMotor, ArmorPlate },
             BuildingType.ElectronicsWorks => new[] { CopperWire, Circuit, InsulatedCable, Battery },
-            BuildingType.TileKiln => new[] { CeramicTile },
             BuildingType.AssemblyPlant => new[] { ControlModule, ThrusterAssembly, FuelTank, Computer, HeatShield, LifeSupportUnit, SensorArray },
             BuildingType.Shipyard => new[] { HullSection, Engine },
             BuildingType.Sawmill => new[] { Lumber },
-            BuildingType.CementKiln => new[] { Cement },
             BuildingType.ConcreteMixer => new[] { Concrete },
             BuildingType.BrineWell => new[] { Lithium },
             BuildingType.SemiconductorFab => new[] { SiliconWafer, Processor, SolarCell },
-            BuildingType.AirSeparator => new[] { SeparatedOxygen },
             BuildingType.EnrichmentPlant => new[] { EnrichedUranium, FuelRod },
             _ => Array.Empty<Recipe>()
         };

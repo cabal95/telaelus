@@ -13,7 +13,7 @@
     { "press": "B" },
     { "wait": 2 },
     { "comment": "Road and Bridge are tier 1 cells, sorted in by name: Bridge first.", "expect": "ui.cells[0].type", "equals": "Bridge" },
-    { "expect": "ui.cells[10].type", "equals": "Road" },
+    { "expect": "ui.cells[9].type", "equals": "Road" },
     { "clickUi": { "id": "buildMenu/Road" } },
     { "wait": 2 },
     { "expect": "ui.open", "equals": null },

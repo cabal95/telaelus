@@ -7,7 +7,7 @@ using Godot;
 namespace Telaelus.Presentation.Ui;
 
 /// <summary>
-/// Renders every building once, at startup, into a picture from the game camera's angle on the
+/// Renders every building at every level once, at startup, into a picture from the game camera's angle on the
 /// <see cref="PictureStage"/>, cached as textures, so menus never hold live 3D views. Grayscale is
 /// a shader on the picture (<see cref="GrayscaleMaterial"/>). Without a renderer (headless runs)
 /// there are no pictures and <see cref="Color"/> returns null.
@@ -16,14 +16,14 @@ public partial class BuildingPictures : Node
 {
     public const int PictureSize = 256;
 
-    private Dictionary<BuildingType, Texture2D> _pictures = new();
+    private Dictionary<(BuildingType Type, int Level), Texture2D> _pictures = new();
 
     /// <summary>Raised once the pictures are ready.</summary>
     public event Action? PicturesReady;
 
     public bool IsReady { get; private set; }
 
-    public Texture2D? Color(BuildingType type) => _pictures.GetValueOrDefault(type);
+    public Texture2D? Color(BuildingType type, int level = 1) => _pictures.GetValueOrDefault((type, level));
 
     private static ShaderMaterial? _grayscale;
 
@@ -54,8 +54,8 @@ public partial class BuildingPictures : Node
 
     private async void RenderAll()
     {
-        var stages = Enum.GetValues<BuildingType>()
-            .Select(type => (type, (Action<Node>)(view => PictureStage.Fill(view, type))));
+        var stages = BuildingDefs.AllLevels()
+            .Select(key => (key, (Action<Node>)(view => PictureStage.Fill(view, key.Type, key.Level))));
         _pictures = await PictureStage.RenderOnce(this, stages, PictureSize);
         IsReady = true;
         PicturesReady?.Invoke();

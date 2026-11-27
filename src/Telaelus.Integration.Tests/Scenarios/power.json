@@ -6,7 +6,7 @@
     { "newGame": {} },
     { "initMap": {} },
     { "seedStockpile": { "type": "Coal", "amount": 20 } },
-    { "comment": "Beside the HQ in the north-east corner, so everything here is online.", "placeBuilding": { "type": "DrillRig", "anchor": [49, 13] } },
+    { "comment": "Beside the HQ in the north-east corner, so everything here is online.", "placeBuilding": { "type": "Mine", "anchor": [49, 13], "level": 2 } },
     { "wait": 2 },
     { "expect": "buildings[1].online", "equals": true },
     { "expect": "buildings[1].idleReason", "equals": "Blackout: Power" },

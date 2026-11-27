@@ -5,7 +5,7 @@
   "steps": [
     { "newGame": {} },
     { "initMap": {} },
-    { "comment": "Sand south-west of the HQ (fine cells x 48..55, z 16..19), in its coverage.", "changeTiles": { "type": "Sand", "biome": "Desert", "cells": [[12, 4], [13, 4]] } },
+    { "comment": "Sand south-west of the HQ (fine cells x 48..55, z 16..23), in its coverage.", "changeTiles": { "type": "Sand", "biome": "Desert", "cells": [[12, 4], [13, 4], [12, 5], [13, 5]] } },
     { "seedStockpile": { "type": "Coal", "amount": 50 } },
     { "teleportPlayer": { "x": 40, "z": 24 } },
 
@@ -29,8 +29,8 @@
     { "expect": "stockpile.Sand", "equals": 0 },
 
     { "comment": "Four Collectors (8) under five Glassworks (10): a quarter over, a brownout at half speed. Two Small Hubs bring the west ones online.", "placeBuilding": { "type": "SandCollector", "anchor": [48, 16] } },
-    { "placeBuilding": { "type": "SandCollector", "anchor": [50, 16] } },
-    { "placeBuilding": { "type": "SandCollector", "anchor": [54, 16] } },
+    { "placeBuilding": { "type": "SandCollector", "anchor": [48, 20] } },
+    { "placeBuilding": { "type": "SandCollector", "anchor": [52, 20] } },
     { "placeBuilding": { "type": "Glassworks", "anchor": [41, 10] } },
     { "queueCraft": { "anchor": [41, 10], "recipe": 0, "count": 99 } },
     { "placeBuilding": { "type": "Glassworks", "anchor": [38, 10] } },

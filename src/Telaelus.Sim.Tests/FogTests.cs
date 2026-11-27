@@ -115,11 +115,11 @@ public class FogTests
         Simulation sim = FoggyMap();
 
         // Map cell (15, 15) is out of sight of the center; (9, 9) is in sight.
-        Assert.False(sim.CanPlace(BuildingType.LumberCamp, 61, 61, Facing.North));
-        Assert.True(sim.CanPlace(BuildingType.LumberCamp, 37, 37, Facing.North));
+        Assert.False(sim.CanPlace(BuildingType.Silo, 61, 61, Facing.North));
+        Assert.True(sim.CanPlace(BuildingType.Silo, 37, 37, Facing.North));
 
         sim.Debug.RevealAll();
-        Assert.True(sim.CanPlace(BuildingType.LumberCamp, 61, 61, Facing.North));
+        Assert.True(sim.CanPlace(BuildingType.Silo, 61, 61, Facing.North));
     }
 
     [Fact]

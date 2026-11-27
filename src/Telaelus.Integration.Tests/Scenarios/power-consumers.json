@@ -20,7 +20,7 @@
     { "expect": "ui.topBar.power", "equals": "0 / 60" },
     { "screenshot": "midday" },
 
-    { "comment": "Night: the array gives nothing; a Drill Rig's 10 Power comes from the bank.", "placeBuilding": { "type": "DrillRig", "anchor": [44, 9] } },
+    { "comment": "Night: the array gives nothing; a Drill Rig's 10 Power comes from the bank.", "placeBuilding": { "type": "Mine", "anchor": [44, 8], "level": 2 } },
     { "setTimeOfDay": 0.95 },
     { "wait": 1 },
     { "expect": "ui.topBar.clock", "equals": "22:48" },
@@ -32,8 +32,8 @@
 
     { "comment": "A Fission Reactor on two Fuel Rods, cooled by two Water Pumps on the pond at map cell (13, 4).", "seedStockpile": { "type": "FuelRod", "amount": 2 } },
     { "changeTiles": { "type": "ShallowWater", "cells": [[13, 4]] } },
-    { "placeBuilding": { "type": "WaterPump", "anchor": [52, 14] } },
-    { "placeBuilding": { "type": "WaterPump", "anchor": [54, 14] } },
+    { "placeBuilding": { "type": "WaterPump", "anchor": [52, 12] } },
+    { "placeBuilding": { "type": "WaterPump", "anchor": [56, 16] } },
     { "placeBuilding": { "type": "FissionReactor", "anchor": [44, 12] } },
     { "setTimeOfDay": 0.5 },
     { "wait": 3 },

@@ -74,6 +74,7 @@
     { "expect": "research.active", "equals": null },
     { "comment": "Advanced Material Transfer is tier 2: still locked until Steel Works opens the tier.", "expect": "ui.cards[1].locked", "equals": true },
     { "setResearchProgress": { "project": "SteelWorks", "seconds": 1200 } },
+    { "comment": "Cement (the Cement Kiln level) is the last Tier 1 project.", "setResearchProgress": { "project": "Cement", "seconds": 600 } },
     { "wait": 2 },
     { "expect": "ui.cards[1].locked", "equals": false },
     { "comment": "Every Tier 1 project is complete: its heading has the check mark, and Tier 2 opens.", "expect": "ui.sections[0]", "equals": { "tier": 1, "heading": "TIER 1", "locked": false, "checked": true } },

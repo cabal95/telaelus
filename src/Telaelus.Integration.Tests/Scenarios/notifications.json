@@ -11,7 +11,7 @@
     { "seedStockpile": { "type": "Wood", "amount": 15 } },
     { "wait": 1 },
     { "comment": "Holding a cost unlocks nothing; the discovery is the only toast.", "expect": "ui.toasts", "equals": [
-      { "style": "brief", "title": "Discovered: Wood", "detail": "A Lumber Camp or a Lumber Mill can work it", "remaining": 5, "shown": true }
+      { "style": "brief", "title": "Discovered: Wood", "detail": "A Lumber Camp, a Lumber Mill or an Advanced Lumber Mill can work it", "remaining": 5, "shown": true }
     ] },
     { "wait": 8 },
     { "screenshot": "brief" },

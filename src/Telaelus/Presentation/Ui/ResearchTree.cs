@@ -37,6 +37,7 @@ public partial class ResearchTree : Dialog
 
     private Simulation _sim = null!;
     private ResourceIcons _icons = null!;
+    private BuildingPictures _pictures = null!;
     private Label _header = null!;
     private HBoxContainer _split = null!;
     private TreeCanvas _canvas = null!;
@@ -88,10 +89,19 @@ public partial class ResearchTree : Dialog
         (Selected, _drawer.State.Text, _drawer.Button.Text, _drawer.Button.Visible && !_drawer.Button.Disabled,
             _drawer.FeeText, _drawer.Time.Text, (float)_drawer.Bar.Value);
 
-    public void Initialize(Simulation sim, ResourceIcons icons)
+    public void Initialize(Simulation sim, ResourceIcons icons, BuildingPictures pictures)
     {
         _sim = sim;
         _icons = icons;
+        _pictures = pictures;
+    }
+
+    /// <summary>A project's picture: its icon model, or for a project that unlocks a level, that level's building picture.</summary>
+    public static Texture2D? Picture(ResearchProject project, ResourceIcons icons, BuildingPictures pictures)
+    {
+        return ResearchDefs.For(project).UnlocksLevel is (BuildingType type, int level)
+            ? pictures.Color(type, level)
+            : icons.Icon(ResearchIconName(project));
     }
 
     protected override void Build()
@@ -414,7 +424,7 @@ public partial class ResearchTree : Dialog
         {
             Simulation sim = _tree._sim;
             ResearchState state = sim.StateOf(_project);
-            _icon.Texture ??= _tree._icons.Icon(ResearchIconName(_project));
+            _icon.Texture ??= Picture(_project, _tree._icons, _tree._pictures);
             bool running = state == ResearchState.Running;
             Indicator.Visible = running;
             Bar.Visible = running;
@@ -563,7 +573,7 @@ public partial class ResearchTree : Dialog
                 }
                 _feeSignature = "";
             }
-            _icon.Texture ??= _tree._icons.Icon(ResearchIconName(project));
+            _icon.Texture ??= Picture(project, _tree._icons, _tree._pictures);
             for (int i = 0; i < def.Transfers.Count; i++)
             {
                 ((TextureRect)_transfers.GetChild(i)).Texture ??= _tree._icons.For(def.Transfers[i]);

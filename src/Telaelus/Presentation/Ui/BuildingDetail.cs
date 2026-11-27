@@ -103,6 +103,8 @@ public partial class BuildingDetail : Dialog
 
     private Button _openResearch = null!;
     private Button _destroy = null!;
+    private Button _upgrade = null!;
+    private bool _upgradeHovered;
     private double _confirmLeft;
     private bool _destroyHovered;
 
@@ -143,7 +145,17 @@ public partial class BuildingDetail : Dialog
     public string? FuelText => _fuel.Visible ? _fuel.SelectedText : null;
 
     /// <summary>The Destroy button's text (it reads "Confirm destroy" while waiting), or null when hidden.</summary>
+    /// <summary>The panel's title: the building's level name (for the snapshot).</summary>
+    public string Title => TitleLabel.Text;
+
     public string? DestroyText => _destroy.Visible ? _destroy.Text : null;
+
+    /// <summary>The Upgrade button as shown (its label, whether it can be pressed, its tooltip lines), or null when hidden.</summary>
+    public (string Text, bool Enabled, IReadOnlyList<string> Tip)? UpgradeShown => _upgrade.Visible
+        ? (_upgrade.Text, !_upgrade.Disabled, UpgradeTip.Select(line => line.Text).ToList())
+        : null;
+
+    private List<TipLine> UpgradeTip { get; set; } = new();
 
     /// <summary>The Destroy button's tooltip ("Refund: 13 Wood, 8 Stone").</summary>
     public string DestroyTip { get; private set; } = "";
@@ -231,6 +243,28 @@ public partial class BuildingDetail : Dialog
             CustomMinimumSize = new Vector2(0f, UiTheme.Gap),
             MouseFilter = MouseFilterEnum.Ignore
         });
+        // Upgrade to the next level, above Destroy, while the building has one.
+        _upgrade = UiTheme.SizeToLabel(new Button
+        {
+            Name = "Upgrade",
+            FocusMode = FocusModeEnum.None
+        });
+        _upgrade.Pressed += () =>
+        {
+            if (Building is Building upgrading && _sim.TryUpgrade(upgrading.Id))
+            {
+                ShowBuilding(upgrading);
+            }
+        };
+        _upgrade.MouseEntered += () => _upgradeHovered = true;
+        _upgrade.MouseExited += () =>
+        {
+            _upgradeHovered = false;
+            Host.HideHover(_upgrade);
+        };
+        Body.AddChild(_upgrade);
+        Host.Register(Id + "/upgrade", _upgrade);
+
         _destroy = UiTheme.SizeToLabel(new Button
         {
             Name = "Destroy",
@@ -588,7 +622,7 @@ public partial class BuildingDetail : Dialog
         // width (Dialog.Place) less its padding and the scroll bar.
         _room = Mathf.Max(Host.UiSize.X / 3f, 280f) - 2 * UiTheme.Padding - ScrollBarRoom;
         TitleLabel.Text = building.Def.Name;
-        _turntable.Show(building.Type);
+        _turntable.Show(building.Type, building.Level);
         Host.Open(this);
         Refresh();
     }
@@ -689,6 +723,8 @@ public partial class BuildingDetail : Dialog
         {
             section.Visible = section.GetChildren().Skip(1).OfType<Control>().Any(control => control.Visible);
         }
+
+        RefreshUpgrade(building);
 
         _destroy.Visible = !def.Permanent;
         _destroy.Text = _confirmLeft > 0 ? "Confirm destroy" : "Destroy";
@@ -1461,6 +1497,36 @@ public partial class BuildingDetail : Dialog
         string inputs = string.Join(" + ", recipe.Inputs.Select((a, i) => $"{(int)a.Amount} {recipe.InputName(i)}"));
         string makes = recipe.Inputs.Count == 0 ? Amounts(recipe.Outputs) : $"{inputs} to {Amounts(recipe.Outputs)}";
         return $"{makes}, {recipe.CycleTime:0.#} s";
+    }
+
+    // "Upgrade to Drill Rig": the next level's description and its price (the difference in cost),
+    // short amounts marked; disabled, with the research it needs, while that level is locked.
+    private void RefreshUpgrade(Building building)
+    {
+        int next = building.Level + 1;
+        _upgrade.Visible = next <= BuildingDefs.Levels(building.Type);
+        if (!_upgrade.Visible)
+        {
+            UpgradeTip = new List<TipLine>();
+            return;
+        }
+        _upgrade.Text = "Upgrade to " + BuildingDefs.For(building.Type, next).Name;
+        var tip = new List<TipLine>(TipLine.Wrapped(BuildingDefs.DescriptionOf(building.Type, next), UiTheme.TextDim));
+        List<TipLine> locked = BuildMenu.LockLines(_sim, building.Type, next);
+        if (locked.Count > 0)
+        {
+            tip.AddRange(locked);
+        }
+        else
+        {
+            tip.AddRange(BuildMenu.CostLines(_sim, _sim.UpgradePrice(building)));
+        }
+        UpgradeTip = tip;
+        _upgrade.Disabled = !_sim.CanUpgrade(building);
+        if (_upgradeHovered)
+        {
+            Host.ShowHover(_upgrade, UpgradeTip);
+        }
     }
 
     private string RefundText(Building building)

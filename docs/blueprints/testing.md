@@ -211,8 +211,18 @@ pausing it and stepping frame by frame.
   Steel Works; a project in a locked tier locked until its tier unlocks; a loaded building in a
   locked tier working while no more can be placed; every buildable building tier 1 to 4 costing
   nothing above its tier; each tier's gateways built from the tier below; a tier N building making
-  tier N items (Lithium and the Air Separator's Liquid Oxygen excepted); each unlock project in the
-  tier below the one it unlocks and paid in its own tier.
+  tier N items (Lithium excepted, and a level judged by the recipes it adds); each unlock project
+  in the tier below the one it unlocks and paid in its own tier.
+- `LevelTests`: each family's level names, tiers, 4 x 4 footprints, and unlocking projects; the
+  Smelter's and Kiln's recipes by level, each level keeping the one below's in order; a level
+  above 1 locked with its tier open until its project is done, and still locked while the tier is
+  closed; placing at a level paying and recording that level's cost; `UpgradePrice` as the
+  difference per resource, empty at the top level; each level's cost including the level below's,
+  so a Mine upgraded twice pays what a Deep Mine costs; `TryUpgrade` refused while locked or one unit
+  short; an upgrade paying, keeping the id, queue, hold, and input choices, and adding the new
+  recipes; a Smelter upgraded mid-cycle to a Steel Mill putting out its fire while the running
+  cycle finishes; `DestroyRefund` half of the placing cost plus the upgrade price, rounded up; and
+  a save round trip keeping `Level`, `Def`, `Paid`, and the recipes.
 - `PowerStoreTests`: the clock starting mid-morning, advancing, and wrapping; daylight through the
   day; the Solar Array's supply by daylight and its night status; a Battery Bank charging at its
   rate up to its capacity, covering a shortage at Normal until it runs dry, giving at most its rate
@@ -229,14 +239,15 @@ pausing it and stepping frame by frame.
 - `RefiningTests`: each building's recipes; the Steel Mill on Auto taking Coal, on Charcoal only
   Charcoal, waiting for it, and back on Auto; the next order's recipe waiting for the running
   cycle; the Electrolyzer's two gases and the Fuel Plant's Rocket
-  Fuel; the Chemical Plant's and Electric Furnace's recipes; Aluminum Smelters' heavy draw.
+  Fuel; the Chemical Plant's and the Smelter levels' recipes; two Electric Smelters on Aluminum
+  drawing 60 Power each.
 - `CraftingQueueTests`: a Charcoal Kiln taking only the Wood its order needs, then idle "Queue
   empty"; a later order of the same recipe going after another's, one in a row growing the last;
   four orders at most; orders running in turn, the first waiting for its inputs; a Copper Wire
   order counted in whole cycles; cancelling the running order returning its inputs, and a later one
-  leaving the running one alone; an idle Electric Furnace still drawing its 40 Power; an idle
-  Smelter taking no new fuel while its burning unit burns out; the Electrolyzer, Brine Well, and
-  Air Separator running without a queue and the Glassworks queueing; input choices kept per
+  leaving the running one alone; an idle Electric Smelter still drawing its 60 Power; an idle
+  Smelter taking no new fuel while its burning unit burns out; the Electrolyzer and Brine Well
+  running without a queue and the Glassworks queueing; input choices kept per
   recipe; the queue and choices surviving a save; an older save loading with an empty queue.
 - `HoldTests`: entering Hold emptying the queue and stopping a cycle of another recipe (its Ore
   back), or letting one of the held recipe run; a held Charcoal Kiln making up to its target,
@@ -265,8 +276,8 @@ pausing it and stepping frame by frame.
     `placeResource` `{ type, mapCell, amount? }` (default: the biome's amount), `setResourceAmount`
     `{ mapCell, amount }` (0 removes), `removeResource` `{ mapCell }`, `removeBuilding`
     `{ anchor }`.
-  - Other setup: `placeBuilding` `{ type, anchor, facing? }` (the spatial placement rule, free
-    and whether or not unlocked), `teleportPlayer` `{ x, z }` (the camera jumps onto the player too), `seedStockpile` `{ type, amount }`, `fillBuffer` `{ anchor, type, amount }` (sets one
+  - Other setup: `placeBuilding` `{ type, anchor, facing?, level? }` (the spatial placement rule,
+    free and whether or not unlocked; level 1 by default), `teleportPlayer` `{ x, z }` (the camera jumps onto the player too), `seedStockpile` `{ type, amount }`, `fillBuffer` `{ anchor, type, amount }` (sets one
     resource in the output buffer of the building at that anchor; 0 removes it), `setRecipe`
     `{ anchor, index }` (chooses the recipe of the running processor at that anchor, as its picker
     does; a queueing processor refuses it), `queueCraft` `{ anchor, recipe, count }` (queues an
@@ -306,8 +317,8 @@ pausing it and stepping frame by frame.
     a scroll container must be hovered into view first), and `scrollUi` `{ id, ticks }` (turns the wheel over one: positive ticks down,
     negative up). When a scroll container clips the control, `clickUi` and `hoverUi` first scroll
     it into view, as a player would, and act a frame later, once the layout has settled. Keys are Godot `Key` names (`R`, `E`, `B`, `Escape`). UI ids are a dialog's id and a
-    control's name: `buildMenu/<BuildingType>` for a cell (`buildMenu/Road` and `buildMenu/Bridge` for the line tools), `buildingDetail/toggle` (the on/off icon
-    toggle) and `buildingDetail/destroy` for the detail panel's actions, `buildingDetail/siloResource` for the
+    control's name: `buildMenu/<level name without spaces>` for a cell (`buildMenu/Mine`, `buildMenu/DrillRig`; `buildMenu/Road` and `buildMenu/Bridge` for the line tools), `buildingDetail/toggle` (the on/off icon
+    toggle), `buildingDetail/upgrade`, and `buildingDetail/destroy` for the detail panel's actions, `buildingDetail/siloResource` for the
     Silo picker, `buildingDetail/mode`, `buildingDetail/input`, and `buildingDetail/fuel` for its
     segmented pickers (for `selectUi`) and `buildingDetail/mode/Hold` and the like for a picker's
     cell (for `clickUi`), `inventory/<ResourceType>` for an inventory row, `inventory/pin/<ResourceType>`
@@ -361,8 +372,8 @@ pausing it and stepping frame by frame.
   open its `name` and `confirm`, while the load dialog is open its `savesPrompt` (the list's question or null) and `saves` (each `name`, `outdated`, and
   `loadable`) and `confirm`, and while the build menu is open, its `tier` (1 to 4), `tiers` (each picker cell's `label`,
   `enabled`, and `checked`), and `cells`, the chosen tier's cells in display order (on Tier 1
-  `Road` and `Bridge` sorted in by name), each `type`, `state` (`affordable` or `unaffordable`),
-  and `label`; while the research tree is open, its `header`, `sections` (each tier's
+  `Road` and `Bridge` sorted in by name, locked levels last), each `type`, `level`, `state`
+  (`affordable`, `unaffordable`, or `locked`), and `label`; while the research tree is open, its `header`, `sections` (each tier's
   `tier`, `heading` as shown, `locked`, and `checked` when every project of the tier is complete),
   its `cards` (every project, each `project`, `running`, `progress` 0 to 1, `selected`, and
   `locked`), and its `drawer` (the selected `project`, its `state` as shown,
@@ -371,7 +382,8 @@ pausing it and stepping frame by frame.
   `id` (`switch` for the on/off toggle, then `network`, `power`, `water`, `sand`, `charge`,
   `burning`, `truck`), `value` as shown ("-10", "+35", "53%", "22 s", or null), `tone`
   (`normal`, `dim`, `good`, `warning`, or `danger`), and `tip`, its tooltip), `state` (the state
-  line, "Working" or "Idle: " and the reason, or null) and `stateTone`, `rows` (each shown status
+  line, "Working" or "Idle: " and the reason, or null) and `stateTone`, `title` (the panel's
+  title, the building's level name), `rows` (each shown status
   row, keyed in camel case: `research`, `site`, `plot`, `eats`, `inRange`, `workingOn`, `recipe`,
   `buffer`, `links`, `reach`), `trucks` (a Depot's bays in order, each `state`, its truck's state
   in camel case or `empty`, and `tip`, as "Truck 2: Parked" or "Empty bay"; null for other
@@ -386,7 +398,8 @@ pausing it and stepping frame by frame.
   Shipyard's Ship launch section: its `bill` ("have / need" per entry), the `button` text,
   `enabled`, the `note` saying why not or null, and `ships` ("Ships launched: n") or null; null for
   other buildings), `adds` (what a storage building adds, by
-  resource name, as "+300"), `destroy` (the Destroy button's text, or null when hidden), `destroyTip`
+  resource name, as "+300"), `upgrade` (the Upgrade button's `text`, `enabled`, and `tip` lines, or
+  null when hidden), `destroy` (the Destroy button's text, or null when hidden), `destroyTip`
   (its tooltip, "Refund: 13 Wood, 8 Stone", or null when hidden), and
   `turnDegrees`; while the field detail panel is open, `field` (its id), `title`, and `rows`
   (`remaining`, `workedBy`); while the inventory is open, `inventory`: the chosen choice's rows in
@@ -395,7 +408,7 @@ pausing it and stepping frame by frame.
   `discovered`, and `pinned`, `inventoryChoice` ("Resources", "Tier 1"), `inventoryArrows`
   (`prev` and `next`, whether each arrow can step), `inventoryPicker` (`currentWidth`, the current
   cell's width, and `nextX`, the right arrow's x in the picker), and `cargo`, the Cargo row's
-  text); `buildings` (`id`, `type`, `anchor`, `facing`, `width`, `depth`,
+  text); `buildings` (`id`, `type`, `level`, `anchor`, `facing`, `width`, `depth`,
   `currentField`, `enabled`, `online`, and `output` (amounts by type),
   `burning` (the fuel burning, or null), `status`
   (`working`, `idle`, or `off`), and `idleReason` or null);
@@ -673,10 +686,15 @@ pausing it and stepping frame by frame.
   its refund on hover, asks once, then refunds half the cost),
   `build-menu` (B opens the menu on Tier 1, Road and Bridge sorted in with the buildings,
   affordable in color and short ones gray; a locked tier's cell disabled, its tooltip naming the
-  research, a click on it doing nothing; after Steel Works Tier 2 showing its 20 buildings and the
-  menu reopening on the tier last viewed; the modal menu stops the world; a hover shows the
+  research, a click on it doing nothing; a level whose research is not done a locked cell, last,
+  its tooltip naming that research and a click on it doing nothing; after Steel Works Tier 2
+  showing its 12 open buildings and 7 locked levels and the menu reopening on the tier last viewed; the modal menu stops the world; a hover shows the
   description and then the cost; B, Escape, and Close close it; clicking an unaffordable cell
   selects it with the placement tooltip),
+  `building-upgrade` (a Mine's Upgrade to Drill Rig disabled and naming Powered Mining while
+  locked, then marking the short amounts, then enabled; pressing it pays the difference, keeps the
+  id and anchor, makes a level 2 Drill Rig whose panel title and picture follow, offers Upgrade to
+  Deep Mine, and raises the refund to half of all it has cost),
   `build-rotate` (R rotates the Refinery ghost 2 x 3 to 3 x 2 and back), `place-at-mouse` (aim and
   click places a Mine at the expected anchor; the ghost counts an Iron Ore field in range),
   `walk` (a right click walks there with the destination ring, and Ctrl + left the same; a left

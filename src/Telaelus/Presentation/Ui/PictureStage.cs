@@ -35,11 +35,11 @@ public static class PictureStage
     }
 
     /// <summary>Stages a building, its front toward the camera; returns the pivot it turns on.</summary>
-    public static Node3D Fill(Node parent, BuildingType type)
+    public static Node3D Fill(Node parent, BuildingType type, int level = 1)
     {
         // The game camera looks from +X +Z, and models face -Z, so a South-facing model
         // turns its front to the camera.
-        return Fill(parent, "buildings/" + BuildingModels.FileName(type), ModelLibrary.EdgeYaw(Facing.South), Framing.Loose);
+        return Fill(parent, "buildings/" + BuildingModels.FileName(type, level), ModelLibrary.EdgeYaw(Facing.South), Framing.Loose);
     }
 
     /// <summary>Stages any model by its path (as for <see cref="ModelLibrary.Instance(string)"/>); returns its pivot.</summary>

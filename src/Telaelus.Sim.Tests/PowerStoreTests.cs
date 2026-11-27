@@ -89,7 +89,7 @@ public class PowerStoreTests
         Simulation sim = EmptyMap();
         Building bank = sim.Debug.PlaceBuilding(BuildingType.BatteryBank, 48, 4, Facing.North);
         bank.Charge = 100f;
-        sim.Debug.PlaceBuilding(BuildingType.DrillRig, 44, 4, Facing.North);
+        sim.Debug.PlaceBuilding(BuildingType.Mine, 44, 4, Facing.North, 2);
 
         // A Drill Rig draws 10 Power: the bank gives it, so the network stays Normal.
         SimTestHelpers.Ticks(sim, 1);
@@ -109,7 +109,7 @@ public class PowerStoreTests
         Building bank = sim.Debug.PlaceBuilding(BuildingType.BatteryBank, 48, 4, Facing.North);
         bank.Charge = 1000f;
         // An Aluminum Smelter draws 60 Power; one bank gives 50, a 20% brownout.
-        sim.Debug.PlaceBuilding(BuildingType.AluminumSmelter, 44, 2, Facing.North);
+        sim.Debug.PlaceBuilding(BuildingType.Smelter, 44, 2, Facing.North, 3);
         SimTestHelpers.Ticks(sim, 1);
 
         Assert.Equal(50f, Power(sim).Supply, 1);
@@ -122,7 +122,7 @@ public class PowerStoreTests
         Simulation sim = EmptyMap();
         Building bank = sim.Debug.PlaceBuilding(BuildingType.BatteryBank, 48, 4, Facing.North);
         bank.Charge = 300f;
-        sim.Debug.PlaceBuilding(BuildingType.DrillRig, 44, 4, Facing.North);
+        sim.Debug.PlaceBuilding(BuildingType.Mine, 44, 4, Facing.North, 2);
         Assert.True(sim.SetBuildingEnabled(bank.Id, false));
 
         SimTestHelpers.Seconds(sim, 5.0);
@@ -137,8 +137,8 @@ public class PowerStoreTests
     {
         Simulation sim = EmptyMap();
         sim.Debug.SetTerrain(13, 4, TerrainType.ShallowWater);
-        sim.Debug.PlaceBuilding(BuildingType.WaterPump, 52, 14, Facing.North);
-        sim.Debug.PlaceBuilding(BuildingType.WaterPump, 54, 14, Facing.North);
+        sim.Debug.PlaceBuilding(BuildingType.WaterPump, 52, 12, Facing.North);
+        sim.Debug.PlaceBuilding(BuildingType.WaterPump, 56, 16, Facing.North);
         return sim;
     }
 

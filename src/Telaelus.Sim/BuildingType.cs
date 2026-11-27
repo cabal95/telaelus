@@ -1,6 +1,10 @@
 namespace Telaelus.Sim;
 
-/// <summary>Kinds of building: every one the player can place, and the HQ, which the world places.</summary>
+/// <summary>
+/// Kinds of building: every one the player can place, and the HQ, which the world places. A leveled
+/// family (the Mine, Lumber Camp, Water Pump, Sand Collector, Oil Well, Smelter, and Kiln) is one
+/// type with several levels (see <see cref="BuildingDefs.For(BuildingType, int)"/>).
+/// </summary>
 public enum BuildingType
 {
     Mine,
@@ -18,37 +22,25 @@ public enum BuildingType
     Relay,
     WaterWheel,
     BurnerGenerator,
-    LumberMill,
-    DrillRig,
     WaterPump,
-    PumpingStation,
     SandCollector,
-    SandDredge,
     Glassworks,
     Depot,
     Forester,
     Quarry,
-    CharcoalKiln,
+    Kiln,
     RockCrusher,
-    DeepWell,
-    DeepMine,
-    SteelMill,
     Electrolyzer,
     FuelPlant,
     ChemicalPlant,
-    AluminumSmelter,
-    ElectricFurnace,
     Fabricator,
     ElectronicsWorks,
-    TileKiln,
     AssemblyPlant,
     Shipyard,
     Sawmill,
-    CementKiln,
     ConcreteMixer,
     BrineWell,
     SemiconductorFab,
-    AirSeparator,
     EnrichmentPlant,
     SolarArray,
     BatteryBank,

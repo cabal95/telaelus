@@ -143,7 +143,8 @@ public sealed class ScenarioCommand
                     BuildingType type = ParseEnum<BuildingType>(Required(arg, "type"));
                     (int x, int z) = Pair(Required(arg, "anchor"), "anchor");
                     Facing facing = arg.TryGetProperty("facing", out JsonElement f) ? ParseEnum<Facing>(f) : Facing.North;
-                    return e => e.PlaceBuilding(type, x, z, facing);
+                    int level = arg.TryGetProperty("level", out JsonElement l) ? Int(l, "level") : 1;
+                    return e => e.PlaceBuilding(type, x, z, facing, level);
                 }
             case "teleportPlayer":
                 {

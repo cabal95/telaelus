@@ -24,7 +24,7 @@ public partial class TurntableView : PanelContainer
     };
 
     private Node3D? _pivot;
-    private BuildingType? _type;
+    private (BuildingType Type, int Level)? _shown;
 
     public override void _Ready()
     {
@@ -40,19 +40,19 @@ public partial class TurntableView : PanelContainer
         container.AddChild(_view);
     }
 
-    /// <summary>Shows a building type (rebuilding the stage only when it changes).</summary>
-    public void Show(BuildingType type)
+    /// <summary>Shows a building type at a level (rebuilding the stage only when either changes).</summary>
+    public void Show(BuildingType type, int level = 1)
     {
-        if (_type == type)
+        if (_shown == (type, level))
         {
             return;
         }
-        _type = type;
+        _shown = (type, level);
         foreach (Node child in _view.GetChildren())
         {
             child.QueueFree();
         }
-        _pivot = PictureStage.Fill(_view, type);
+        _pivot = PictureStage.Fill(_view, type, level);
     }
 
     public override void _Process(double delta)

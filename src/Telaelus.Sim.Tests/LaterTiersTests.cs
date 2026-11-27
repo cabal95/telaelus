@@ -19,19 +19,17 @@ public class LaterTiersTests
         if (water)
         {
             sim.Debug.SetTerrain(13, 4, TerrainType.ShallowWater);
-            sim.Debug.PlaceBuilding(BuildingType.WaterPump, 52, 14, Facing.North);
-            sim.Debug.PlaceBuilding(BuildingType.WaterPump, 54, 14, Facing.North);
+            sim.Debug.PlaceBuilding(BuildingType.WaterPump, 52, 12, Facing.North);
+            sim.Debug.PlaceBuilding(BuildingType.WaterPump, 56, 16, Facing.North);
         }
         return sim;
     }
 
     [Theory]
     [InlineData(BuildingType.Sawmill, "Lumber")]
-    [InlineData(BuildingType.CementKiln, "Cement")]
     [InlineData(BuildingType.ConcreteMixer, "Concrete")]
     [InlineData(BuildingType.BrineWell, "Lithium")]
     [InlineData(BuildingType.SemiconductorFab, "Silicon Wafer,Processor,Solar Cell")]
-    [InlineData(BuildingType.AirSeparator, "Liquid Oxygen")]
     [InlineData(BuildingType.EnrichmentPlant, "Enriched Uranium,Fuel Rod")]
     [InlineData(BuildingType.ChemicalPlant, "Plastic,Rubber,Carbon Fiber,Sulfuric Acid")]
     [InlineData(BuildingType.Fabricator, "Hull Plate,Steel Beam,Aluminum Frame,Machine Parts,Composite Panel,Magnet,Electric Motor,Armor Plate")]
@@ -46,7 +44,7 @@ public class LaterTiersTests
     public void EveryCatalogItem_HasASource()
     {
         var made = Enum.GetValues<BuildingType>()
-            .SelectMany(Recipes.For)
+            .SelectMany(type => Recipes.For(type, BuildingDefs.Levels(type)))
             .Select(r => r.Outputs[0].Type)
             .ToHashSet();
         var unmade = Enum.GetValues<ResourceType>()
@@ -96,26 +94,14 @@ public class LaterTiersTests
     }
 
     [Fact]
-    public void TheAirSeparator_MakesLiquidOxygen_WithoutWater()
-    {
-        Simulation sim = Plant(water: false);
-        Building separator = sim.Debug.PlaceBuilding(BuildingType.AirSeparator, 48, 4, Facing.North);
-        Assert.True(separator.Online);
-
-        SimTestHelpers.Seconds(sim, 10.2);
-
-        Assert.Equal(2f, SimTestHelpers.Stock(sim, ResourceType.LiquidOxygen));
-        Assert.Equal(0f, separator.Def.Draw(CapacityType.Water));
-    }
-
-    [Fact]
     public void TheCementKiln_BurnsFuel_AndNeedsNoPower()
     {
         var sim = new Simulation();
         sim.Debug.ResetToEmptyMap();
         sim.Debug.SeedStockpile(ResourceType.Limestone, 6f);
-        Building kiln = sim.Debug.PlaceBuilding(BuildingType.CementKiln, 48, 4, Facing.North);
-        SimTestHelpers.Order(sim, kiln);
+        // The Cement Kiln's Cement is recipe 1.
+        Building kiln = sim.Debug.PlaceBuilding(BuildingType.Kiln, 48, 4, Facing.North, 2);
+        SimTestHelpers.Order(sim, kiln, 1);
         SimTestHelpers.Ticks(sim, 1);
         Assert.True(kiln.Online);
         Assert.Equal(new BuildingStatus(BuildingState.Idle, "Waiting for fuel"), sim.BuildingStatusOf(kiln));
@@ -178,10 +164,10 @@ public class LaterTiersTests
             (BuildingType.AssemblyPlant, 8, 24, 3),
             (BuildingType.EnrichmentPlant, 15, 24, 0),
             (BuildingType.EnrichmentPlant, 22, 24, 1),
-            (BuildingType.WaterPump, 46, 24, 0),
-            (BuildingType.WaterPump, 46, 26, 0),
-            (BuildingType.WaterPump, 48, 22, 0),
-            (BuildingType.WaterPump, 50, 22, 0),
+            (BuildingType.WaterPump, 44, 24, 0),
+            (BuildingType.WaterPump, 48, 20, 0),
+            (BuildingType.WaterPump, 48, 28, 0),
+            (BuildingType.WaterPump, 52, 24, 0),
             (BuildingType.Vault, 34, 24, 0)
         };
         foreach ((BuildingType type, int x, int z, int recipe) in placements)

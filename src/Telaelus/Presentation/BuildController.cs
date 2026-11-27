@@ -31,7 +31,7 @@ public partial class BuildController : Node3D
     private Camera3D _camera = null!;
     private Node3D _ghost = null!;
     private Node3D? _ghostModel;
-    private (BuildingType Type, Facing Facing)? _ghostModelKey;
+    private (BuildingType Type, Facing Facing, int Level)? _ghostModelKey;
     private MeshInstance3D _ghostPlate = null!;
     private BoxMesh _ghostPlateMesh = null!;
     private StandardMaterial3D _ghostMaterial = null!;
@@ -41,6 +41,9 @@ public partial class BuildController : Node3D
     private readonly List<MeshInstance3D> _highlights = new();
 
     public BuildingType? Selected { get; private set; }
+
+    /// <summary>The level of the building selected for placement (1 for a building without levels).</summary>
+    public int SelectedLevel { get; private set; } = 1;
 
     /// <summary>The line tool selected instead of a building (Road or Bridge), or null.</summary>
     public LineTool? Line { get; private set; }
@@ -203,11 +206,11 @@ public partial class BuildController : Node3D
         }
 
         GhostInfo g = ghost.Value;
-        BuildingDef def = BuildingDefs.For(Selected.Value);
+        BuildingDef def = BuildingDefs.For(Selected.Value, SelectedLevel);
 
         _ghost.Visible = true;
         _ghost.Position = g.Center;
-        ShowGhostModel(Selected.Value, Facing);
+        ShowGhostModel(Selected.Value, Facing, SelectedLevel);
         _ghostPlateMesh.Size = new Vector3(g.Width, PlateHeight, g.Depth);
         _ghostPlate.Position = new Vector3(0f, PlateHeight * 0.5f, 0f);
         _ghostMaterial.AlbedoColor = g.Placeable && g.Affordable ? ValidColor : InvalidColor;
@@ -244,7 +247,7 @@ public partial class BuildController : Node3D
             return null;
         }
 
-        BuildingDef def = BuildingDefs.For(Selected.Value);
+        BuildingDef def = BuildingDefs.For(Selected.Value, SelectedLevel);
         (int width, int depth) = def.Footprint(Facing);
         Vector3 center = def.Center(anchorX, anchorZ, Facing);
         int fieldsInRange = def.IsExtractor
@@ -257,7 +260,7 @@ public partial class BuildController : Node3D
             depth,
             center,
             _sim.CanPlace(Selected.Value, anchorX, anchorZ, Facing),
-            _sim.CanAfford(Selected.Value),
+            _sim.CanAfford(Selected.Value, SelectedLevel),
             fieldsInRange,
             _sim.WouldBeOnline(Selected.Value, anchorX, anchorZ, Facing));
     }
@@ -335,17 +338,17 @@ public partial class BuildController : Node3D
 
     /// <summary>
     /// Shows a copy of the building's model for the ghost, rebuilt only when the
-    /// type or facing changes, with every surface drawn in the shared tint material.
+    /// type, level, or facing changes, with every surface drawn in the shared tint material.
     /// </summary>
-    private void ShowGhostModel(BuildingType type, Facing facing)
+    private void ShowGhostModel(BuildingType type, Facing facing, int level)
     {
-        if (_ghostModelKey == (type, facing))
+        if (_ghostModelKey == (type, facing, level))
         {
             return;
         }
         _ghostModel?.QueueFree();
-        _ghostModel = BuildingModels.Create(type, facing);
-        _ghostModelKey = (type, facing);
+        _ghostModel = BuildingModels.Create(type, facing, level);
+        _ghostModelKey = (type, facing, level);
         TintAll(_ghostModel);
         _ghost.AddChild(_ghostModel);
     }
@@ -534,12 +537,13 @@ public partial class BuildController : Node3D
         return TryGetMouseGround(out Vector3 ground) ? ground : null;
     }
 
-    /// <summary>Selects a building for placement; a locked building cannot be selected.</summary>
-    public void Select(BuildingType type)
+    /// <summary>Selects a building (at a level) for placement; a locked building or level cannot be selected.</summary>
+    public void Select(BuildingType type, int level = 1)
     {
-        if (_sim.IsUnlocked(type))
+        if (_sim.IsUnlocked(type, level))
         {
             Selected = type;
+            SelectedLevel = level;
             Line = null;
             _lineStart = null;
         }
@@ -798,9 +802,9 @@ public partial class BuildController : Node3D
         {
             return lines;
         }
-        BuildingDef def = BuildingDefs.For(type);
+        BuildingDef def = BuildingDefs.For(type, SelectedLevel);
         lines.Add(new TipLine(def.Name, UiTheme.Accent));
-        lines.AddRange(BuildMenu.CostLines(_sim, type));
+        lines.AddRange(BuildMenu.CostLines(_sim, type, SelectedLevel));
         if (def.IsExtractor)
         {
             lines.Add(new TipLine($"Fields in range: {FieldsInRange}"));
@@ -837,7 +841,7 @@ public partial class BuildController : Node3D
         {
             return;
         }
-        _sim.TryPlaceBuilding(Selected.Value, anchorX, anchorZ, Facing);
+        _sim.TryPlaceBuilding(Selected.Value, anchorX, anchorZ, Facing, SelectedLevel);
     }
 
     // The anchor whose footprint center is nearest the mouse's ground point.

@@ -155,7 +155,7 @@ The level model changes saved buildings enough that old saves are not carried ov
 
 ## Phases (each its own changeset)
 
-1. **Leveled buildings:**
+1. **Leveled buildings:** done (completed/2611261944-leveled-buildings.md):
    - the level model (each level's definition, a building's level, and saving it);
    - the seven families at 4 x 4;
    - the level unlock projects;
@@ -163,12 +163,12 @@ The level model changes saved buildings enough that old saves are not carried ov
    - upgrading in place (paying the difference);
    - the build menu's level choice and the detail panel's Upgrade action;
    - dropping the Air Separator.
-2. **Level models:** done (completed/2611261712-level-models.md); phase 1 switches to them and
-   removes the models they replace.
-3. **Deep levels:** the "around" work area (could fold into phase 1).
+2. **Level models:** done (completed/2611261712-level-models.md); phase 1 switched to them and
+   removed the models they replaced.
+3. **Deep levels:** done, folded into phase 1.
 4. **Research tree sections:** done (completed/2611261650-research-tree-sections.md).
 5. **Process speed research:** the speed model and the eight projects.
-6. **Save version:** done (completed/2611261642-save-version.md). Phase 1 raises
+6. **Save version:** done (completed/2611261642-save-version.md). Phase 1 raised
    `SaveFormat.Version` to 2.
 
 ## Decisions

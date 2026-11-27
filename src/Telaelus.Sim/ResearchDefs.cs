@@ -10,7 +10,21 @@ public enum ResearchProject
     AdvancedMaterialTransfer,
     SteelWorks,
     Electronics,
-    Computers
+    Computers,
+    Cement,
+    Steelmaking,
+    ElectricSmelting,
+    PoweredMining,
+    PoweredLogging,
+    PoweredPumping,
+    SandSifting,
+    OilRigs,
+    DeepMining,
+    AdvancedLogging,
+    AdvancedPumping,
+    Dredging,
+    DeepDrilling,
+    TileFiring
 }
 
 /// <summary>Where a project stands for the player.</summary>
@@ -54,6 +68,9 @@ public sealed record ResearchDef(
 
     /// <summary>The building tier completing it unlocks, or null for an ordinary project.</summary>
     public int? Unlocks { get; init; }
+
+    /// <summary>The building level completing it unlocks (a leveled family above level 1), or null.</summary>
+    public (BuildingType Type, int Level)? UnlocksLevel { get; init; }
 }
 
 public static class ResearchDefs
@@ -168,11 +185,177 @@ public static class ResearchDefs
         {
             Tier = 3,
             Unlocks = 4
-        }
+        },
+        [ResearchProject.Cement] = LevelProject("Cement", BuildingType.Kiln, 2, 600f, new ResourceAmount[]
+            {
+                new(ResourceType.Iron, 30f),
+                new(ResourceType.Stone, 40f),
+                new(ResourceType.Wood, 40f)
+            },
+            Array.Empty<ResearchProject>(),
+            0,
+            8),
+        [ResearchProject.Steelmaking] = LevelProject("Steelmaking", BuildingType.Smelter, 2, 900f, new ResourceAmount[]
+            {
+                new(ResourceType.Iron, 60f),
+                new(ResourceType.Copper, 30f),
+                new(ResourceType.Stone, 40f)
+            },
+            Array.Empty<ResearchProject>(),
+            0,
+            7),
+        [ResearchProject.ElectricSmelting] = LevelProject("Electric Smelting", BuildingType.Smelter, 3, 1200f, new ResourceAmount[]
+            {
+                new(ResourceType.Steel, 60f),
+                new(ResourceType.Copper, 30f),
+                new(ResourceType.Glass, 20f)
+            },
+            new[]
+            {
+                ResearchProject.Steelmaking
+            },
+            1,
+            7),
+        [ResearchProject.PoweredMining] = LevelProject("Powered Mining", BuildingType.Mine, 2, 900f, new ResourceAmount[]
+            {
+                new(ResourceType.Steel, 40f),
+                new(ResourceType.Copper, 30f)
+            },
+            Array.Empty<ResearchProject>(),
+            0,
+            2),
+        [ResearchProject.PoweredLogging] = LevelProject("Powered Logging", BuildingType.LumberCamp, 2, 900f, new ResourceAmount[]
+            {
+                new(ResourceType.Steel, 30f),
+                new(ResourceType.Wood, 40f)
+            },
+            Array.Empty<ResearchProject>(),
+            0,
+            3),
+        [ResearchProject.PoweredPumping] = LevelProject("Powered Pumping", BuildingType.WaterPump, 2, 900f, new ResourceAmount[]
+            {
+                new(ResourceType.Steel, 30f),
+                new(ResourceType.Copper, 20f)
+            },
+            Array.Empty<ResearchProject>(),
+            0,
+            4),
+        [ResearchProject.SandSifting] = LevelProject("Sand Sifting", BuildingType.SandCollector, 2, 900f, new ResourceAmount[]
+            {
+                new(ResourceType.Steel, 30f),
+                new(ResourceType.Glass, 20f)
+            },
+            Array.Empty<ResearchProject>(),
+            0,
+            5),
+        [ResearchProject.OilRigs] = LevelProject("Oil Rigs", BuildingType.OilWell, 2, 900f, new ResourceAmount[]
+            {
+                new(ResourceType.Steel, 40f),
+                new(ResourceType.Copper, 20f)
+            },
+            Array.Empty<ResearchProject>(),
+            0,
+            6),
+        [ResearchProject.DeepMining] = LevelProject("Deep Mining", BuildingType.Mine, 3, 1500f, new ResourceAmount[]
+            {
+                new(ResourceType.Steel, 60f),
+                new(ResourceType.Concrete, 30f),
+                new(ResourceType.ElectricMotor, 10f)
+            },
+            new[]
+            {
+                ResearchProject.PoweredMining
+            },
+            0,
+            2),
+        [ResearchProject.AdvancedLogging] = LevelProject("Advanced Logging", BuildingType.LumberCamp, 3, 1500f, new ResourceAmount[]
+            {
+                new(ResourceType.Steel, 40f),
+                new(ResourceType.ElectricMotor, 20f)
+            },
+            new[]
+            {
+                ResearchProject.PoweredLogging
+            },
+            0,
+            3),
+        [ResearchProject.AdvancedPumping] = LevelProject("Advanced Pumping", BuildingType.WaterPump, 3, 1500f, new ResourceAmount[]
+            {
+                new(ResourceType.Steel, 40f),
+                new(ResourceType.Concrete, 20f),
+                new(ResourceType.ElectricMotor, 10f)
+            },
+            new[]
+            {
+                ResearchProject.PoweredPumping
+            },
+            0,
+            4),
+        [ResearchProject.Dredging] = LevelProject("Dredging", BuildingType.SandCollector, 3, 1500f, new ResourceAmount[]
+            {
+                new(ResourceType.Steel, 40f),
+                new(ResourceType.ElectricMotor, 10f)
+            },
+            new[]
+            {
+                ResearchProject.SandSifting
+            },
+            0,
+            5),
+        [ResearchProject.DeepDrilling] = LevelProject("Deep Drilling", BuildingType.OilWell, 3, 1500f, new ResourceAmount[]
+            {
+                new(ResourceType.Steel, 60f),
+                new(ResourceType.Concrete, 20f),
+                new(ResourceType.ElectricMotor, 10f)
+            },
+            new[]
+            {
+                ResearchProject.OilRigs
+            },
+            0,
+            6),
+        [ResearchProject.TileFiring] = LevelProject("Tile Firing", BuildingType.Kiln, 3, 1500f, new ResourceAmount[]
+            {
+                new(ResourceType.Concrete, 40f),
+                new(ResourceType.Silicon, 20f),
+                new(ResourceType.Steel, 20f)
+            },
+            new[]
+            {
+                ResearchProject.Cement
+            },
+            0,
+            8)
     };
+
+    // A project that unlocks a level: in that level's tier, described by what the level is.
+    private static ResearchDef LevelProject(string name, BuildingType type, int level, float work, IReadOnlyList<ResourceAmount> fee,
+        IReadOnlyList<ResearchProject> needs, int column, int row)
+    {
+        BuildingDef def = BuildingDefs.For(type, level);
+        string description = $"The {BuildingDefs.For(type).Name} can be built or upgraded to a {def.Name}. {BuildingDefs.DescriptionOf(type, level)}";
+        return new ResearchDef(name, description, work, fee, needs, column, row)
+        {
+            Tier = def.Tier,
+            UnlocksLevel = (type, level)
+        };
+    }
 
     public static ResearchDef For(ResearchProject project)
     {
         return Table[project];
+    }
+
+    /// <summary>The project that unlocks a type's level, or null (level 1, or a type without levels).</summary>
+    public static ResearchProject? UnlockingLevel(BuildingType type, int level)
+    {
+        foreach (ResearchProject project in All)
+        {
+            if (Table[project].UnlocksLevel == (type, level))
+            {
+                return project;
+            }
+        }
+        return null;
     }
 }

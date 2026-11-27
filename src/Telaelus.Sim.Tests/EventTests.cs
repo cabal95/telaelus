@@ -55,7 +55,7 @@ public class EventTests
     {
         (Simulation sim, List<SimEvent> events) = Recorded();
         sim.Debug.SetTerrain(12, 4, TerrainType.ShallowWater);
-        Building pump = sim.Debug.PlaceBuilding(BuildingType.WaterPump, 48, 14, Facing.North);
+        Building pump = sim.Debug.PlaceBuilding(BuildingType.WaterPump, 48, 12, Facing.North);
         sim.Debug.PlaceBuilding(BuildingType.Refinery, 46, 8, Facing.North);
         SimTestHelpers.Ticks(sim, 1);
         // The Refinery's Power has no generator, so only Water is watched here.

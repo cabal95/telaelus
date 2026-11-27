@@ -54,41 +54,11 @@ public sealed partial class Simulation
         return r < 0 ? r + by : r;
     }
 
-    /// <summary>
-    /// What an <see cref="Placement.OverSite"/> building would work at an anchor: a motherlode of its
-    /// kind whose center 4 x 4 the footprint is, or a worked-out map cell of a deposit it lists that
-    /// the footprint is exactly; null for neither.
-    /// </summary>
-    public (ResourceField? Motherlode, ResourceType? Deposit)? SiteAt(BuildingType type, int anchorX, int anchorZ)
-    {
-        BuildingDef def = BuildingDefs.For(type);
-        if (def.Placement != Placement.OverSite)
-        {
-            return null;
-        }
-        if (FloorMod(anchorX, FineCellsPerMapCell) == 2 && FloorMod(anchorZ, FineCellsPerMapCell) == 2
-            && FieldAt(anchorX, anchorZ) is { IsMotherlode: true } lode
-            && lode.MinX + 2 == anchorX && lode.MinZ + 2 == anchorZ
-            && MotherlodeDefs.For(lode.Motherlode!.Value).WorkedBy == type)
-        {
-            return (lode, null);
-        }
-        if (FloorMod(anchorX, FineCellsPerMapCell) == 0 && FloorMod(anchorZ, FineCellsPerMapCell) == 0
-            && _workedOut.TryGetValue((MapCellOf(anchorX), MapCellOf(anchorZ)), out ResourceType deposit)
-            && ((IList<ResourceType>)def.Sites).Contains(deposit))
-        {
-            return (null, deposit);
-        }
-        return null;
-    }
-
     /// <summary>The placements this file owns; null for one it does not (the caller applies the standard rule).</summary>
     private bool? CanPlaceRenewable(BuildingType type, BuildingDef def, int anchorX, int anchorZ, Facing facing)
     {
         switch (def.Placement)
         {
-            case Placement.OverSite:
-                return SiteAt(type, anchorX, anchorZ) is ({ } site) && CellsFree(def, anchorX, anchorZ, facing, site.Motherlode);
             case Placement.OpenGrassCell:
                 return FloorMod(anchorX, FineCellsPerMapCell) == 0 && FloorMod(anchorZ, FineCellsPerMapCell) == 0
                     && CellsFree(def, anchorX, anchorZ, facing, null, (x, z) => TerrainAt(x, z) == TerrainType.Grass);
@@ -131,34 +101,24 @@ public sealed partial class Simulation
 
     /// <summary>
     /// Where a building's ghost goes for a pointer at a world point: the map cell's corner for a
-    /// Forester or a building over a site, or a motherlode's center for one that works motherlodes;
-    /// null for a building that places freely.
+    /// Forester; null for a building that places freely.
     /// </summary>
     public (int X, int Z)? SnapAnchor(BuildingType type, float worldX, float worldZ)
     {
         BuildingDef def = BuildingDefs.For(type);
-        if (def.Placement is not (Placement.OpenGrassCell or Placement.OverSite))
+        if (def.Placement != Placement.OpenGrassCell)
         {
             return null;
         }
         (int x, int z) = CellAt(worldX, worldZ);
-        if (def.Placement == Placement.OverSite && FieldAt(x, z) is { IsMotherlode: true } lode)
-        {
-            return ((int)lode.MinX + 2, (int)lode.MinZ + 2);
-        }
         return (MapCellOf(x) * FineCellsPerMapCell, MapCellOf(z) * FineCellsPerMapCell);
     }
 
     // ---- Lifecycle -------------------------------------------------------
 
-    /// <summary>Sets up a new building's site, output choice, and plot.</summary>
+    /// <summary>Sets up a new building's plot.</summary>
     private void RenewablesOnBuildingAdded(Building building)
     {
-        if (SiteAt(building.Type, building.AnchorX, building.AnchorZ) is ({ } site))
-        {
-            building.SiteMotherlode = site.Motherlode;
-            building.SiteDeposit = site.Deposit;
-        }
         if (building.Def.Plot is not null)
         {
             Plant(building);
@@ -233,7 +193,8 @@ public sealed partial class Simulation
     /// </summary>
     public IReadOnlyList<ResourceType> OutputChoices(Building building)
     {
-        if (building.SiteMotherlode is { Motherlode: MotherlodeType kind })
+        (ResourceField? lode, ResourceType? siteDeposit) = SiteOf(building);
+        if (lode is { Motherlode: MotherlodeType kind })
         {
             var yields = new List<ResourceType>();
             foreach ((ResourceType type, float _) in MotherlodeDefs.For(kind).Yields)
@@ -242,7 +203,7 @@ public sealed partial class Simulation
             }
             return yields;
         }
-        if (building.SiteDeposit is ResourceType deposit)
+        if (siteDeposit is ResourceType deposit)
         {
             return new[] { deposit };
         }
@@ -281,11 +242,98 @@ public sealed partial class Simulation
     /// <summary>Seconds a collector without a field takes for a unit of its output: by the motherlode's share, or its own rate.</summary>
     public float UnitSeconds(Building building)
     {
-        if (building.SiteMotherlode is { Motherlode: MotherlodeType kind } && OutputOf(building) is ResourceType type)
+        if (SiteOf(building).Motherlode is { Motherlode: MotherlodeType kind } && OutputOf(building) is ResourceType type)
         {
             return MotherlodeDefs.For(kind).UnitSeconds(type);
         }
         return building.Def.ProduceSeconds;
+    }
+
+    /// <summary>
+    /// The site a deep level works while no live field is in range: a motherlode of a kind its family
+    /// works, or else a worked-out cell of one of its <see cref="BuildingDef.DeepSites"/>, among the map
+    /// cells its footprint touches or borders (a motherlode first, then cells by row); null for none.
+    /// Any number of deep levels may work the same site.
+    /// </summary>
+    public (ResourceField? Motherlode, ResourceType? Deposit)? DeepSiteAround(Building building)
+    {
+        if (!building.Def.IsDeep)
+        {
+            return null;
+        }
+        // The fine cells the footprint covers, grown by one on every side.
+        int x0 = building.AnchorX - 1;
+        int z0 = building.AnchorZ - 1;
+        int x1 = building.AnchorX + building.Width;
+        int z1 = building.AnchorZ + building.Depth;
+        foreach (ResourceField field in _fields)
+        {
+            if (field.Motherlode is MotherlodeType kind && MotherlodeDefs.For(kind).WorkedBy == building.Type)
+            {
+                int size = field.Size * FineCellsPerMapCell;
+                if (field.MinX <= x1 && field.MinX + size - 1 >= x0 && field.MinZ <= z1 && field.MinZ + size - 1 >= z0)
+                {
+                    return (field, null);
+                }
+            }
+        }
+        for (int mz = MapCellOf(z0); mz <= MapCellOf(z1); mz++)
+        {
+            for (int mx = MapCellOf(x0); mx <= MapCellOf(x1); mx++)
+            {
+                if (_workedOut.TryGetValue((mx, mz), out ResourceType deposit) && ((IList<ResourceType>)building.Def.DeepSites).Contains(deposit))
+                {
+                    return (null, deposit);
+                }
+            }
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// The site a collector works without a field: a deep level's current one, or (before it has
+    /// stepped, or while offline) the one around it, so its output choice can be set at any time.
+    /// </summary>
+    private (ResourceField? Motherlode, ResourceType? Deposit) SiteOf(Building building)
+    {
+        if (building.SiteMotherlode is not null || building.SiteDeposit is not null || !building.Def.IsDeep)
+        {
+            return (building.SiteMotherlode, building.SiteDeposit);
+        }
+        return DeepSiteAround(building) ?? (null, null);
+    }
+
+    /// <summary>
+    /// A deep level's step: a live field in range is worked as by any extractor, at its speed; with
+    /// none, the site around it (<see cref="DeepSiteAround"/>) at the deep rate. Switching between them
+    /// starts the unit over.
+    /// </summary>
+    private void StepDeep(Building building, double dt)
+    {
+        ResourceField? live = building.CurrentField is { Depleted: false } current ? current : NearestFieldInWorkArea(building);
+        if (live is not null)
+        {
+            if (building.SiteMotherlode is not null || building.SiteDeposit is not null)
+            {
+                building.SiteMotherlode = null;
+                building.SiteDeposit = null;
+                building.Progress = 0f;
+            }
+            StepExtractor(building, dt);
+            return;
+        }
+        (ResourceField? lode, ResourceType? deposit) = DeepSiteAround(building) ?? (null, null);
+        if (lode != building.SiteMotherlode || deposit != building.SiteDeposit)
+        {
+            building.SiteMotherlode = lode;
+            building.SiteDeposit = deposit;
+            building.CurrentField = null;
+            building.Progress = 0f;
+        }
+        if (lode is not null || deposit is not null)
+        {
+            StepProducer(building, dt);
+        }
     }
 
     /// <summary>Works toward the next unit at the collector's speed; a whole unit waits until its buffer has room.</summary>
@@ -337,14 +385,9 @@ public sealed partial class Simulation
 
     // ---- Reach ---------------------------------------------------------------
 
-    /// <summary>The rectangle trucks stop beside and the player collects from: the motherlode under a building on one, else its footprint.</summary>
+    /// <summary>The rectangle trucks stop beside and the player collects from: its footprint.</summary>
     public static (int X, int Z, int Width, int Depth) ReachOf(Building building)
     {
-        if (building.SiteMotherlode is ResourceField lode)
-        {
-            int size = lode.Size * FineCellsPerMapCell;
-            return ((int)lode.MinX, (int)lode.MinZ, size, size);
-        }
         return (building.AnchorX, building.AnchorZ, building.Width, building.Depth);
     }
 

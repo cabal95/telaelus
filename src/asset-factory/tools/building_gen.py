@@ -1464,23 +1464,19 @@ def bridge_pier():
     return m, mat.mats
 
 
-BUILDINGS = {"mine": mine, "lumber_camp": lumber_camp, "smelter": smelter, "refinery": refinery,
-             "oil_well": oil_well, "hq": hq, "silo": silo, "stockyard": stockyard, "tank_farm": tank_farm,
+# The leveled families' old models (mine, drill_rig, deep_mine, smelter, ...) are not exported: their
+# functions draw the level models' parts (LEVELS, below).
+BUILDINGS = {"refinery": refinery,
+             "hq": hq, "silo": silo, "stockyard": stockyard, "tank_farm": tank_farm,
              "warehouse": warehouse, "vault": vault, "small_hub": small_hub, "relay": relay,
-             "water_wheel": water_wheel, "burner_generator": burner_generator, "lumber_mill": lumber_mill,
-             "drill_rig": drill_rig, "water_pump": water_pump, "pumping_station": pumping_station,
-             "sand_collector": sand_collector, "sand_dredge": sand_dredge, "glassworks": glassworks,
-             "depot": depot, "forester": forester, "quarry": quarry, "charcoal_kiln": charcoal_kiln,
-             "rock_crusher": rock_crusher, "deep_well": deep_well, "deep_mine": deep_mine,
-             "steel_mill": steel_mill, "electrolyzer": electrolyzer, "fuel_plant": fuel_plant,
-             "chemical_plant": chemical_plant, "aluminum_smelter": aluminum_smelter,
-             "electric_furnace": electric_furnace, "fabricator": fabricator,
-             "electronics_works": electronics_works, "tile_kiln": tile_kiln, "assembly_plant": assembly_plant,
+             "water_wheel": water_wheel, "burner_generator": burner_generator, "glassworks": glassworks,
+             "depot": depot, "forester": forester, "quarry": quarry, "rock_crusher": rock_crusher, "electrolyzer": electrolyzer, "fuel_plant": fuel_plant,
+             "chemical_plant": chemical_plant, "fabricator": fabricator,
+             "electronics_works": electronics_works, "assembly_plant": assembly_plant,
              "shipyard": shipyard, "display_stand": display_stand, "ship_engine": ship_engine,
              "ship_hull_ring": ship_hull_ring, "ship_nose": ship_nose, "sawmill": sawmill,
-             "cement_kiln": cement_kiln, "concrete_mixer": concrete_mixer, "brine_well": brine_well,
-             "semiconductor_fab": semiconductor_fab, "air_separator": air_separator,
-             "enrichment_plant": enrichment_plant, "solar_array": solar_array,
+             "concrete_mixer": concrete_mixer, "brine_well": brine_well,
+             "semiconductor_fab": semiconductor_fab, "enrichment_plant": enrichment_plant, "solar_array": solar_array,
              "battery_bank": battery_bank, "fission_reactor": fission_reactor,
              "research_lab": research_lab, "road_patch": road_patch, "road_end": road_end,
              "road_straight": road_straight, "road_corner": road_corner, "road_tee": road_tee,

@@ -14,7 +14,10 @@ public enum BuildCellState
     Affordable,
 
     /// <summary>Discovered, but short of its cost right now: grayscale.</summary>
-    Unaffordable
+    Unaffordable,
+
+    /// <summary>A level whose tier is open but whose research is not done: grayscale and dim, its research on hover.</summary>
+    Locked
 }
 
 /// <summary>
@@ -37,17 +40,23 @@ public partial class BuildMenu : Dialog
     private SegmentedPicker _tierPicker = null!;
     private int _tier;
     private readonly Dictionary<LineTool, InfraCell> _infra = new();
-    private readonly Dictionary<BuildingType, Cell> _cells = new();
+    // Each building level's cell, by its id: the level's name without spaces ("DrillRig").
+    private readonly Dictionary<string, Cell> _cells = new();
     private string _signature = "";
 
     public override DialogKind Kind => DialogKind.Modal;
 
     public override string Id => "buildMenu";
 
-    /// <summary>The chosen tier's cells in display order, with their state and label (for the snapshot).</summary>
-    public IReadOnlyList<(string Type, BuildCellState State, string Label)> Cells => _order
-        .Select(key => (key, StateOf(key), LabelOf(key)))
+    /// <summary>The chosen tier's cells in display order: type (a building's family, or a line tool), level, state, and label (for the snapshot).</summary>
+    public IReadOnlyList<(string Type, int Level, BuildCellState State, string Label)> Cells => _order
+        .Select(key => Enum.TryParse(key, out LineTool tool)
+            ? (key, 1, _infra[tool].State, _infra[tool].Label.Text)
+            : (_cells[key].Type.ToString(), _cells[key].Level, _cells[key].State, _cells[key].Label.Text))
         .ToList();
+
+    /// <summary>A level's cell id: its name without spaces ("DrillRig").</summary>
+    public static string CellId(BuildingType type, int level) => BuildingDefs.For(type, level).Name.Replace(" ", "");
 
     /// <summary>The tier shown, 1 to 4 (for the snapshot).</summary>
     public int Tier => _tier;
@@ -70,9 +79,7 @@ public partial class BuildMenu : Dialog
         return $"Unlocked by {ResearchDefs.For(project).Name} research";
     }
 
-    private BuildCellState StateOf(string key) => Enum.TryParse(key, out LineTool tool) ? _infra[tool].State : _cells[Enum.Parse<BuildingType>(key)].State;
 
-    private string LabelOf(string key) => Enum.TryParse(key, out LineTool tool) ? _infra[tool].Label.Text : _cells[Enum.Parse<BuildingType>(key)].Label.Text;
 
     public void Initialize(Simulation sim, BuildController builder, BuildingPictures pictures, ResourceIcons icons)
     {
@@ -112,12 +119,13 @@ public partial class BuildMenu : Dialog
             _grid.AddChild(cell);
             Host.Register(Id + "/" + tool, cell);
         }
-        foreach (BuildingType type in Enum.GetValues<BuildingType>().Where(type => BuildingDefs.For(type).Buildable))
+        foreach ((BuildingType type, int level) in BuildingDefs.AllLevels().Where(key => BuildingDefs.For(key.Type).Buildable))
         {
-            var cell = new Cell(this, type);
-            _cells[type] = cell;
+            var cell = new Cell(this, type, level);
+            string id = CellId(type, level);
+            _cells[id] = cell;
             _grid.AddChild(cell);
-            Host.Register(Id + "/" + type, cell);
+            Host.Register(Id + "/" + id, cell);
         }
     }
 
@@ -152,10 +160,13 @@ public partial class BuildMenu : Dialog
         }
         _tierPicker.Selected = _tier - 1;
 
-        var states = new Dictionary<BuildingType, BuildCellState>();
-        foreach (BuildingType type in _cells.Keys.Where(type => BuildingDefs.For(type).Tier == _tier))
+        // A level whose research is not done still shows in its (open) tier, locked.
+        var states = new Dictionary<string, BuildCellState>();
+        foreach ((string id, Cell cell) in _cells.Where(p => BuildingDefs.For(p.Value.Type, p.Value.Level).Tier == _tier))
         {
-            states[type] = _sim.CanAfford(type) ? BuildCellState.Affordable : BuildCellState.Unaffordable;
+            states[id] = !_sim.IsUnlocked(cell.Type, cell.Level) ? BuildCellState.Locked
+                : _sim.CanAfford(cell.Type, cell.Level) ? BuildCellState.Affordable
+                : BuildCellState.Unaffordable;
         }
 
         foreach (InfraCell cell in _infra.Values)
@@ -170,13 +181,14 @@ public partial class BuildMenu : Dialog
         }
         _signature = signature;
 
-        // Road and Bridge are tier 1 cells, sorted in with the buildings by name.
-        var shown = states.Keys.Select(type => (Key: type.ToString(), Name: BuildingDefs.For(type).Name, Cell: (Control)_cells[type]));
+        // Road and Bridge are tier 1 cells, sorted in with the buildings by name; locked levels follow.
+        var shown = states.Keys.Select(id => (Key: id, Name: BuildingDefs.For(_cells[id].Type, _cells[id].Level).Name,
+            Locked: states[id] == BuildCellState.Locked, Cell: (Control)_cells[id]));
         if (_tier == 1)
         {
-            shown = shown.Concat(_infra.Select(p => (Key: p.Key.ToString(), Name: p.Value.Label.Text, Cell: (Control)p.Value)));
+            shown = shown.Concat(_infra.Select(p => (Key: p.Key.ToString(), Name: p.Value.Label.Text, Locked: false, Cell: (Control)p.Value)));
         }
-        var ordered = shown.OrderBy(entry => entry.Name, StringComparer.Ordinal).ToList();
+        var ordered = shown.OrderBy(entry => entry.Locked).ThenBy(entry => entry.Name, StringComparer.Ordinal).ToList();
         _order = ordered.Select(entry => entry.Key).ToList();
         foreach (Control cell in _cells.Values.Concat<Control>(_infra.Values))
         {
@@ -188,36 +200,68 @@ public partial class BuildMenu : Dialog
             _grid.MoveChild(ordered[i].Cell, i);
             if (ordered[i].Cell is Cell building)
             {
-                building.Apply(states[Enum.Parse<BuildingType>(ordered[i].Key)], _pictures);
+                building.Apply(states[ordered[i].Key], _pictures);
             }
         }
     }
 
-    private string Signature(Dictionary<BuildingType, BuildCellState> states)
+    private string Signature(Dictionary<string, BuildCellState> states)
     {
         var text = new StringBuilder().Append(_tier).Append('|');
-        foreach ((BuildingType type, BuildCellState state) in states)
+        foreach ((string id, BuildCellState state) in states)
         {
-            text.Append(type).Append(':').Append(state).Append(';');
+            text.Append(id).Append(':').Append(state).Append(';');
         }
         return text.ToString();
     }
 
-    private void Pick(BuildingType type)
+    private void Pick(BuildingType type, int level)
     {
-        if (!_sim.IsUnlocked(type))
+        if (!_sim.IsUnlocked(type, level))
         {
             return;
         }
         Host.Close(this);
-        _builder.Select(type);
+        _builder.Select(type, level);
     }
 
-    /// <summary>The tooltip lines for a building's cost: one per material, short ones marked.</summary>
-    public static List<TipLine> CostLines(Simulation sim, BuildingType type)
+    /// <summary>The tooltip lines for a building's cost at a level: one per material, short ones marked.</summary>
+    public static List<TipLine> CostLines(Simulation sim, BuildingType type, int level = 1)
+    {
+        return CostLines(sim, BuildingDefs.For(type, level).Cost);
+    }
+
+    /// <summary>
+    /// Why a level cannot be built yet, as tooltip lines: "Needs Steel Works research" while its tier is
+    /// locked, "Needs Powered Mining research" while its project is not complete, and for each of that
+    /// project's own unfinished prerequisites "Deep Mining needs Powered Mining". Empty once unlocked.
+    /// </summary>
+    public static List<TipLine> LockLines(Simulation sim, BuildingType type, int level)
     {
         var lines = new List<TipLine>();
-        foreach (ResourceAmount cost in BuildingDefs.For(type).Cost)
+        int tier = BuildingDefs.For(type, level).Tier;
+        if (tier > sim.UnlockedTier)
+        {
+            ResearchProject opens = ResearchDefs.All.First(p => ResearchDefs.For(p).Unlocks == tier);
+            lines.Add(new TipLine($"Needs {ResearchDefs.For(opens).Name} research", UiTheme.Warning));
+        }
+        if (level > 1 && ResearchDefs.UnlockingLevel(type, level) is ResearchProject project && !sim.IsResearched(project))
+        {
+            ResearchDef def = ResearchDefs.For(project);
+            lines.Add(new TipLine($"Needs {def.Name} research", UiTheme.Warning));
+            foreach (ResearchProject before in def.Prerequisites.Where(p => !sim.IsResearched(p)))
+            {
+                lines.Add(new TipLine($"{def.Name} needs {ResearchDefs.For(before).Name}", UiTheme.TextDim));
+            }
+        }
+        return lines;
+    }
+
+    /// <summary>The tooltip lines for a list of costs: one per material, short ones marked.</summary>
+    public static List<TipLine> CostLines(Simulation sim, IReadOnlyList<ResourceAmount> costs)
+    {
+        var lines = new List<TipLine>();
+        foreach (ResourceAmount cost in costs)
         {
             sim.Stockpile.TryGetValue(cost.Type, out float have);
             int held = Mathf.FloorToInt(have);
@@ -331,11 +375,10 @@ public partial class BuildMenu : Dialog
         }
     }
 
-    /// <summary>One building's cell: its picture over its label, outlined on hover.</summary>
+    /// <summary>One building level's cell: its picture over its label, outlined on hover.</summary>
     private sealed partial class Cell : PanelContainer
     {
         private readonly BuildMenu _menu;
-        private readonly BuildingType _type;
         private readonly TextureRect _picture;
         private readonly StyleBoxFlat _normal = UiTheme.Box(UiTheme.Cell, UiTheme.CellRadius, padding: 4);
         private readonly StyleBoxFlat _hover;
@@ -344,11 +387,16 @@ public partial class BuildMenu : Dialog
 
         public BuildCellState State { get; private set; } = BuildCellState.Affordable;
 
-        public Cell(BuildMenu menu, BuildingType type)
+        public BuildingType Type { get; }
+
+        public int Level { get; }
+
+        public Cell(BuildMenu menu, BuildingType type, int level)
         {
             _menu = menu;
-            _type = type;
-            Name = type.ToString();
+            Type = type;
+            Level = level;
+            Name = CellId(type, level);
             CustomMinimumSize = new Vector2(CellSize, CellSize);
             MouseFilter = MouseFilterEnum.Stop;
             _hover = (StyleBoxFlat)_normal.Duplicate();
@@ -385,16 +433,18 @@ public partial class BuildMenu : Dialog
         public void Apply(BuildCellState state, BuildingPictures pictures)
         {
             State = state;
-            Label.Text = BuildingDefs.For(_type).Name;
-            _picture.Texture = pictures.Color(_type);
-            _picture.Material = state == BuildCellState.Unaffordable ? BuildingPictures.GrayscaleMaterial : null;
+            Label.Text = BuildingDefs.For(Type, Level).Name;
+            Label.AddThemeColorOverride("font_color", state == BuildCellState.Locked ? UiTheme.TextDim : UiTheme.Text);
+            _picture.Texture = pictures.Color(Type, Level);
+            _picture.Material = state == BuildCellState.Affordable ? null : BuildingPictures.GrayscaleMaterial;
+            _picture.Modulate = state == BuildCellState.Locked ? new Color(1f, 1f, 1f, 0.45f) : Colors.White;
         }
 
         private void OnEnter()
         {
             AddThemeStyleboxOverride("panel", _hover);
-            var lines = new List<TipLine>(TipLine.Wrapped(BuildingDefs.DescriptionOf(_type), UiTheme.TextDim));
-            lines.AddRange(CostLines(_menu._sim, _type));
+            var lines = new List<TipLine>(TipLine.Wrapped(BuildingDefs.DescriptionOf(Type, Level), UiTheme.TextDim));
+            lines.AddRange(State == BuildCellState.Locked ? LockLines(_menu._sim, Type, Level) : CostLines(_menu._sim, Type, Level));
             _menu.Host.ShowHover(this, lines);
         }
 
@@ -409,7 +459,7 @@ public partial class BuildMenu : Dialog
             if (@event is InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left })
             {
                 AcceptEvent();
-                _menu.Pick(_type);
+                _menu.Pick(Type, Level);
             }
         }
     }

@@ -8,9 +8,9 @@ public class PlacementTests
     private const int Z = SimTestHelpers.ClearZ;
 
     [Theory]
-    [InlineData(BuildingType.Mine, Facing.North, 2, 2)]
-    [InlineData(BuildingType.LumberCamp, Facing.East, 2, 2)]
-    [InlineData(BuildingType.Smelter, Facing.West, 3, 3)]
+    [InlineData(BuildingType.Mine, Facing.North, 4, 4)]
+    [InlineData(BuildingType.LumberCamp, Facing.East, 4, 4)]
+    [InlineData(BuildingType.Smelter, Facing.West, 4, 4)]
     [InlineData(BuildingType.Refinery, Facing.North, 2, 3)]
     [InlineData(BuildingType.Refinery, Facing.East, 3, 2)]
     [InlineData(BuildingType.Refinery, Facing.South, 2, 3)]
@@ -24,52 +24,52 @@ public class PlacementTests
     public void CanPlace_OnClearGrass()
     {
         var sim = new Simulation();
-        Assert.True(sim.CanPlace(BuildingType.Smelter, X, Z, Facing.North));
+        Assert.True(sim.CanPlace(BuildingType.Warehouse, X, Z, Facing.North));
     }
 
     [Fact]
     public void CanPlace_RejectsWater()
     {
         var sim = new Simulation();
-        Assert.False(sim.CanPlace(BuildingType.Smelter, 36, 20, Facing.North));
+        Assert.False(sim.CanPlace(BuildingType.Warehouse, 36, 20, Facing.North));
 
         // Partially overlapping the pond's edge (fine x 36) is rejected too.
-        Assert.False(sim.CanPlace(BuildingType.Smelter, 34, 20, Facing.North));
+        Assert.False(sim.CanPlace(BuildingType.Warehouse, 34, 20, Facing.North));
     }
 
     [Fact]
     public void CanPlace_RejectsMountain()
     {
         var sim = new Simulation();
-        Assert.False(sim.CanPlace(BuildingType.Mine, 16, 36, Facing.North));
+        Assert.False(sim.CanPlace(BuildingType.Silo, 16, 36, Facing.North));
     }
 
     [Fact]
     public void CanPlace_RejectsAnyFootprintCellOnAField()
     {
         var sim = new Simulation();
-        Assert.False(sim.CanPlace(BuildingType.Mine, 40, 36, Facing.North));
+        Assert.False(sim.CanPlace(BuildingType.Silo, 40, 36, Facing.North));
 
-        // A Smelter at (38, 34) covers fine (40, 36), the Ore field's corner.
-        Assert.False(sim.CanPlace(BuildingType.Smelter, 38, 34, Facing.North));
+        // A Warehouse at (38, 34) covers fine (40, 36), the Ore field's corner.
+        Assert.False(sim.CanPlace(BuildingType.Warehouse, 38, 34, Facing.North));
     }
 
     [Fact]
     public void CanPlace_RejectsOccupiedCells()
     {
         var sim = new Simulation();
-        sim.Debug.PlaceBuilding(BuildingType.Smelter, X, Z, Facing.North);
-        Assert.False(sim.CanPlace(BuildingType.Mine, X + 2, Z + 2, Facing.North));
-        Assert.True(sim.CanPlace(BuildingType.Mine, X + 3, Z, Facing.North));
+        sim.Debug.PlaceBuilding(BuildingType.Warehouse, X, Z, Facing.North);
+        Assert.False(sim.CanPlace(BuildingType.Silo, X + 2, Z + 2, Facing.North));
+        Assert.True(sim.CanPlace(BuildingType.Silo, X + 3, Z, Facing.North));
     }
 
     [Fact]
     public void CanPlace_RejectsOutOfBounds()
     {
         var sim = new Simulation();
-        Assert.False(sim.CanPlace(BuildingType.Mine, -1, 10, Facing.North));
-        Assert.False(sim.CanPlace(BuildingType.Smelter, 62, 62, Facing.North));
-        Assert.True(sim.CanPlace(BuildingType.Smelter, 61, 61, Facing.North));
+        Assert.False(sim.CanPlace(BuildingType.Silo, -1, 10, Facing.North));
+        Assert.False(sim.CanPlace(BuildingType.Warehouse, 62, 62, Facing.North));
+        Assert.True(sim.CanPlace(BuildingType.Warehouse, 61, 61, Facing.North));
     }
 
     [Fact]
@@ -125,7 +125,7 @@ public class PlacementTests
     public void TryPlaceBuilding_FailsWithoutChangingState()
     {
         var sim = new Simulation();
-        Assert.False(sim.TryPlaceBuilding(BuildingType.Smelter, 36, 20, Facing.North));
+        Assert.False(sim.TryPlaceBuilding(BuildingType.Warehouse, 36, 20, Facing.North));
         Assert.Empty(SimTestHelpers.Placed(sim));
     }
 
@@ -137,10 +137,10 @@ public class PlacementTests
     [InlineData(30, 31)]
     public void CanPlace_RejectsAFootprintContainingThePlayer(int anchorX, int anchorZ)
     {
-        // A 3x3 Smelter: centered on the player, and with the player on a corner or an edge.
+        // A 3x3 Warehouse: centered on the player, and with the player on a corner or an edge.
         var sim = new Simulation();
         sim.Debug.TeleportPlayer(32.5f, 32.5f);
-        Assert.False(sim.CanPlace(BuildingType.Smelter, anchorX, anchorZ, Facing.North));
+        Assert.False(sim.CanPlace(BuildingType.Warehouse, anchorX, anchorZ, Facing.North));
     }
 
     [Theory]
@@ -152,7 +152,7 @@ public class PlacementTests
     {
         var sim = new Simulation();
         sim.Debug.TeleportPlayer(32.5f, 32.5f);
-        Assert.True(sim.CanPlace(BuildingType.Smelter, anchorX, anchorZ, Facing.North));
+        Assert.True(sim.CanPlace(BuildingType.Warehouse, anchorX, anchorZ, Facing.North));
     }
 
     [Fact]
@@ -160,7 +160,7 @@ public class PlacementTests
     {
         var sim = new Simulation();
         sim.Debug.TeleportPlayer(32.5f, 32.5f);
-        Assert.False(sim.TryPlaceBuilding(BuildingType.Smelter, 31, 31, Facing.North));
+        Assert.False(sim.TryPlaceBuilding(BuildingType.Warehouse, 31, 31, Facing.North));
         Assert.Empty(SimTestHelpers.Placed(sim));
         Assert.True(sim.IsWalkable(32, 32));
     }
@@ -171,8 +171,8 @@ public class PlacementTests
         // At exactly (32, 32) the player is in cell (32, 32), not (31, 31).
         var sim = new Simulation();
         sim.Debug.TeleportPlayer(32f, 32f);
-        Assert.True(sim.CanPlace(BuildingType.Smelter, 29, 29, Facing.North));
-        Assert.False(sim.CanPlace(BuildingType.Smelter, 32, 32, Facing.North));
+        Assert.True(sim.CanPlace(BuildingType.Warehouse, 29, 29, Facing.North));
+        Assert.False(sim.CanPlace(BuildingType.Warehouse, 32, 32, Facing.North));
     }
 
     [Fact]
@@ -181,6 +181,6 @@ public class PlacementTests
         var sim = new Simulation();
         sim.Debug.TeleportPlayer(32.5f, 32.5f);
         Assert.Throws<System.InvalidOperationException>(
-            () => sim.Debug.PlaceBuilding(BuildingType.Mine, 32, 32, Facing.North));
+            () => sim.Debug.PlaceBuilding(BuildingType.Silo, 32, 32, Facing.North));
     }
 }

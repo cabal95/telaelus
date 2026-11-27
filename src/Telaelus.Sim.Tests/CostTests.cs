@@ -14,7 +14,7 @@ public class CostTests
     public void Unlocking_IsKeptWhenTheStockRunsOut()
     {
         Simulation sim = EmptyMap();
-        sim.Debug.SeedStockpile(ResourceType.Wood, 15f);
+        sim.Debug.SeedStockpile(ResourceType.Wood, 10f);
         Assert.True(sim.TryPlaceBuilding(BuildingType.LumberCamp, SimTestHelpers.ClearX, SimTestHelpers.ClearZ, Facing.North));
 
         Assert.Equal(0f, SimTestHelpers.Stock(sim, ResourceType.Wood));

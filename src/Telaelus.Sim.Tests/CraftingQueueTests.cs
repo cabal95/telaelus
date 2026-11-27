@@ -15,8 +15,8 @@ public class CraftingQueueTests
         sim.Debug.SeedStockpile(ResourceType.Coal, 180f);
         SimTestHelpers.Burners(sim, 6);
         sim.Debug.SetTerrain(13, 4, TerrainType.ShallowWater);
-        sim.Debug.PlaceBuilding(BuildingType.WaterPump, 52, 14, Facing.North);
-        sim.Debug.PlaceBuilding(BuildingType.WaterPump, 54, 14, Facing.North);
+        sim.Debug.PlaceBuilding(BuildingType.WaterPump, 52, 12, Facing.North);
+        sim.Debug.PlaceBuilding(BuildingType.WaterPump, 56, 16, Facing.North);
         return sim;
     }
 
@@ -30,7 +30,7 @@ public class CraftingQueueTests
     {
         Simulation sim = Plant();
         sim.Debug.SeedStockpile(ResourceType.Wood, 30f);
-        Building kiln = sim.Debug.PlaceBuilding(BuildingType.CharcoalKiln, 50, 14, Facing.North);
+        Building kiln = sim.Debug.PlaceBuilding(BuildingType.Kiln, 46, 14, Facing.North);
         SimTestHelpers.Ticks(sim, 1);
         Assert.Equal(new BuildingStatus(BuildingState.Idle, "Queue empty"), sim.BuildingStatusOf(kiln));
         Assert.Equal(30f, SimTestHelpers.Stock(sim, ResourceType.Wood));
@@ -122,7 +122,7 @@ public class CraftingQueueTests
     {
         Simulation sim = Plant();
         sim.Debug.SeedStockpile(ResourceType.Wood, 6f);
-        Building kiln = sim.Debug.PlaceBuilding(BuildingType.CharcoalKiln, 50, 14, Facing.North);
+        Building kiln = sim.Debug.PlaceBuilding(BuildingType.Kiln, 46, 14, Facing.North);
         Assert.True(sim.QueueCraft(kiln.Id, 0, 2));
         SimTestHelpers.Seconds(sim, 5.0);
         Assert.True(kiln.Crafting);
@@ -157,11 +157,11 @@ public class CraftingQueueTests
     public void AnIdleProcessor_StillDrawsItsCapacity()
     {
         Simulation sim = Plant();
-        Building furnace = sim.Debug.PlaceBuilding(BuildingType.ElectricFurnace, 48, 4, Facing.North);
+        Building furnace = sim.Debug.PlaceBuilding(BuildingType.Smelter, 48, 4, Facing.North, 3);
         SimTestHelpers.Ticks(sim, 1);
 
         Assert.Equal(new BuildingStatus(BuildingState.Idle, "Queue empty"), sim.BuildingStatusOf(furnace));
-        Assert.Equal(40f, sim.Capacity(CapacityType.Power).Demand);
+        Assert.Equal(60f, sim.Capacity(CapacityType.Power).Demand);
     }
 
     [Fact]
@@ -193,26 +193,26 @@ public class CraftingQueueTests
         Assert.False(electrolyzer.Queues);
         Assert.False(sim.QueueCraft(electrolyzer.Id, 0, 1));
         Assert.True(sim.SetRecipe(electrolyzer.Id, 1));
-        Assert.False(new Building(-1, BuildingType.BrineWell, 0, 0, Facing.North, Recipes.For(BuildingType.BrineWell)).Queues);
-        Assert.False(new Building(-1, BuildingType.AirSeparator, 0, 0, Facing.North, Recipes.For(BuildingType.AirSeparator)).Queues);
+        Assert.False(new Building(-1, BuildingType.BrineWell, 0, 0, Facing.North).Queues);
         // The Glassworks makes from nothing but burns fuel, so it queues.
-        Assert.True(new Building(-1, BuildingType.Glassworks, 0, 0, Facing.North, Recipes.For(BuildingType.Glassworks)).Queues);
+        Assert.True(new Building(-1, BuildingType.Glassworks, 0, 0, Facing.North).Queues);
     }
 
     [Fact]
     public void InputChoices_AreKeptPerRecipe()
     {
         Simulation sim = Plant();
-        Building furnace = sim.Debug.PlaceBuilding(BuildingType.ElectricFurnace, 48, 4, Facing.North);
-        Assert.True(sim.SetInputChoice(furnace.Id, 0, 1, ResourceType.Charcoal));
-        Assert.False(sim.SetInputChoice(furnace.Id, 1, 0, ResourceType.Charcoal));
+        // The Electric Smelter's Silicon is recipe 4, its Titanium 5.
+        Building furnace = sim.Debug.PlaceBuilding(BuildingType.Smelter, 48, 4, Facing.North, 3);
+        Assert.True(sim.SetInputChoice(furnace.Id, 4, 1, ResourceType.Charcoal));
+        Assert.False(sim.SetInputChoice(furnace.Id, 5, 0, ResourceType.Charcoal));
         sim.Debug.SeedStockpile(ResourceType.TitaniumOre, 2f);
-        Assert.True(sim.QueueCraft(furnace.Id, 1, 1));
+        Assert.True(sim.QueueCraft(furnace.Id, 5, 1));
         SimTestHelpers.Seconds(sim, 21.0);
 
         // Titanium ran in between; Silicon still takes Charcoal.
         Assert.Equal(1f, SimTestHelpers.Stock(sim, ResourceType.Titanium));
-        Recipe silicon = furnace.Recipes[0];
+        Recipe silicon = furnace.Recipes[4];
         Assert.Equal(ResourceType.Charcoal, sim.ChosenInput(furnace, silicon, 1));
     }
 
@@ -224,8 +224,8 @@ public class CraftingQueueTests
         Building smelter = sim.Debug.PlaceBuilding(BuildingType.Smelter, 48, 4, Facing.North);
         Assert.True(sim.QueueCraft(smelter.Id, 0, 3));
         Assert.True(sim.QueueCraft(smelter.Id, 1, 2));
-        Building furnace = sim.Debug.PlaceBuilding(BuildingType.ElectricFurnace, 48, 12, Facing.North);
-        Assert.True(sim.SetInputChoice(furnace.Id, 0, 1, ResourceType.Charcoal));
+        Building furnace = sim.Debug.PlaceBuilding(BuildingType.Smelter, 48, 12, Facing.North, 3);
+        Assert.True(sim.SetInputChoice(furnace.Id, 4, 1, ResourceType.Charcoal));
         SimTestHelpers.Seconds(sim, 20.0);
 
         Simulation loaded = Simulation.FromSave(sim.Save());
@@ -233,17 +233,18 @@ public class CraftingQueueTests
         Building again = loaded.BuildingById(smelter.Id)!;
         Assert.Equal("Iron 2, Copper 2", Queue(again));
         Assert.True(again.Crafting);
-        Assert.True(Simulation.HasInputChoice(loaded.BuildingById(furnace.Id)!, furnace.Recipes[0], 1));
+        Assert.True(Simulation.HasInputChoice(loaded.BuildingById(furnace.Id)!, furnace.Recipes[4], 1));
     }
 
     [Fact]
     public void AnOlderSave_LoadsWithAnEmptyQueue_AndItsInputChoicesOnItsRecipe()
     {
         Simulation sim = Plant();
-        Building furnace = sim.Debug.PlaceBuilding(BuildingType.ElectricFurnace, 48, 4, Facing.North);
+        Building furnace = sim.Debug.PlaceBuilding(BuildingType.Smelter, 48, 4, Facing.North, 3);
         SaveData save = sim.Save();
         BuildingData data = save.Buildings.Single(b => b.Id == furnace.Id);
         data.Queue.Clear();
+        data.RecipeIndex = 4;
         data.PendingRecipe = 1;
         data.InputChoices = new() { new[] { 1, (int)ResourceType.Charcoal } };
 
@@ -251,6 +252,6 @@ public class CraftingQueueTests
 
         Assert.Empty(loaded.Queue);
         Assert.Null(loaded.PendingRecipe);
-        Assert.True(Simulation.HasInputChoice(loaded, loaded.Recipes[0], 1));
+        Assert.True(Simulation.HasInputChoice(loaded, loaded.Recipes[4], 1));
     }
 }

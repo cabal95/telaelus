@@ -234,15 +234,21 @@ ui-style.md. There is no text HUD; the screen holds:
   research"). The menu opens on the tier last viewed, the highest unlocked the first time; the
   choice is not saved and starts again with a new game or a load. Below, a grid of 112-unit square
   cells, as many columns as fit, scrolling when taller than the panel allows: the chosen tier's
-  buildings (never the HQ) by name, and on Tier 1 the Road and Bridge cells sorted in among them
+  buildings (never the HQ), each level of a leveled family its own cell in its level's tier
+  ("Drill Rig" in Tier 2, `buildMenu/DrillRig`, a cell's id being its name without spaces), by
+  name, and on Tier 1 the Road and Bridge cells sorted in among them
   (pictures drawn from `road_cross` and `bridge_deck` as UI icons, in color when one tile is
   affordable on plain ground, grayscale when not; a hover names the tool and its price; clicking
   one closes the menu and selects that line tool, buildings.md). A building's cell shows its
-  picture and name, in full color when affordable and in grayscale when not. Hovering a cell
-  outlines it and shows its tooltip: its description (buildings.md) in `TextDim` broken into lines
-  of about 44 characters (`TipLine.Wrapped`), then its cost. Clicking a cell, affordable or not,
-  closes the menu and selects the building for placement, so the player can position it while
-  materials build up. The cells refresh while the menu is open, so a cell turns from gray to color
+  picture and name, in full color when affordable and in grayscale when not. A level whose tier is
+  open but whose research is not done is a **locked** cell, after the others (by name): its picture
+  grayscale and dimmed, its name in `TextDim`. Hovering a cell outlines it and shows its tooltip:
+  its description (buildings.md) in `TextDim` broken into lines of about 44 characters
+  (`TipLine.Wrapped`), then its cost, or for a locked cell what it needs ("Needs Powered Mining
+  research", and "Deep Mining needs Powered Mining" while that project's own prerequisite is not
+  done; `BuildMenu.LockLines`). Clicking a cell, affordable or not, closes the menu and selects the
+  building at that level for placement (`BuildController.Select(type, level)`), so the player can
+  position it while materials build up; clicking a locked cell does nothing. The cells refresh while the menu is open, so a cell turns from gray to color
   as the stock arrives.
 - **Building detail panel** (`BuildingDetail`, a panel): opened by clicking a placed building
   outside build mode, and switched to another building by clicking it. It is built from the UI
@@ -274,8 +280,8 @@ ui-style.md. There is no text HUD; the screen holds:
      for any other reason (a problem: no power, offline, storage full, waiting for inputs or fuel).
      Not on storage buildings or hubs.
   4. **Text rows** (`StatusRows`): Research (a Research Lab's running project, "Material Transfer,
-     40%, speed 1x", or "No research running"), Site (a Deep Well or Deep Mine: "Worked-out Iron
-     Ore", "Laterite motherlode"), Plot (a Forester: "Growing: 2:10 left", "Grown: 112 / 150 Wood",
+     40%, speed 1x", or "No research running"), Site (a Deep Well or Deep Mine working the site
+     beside it: "Worked-out Iron Ore", "Laterite motherlode"), Plot (a Forester: "Growing: 2:10 left", "Grown: 112 / 150 Wood",
      or "Replanting in 18 s"), Eats (the Rock Crusher: "1 Stone every 10 s; 230 in storage"), In
      range (extractors: the fields in the work area counted by type, each followed by what those
      fields hold in all, as "Iron Ore 2 (500), Stone 1 (250)", or "none"), Working on (only for a
@@ -346,7 +352,13 @@ ui-style.md. There is no text HUD; the screen holds:
        (have 3)" in `Short`), "Every bay is full" (dim), or else the cost (dim).
      - **Research** (a Research Lab): the Research tree [T] button (`buildingDetail/openResearch`),
        sized to its label, opening the research tree.
-  7. **Destroy** (not for the HQ), alone at the bottom, sized to its label and centered, whose
+  7. **Upgrade** (a leveled building below its top level, `buildingDetail/upgrade`): "Upgrade to
+     Drill Rig", sized to its label, above Destroy. Its tooltip is the next level's description,
+     then its price (the difference in cost, short amounts marked) or, while that level is
+     locked, what it needs (as a locked build menu cell). It is disabled while locked or short;
+     pressing it upgrades the building in place (`Simulation.TryUpgrade`), and its model, picture,
+     and panel switch to the new level.
+  8. **Destroy** (not for the HQ), alone at the bottom, sized to its label and centered, whose
      tooltip shows its refund ("Refund: 13 Wood, 8 Stone", or "Refund: nothing") and which asks
      once: the first click changes it to "Confirm destroy" for 3 seconds, and a second click in
      that time destroys the building.
@@ -373,8 +385,7 @@ ui-style.md. There is no text HUD; the screen holds:
   state that would give), and the dim hint "R rotate   Esc cancel". Outside build mode the same tooltip names the truck nearest the
   pointer (within 28 pixels of its middle): "Truck" in the accent color over its state, or, with
   no truck there, an empty worked-out cell under the pointer ("Worked-out Crude Oil"). The ghost of
-  a Forester, Deep Well, or Deep Mine snaps (`SnapAnchor`) to map cells, and a deep building's to a
-  motherlode's center when the pointer is over one. Field outlines and the hover outline fit a
+  a Forester snaps (`SnapAnchor`) to map cells. Field outlines and the hover outline fit a
   motherlode's 8 x 8. The ghost itself shows the facing (the model is
   turned) and whether the spot is open and affordable (green or red).
 

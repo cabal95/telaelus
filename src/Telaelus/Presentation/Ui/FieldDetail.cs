@@ -102,10 +102,11 @@ public partial class FieldDetail : Dialog
                 $"{ResourceDefs.For(y.Type).Name} {y.Share * 100f:0}% (every {def.UnitSeconds(y.Type):0.##} s)")));
             _rows.Set("Growing", null);
             _rows.Set("Remaining", "Endless");
-            Building? worker = _sim.Buildings.FirstOrDefault(b => ReferenceEquals(b.SiteMotherlode, field));
-            _rows.Set("Worked by", worker is null
-                ? "nothing (a " + BuildingDefs.For(def.WorkedBy).Name + " on its center)"
-                : $"1 {worker.Def.Name}, on {ResourceDefs.For(_sim.OutputOf(worker)!.Value).Name}");
+            var workers = _sim.Buildings.Where(b => ReferenceEquals(b.SiteMotherlode, field)).ToList();
+            BuildingDef deep = BuildingDefs.For(def.WorkedBy, BuildingDefs.Levels(def.WorkedBy));
+            _rows.Set("Worked by", workers.Count == 0
+                ? "nothing (a " + deep.Name + " beside it)"
+                : $"{workers.Count} {deep.Name}" + (workers.Count == 1 ? "" : "s"));
             _remaining.Visible = false;
             return;
         }

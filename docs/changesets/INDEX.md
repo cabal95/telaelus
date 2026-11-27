@@ -16,7 +16,8 @@ Parked plans, not approved; see `future/`.
   Collector, Oil Well, Smelter, Kiln) at 4 x 4, each level unlocked by research and upgraded in
   place; deep levels working the cells around them; research tree back to one screen with tier
   sections; process speed research. Save version (2611261642-save-version), research tree
-  sections (2611261650-research-tree-sections), and level models (2611261712-level-models) done.
+  sections (2611261650-research-tree-sections), level models (2611261712-level-models), and
+  leveled buildings with deep levels (2611261944-leveled-buildings) done; process speed research remains.
 - **graphics-settings** - A player graphics settings panel: the renderer (Forward+ or Mobile, on
   restart, with a first-launch default by GPU), display mode, render scale with FSR upscaling,
   vsync, and a frame cap, kept in a settings file in the player's data folder.
@@ -304,6 +305,10 @@ Newest last. One line each; open the file for the full spec.
 - **2611261712-level-models** - 4 x 4 models for every level of the seven leveled building families
   (`<family>_<level>`), refits scaled up a little and new upgrades, with a levels overview; not
   loaded yet.
+- **2611261944-leveled-buildings** - Seven building families (Mine, Lumber Camp, Water Pump, Sand Collector, Oil
+  Well, Smelter, Kiln) merged into leveled types at 4 x 4, each level above 1 unlocked by its own
+  research and built directly or upgraded in place; deep levels work the cells around them; the
+  Air Separator and Aluminum Smelter dropped; save version 2.
 
 ## Adding a changeset
 

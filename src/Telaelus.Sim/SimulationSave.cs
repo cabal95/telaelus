@@ -174,7 +174,7 @@ public sealed partial class Simulation
         var outgrown = new List<Building>();
         foreach (BuildingData d in data.Buildings)
         {
-            var b = new Building(d.Id, d.Type, d.AnchorX, d.AnchorZ, d.Facing, Telaelus.Sim.Recipes.For(d.Type))
+            var b = new Building(d.Id, d.Type, d.AnchorX, d.AnchorZ, d.Facing, d.Level)
             {
                 Enabled = d.Enabled,
                 RecipeIndex = d.RecipeIndex,
@@ -192,6 +192,11 @@ public sealed partial class Simulation
                 FeedLeft = d.FeedLeft,
                 Starved = d.Starved
             };
+            if (d.Paid.Count > 0)
+            {
+                b.Paid.Clear();
+                b.Paid.AddRange(d.Paid.Select(p => new ResourceAmount(p.Type, p.Amount)));
+            }
             foreach (int[] choice in d.InputChoices)
             {
                 if (choice.Length == 2)
@@ -483,6 +488,8 @@ public sealed partial class Simulation
             AnchorZ = b.AnchorZ,
             Facing = b.Facing,
             Width = b.Width,
+            Level = b.Level,
+            Paid = b.Paid.Select(p => new AmountData(p.Type, p.Amount)).ToList(),
             Enabled = b.Enabled,
             RecipeIndex = b.RecipeIndex,
             PendingRecipe = b.PendingRecipe,

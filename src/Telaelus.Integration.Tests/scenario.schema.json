@@ -37,7 +37,7 @@
     "biome": { "enum": ["Grassland", "Forest", "Highlands", "Desert", "Swamp", "Tundra", "Volcanic", "Ocean"] },
     "feature": { "enum": ["None", "Mountain", "River"] },
     "resource": { "enum": ["Wood", "Stone", "IronOre", "CopperOre", "Coal", "CrudeOil", "Bauxite", "Limestone", "Quartz", "TitaniumOre", "Sulfur", "RareEarths", "UraniumOre", "Crystals", "Sand", "Water", "Lithium", "Iron", "RocketFuel", "Copper", "Steel", "Glass", "Lumber", "Charcoal", "Cement", "Concrete", "Kerosene", "Plastic", "Hydrogen", "LiquidOxygen", "Aluminum", "Silicon", "SulfuricAcid", "Rubber", "Titanium", "CarbonFiber", "EnrichedUranium", "HullPlate", "SteelBeam", "CopperWire", "Circuit", "InsulatedCable", "MachineParts", "SiliconWafer", "Processor", "Magnet", "ElectricMotor", "Battery", "SolarCell", "CompositePanel", "CeramicTile", "AluminumFrame", "ArmorPlate", "ControlModule", "Computer", "ThrusterAssembly", "FuelTank", "HeatShield", "FuelRod", "LifeSupportUnit", "SensorArray", "HullSection", "Engine"] },
-    "building": { "enum": ["Mine", "LumberCamp", "Smelter", "Refinery", "OilWell", "Hq", "Silo", "Stockyard", "TankFarm", "Warehouse", "Vault", "SmallHub", "Relay", "WaterWheel", "BurnerGenerator", "LumberMill", "DrillRig", "WaterPump", "PumpingStation", "SandCollector", "SandDredge", "Glassworks", "Depot", "Forester", "Quarry", "CharcoalKiln", "RockCrusher", "DeepWell", "DeepMine", "SteelMill", "Electrolyzer", "FuelPlant", "ChemicalPlant", "AluminumSmelter", "ElectricFurnace", "Fabricator", "ElectronicsWorks", "TileKiln", "AssemblyPlant", "Shipyard", "Sawmill", "CementKiln", "ConcreteMixer", "BrineWell", "SemiconductorFab", "AirSeparator", "EnrichmentPlant", "SolarArray", "BatteryBank", "FissionReactor", "ResearchLab"] },
+    "building": { "enum": ["Mine", "LumberCamp", "Smelter", "Refinery", "OilWell", "Hq", "Silo", "Stockyard", "TankFarm", "Warehouse", "Vault", "SmallHub", "Relay", "WaterWheel", "BurnerGenerator", "WaterPump", "SandCollector", "Glassworks", "Depot", "Forester", "Quarry", "Kiln", "RockCrusher", "Electrolyzer", "FuelPlant", "ChemicalPlant", "Fabricator", "ElectronicsWorks", "AssemblyPlant", "Shipyard", "Sawmill", "ConcreteMixer", "BrineWell", "SemiconductorFab", "EnrichmentPlant", "SolarArray", "BatteryBank", "FissionReactor", "ResearchLab"] },
     "facing": { "enum": ["North", "East", "South", "West"] },
     "comment": { "type": "string", "description": "Ignored; documents the step." },
     "scenarioStep": {
@@ -213,7 +213,7 @@
       }
     },
     "placeBuilding": {
-      "description": "Place a building through the normal placement rules (fails the step if invalid).",
+      "description": "Place a building through the normal placement rules (fails the step if invalid), at a level for a leveled family (1 by default).",
       "type": "object",
       "required": ["placeBuilding"],
       "additionalProperties": false,
@@ -225,7 +225,8 @@
           "properties": {
             "type": { "$ref": "#/definitions/building" },
             "anchor": { "$ref": "#/definitions/pair" },
-            "facing": { "$ref": "#/definitions/facing" }
+            "facing": { "$ref": "#/definitions/facing" },
+            "level": { "type": "integer", "minimum": 1, "maximum": 3 }
           }
         },
         "comment": { "$ref": "#/definitions/comment" }
@@ -248,7 +249,7 @@
         "comment": { "$ref": "#/definitions/comment" }
       }
     },
-    "research": { "enum": ["MaterialTransfer", "AdvancedMaterialTransfer", "SteelWorks", "Electronics", "Computers"] },
+    "research": { "enum": ["MaterialTransfer", "AdvancedMaterialTransfer", "SteelWorks", "Electronics", "Computers", "Cement", "Steelmaking", "ElectricSmelting", "PoweredMining", "PoweredLogging", "PoweredPumping", "SandSifting", "OilRigs", "DeepMining", "AdvancedLogging", "AdvancedPumping", "Dredging", "DeepDrilling", "TileFiring"] },
     "startResearch": {
       "description": "Start (or resume) a research project, paying its fee the first time; fails if it cannot start.",
       "type": "object",

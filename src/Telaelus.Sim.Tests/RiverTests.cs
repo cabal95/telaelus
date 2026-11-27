@@ -119,9 +119,9 @@ public class RiverTests
         Assert.Equal(terrain, sim.TerrainAt(8, 9));
         Assert.Equal(terrain, sim.TerrainAt(8, 8));
 
-        // A Mine on the north bank and the ground beyond fits; one reaching the channel does not.
-        Assert.True(sim.CanPlace(BuildingType.Mine, 8, 7, Facing.North));
-        Assert.False(sim.CanPlace(BuildingType.Mine, 8, 8, Facing.North));
+        // A 2 x 2 Silo on the north bank and the ground beyond fits; one reaching the channel does not.
+        Assert.True(sim.CanPlace(BuildingType.Silo, 8, 7, Facing.North));
+        Assert.False(sim.CanPlace(BuildingType.Silo, 8, 8, Facing.North));
     }
 
     [Fact]

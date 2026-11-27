@@ -295,17 +295,89 @@ public sealed partial class Simulation
         return true;
     }
 
-    /// <summary>Whether its tier is unlocked: a buildable type of the unlocked tier or below.</summary>
-    public bool IsUnlocked(BuildingType type)
+    /// <summary>
+    /// Whether a type can be built at a level: level 1 once its tier is unlocked (a buildable type of the
+    /// unlocked tier or below); a higher level once the research that unlocks it is complete.
+    /// </summary>
+    public bool IsUnlocked(BuildingType type, int level = 1)
     {
-        BuildingDef def = BuildingDefs.For(type);
-        return def.Buildable && def.Tier <= UnlockedTier;
+        BuildingDef def = BuildingDefs.For(type, level);
+        if (!def.Buildable || def.Tier > UnlockedTier)
+        {
+            return false;
+        }
+        return level == 1 || (ResearchDefs.UnlockingLevel(type, level) is ResearchProject project && IsResearched(project));
     }
 
-    /// <summary>Whether the stockpile holds the building's whole cost.</summary>
-    public bool CanAfford(BuildingType type)
+    /// <summary>Whether the stockpile holds the building's whole cost at a level.</summary>
+    public bool CanAfford(BuildingType type, int level = 1)
     {
-        return HasAll(BuildingDefs.For(type).Cost);
+        return HasAll(BuildingDefs.For(type, level).Cost);
+    }
+
+    /// <summary>
+    /// What upgrading a building to its next level costs: the next level's cost less this level's, per
+    /// resource, never below 0. Empty for a building at its top level.
+    /// </summary>
+    public IReadOnlyList<ResourceAmount> UpgradePrice(Building building)
+    {
+        if (building.Level >= BuildingDefs.Levels(building.Type))
+        {
+            return Array.Empty<ResourceAmount>();
+        }
+        var price = new List<ResourceAmount>();
+        foreach (ResourceAmount cost in BuildingDefs.For(building.Type, building.Level + 1).Cost)
+        {
+            float have = 0f;
+            foreach (ResourceAmount paid in building.Def.Cost)
+            {
+                if (paid.Type == cost.Type)
+                {
+                    have += paid.Amount;
+                }
+            }
+            if (cost.Amount > have)
+            {
+                price.Add(new ResourceAmount(cost.Type, cost.Amount - have));
+            }
+        }
+        return price;
+    }
+
+    /// <summary>Whether a building can go up a level now: below its top, the next level unlocked, and its price held.</summary>
+    public bool CanUpgrade(Building building)
+    {
+        return building.Level < BuildingDefs.Levels(building.Type)
+            && IsUnlocked(building.Type, building.Level + 1)
+            && HasAll(UpgradePrice(building));
+    }
+
+    /// <summary>
+    /// Takes a building up one level in place: pays the price and swaps in the next level's definition
+    /// and recipes. Everything else stays (id, position, on/off, queue or hold, choices, buffers); a
+    /// running cycle finishes at the new speed, and a level that burns no fuel puts out its fire. False, changing nothing, when it cannot (see <see cref="CanUpgrade"/>).
+    /// </summary>
+    public bool TryUpgrade(int id)
+    {
+        Building? building = BuildingById(id);
+        if (building is null || !CanUpgrade(building))
+        {
+            return false;
+        }
+        foreach (ResourceAmount cost in UpgradePrice(building))
+        {
+            AddToStockpile(cost.Type, -cost.Amount);
+            building.Paid.Add(cost);
+        }
+        building.SetLevel(building.Level + 1);
+        if (!building.Def.BurnsFuel)
+        {
+            // The unit in its fire was spent when taken; the new level runs on Power alone.
+            building.Burning = null;
+            building.BurnLeft = 0f;
+        }
+        RecomputeNetwork();
+        return true;
     }
 
     /// <summary>
@@ -313,18 +385,18 @@ public sealed partial class Simulation
     /// and the building must be unlocked and affordable. Its cost is deducted; a
     /// refused placement changes nothing.
     /// </summary>
-    public bool TryPlaceBuilding(BuildingType type, int anchorX, int anchorZ, Facing facing)
+    public bool TryPlaceBuilding(BuildingType type, int anchorX, int anchorZ, Facing facing, int level = 1)
     {
-        if (!CanPlace(type, anchorX, anchorZ, facing) || !IsUnlocked(type) || !CanAfford(type))
+        if (!CanPlace(type, anchorX, anchorZ, facing) || !IsUnlocked(type, level) || !CanAfford(type, level))
         {
             return false;
         }
 
-        foreach (ResourceAmount cost in BuildingDefs.For(type).Cost)
+        foreach (ResourceAmount cost in BuildingDefs.For(type, level).Cost)
         {
             AddToStockpile(cost.Type, -cost.Amount);
         }
-        AddBuilding(type, anchorX, anchorZ, facing);
+        AddBuilding(type, anchorX, anchorZ, facing, level);
         return true;
     }
 
@@ -384,16 +456,21 @@ public sealed partial class Simulation
     }
 
     /// <summary>
-    /// What a building would refund if destroyed now: half of each cost
-    /// amount, rounded up, plus the inputs of a processor's running cycle and everything in its
+    /// What a building would refund if destroyed now: half of everything it cost (its level's cost
+    /// when placed, and each upgrade's price), rounded up per resource, plus the inputs of a processor's running cycle and everything in its
     /// buffers, in full.
     /// </summary>
     public IReadOnlyList<ResourceAmount> DestroyRefund(Building building)
     {
         var refund = new Dictionary<ResourceType, float>();
-        foreach (ResourceAmount cost in building.Def.Cost)
+        var paid = new Dictionary<ResourceType, float>();
+        foreach (ResourceAmount cost in building.Paid)
         {
-            Add(refund, cost.Type, Mathf.Ceil(cost.Amount * 0.5f));
+            Add(paid, cost.Type, cost.Amount);
+        }
+        foreach ((ResourceType type, float amount) in paid)
+        {
+            Add(refund, type, Mathf.Ceil(amount * 0.5f));
         }
         foreach (ResourceAmount input in RunningInputs(building))
         {
@@ -512,7 +589,7 @@ public sealed partial class Simulation
                 ? new BuildingStatus(BuildingState.Working, null)
                 : new BuildingStatus(BuildingState.Idle, "Offline: supplies nothing");
         }
-        if (building.Def.ProduceSeconds > 0f)
+        if (building.Def.ProduceSeconds > 0f && !building.Def.IsDeep)
         {
             return BufferHasRoom(building, 1f)
                 ? new BuildingStatus(BuildingState.Working, null)
@@ -527,6 +604,13 @@ public sealed partial class Simulation
             ResourceField? field = building.CurrentField is { Depleted: false } current ? current : NearestFieldInWorkArea(building);
             if (field is null)
             {
+                // A deep level with no live field works the site around it, if any.
+                if (DeepSiteAround(building) is not null)
+                {
+                    return BufferHasRoom(building, 1f)
+                        ? new BuildingStatus(BuildingState.Working, null)
+                        : new BuildingStatus(BuildingState.Idle, "Full: waiting for pickup");
+                }
                 return new BuildingStatus(BuildingState.Idle, "No fields in range");
             }
             return BufferHasRoom(building, Mathf.Min(field.Amount, 1f))
@@ -582,9 +666,9 @@ public sealed partial class Simulation
         return new BuildingStatus(BuildingState.Idle, "Waiting for " + string.Join(", ", missing));
     }
 
-    private Building AddBuilding(BuildingType type, int anchorX, int anchorZ, Facing facing)
+    private Building AddBuilding(BuildingType type, int anchorX, int anchorZ, Facing facing, int level = 1)
     {
-        var building = new Building(_nextBuildingId++, type, anchorX, anchorZ, facing, Telaelus.Sim.Recipes.For(type));
+        var building = new Building(_nextBuildingId++, type, anchorX, anchorZ, facing, level);
         _buildings.Add(building);
         for (int x = anchorX; x < anchorX + building.Width; x++)
         {
@@ -833,6 +917,11 @@ public sealed partial class Simulation
             {
                 // A collector works only on the network; going offline drops the unit in hand.
                 building.Progress = 0f;
+                continue;
+            }
+            if (building.Def.IsDeep)
+            {
+                StepDeep(building, dt);
                 continue;
             }
             if (building.Def.ProduceSeconds > 0f)

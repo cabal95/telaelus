@@ -15,7 +15,7 @@ public class HoldTests
         sim.Debug.SeedStockpile(ResourceType.Coal, 180f);
         SimTestHelpers.Burners(sim, 6);
         sim.Debug.SeedStockpile(ResourceType.Wood, 60f);
-        Building kiln = sim.Debug.PlaceBuilding(BuildingType.CharcoalKiln, 50, 14, Facing.North);
+        Building kiln = sim.Debug.PlaceBuilding(BuildingType.Kiln, 50, 14, Facing.North);
         return (sim, kiln);
     }
 

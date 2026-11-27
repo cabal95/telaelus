@@ -198,7 +198,11 @@ Emissive materials glow at half their base color. Mountains keep their own stone
   scale today's model up a little (1.2x from 2 x 2, 1.1x from 3 x 3, never more than 20%) onto the
   plot, the yard dressed with the family's props (ore heaps, log piles, sand, crates, pipes); a
   level 1 smaller than today's is 0.75x. Each family keeps its accent through its levels, and a
-  powered level carries a power pole.
+  powered level carries a power pole. The standalone models the levels replaced (the Mine, Lumber
+  Camp, Water Pump, Sand Collector, Oil Well, Smelter, Charcoal Kiln, Drill Rig, Deep Mine, Lumber
+  Mill, Pumping Station, Sand Dredge, Deep Well, Steel Mill, Electric Furnace, Cement Kiln, and
+  Tile Kiln), and the dropped Aluminum Smelter and Air Separator, are no longer exported; their
+  descriptions below stay as the parts the level models are built from.
 - The tier-1 refining buildings are bigger than the tier-0 start and mostly long: Steel Mill (4 x
   6, a brick hall with a tipped converter and chimney at the back, a casting bay, billets at the
   front), Electrolyzer (4 x 5, two rows of cells, a rectifier house, an oxygen and a hydrogen tank

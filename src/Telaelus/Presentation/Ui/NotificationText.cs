@@ -31,7 +31,7 @@ public static class NotificationText
             {
                 case SimEventKind.ResearchComplete:
                     ResearchDef def = ResearchDefs.For(e.Project);
-                    Texture2D? icon = icons.Icon(ResearchTree.ResearchIconName(e.Project));
+                    Texture2D? icon = ResearchTree.Picture(e.Project, icons, pictures);
                     toasts.Add(new Toastable(ToastStyle.Lasting, icon, "Research complete: " + def.Name, def.Description));
                     if (def.Unlocks is int tier)
                     {
@@ -62,8 +62,8 @@ public static class NotificationText
     /// <summary>"A Mine can work it", "A Mine or a Drill Rig can work it", or null when nothing extracts it.</summary>
     public static string? WorkedBy(ResourceType type)
     {
-        var names = System.Enum.GetValues<BuildingType>()
-            .Select(BuildingDefs.For)
+        var names = BuildingDefs.AllLevels()
+            .Select(entry => BuildingDefs.For(entry.Type, entry.Level))
             .Where(d => d.Buildable && d.Works.Contains(type))
             .Select(d => Article(d.Name) + " " + d.Name)
             .ToList();

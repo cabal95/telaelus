@@ -159,12 +159,12 @@ public class ResourceTests
     [Fact]
     public void OilWell_PumpsCrudeOil_FromBesideItsSeep()
     {
-        // Oil Well anchored at (12, 10), center (13, 11): the seep at map cell (3, 3) is 1 away,
-        // the one at (5, 2) is 7 away, beyond its 3-unit radius.
+        // Oil Well anchored at (12, 8), center (14, 10): the seep at map cell (3, 3) is 2 away,
+        // the one at (5, 2) is 6 away, beyond its 3-unit radius.
         Simulation sim = EmptyMap();
         ResourceField near = sim.Debug.PlaceField(ResourceType.CrudeOil, 3, 3);
         sim.Debug.PlaceField(ResourceType.CrudeOil, 5, 2);
-        Building well = SimTestHelpers.PlaceOnline(sim, BuildingType.OilWell, 12, 10);
+        Building well = SimTestHelpers.PlaceOnline(sim, BuildingType.OilWell, 12, 8);
         sim.Debug.PlaceBuilding(BuildingType.TankFarm, 40, 40, Facing.North);
 
         // 4 s per unit at base speed.

@@ -307,19 +307,20 @@ public class TruckTests
     public void ACollectorNoTruckCanReach_IsSkipped()
     {
         Simulation sim = EmptyMap();
-        for (int x = 4; x <= 6; x++)
+        // An island of map cells (5, 5) and (6, 5), room for the 4 x 4 Mine and a hub beside it.
+        for (int x = 4; x <= 7; x++)
         {
             for (int z = 4; z <= 6; z++)
             {
-                if (x != 5 || z != 5)
+                if (z != 5 || x == 4 || x == 7)
                 {
                     sim.Debug.SetTerrain(x, z, TerrainType.ShallowWater);
                 }
             }
         }
-        Building island = sim.Debug.PlaceBuilding(BuildingType.Mine, 21, 21, Facing.North);
+        Building island = sim.Debug.PlaceBuilding(BuildingType.Mine, 20, 20, Facing.North);
         // A hub on the island, linked to the second Relay, puts the Mine online.
-        sim.Debug.PlaceBuilding(BuildingType.SmallHub, 20, 20, Facing.North);
+        sim.Debug.PlaceBuilding(BuildingType.SmallHub, 24, 20, Facing.North);
         Assert.True(island.Online);
         island.Output[ResourceType.IronOre] = 15f;
         Building depot = sim.Debug.PlaceBuilding(BuildingType.Depot, DepotX, DepotZ, Facing.North);
@@ -354,7 +355,7 @@ public class TruckTests
         sim.Debug.PlaceBuilding(BuildingType.Relay, 40, 20, Facing.North);
         sim.Debug.PlaceBuilding(BuildingType.SmallHub, 17, 30, Facing.North);
         sim.Debug.PlaceBuilding(BuildingType.SmallHub, 34, 34, Facing.North);
-        Building mine = sim.Debug.PlaceBuilding(BuildingType.Mine, 9, 29, Facing.North);
+        Building mine = sim.Debug.PlaceBuilding(BuildingType.Mine, 8, 28, Facing.North);
         Building depot = sim.Debug.PlaceBuilding(BuildingType.Depot, 36, 36, Facing.North);
         Assert.True(mine.Online);
         Assert.True(depot.Online);

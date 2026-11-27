@@ -21,8 +21,8 @@
     { "expect": "ui.rows.workedBy", "equals": "nothing" },
     { "comment": "The biome and gather speeds are not shown.", "expect": "ui.rows.biome", "exists": false },
 
-    { "comment": "Two Mines beside the field, each 1 unit from its square.", "placeBuilding": { "type": "Mine", "anchor": [44, 34] } },
-    { "placeBuilding": { "type": "Mine", "anchor": [40, 34] } },
+    { "comment": "Two Mines beside the field, one east and one north.", "placeBuilding": { "type": "Mine", "anchor": [44, 34] } },
+    { "placeBuilding": { "type": "Mine", "anchor": [40, 32] } },
     { "comment": "Small Hubs from the HQ put both Mines online (collectors work only online).", "placeBuilding": { "type": "SmallHub", "anchor": [50, 20] } },
     { "placeBuilding": { "type": "SmallHub", "anchor": [46, 30] } },
     { "aimAt": { "world": [36, 30] } },

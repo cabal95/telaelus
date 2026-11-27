@@ -7,7 +7,6 @@ public class PartsTests
     [Theory]
     [InlineData(BuildingType.Fabricator, "Hull Plate,Steel Beam,Aluminum Frame,Machine Parts,Composite Panel,Magnet,Electric Motor,Armor Plate")]
     [InlineData(BuildingType.ElectronicsWorks, "Copper Wire,Circuit,Insulated Cable,Battery")]
-    [InlineData(BuildingType.TileKiln, "Ceramic Tile")]
     [InlineData(BuildingType.AssemblyPlant, "Control Module,Thruster Assembly,Fuel Tank,Computer,Heat Shield,Life Support Unit,Sensor Array")]
     [InlineData(BuildingType.Shipyard, "Hull Section,Engine")]
     public void EachPartsBuilding_RunsItsRecipes(BuildingType type, string names)
@@ -19,7 +18,7 @@ public class PartsTests
     public void SomeRecipes_MakeTwoUnits()
     {
         Assert.Equal(2f, Recipes.For(BuildingType.ElectronicsWorks)[0].Outputs[0].Amount);
-        Assert.Equal(2f, Recipes.For(BuildingType.TileKiln)[0].Outputs[0].Amount);
+        Assert.Equal(2f, Recipes.For(BuildingType.Kiln, 3)[2].Outputs[0].Amount);
         Assert.Equal(1f, Recipes.For(BuildingType.Fabricator)[0].Outputs[0].Amount);
     }
 
@@ -31,7 +30,7 @@ public class PartsTests
         sim.Debug.SeedStockpile(ResourceType.Coal, 20f);
         sim.Debug.PlaceBuilding(BuildingType.BurnerGenerator, 44, 0, Facing.North);
         sim.Debug.SetTerrain(13, 4, TerrainType.ShallowWater);
-        sim.Debug.PlaceBuilding(BuildingType.WaterPump, 52, 14, Facing.North);
+        sim.Debug.PlaceBuilding(BuildingType.WaterPump, 52, 12, Facing.North);
         sim.Debug.SeedStockpile(ResourceType.Copper, 1f);
         Building works = sim.Debug.PlaceBuilding(BuildingType.ElectronicsWorks, 48, 4, Facing.North);
         SimTestHelpers.Order(sim, works);
@@ -78,13 +77,13 @@ public class PartsTests
             (BuildingType.Fabricator, 28, 14, 4),
             (BuildingType.ElectronicsWorks, 33, 14, 0),
             (BuildingType.ElectronicsWorks, 33, 19, 1),
-            (BuildingType.TileKiln, 38, 14, 0),
+            (BuildingType.Kiln, 38, 14, 2),
             (BuildingType.AssemblyPlant, 8, 24, 0),
             (BuildingType.AssemblyPlant, 15, 24, 1),
             (BuildingType.AssemblyPlant, 22, 24, 2),
             (BuildingType.Shipyard, 8, 34, 0),
             (BuildingType.Shipyard, 17, 34, 1),
-            (BuildingType.WaterPump, 46, 24, 0),
+            (BuildingType.WaterPump, 44, 24, 0),
             (BuildingType.Warehouse, 30, 24, 0),
             (BuildingType.Warehouse, 34, 24, 0),
             (BuildingType.Warehouse, 38, 24, 0),
@@ -93,7 +92,8 @@ public class PartsTests
         };
         foreach ((BuildingType type, int x, int z, int recipe) in placements)
         {
-            Building building = sim.Debug.PlaceBuilding(type, x, z, Facing.North);
+            // The Kiln makes Ceramic Tile at level 3 (the Tile Kiln), its recipe 2.
+            Building building = sim.Debug.PlaceBuilding(type, x, z, Facing.North, type == BuildingType.Kiln ? 3 : 1);
             if (building.Queues)
             {
                 SimTestHelpers.Order(sim, building, recipe);

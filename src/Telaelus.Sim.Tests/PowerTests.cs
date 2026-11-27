@@ -24,8 +24,8 @@ public class PowerTests
         }
         Building[] rigs =
         {
-            sim.Debug.PlaceBuilding(BuildingType.DrillRig, 23, 32, Facing.North),
-            sim.Debug.PlaceBuilding(BuildingType.DrillRig, 26, 32, Facing.North)
+            sim.Debug.PlaceBuilding(BuildingType.Mine, 23, 32, Facing.North, 2),
+            sim.Debug.PlaceBuilding(BuildingType.Mine, 27, 32, Facing.North, 2)
         };
         SimTestHelpers.Burners(sim, 3, 38, 36);
         sim.Debug.PlaceBuilding(BuildingType.SmallHub, 29, 31, Facing.North);
@@ -68,7 +68,7 @@ public class PowerTests
     {
         Simulation sim = EmptyMap();
         sim.Debug.SeedStockpile(ResourceType.Coal, 10f);
-        Building rig = sim.Debug.PlaceBuilding(BuildingType.DrillRig, 20, 40, Facing.North);
+        Building rig = sim.Debug.PlaceBuilding(BuildingType.Mine, 20, 40, Facing.North, 2);
         Building burner = sim.Debug.PlaceBuilding(BuildingType.BurnerGenerator, 24, 40, Facing.North);
         SimTestHelpers.Ticks(sim, 1);
 
@@ -191,12 +191,12 @@ public class PowerTests
         Simulation sim = EmptyMap();
         sim.Debug.SeedStockpile(ResourceType.Coal, 5f);
         sim.Debug.PlaceField(ResourceType.IronOre, 11, 4, 100f);
-        Building rig = sim.Debug.PlaceBuilding(BuildingType.DrillRig, 49, 13, Facing.North);
+        Building rig = sim.Debug.PlaceBuilding(BuildingType.Mine, 49, 13, Facing.North, 2);
         sim.Debug.PlaceBuilding(BuildingType.BurnerGenerator, 53, 13, Facing.North);
         Assert.True(rig.Online);
 
-        // Iron Ore takes 6 s by hand; at speed 2 that is 3 s a unit: 3 units in 9.1 s.
-        SimTestHelpers.Seconds(sim, 9.1);
+        // Iron Ore takes 6 s by hand; at the Drill Rig's speed 1.3 that is 4.6 s a unit: 3 units in 14 s.
+        SimTestHelpers.Seconds(sim, 14.0);
 
         Assert.Equal(3f, rig.Output[ResourceType.IronOre]);
     }

@@ -152,10 +152,10 @@ public class ResearchTests
         sim.Debug.PlaceField(ResourceType.IronOre, 12, 4, 200f);
         Building near = sim.Debug.PlaceBuilding(BuildingType.Mine, 52, 16, Facing.North);
         sim.Debug.PlaceField(ResourceType.IronOre, 3, 3, 200f);
-        Building far = sim.Debug.PlaceBuilding(BuildingType.Mine, 12, 10, Facing.North);
+        Building far = sim.Debug.PlaceBuilding(BuildingType.Mine, 12, 8, Facing.North);
         far.Output[ResourceType.IronOre] = 8f;
         sim.Debug.PlaceField(ResourceType.Bauxite, 11, 2, 200f);
-        Building rig = sim.Debug.PlaceBuilding(BuildingType.DrillRig, 44, 4, Facing.North);
+        Building rig = sim.Debug.PlaceBuilding(BuildingType.Mine, 44, 4, Facing.North, 2);
         Assert.True(near.Online);
         Assert.False(far.Online);
         Assert.True(rig.Online);

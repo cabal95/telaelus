@@ -86,7 +86,7 @@ public class ExtractorTests
         var sim = new Simulation();
         ResourceField field = SimTestHelpers.FieldAtMapCell(sim, 10, 9);
         SimTestHelpers.PlaceOnline(sim, BuildingType.Mine, NearOreX, NearOreZ);
-        SimTestHelpers.PlaceOnline(sim, BuildingType.Mine, 40, 34);
+        SimTestHelpers.PlaceOnline(sim, BuildingType.Mine, 40, 32);
 
         SimTestHelpers.Seconds(sim, 8.1);
 
@@ -103,7 +103,7 @@ public class ExtractorTests
         sim.Debug.PlaceField(ResourceType.Limestone, 5, 5);
         sim.Debug.PlaceField(ResourceType.Crystals, 10, 5);
         Building mine = SimTestHelpers.PlaceOnline(sim, BuildingType.Mine, 22, 24);
-        Building rig = sim.Debug.PlaceBuilding(BuildingType.DrillRig, 41, 24, Facing.North);
+        Building rig = sim.Debug.PlaceBuilding(BuildingType.Mine, 41, 24, Facing.North, 2);
         SimTestHelpers.Ticks(sim, 1);
 
         Assert.Equal(ResourceType.Limestone, mine.CurrentField?.Type);

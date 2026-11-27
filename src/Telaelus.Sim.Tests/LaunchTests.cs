@@ -77,11 +77,11 @@ public class LaunchTests
         SimTestHelpers.Burners(sim, 7);
         (BuildingType Type, int X, int Z)[] placements =
         {
-            (BuildingType.Mine, 30, 24),
-            (BuildingType.Mine, 30, 36),
+            (BuildingType.Mine, 28, 24),
+            (BuildingType.Mine, 28, 36),
             (BuildingType.Mine, 36, 36),
-            (BuildingType.OilWell, 42, 36),
-            (BuildingType.OilWell, 42, 48),
+            (BuildingType.OilWell, 40, 36),
+            (BuildingType.OilWell, 40, 48),
             (BuildingType.Smelter, 20, 14),
             (BuildingType.Refinery, 36, 13),
             (BuildingType.Refinery, 38, 13),
@@ -90,10 +90,10 @@ public class LaunchTests
             (BuildingType.Electrolyzer, 36, 19),
             (BuildingType.Electrolyzer, 40, 19),
             (BuildingType.Electrolyzer, 44, 19),
-            (BuildingType.WaterPump, 54, 20),
-            (BuildingType.WaterPump, 54, 22),
-            (BuildingType.WaterPump, 54, 24),
-            (BuildingType.WaterPump, 54, 26),
+            (BuildingType.WaterPump, 52, 20),
+            (BuildingType.WaterPump, 52, 24),
+            (BuildingType.WaterPump, 56, 28),
+            (BuildingType.WaterPump, 56, 16),
             (BuildingType.TankFarm, 24, 30),
             (BuildingType.TankFarm, 27, 30),
             (BuildingType.TankFarm, 20, 30)

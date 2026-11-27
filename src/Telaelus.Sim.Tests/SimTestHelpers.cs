@@ -15,9 +15,9 @@ internal static class SimTestHelpers
     public const int ClearX = 28;
     public const int ClearZ = 28;
 
-    // A Water Pump spot on the west shore of the pond (which starts at fine x 36, z 20..27), in
+    // A 4 x 4 Water Pump spot on the west shore of the pond (which starts at fine x 36, z 20..27), in
     // the HQ's coverage.
-    public const int PondPumpX = 34;
+    public const int PondPumpX = 32;
     public const int PondPumpZ = 22;
 
     /// <summary>Queues an order at a processor large enough to keep it crafting for the whole test.</summary>
@@ -97,9 +97,9 @@ internal static class SimTestHelpers
     }
 
     /// <summary>Places a building and connects it to the HQ's network (collectors work only online).</summary>
-    public static Building PlaceOnline(Simulation sim, BuildingType type, int x, int z, Facing facing = Facing.North)
+    public static Building PlaceOnline(Simulation sim, BuildingType type, int x, int z, Facing facing = Facing.North, int level = 1)
     {
-        Building building = sim.Debug.PlaceBuilding(type, x, z, facing);
+        Building building = sim.Debug.PlaceBuilding(type, x, z, facing, level);
         if (!building.Online)
         {
             Connect(sim, building.Position.X, building.Position.Z);

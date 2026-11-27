@@ -15,19 +15,27 @@ public sealed class Building
 {
     public int Id { get; }
     public BuildingType Type { get; }
-    public BuildingDef Def { get; }
+
+    /// <summary>Its level, 1 to <see cref="BuildingDefs.Levels"/> (1 for every building but a leveled family's).</summary>
+    public int Level { get; private set; }
+
+    /// <summary>Its definition at its level.</summary>
+    public BuildingDef Def { get; private set; }
+
+    /// <summary>What it has cost in all: its level's cost when placed, plus each upgrade's price (half comes back when destroyed).</summary>
+    public List<ResourceAmount> Paid { get; } = new();
     public int AnchorX { get; private set; }
     public int AnchorZ { get; private set; }
     public Facing Facing { get; }
-    /// <summary>The recipes it can run (none for a building that is not a processor), the default first.</summary>
-    public IReadOnlyList<Recipe> Recipes { get; }
+    /// <summary>The recipes it can run at its level (none for a building that is not a processor), the default first.</summary>
+    public IReadOnlyList<Recipe> Recipes { get; private set; }
 
     /// <summary>
     /// Whether it crafts from a queue of orders (see Simulation.QueueCraft): every processor but one
-    /// that makes from nothing and burns no fuel (the Electrolyzer, Brine Well, Air Separator), which
-    /// runs its recipe until storage is full.
+    /// that makes from nothing and burns no fuel (the Electrolyzer, Brine Well), which runs its recipe
+    /// until storage is full.
     /// </summary>
-    public bool Queues { get; }
+    public bool Queues { get; private set; }
 
     /// <summary>A queueing processor's orders, the first crafting; at most Simulation.MaxQueue.</summary>
     public List<CraftOrder> Queue { get; } = new();
@@ -102,10 +110,10 @@ public sealed class Building
     /// <summary>What a collector with a choice yields (the Quarry, a motherlode's Deep Mine or Deep Well); see Simulation.OutputChoices.</summary>
     public ResourceType? OutputChoice { get; set; }
 
-    /// <summary>The motherlode a Deep Mine or Deep Well stands on, or null.</summary>
+    /// <summary>The motherlode a deep level works beside it while no live field is in range, or null.</summary>
     public ResourceField? SiteMotherlode { get; set; }
 
-    /// <summary>The worked-out deposit a Deep Mine or Deep Well stands over, or null.</summary>
+    /// <summary>The worked-out deposit a deep level works beside it while no live field is in range, or null.</summary>
     public ResourceType? SiteDeposit { get; set; }
 
     /// <summary>A Forester's field while it has one (growing or grown); null while the plot stands bare.</summary>
@@ -120,16 +128,26 @@ public sealed class Building
     /// <summary>Whether a provider that eats had nothing to eat this tick.</summary>
     public bool Starved { get; set; }
 
-    public Building(int id, BuildingType type, int anchorX, int anchorZ, Facing facing, IReadOnlyList<Recipe> recipes)
+    public Building(int id, BuildingType type, int anchorX, int anchorZ, Facing facing, int level = 1)
     {
         Id = id;
         Type = type;
-        Def = BuildingDefs.For(type);
         AnchorX = anchorX;
         AnchorZ = anchorZ;
         Facing = facing;
-        Recipes = recipes;
-        Queues = recipes.Count > 0 && (Def.BurnsFuel || recipes.Any(recipe => recipe.Inputs.Count > 0));
+        Def = BuildingDefs.For(type, level);
+        Recipes = Telaelus.Sim.Recipes.For(type, level);
+        SetLevel(level);
+        Paid.AddRange(Def.Cost);
+    }
+
+    /// <summary>Takes a level's definition and recipes (on placing, and on an upgrade); the footprint is the same at every level.</summary>
+    internal void SetLevel(int level)
+    {
+        Level = level;
+        Def = BuildingDefs.For(Type, level);
+        Recipes = Telaelus.Sim.Recipes.For(Type, level);
+        Queues = Recipes.Count > 0 && (Def.BurnsFuel || Recipes.Any(recipe => recipe.Inputs.Count > 0));
     }
 
     /// <summary>Moves the anchor (a loaded building whose footprint grew since it was saved).</summary>

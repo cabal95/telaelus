@@ -34,17 +34,17 @@ buildings.md). A single global stockpile holds all amounts, within storage limit
   | Water | TerrainSourced | no | | capacity from a Water Pump or Pumping Station beside water (buildings.md) |
   | Lithium | TerrainSourced | no | | a Brine Well on a salt flat (buildings.md) |
 
-  The refined resources, by tier. What makes them: the Smelter Iron and Copper; the
-  Refinery Kerosene; the Fuel Plant Rocket Fuel (Kerosene and Hydrogen); the Electrolyzer Hydrogen
-  and Liquid Oxygen; the Steel Mill Steel; the Chemical Plant Plastic, Rubber, and Carbon Fiber;
-  the Aluminum Smelter Aluminum; the Electric Furnace Silicon and Titanium; the Glassworks Glass;
-  the Charcoal Kiln Charcoal; the Fabricator Hull Plate, Steel Beam, Aluminum Frame, Machine Parts,
-  and Composite Panel; the Electronics Works Copper Wire and Circuit; the Tile Kiln Ceramic Tile;
-  the Assembly Plant Control Module, Thruster Assembly, and Fuel Tank; the Shipyard Hull Section
-  and Engine. The later tiers: the Sawmill Lumber; the Cement Kiln Cement; the Concrete Mixer
+  The refined resources, by tier. What makes them (a leveled building's level named, buildings.md):
+  the Smelter Iron and Copper, its Steel Mill level Steel too, and its Electric Smelter level
+  Aluminum, Silicon, and Titanium too; the Refinery Kerosene; the Fuel Plant Rocket Fuel (Kerosene
+  and Hydrogen); the Electrolyzer Hydrogen and Liquid Oxygen (the only source of Liquid Oxygen);
+  the Chemical Plant Plastic, Rubber, and Carbon Fiber; the Glassworks Glass; the Kiln Charcoal,
+  its Cement Kiln level Cement too, and its Tile Kiln level Ceramic Tile too; the Fabricator Hull
+  Plate, Steel Beam, Aluminum Frame, Machine Parts, and Composite Panel; the Electronics Works
+  Copper Wire and Circuit; the Assembly Plant Control Module, Thruster Assembly, and Fuel Tank; the
+  Shipyard Hull Section and Engine. The later tiers: the Sawmill Lumber; the Concrete Mixer
   Concrete; the Chemical Plant also Sulfuric Acid; the Enrichment Plant Enriched Uranium and Fuel
-  Rod; the Air Separator Liquid Oxygen too; the Fabricator also Magnet, Electric Motor, and Armor
-  Plate; the Electronics Works also Insulated Cable and Battery; the Semiconductor Fab Silicon
+  Rod; the Fabricator also Magnet, Electric Motor, and Armor Plate; the Electronics Works also Insulated Cable and Battery; the Semiconductor Fab Silicon
   Wafer, Processor, and Solar Cell; the Assembly Plant also Computer, Heat Shield, Life Support
   Unit, and Sensor Array (buildings.md has the recipes). Every refined resource has a maker:
 
@@ -129,29 +129,29 @@ buildings.md). A single global stockpile holds all amounts, within storage limit
 - A field blocks movement and placement on all its fine cells until it depletes and is removed,
   which reopens them.
 - **Worked-out records:** when a field of any deposit but Wood depletes (and is not a Forester's),
-  its map cell keeps the deposit it held (`WorkedOut`). A record blocks nothing; the Deep Well and
-  Deep Mine stand over one (buildings.md). The world shows a marker there (presentation.md).
+  its map cell keeps the deposit it held (`WorkedOut`). A record blocks nothing; a Deep Well or
+  Deep Mine beside one works it (buildings.md). The world shows a marker there (presentation.md).
 - **Growing fields:** a Forester's field (`Owner`) is `Growing` until its `GrowLeft` runs out; a
   field is `Workable` (extractors take it, the player harvests it) only when grown, not a
   motherlode, and not depleted.
 - **Motherlodes** (`MotherlodeDefs`): a field of `Size` 2 (2 x 2 map cells, 8 x 8 units) with a
-  `Motherlode` kind instead of an amount. It never depletes; nothing but the one Deep Mine or Deep
-  Well on its center works it. Its `Type` is its largest yield. The field index lists it under all
+  `Motherlode` kind instead of an amount. It never depletes; only the Deep Mines (or, for a Salt
+  Dome, the Deep Wells) beside it work it, any number of them. Its `Type` is its largest yield. The field index lists it under all
   four of its map cells, so `FieldAt`, walking, and placement treat its 64 fine cells as the field.
   Seeing it discovers every resource it yields.
 
   | Kind | Biomes | Yields (share) | Worked by |
   |---|---|---|---|
-  | Laterite | Grassland, Desert | Iron Ore 60%, Bauxite 40% | Deep Mine |
+  | Laterite | Grassland, Desert | Iron Ore 60%, Bauxite 40% | Deep Mine (Mine level 3) |
   | Porphyry | Highlands | Copper Ore 55%, Iron Ore 25%, Quartz 20% | Deep Mine |
   | Coal Measures | Highlands, Forest | Coal 50%, Iron Ore 30%, Limestone 20% | Deep Mine |
-  | Salt Dome | Desert | Crude Oil 75%, Sulfur 25% | Deep Well |
+  | Salt Dome | Desert | Crude Oil 75%, Sulfur 25% | Deep Well (Oil Well level 3) |
   | Mineral Sands | Tundra | Titanium Ore 50%, Quartz 40%, Rare Earths 10% | Deep Mine |
   | Massive Sulfide | Volcanic, Swamp | Sulfur 45%, Copper Ore 35%, Iron Ore 20% | Deep Mine |
 
   A unit of the largest share takes 5 s (`MotherlodeDef.BaseSeconds`); a smaller share takes 5 s
   times the largest share over its own (Laterite Bauxite 7.5 s, Mineral Sands Rare Earths 25 s).
-- **Charcoal** comes from the Charcoal Kiln (3 Wood to 1).
+- **Charcoal** comes from the Kiln (the Charcoal Kiln, its level 1; 3 Wood to 1).
 
 ### Range to a field
 

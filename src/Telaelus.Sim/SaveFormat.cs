@@ -60,7 +60,7 @@ public sealed class SaveFormatException : Exception
 /// </summary>
 public static class SaveFormat
 {
-    public const int Version = 1;
+    public const int Version = 2;
 
     private static readonly JsonSerializerOptions Options = new()
     {

@@ -131,7 +131,7 @@ public class BuildingControlTests
         var sim = new Simulation();
         ResourceField ore = SimTestHelpers.FieldAtMapCell(sim, 10, 9);
         Building first = SimTestHelpers.PlaceOnline(sim, BuildingType.Mine, NearOreX, NearOreZ);
-        Building second = SimTestHelpers.PlaceOnline(sim, BuildingType.Mine, 40, 34);
+        Building second = SimTestHelpers.PlaceOnline(sim, BuildingType.Mine, 40, 32);
         sim.Debug.PlaceBuilding(BuildingType.Smelter, SimTestHelpers.ClearX, SimTestHelpers.ClearZ, Facing.North);
         Assert.Empty(sim.ExtractorsWorking(ore));
 

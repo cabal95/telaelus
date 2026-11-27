@@ -12,7 +12,7 @@
 
 [ext_resource type="PackedScene" path="res://assets/models/buildings/hq.glb" id="m5"]
 
-[ext_resource type="PackedScene" path="res://assets/models/buildings/smelter.glb" id="m6"]
+[ext_resource type="PackedScene" path="res://assets/models/buildings/smelter_1.glb" id="m6"]
 
 [ext_resource type="PackedScene" path="res://assets/models/buildings/glassworks.glb" id="m7"]
 
@@ -22,7 +22,7 @@
 
 [ext_resource type="PackedScene" path="res://assets/models/buildings/water_wheel.glb" id="m10"]
 
-[ext_resource type="PackedScene" path="res://assets/models/buildings/lumber_camp.glb" id="m11"]
+[ext_resource type="PackedScene" path="res://assets/models/buildings/lumber_camp_1.glb" id="m11"]
 
 [ext_resource type="PackedScene" path="res://assets/models/buildings/silo.glb" id="m12"]
 

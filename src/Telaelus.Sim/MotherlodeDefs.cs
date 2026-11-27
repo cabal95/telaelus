@@ -14,7 +14,7 @@ public enum MotherlodeType
     MassiveSulfide
 }
 
-/// <summary>A motherlode kind: its name, its yields (largest share first), where it forms, and what works it.</summary>
+/// <summary>A motherlode kind: its name, its yields (largest share first), where it forms, and the family whose deep level (level 3) works it.</summary>
 public sealed record MotherlodeDef(
     string Name,
     IReadOnlyList<(ResourceType Type, float Share)> Yields,
@@ -57,22 +57,22 @@ public static class MotherlodeDefs
     {
         [MotherlodeType.Laterite] = new MotherlodeDef("Laterite",
             new[] { (ResourceType.IronOre, 0.60f), (ResourceType.Bauxite, 0.40f) },
-            new[] { BiomeType.Grassland, BiomeType.Desert }, BuildingType.DeepMine),
+            new[] { BiomeType.Grassland, BiomeType.Desert }, BuildingType.Mine),
         [MotherlodeType.Porphyry] = new MotherlodeDef("Porphyry",
             new[] { (ResourceType.CopperOre, 0.55f), (ResourceType.IronOre, 0.25f), (ResourceType.Quartz, 0.20f) },
-            new[] { BiomeType.Highlands }, BuildingType.DeepMine),
+            new[] { BiomeType.Highlands }, BuildingType.Mine),
         [MotherlodeType.CoalMeasures] = new MotherlodeDef("Coal Measures",
             new[] { (ResourceType.Coal, 0.50f), (ResourceType.IronOre, 0.30f), (ResourceType.Limestone, 0.20f) },
-            new[] { BiomeType.Highlands, BiomeType.Forest }, BuildingType.DeepMine),
+            new[] { BiomeType.Highlands, BiomeType.Forest }, BuildingType.Mine),
         [MotherlodeType.SaltDome] = new MotherlodeDef("Salt Dome",
             new[] { (ResourceType.CrudeOil, 0.75f), (ResourceType.Sulfur, 0.25f) },
-            new[] { BiomeType.Desert }, BuildingType.DeepWell),
+            new[] { BiomeType.Desert }, BuildingType.OilWell),
         [MotherlodeType.MineralSands] = new MotherlodeDef("Mineral Sands",
             new[] { (ResourceType.TitaniumOre, 0.50f), (ResourceType.Quartz, 0.40f), (ResourceType.RareEarths, 0.10f) },
-            new[] { BiomeType.Tundra }, BuildingType.DeepMine),
+            new[] { BiomeType.Tundra }, BuildingType.Mine),
         [MotherlodeType.MassiveSulfide] = new MotherlodeDef("Massive Sulfide",
             new[] { (ResourceType.Sulfur, 0.45f), (ResourceType.CopperOre, 0.35f), (ResourceType.IronOre, 0.20f) },
-            new[] { BiomeType.Volcanic, BiomeType.Swamp }, BuildingType.DeepMine)
+            new[] { BiomeType.Volcanic, BiomeType.Swamp }, BuildingType.Mine)
     };
 
     public static MotherlodeDef For(MotherlodeType type)

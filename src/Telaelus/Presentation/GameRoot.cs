@@ -728,7 +728,7 @@ public partial class GameRoot : Node3D
         {
             Name = "ResearchTree"
         };
-        _researchTree.Initialize(_sim, _icons);
+        _researchTree.Initialize(_sim, _icons, _buildingPictures);
         _dialogs.Add(_researchTree, "Research");
         _buildingDetail.ResearchRequested += OpenResearchTree;
 

@@ -69,6 +69,6 @@
     { "click": {} },
     { "wait": 2 },
     { "expect": "buildings[9].type", "equals": "Mine" },
-    { "expect": "buildings[9].anchor", "equals": [20, 34] }
+    { "expect": "buildings[9].anchor", "equals": [19, 33] }
   ]
 }

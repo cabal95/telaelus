@@ -22,7 +22,7 @@ public partial class ResourceIcons : Node
 
     /// <summary>The icon models that stand for no resource (<c>icons/&lt;name&gt;</c>, see the icons README).</summary>
     public static readonly string[] UiIconNames = Ui.UiIcons.Fixed
-        .Concat(ResearchDefs.All.Select(ResearchTree.ResearchIconName))
+        .Concat(ResearchDefs.All.Where(p => ResearchDefs.For(p).UnlocksLevel is null).Select(ResearchTree.ResearchIconName))
         .Concat(Ui.UiIcons.Pictures.Keys)
         .ToArray();
 

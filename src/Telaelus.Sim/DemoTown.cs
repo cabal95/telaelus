@@ -45,6 +45,10 @@ public static class DemoTown
 
     private const float FieldAmount = 2000f;
 
+    // Declared before BuildingLayout, which reads it: static fields initialize in order.
+    /// <summary>The map cell (relative to the spawn's) of the Mine the demo upgrades to a Drill Rig.</summary>
+    private static readonly (int Dx, int Dz) DrillRigCell = (1, 7);
+
     /// <summary>
     /// Each building in placing order: its type, the map cell relative to the spawn's, the fine-cell
     /// offset of its anchor inside that cell, and its facing.
@@ -73,11 +77,11 @@ public static class DemoTown
         (BuildingType.Warehouse, 3, 1, 0, 0, Facing.North),
         (BuildingType.Warehouse, -5, -1, 0, 0, Facing.North),
         // Mining, matched to what the town uses so the trucks never wait on full storage: the Drill
-        // Rig's Iron Ore feeds four Smelters, the Copper Ore Mine one, the Coal Mine and the Charcoal
-        // Kiln fuel them and the generator, and the Lumber Camp feeds the Kiln.
-        (BuildingType.LumberCamp, 6, -2, 1, 1, Facing.North),
-        (BuildingType.Mine, -7, -3, 1, 1, Facing.North),
-        (BuildingType.Mine, -7, 4, 1, 1, Facing.North),
+        // Rig's and a Mine's Iron Ore feed four Smelters, the Copper Ore Mine one, the Coal Mine and
+        // the Charcoal Kiln fuel them and the generator, and the Lumber Camp feeds the Kiln.
+        (BuildingType.LumberCamp, 6, -2, 0, 0, Facing.North),
+        (BuildingType.Mine, -7, -3, 0, 0, Facing.North),
+        (BuildingType.Mine, -7, 4, 0, 0, Facing.North),
         // Hauling.
         (BuildingType.Depot, -4, -3, 0, 0, Facing.South),
         // Refining: the last Smelter makes Copper.
@@ -86,10 +90,11 @@ public static class DemoTown
         (BuildingType.Smelter, -1, 2, 0, 0, Facing.North),
         (BuildingType.Smelter, -3, 4, 0, 0, Facing.North),
         (BuildingType.Smelter, -1, 4, 0, 0, Facing.North),
-        (BuildingType.CharcoalKiln, 3, 2, 1, 1, Facing.North),
-        // Power, the Drill Rig, and research.
+        (BuildingType.Kiln, 3, 2, 0, 0, Facing.North),
+        // Power, the Mine upgraded to a Drill Rig (DrillRigCell), and research.
         (BuildingType.BurnerGenerator, 1, -5, 1, 0, Facing.North),
-        (BuildingType.DrillRig, 1, 7, 0, 0, Facing.North),
+        (BuildingType.Mine, DrillRigCell.Dx, DrillRigCell.Dz, 0, 0, Facing.North),
+        (BuildingType.Mine, DrillRigCell.Dx + 1, DrillRigCell.Dz, 0, 0, Facing.North),
         (BuildingType.ResearchLab, -1, -6, 0, 0, Facing.North)
     };
 
@@ -149,18 +154,32 @@ public static class DemoTown
             sim.Debug.PlaceField(type, sx + dx, sz + dz, FieldAmount);
         }
 
-        // Its Drill Rig is tier 2, so Steel Works is researched first, its fee paid as a player's would be.
-        ResearchDef steelWorks = ResearchDefs.For(ResearchProject.SteelWorks);
-        Pay(sim, steelWorks.Fee);
-        if (!sim.StartResearch(ResearchProject.SteelWorks))
+        // Its Drill Rig is a tier 2 level, so Steel Works and Powered Mining are researched first, their
+        // fees paid as a player's would be.
+        foreach (ResearchProject project in new[] { ResearchProject.SteelWorks, ResearchProject.PoweredMining })
         {
-            throw new InvalidOperationException("the demo could not start Steel Works");
+            ResearchDef def = ResearchDefs.For(project);
+            Pay(sim, def.Fee);
+            if (!sim.StartResearch(project))
+            {
+                throw new InvalidOperationException($"the demo could not start {def.Name}");
+            }
+            sim.Debug.SetResearchProgress(project, def.Work);
         }
-        sim.Debug.SetResearchProgress(ResearchProject.SteelWorks, steelWorks.Work);
 
         foreach ((BuildingType type, int dx, int dz, int ox, int oz, Facing facing) in BuildingLayout)
         {
             Place(sim, type, (sx + dx) * Simulation.FineCellsPerMapCell + ox, (sz + dz) * Simulation.FineCellsPerMapCell + oz, facing);
+        }
+
+        // The Mine on the Iron Ore goes up to a Drill Rig in place, its price paid as a player's would be.
+        Building drillRig = sim.Buildings.First(b => b.Type == BuildingType.Mine
+            && b.AnchorX == (sx + DrillRigCell.Dx) * Simulation.FineCellsPerMapCell
+            && b.AnchorZ == (sz + DrillRigCell.Dz) * Simulation.FineCellsPerMapCell);
+        Pay(sim, sim.UpgradePrice(drillRig));
+        if (!sim.TryUpgrade(drillRig.Id))
+        {
+            throw new InvalidOperationException("the demo could not upgrade its Mine to a Drill Rig");
         }
 
         foreach ((int fromDx, int fromDz, int toDx, int toDz) in RoadLayout)
@@ -180,7 +199,7 @@ public static class DemoTown
         {
             Order(sim, smelter, smelter == smelters[^1] ? 1 : 0);
         }
-        Order(sim, sim.Buildings.First(b => b.Type == BuildingType.CharcoalKiln), 0);
+        Order(sim, sim.Buildings.First(b => b.Type == BuildingType.Kiln), 0);
 
         Building depot = sim.Buildings.First(b => b.Type == BuildingType.Depot);
         for (int truck = 1; truck < depot.Def.TruckSlots; truck++)

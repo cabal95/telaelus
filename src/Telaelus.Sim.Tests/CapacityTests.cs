@@ -29,10 +29,10 @@ public class CapacityTests
     public void WaterSupplyAndDemand_CountOnlyOnlineSwitchedOnBuildings()
     {
         Simulation sim = EmptyMap();
-        Building pump = sim.Debug.PlaceBuilding(BuildingType.WaterPump, 48, 14, Facing.North);
+        Building pump = sim.Debug.PlaceBuilding(BuildingType.WaterPump, 48, 12, Facing.North);
         Building refinery = sim.Debug.PlaceBuilding(BuildingType.Refinery, 46, 8, Facing.North);
         sim.Debug.SetTerrain(2, 10, TerrainType.ShallowWater);
-        Building farPump = sim.Debug.PlaceBuilding(BuildingType.WaterPump, 8, 38, Facing.North);
+        Building farPump = sim.Debug.PlaceBuilding(BuildingType.WaterPump, 8, 36, Facing.North);
         SimTestHelpers.Ticks(sim, 1);
 
         Assert.True(pump.Online);
@@ -60,7 +60,7 @@ public class CapacityTests
         Assert.Equal(0f, SimTestHelpers.Gathered(sim, ResourceType.Kerosene));
         Assert.Equal(5f, SimTestHelpers.Stock(sim, ResourceType.CrudeOil));
 
-        sim.Debug.PlaceBuilding(BuildingType.WaterPump, 48, 14, Facing.North);
+        sim.Debug.PlaceBuilding(BuildingType.WaterPump, 44, 16, Facing.North);
         SimTestHelpers.Seconds(sim, 8.5);
         Assert.Equal(1f, SimTestHelpers.Gathered(sim, ResourceType.Kerosene));
     }
@@ -79,8 +79,9 @@ public class CapacityTests
             SimTestHelpers.Order(sim, refineries[i]);
         }
         SimTestHelpers.Burners(sim, 4);
-        sim.Debug.PlaceBuilding(BuildingType.WaterPump, 48, 14, Facing.North);
-        sim.Debug.PlaceBuilding(BuildingType.WaterPump, 50, 14, Facing.North);
+        // The pond at map cell (12, 4) is fine x 48..51, z 16..19: one pump below it, one beside it.
+        sim.Debug.PlaceBuilding(BuildingType.WaterPump, 48, 12, Facing.North);
+        sim.Debug.PlaceBuilding(BuildingType.WaterPump, 44, 16, Facing.North);
         Assert.All(SimTestHelpers.Placed(sim), b => Assert.True(b.Online));
         SimTestHelpers.Ticks(sim, 1);
 
@@ -104,7 +105,7 @@ public class CapacityTests
             sim.Debug.PlaceBuilding(BuildingType.Refinery, 44 + 2 * i, 8, Facing.North);
         }
         Building[] burners = SimTestHelpers.Burners(sim, 3);
-        sim.Debug.PlaceBuilding(BuildingType.PumpingStation, 47, 13, Facing.North);
+        sim.Debug.PlaceBuilding(BuildingType.WaterPump, 48, 12, Facing.North, 3);
         Assert.All(SimTestHelpers.Placed(sim), b => Assert.True(b.Online));
         SimTestHelpers.Ticks(sim, 1);
 
@@ -129,12 +130,12 @@ public class CapacityTests
         // Map cell (5, 5) is a pond: fine cells x 20..23, z 20..23.
         sim.Debug.SetTerrain(5, 5, TerrainType.ShallowWater);
 
-        Assert.True(sim.CanPlace(BuildingType.WaterPump, 18, 20, Facing.North));
+        Assert.True(sim.CanPlace(BuildingType.WaterPump, 16, 20, Facing.North));
         Assert.True(sim.CanPlace(BuildingType.WaterPump, 21, 24, Facing.North));
-        Assert.True(sim.CanPlace(BuildingType.PumpingStation, 17, 21, Facing.North));
+        Assert.True(sim.CanPlace(BuildingType.WaterPump, 16, 22, Facing.North));
         // Corner to corner is not beside, and a cell away is not either.
-        Assert.False(sim.CanPlace(BuildingType.WaterPump, 18, 24, Facing.North));
-        Assert.False(sim.CanPlace(BuildingType.WaterPump, 17, 20, Facing.North));
+        Assert.False(sim.CanPlace(BuildingType.WaterPump, 16, 24, Facing.North));
+        Assert.False(sim.CanPlace(BuildingType.WaterPump, 15, 20, Facing.North));
         // Nor on the water itself.
         Assert.False(sim.CanPlace(BuildingType.WaterPump, 20, 20, Facing.North));
 
@@ -143,7 +144,7 @@ public class CapacityTests
         sim.Debug.SetFeature(10, 5, MapFeature.River, Facing.South);
         sim.Debug.SetFeature(10, 6, MapFeature.River, Facing.South);
         Assert.True(sim.IsRiverChannel(41, 21));
-        Assert.True(sim.CanPlace(BuildingType.WaterPump, 39, 20, Facing.North));
+        Assert.True(sim.CanPlace(BuildingType.WaterPump, 37, 20, Facing.North));
         Assert.False(sim.CanPlace(BuildingType.WaterPump, 30, 30, Facing.North));
     }
 
@@ -156,9 +157,9 @@ public class CapacityTests
         sim.Debug.SetTerrain(6, 5, TerrainType.Sand);
 
         Assert.True(sim.CanPlace(BuildingType.SandCollector, 20, 20, Facing.North));
-        Assert.True(sim.CanPlace(BuildingType.SandDredge, 22, 20, Facing.North));
+        Assert.True(sim.CanPlace(BuildingType.SandCollector, 22, 20, Facing.North));
         Assert.False(sim.CanPlace(BuildingType.SandCollector, 19, 20, Facing.North));
-        Assert.False(sim.CanPlace(BuildingType.SandDredge, 22, 22, Facing.North));
+        Assert.False(sim.CanPlace(BuildingType.SandCollector, 22, 22, Facing.North));
     }
 
     [Fact]

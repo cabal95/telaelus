@@ -94,7 +94,7 @@ public class NetworkTests
     {
         Simulation sim = EmptyMap();
         ResourceField ore = sim.Debug.PlaceField(ResourceType.IronOre, 3, 3, 100f);
-        Building mine = SimTestHelpers.PlaceOnline(sim, BuildingType.Mine, 12, 10);
+        Building mine = SimTestHelpers.PlaceOnline(sim, BuildingType.Mine, 12, 8);
 
         // 8 s a unit at base speed; 20 units fill the buffer at 160 s.
         SimTestHelpers.Seconds(sim, 200.0);
@@ -109,7 +109,7 @@ public class NetworkTests
     public void CollectingByHand_TakesTheWholeBuffer_InOneHalfSecondHold()
     {
         Simulation sim = EmptyMap();
-        Building mine = sim.Debug.PlaceBuilding(BuildingType.Mine, 12, 10, Facing.North);
+        Building mine = sim.Debug.PlaceBuilding(BuildingType.Mine, 12, 8, Facing.North);
         mine.Output[ResourceType.IronOre] = 12f;
         mine.Output[ResourceType.Stone] = 5f;
 
@@ -138,7 +138,7 @@ public class NetworkTests
     {
         Simulation sim = EmptyMap();
         sim.Debug.SeedStockpile(ResourceType.IronOre, 55f);
-        Building mine = sim.Debug.PlaceBuilding(BuildingType.Mine, 12, 10, Facing.North);
+        Building mine = sim.Debug.PlaceBuilding(BuildingType.Mine, 12, 8, Facing.North);
         mine.Output[ResourceType.IronOre] = 8f;
         mine.Output[ResourceType.Stone] = 3f;
 
@@ -156,7 +156,7 @@ public class NetworkTests
         Simulation sim = EmptyMap();
         sim.Debug.SeedStockpile(ResourceType.IronOre, 60f);
         sim.Debug.PlaceField(ResourceType.IronOre, 3, 3, 100f);
-        Building mine = SimTestHelpers.PlaceOnline(sim, BuildingType.Mine, 12, 10);
+        Building mine = SimTestHelpers.PlaceOnline(sim, BuildingType.Mine, 12, 8);
         SimTestHelpers.Seconds(sim, 20.0);
 
         SimTestHelpers.CollectByHand(sim, mine);
@@ -181,7 +181,7 @@ public class NetworkTests
         Simulation sim = EmptyMap();
         sim.Debug.SeedStockpile(ResourceType.IronOre, 10f);
         sim.Debug.SeedStockpile(ResourceType.Coal, 10f);
-        Building smelter = sim.Debug.PlaceBuilding(BuildingType.Smelter, 20, 20, Facing.North);
+        Building smelter = sim.Debug.PlaceBuilding(BuildingType.Smelter, 18, 20, Facing.North);
         SimTestHelpers.Order(sim, smelter);
         Assert.False(smelter.Online);
 
@@ -205,7 +205,7 @@ public class NetworkTests
         Simulation sim = EmptyMap();
         sim.Debug.SeedStockpile(ResourceType.IronOre, 10f);
         sim.Debug.SeedStockpile(ResourceType.Coal, 10f);
-        Building smelter = SimTestHelpers.PlaceOnline(sim, BuildingType.Smelter, 20, 20);
+        Building smelter = SimTestHelpers.PlaceOnline(sim, BuildingType.Smelter, 18, 20);
         SimTestHelpers.Order(sim, smelter);
         SimTestHelpers.Seconds(sim, 8.0);
         Assert.True(smelter.Crafting);
@@ -231,7 +231,7 @@ public class NetworkTests
         Simulation sim = EmptyMap();
         sim.Debug.SeedStockpile(ResourceType.IronOre, 10f);
         sim.Debug.SeedStockpile(ResourceType.Coal, 10f);
-        Building smelter = SimTestHelpers.PlaceOnline(sim, BuildingType.Smelter, 20, 20);
+        Building smelter = SimTestHelpers.PlaceOnline(sim, BuildingType.Smelter, 18, 20);
         SimTestHelpers.Order(sim, smelter);
         SimTestHelpers.Ticks(sim, 1);
         Assert.True(smelter.Crafting);
@@ -251,7 +251,7 @@ public class NetworkTests
         Simulation sim = EmptyMap();
         sim.Debug.SeedStockpile(ResourceType.IronOre, 60f);
         sim.Debug.PlaceField(ResourceType.IronOre, 3, 3, 100f);
-        Building mine = SimTestHelpers.PlaceOnline(sim, BuildingType.Mine, 12, 10);
+        Building mine = SimTestHelpers.PlaceOnline(sim, BuildingType.Mine, 12, 8);
         SimTestHelpers.Seconds(sim, 40.5);
 
         sim.TryDestroyBuilding(mine.Id);

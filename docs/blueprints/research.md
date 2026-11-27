@@ -17,8 +17,9 @@ storage only by hand or by truck.
   name, a description, its **work** (game seconds at one lab's speed), its **fee** (resources paid
   once, to begin), its **prerequisites** (projects that must be complete first), its place in the
   tier's tree (`Column`, `Row`, within the tier), its **tier** (`Tier`, 1 to 4: it is locked while that tier is), the
-  building tier it unlocks if it is a tier's unlock project (`Unlocks`), and for a transfer project
-  the raw resources it carries (`Transfers`).
+  building tier it unlocks if it is a tier's unlock project (`Unlocks`), the building level it
+  unlocks if it is a level project (`UnlocksLevel`, a type and level; `ResearchDefs.UnlockingLevel`
+  finds it), and for a transfer project the raw resources it carries (`Transfers`).
 
 | Project | Tier | Work | Fee | Prerequisites | Place | Unlocks or transfers |
 |---|---|---|---|---|---|---|
@@ -27,9 +28,29 @@ storage only by hand or by truck.
 | Steel Works | 1 | 1200 s (two game days) | 60 Iron, 60 Copper, 40 Glass, 80 Wood | none | column 0, row 1 | unlocks Tier 2 |
 | Electronics | 2 | 1800 s (three game days) | 60 Steel, 60 Plastic, 40 Aluminum, 120 Wood | Steel Works | column 0, row 1 | unlocks Tier 3 |
 | Computers | 3 | 2700 s (four and a half game days) | 60 Circuit, 20 Electric Motor, 40 Steel, 200 Wood | Electronics | column 0, row 1 | unlocks Tier 4 |
+| Powered Mining | 2 | 900 s | 40 Steel, 30 Copper | none | column 0, row 2 | Mine level 2, Drill Rig |
+| Deep Mining | 3 | 1500 s | 60 Steel, 30 Concrete, 10 Electric Motor | Powered Mining | column 0, row 2 | Mine level 3, Deep Mine |
+| Powered Logging | 2 | 900 s | 30 Steel, 40 Wood | none | column 0, row 3 | Lumber Camp level 2, Lumber Mill |
+| Advanced Logging | 3 | 1500 s | 40 Steel, 20 Electric Motor | Powered Logging | column 0, row 3 | Lumber Camp level 3, Advanced Lumber Mill |
+| Powered Pumping | 2 | 900 s | 30 Steel, 20 Copper | none | column 0, row 4 | Water Pump level 2, Pumping Station |
+| Advanced Pumping | 3 | 1500 s | 40 Steel, 20 Concrete, 10 Electric Motor | Powered Pumping | column 0, row 4 | Water Pump level 3, Advanced Pumping Station |
+| Sand Sifting | 2 | 900 s | 30 Steel, 20 Glass | none | column 0, row 5 | Sand Collector level 2, Sand Sifter |
+| Dredging | 3 | 1500 s | 40 Steel, 10 Electric Motor | Sand Sifting | column 0, row 5 | Sand Collector level 3, Sand Dredge |
+| Oil Rigs | 2 | 900 s | 40 Steel, 20 Copper | none | column 0, row 6 | Oil Well level 2, Oil Rig |
+| Deep Drilling | 3 | 1500 s | 60 Steel, 20 Concrete, 10 Electric Motor | Oil Rigs | column 0, row 6 | Oil Well level 3, Deep Well |
+| Steelmaking | 2 | 900 s | 60 Iron, 30 Copper, 40 Stone | none | column 0, row 7 | Smelter level 2, Steel Mill |
+| Electric Smelting | 2 | 1200 s | 60 Steel, 30 Copper, 20 Glass | Steelmaking | column 1, row 7 | Smelter level 3, Electric Smelter |
+| Cement | 1 | 600 s | 30 Iron, 40 Stone, 40 Wood | none | column 0, row 8 | Kiln level 2, Cement Kiln |
+| Tile Firing | 3 | 1500 s | 40 Concrete, 20 Silicon, 20 Steel | Cement | column 0, row 8 | Kiln level 3, Tile Kiln |
 
 (placeholders; a game day is `Simulation.DayLength`, 600 s. The unlock projects' fees are modest
 because they will later gain prerequisites of their own.)
+
+- **Level projects** (buildings.md, Levels) sit in their level's tier, a row per family. Each is
+  described as "The Mine can be built or upgraded to a Drill Rig." and the level's description.
+  Steelmaking is paid in tier 1 items, since Steel is made only once it is done; the other tier 2
+  level fees take Steel. Its card, drawer, and toast show the level's building picture
+  (`ResearchTree.Picture`) in place of an icon model.
 
 ### Tiers
 

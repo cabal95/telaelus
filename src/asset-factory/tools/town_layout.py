@@ -66,12 +66,12 @@ def build():
     group("Buildings")
     for name, file, x, z, yaw in [
         ("HQ", "hq", 6, 11, 180),
-        ("Smelter", "smelter", 13.5, 8.5, 180),
+        ("Smelter", "smelter_1", 13.5, 8.5, 180),
         ("Glassworks", "glassworks", 18.5, 9, 180),
         ("BurnerGenerator", "burner_generator", 18, 15, 180),
         ("Depot", "depot", 13, 16, 180),
         ("WaterWheel", "water_wheel", 26, 10, 0),
-        ("LumberCamp", "lumber_camp", 33, 15, 180),
+        ("LumberCamp", "lumber_camp_1", 33, 15, 180),
         ("Silo", "silo", 36, 15.5, 180),
         ("ResearchLab", "research_lab", 33, 26.5, 0),
         ("Warehouse", "warehouse", 37.5, 26.5, 0),

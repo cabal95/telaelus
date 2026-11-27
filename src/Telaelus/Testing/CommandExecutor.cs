@@ -274,9 +274,9 @@ public sealed class CommandExecutor
         return StepOutcome.Ok;
     }
 
-    public StepOutcome PlaceBuilding(BuildingType type, int anchorX, int anchorZ, Facing facing)
+    public StepOutcome PlaceBuilding(BuildingType type, int anchorX, int anchorZ, Facing facing, int level = 1)
     {
-        _root.Sim.Debug.PlaceBuilding(type, anchorX, anchorZ, facing);
+        _root.Sim.Debug.PlaceBuilding(type, anchorX, anchorZ, facing, level);
         return StepOutcome.Ok;
     }
 

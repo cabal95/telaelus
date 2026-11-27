@@ -70,7 +70,7 @@
     { "screenshot": "ghost-on-channel" },
     { "expect": "build.ghost.anchor", "equals": [12, 40] },
     { "expect": "build.ghost.placeable", "equals": false },
-    { "comment": "Aimed at (13, 39), it covers z 38 to 40: grass and the north bank.", "aimAt": { "cell": [13, 39] } },
+    { "comment": "Centered on the grid corner (14, 39), it is anchored at (12, 37) and covers z 37 to 40: grass and the north bank.", "aimAt": { "world": [14, 39] } },
     { "wait": 2 },
     { "expect": "build.ghost.placeable", "equals": true }
   ]

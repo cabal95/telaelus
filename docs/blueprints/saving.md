@@ -19,7 +19,7 @@ Game; in a game, Escape opens the game menu (Resume, Save Game, Load Game, Train
     revealed from;
   - every field (id, type, map cell, motherlode, initial and current amount, the building working
     it, growing and time left) and the worked-out cells;
-  - every building (id, type, anchor, facing, footprint width, enabled, recipe and the waiting change, crafting
+  - every building (id, type, level, what it has cost in all (`Paid`), anchor, facing, footprint width, enabled, recipe and the waiting change, crafting
     queue (each order's recipe and items left; absent in older saves, an empty queue), hold
     (recipe and target; absent in older saves, Queue mode), input
     choices by recipe (an older save's by input alone belong to its recipe), fuel
@@ -54,7 +54,7 @@ Game; in a game, Escape opens the game menu (Resume, Save Game, Load Game, Train
   launched, and buildings), the sim's `SaveData`, and the presentation's object.
 - **Versioned:** the header's `SaveVersion` is the save's version; a file without one is version 0
   (every save from before save versions, which had a `FormatVersion` instead, now ignored).
-  `SaveFormat.Version` is 1, and the game and the demo writer write it. A save that cannot be read
+  `SaveFormat.Version` is 2 (the leveled buildings), and the game and the demo writer write it. A save that cannot be read
   is a `SaveFormatException` with a `Kind` (`SaveProblem`) and the reason shown: `Damaged`, "The
   save is damaged"; `Newer`, "Saved by a newer version"; `Older`, "Saved by an older version".
   Such a save is listed but cannot be loaded.
@@ -105,12 +105,12 @@ Game; in a game, Escape opens the game menu (Resume, Save Game, Load Game, Train
   does not import.
 - **The town** (`DemoTown`, in the sim): on generated world `DemoTown.Seed`, the world's fields
   within 12 map cells of the spawn are cleared and the town's own placed, then its buildings are
-  bought and placed as a player would (each cost put in the stockpile first). Its Drill Rig is tier
-  2, so it first researches Steel Works (its fee paid the same way, the work done at once). It
-  has:
-  - a Drill Rig on Iron Ore, powered by a Burner Generator;
+  bought and placed as a player would (each cost put in the stockpile first). It first researches
+  Steel Works and Powered Mining (their fees paid the same way, the work done at once), and its Mine
+  on the Iron Ore is upgraded to a Drill Rig in place, its price paid the same way. It has:
+  - a Drill Rig (a level 2 Mine) on Iron Ore, powered by a Burner Generator;
   - Mines on Copper Ore and Coal, and a Lumber Camp;
-  - five Smelters (four on Iron, one on Copper) and a Charcoal Kiln;
+  - five Smelters (four on Iron, one on Copper) and a Charcoal Kiln (a level 1 Kiln);
   - a Depot with its four trucks, a Stockyard and three Warehouses, a Research Lab on Material
     Transfer, eleven Small Hubs, and a road along the spawn's row.
 

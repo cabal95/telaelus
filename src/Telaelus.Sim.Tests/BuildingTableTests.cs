@@ -16,11 +16,11 @@ public class BuildingTableTests
     private const string Header = "| Building | Tier | Size | Build cost | Draws | Supplies | Burns / eats | Makes |";
 
     /// <summary>Collectors whose output the definitions do not name in a way a table can say plainly.</summary>
-    private static readonly Dictionary<BuildingType, string> MakesInWords = new()
+    private static readonly Dictionary<string, string> MakesInWords = new()
     {
-        [BuildingType.Quarry] = "1 Stone every 6 s (or Limestone beside a Highlands mountain), beside a mountain",
-        [BuildingType.DeepWell] = "1 Crude Oil every 26.67 s (worked-out oil site or Salt Dome)",
-        [BuildingType.DeepMine] = "1 unit every 20 s on a worked-out Iron Ore, Copper Ore, Bauxite, Titanium Ore, Quartz, or Limestone cell, or a motherlode"
+        ["Quarry"] = "1 Stone every 6 s (or Limestone beside a Highlands mountain), beside a mountain",
+        ["Deep Well"] = "with no live field in range, 1 Crude Oil every 26.67 s from a worked-out oil cell or Salt Dome beside it",
+        ["Deep Mine"] = "with no live field in range, 1 unit every 20 s from a worked-out Iron Ore, Copper Ore, Bauxite, Titanium Ore, Quartz, or Limestone cell or a motherlode beside it"
     };
 
     [Fact]
@@ -33,13 +33,13 @@ public class BuildingTableTests
             "docs/blueprints/buildings.md's \"At a glance\" table differs from the code. It should read:\n\n" + expected);
     }
 
-    /// <summary>The table as the code defines it, one row per building in enum order.</summary>
+    /// <summary>The table as the code defines it, one row per building and level in enum order.</summary>
     public static string Table()
     {
         var lines = new List<string> { Header, "|---|---|---|---|---|---|---|---|" };
-        foreach (BuildingType type in Enum.GetValues<BuildingType>())
+        foreach ((BuildingType type, int level) in BuildingDefs.AllLevels())
         {
-            BuildingDef d = BuildingDefs.For(type);
+            BuildingDef d = BuildingDefs.For(type, level);
             string cost = d.Buildable ? Amounts(d.Cost) : "placed by the world";
             string draws = string.Join(", ", d.Draws.Select(kv => $"{Num(kv.Value)} {kv.Key}"));
             string supplies = string.Join(", ", d.Supplies.Select(kv => $"{Num(kv.Value)} {kv.Key}"));
@@ -60,19 +60,19 @@ public class BuildingTableTests
             {
                 burns.Add($"1 {Name(eats)} every {Num(every)} s");
             }
-            lines.Add($"| {d.Name} | {d.Tier} | {d.Width} x {d.Depth} | {cost} | {draws} | {supplies} | {string.Join("; ", burns)} | {string.Join("<br>", Makes(type, d))} |");
+            lines.Add($"| {d.Name} | {d.Tier} | {d.Width} x {d.Depth} | {cost} | {draws} | {supplies} | {string.Join("; ", burns)} | {string.Join("<br>", Makes(type, level, d))} |");
         }
         return string.Join("\n", lines);
     }
 
-    private static List<string> Makes(BuildingType type, BuildingDef d)
+    private static List<string> Makes(BuildingType type, int level, BuildingDef d)
     {
         var makes = new List<string>();
         if (d.IsExtractor)
         {
             makes.Add($"works {string.Join(", ", d.Works.Select(Name))} (radius {Num(d.WorkRadius)}, speed {Num(d.Speed)})");
         }
-        if (MakesInWords.TryGetValue(type, out string? words))
+        if (MakesInWords.TryGetValue(d.Name, out string? words))
         {
             makes.Add(words);
         }
@@ -84,7 +84,7 @@ public class BuildingTableTests
         {
             makes.Add($"grows {Num(amount)} Wood in {Num(grow)} s, bare {Num(regrow)} s after cutting");
         }
-        foreach (Recipe recipe in Recipes.For(type))
+        foreach (Recipe recipe in Recipes.For(type, level))
         {
             makes.Add(RecipeText(recipe));
         }

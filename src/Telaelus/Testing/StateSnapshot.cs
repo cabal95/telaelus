@@ -341,11 +341,12 @@ public static class StateSnapshot
         if (root.Dialogs.Current == root.BuildMenu)
         {
             var cells = new JsonArray();
-            foreach ((string type, BuildCellState state, string label) in root.BuildMenu.Cells)
+            foreach ((string type, int level, BuildCellState state, string label) in root.BuildMenu.Cells)
             {
                 cells.Add(new JsonObject
                 {
                     ["type"] = type,
+                    ["level"] = level,
                     ["state"] = Camel(state.ToString()),
                     ["label"] = label
                 });
@@ -369,9 +370,18 @@ public static class StateSnapshot
                 ["tone"] = Camel(entry.Tone.ToString()),
                 ["tip"] = entry.Tip
             }).ToArray());
+            ui["title"] = root.BuildingDetail.Title;
             ui["state"] = root.BuildingDetail.State?.Text;
             ui["stateTone"] = root.BuildingDetail.State is (_, Tone stateTone) ? Camel(stateTone.ToString()) : null;
             ui["rows"] = rows;
+            ui["upgrade"] = root.BuildingDetail.UpgradeShown is (string upgradeText, bool upgradeEnabled, System.Collections.Generic.IReadOnlyList<string> upgradeTip)
+                ? new JsonObject
+                {
+                    ["text"] = upgradeText,
+                    ["enabled"] = upgradeEnabled,
+                    ["tip"] = new JsonArray(upgradeTip.Select(line => (JsonNode)line).ToArray())
+                }
+                : null;
             ui["destroy"] = root.BuildingDetail.DestroyText;
             ui["destroyTip"] = root.BuildingDetail.DestroyText is null ? null : root.BuildingDetail.DestroyTip;
             ui["fuel"] = root.BuildingDetail.FuelText;
@@ -567,6 +577,7 @@ public static class StateSnapshot
         return new JsonObject
         {
             ["selected"] = selected.ToString(),
+            ["level"] = builder.SelectedLevel,
             ["facing"] = builder.Facing.ToString(),
             ["fieldsInRange"] = ghost?.FieldsInRange ?? 0,
             ["tooltip"] = Lines(dialogs.PlacementTip),
@@ -656,6 +667,7 @@ public static class StateSnapshot
             {
                 ["id"] = b.Id,
                 ["type"] = b.Type.ToString(),
+                ["level"] = b.Level,
                 ["anchor"] = Pair(b.AnchorX, b.AnchorZ),
                 ["facing"] = b.Facing.ToString(),
                 ["width"] = b.Width,

@@ -37,7 +37,7 @@ public class PathTests
         Assert.DoesNotContain(path, p => p.X > 14f && p.X < 17f && p.Z > 9f && p.Z < 12f);
         (int x, int z) = Simulation.CellAt(path[^1].X, path[^1].Z);
         Assert.Equal(23, x);
-        Assert.InRange(z, 9, 10);
+        Assert.InRange(z, 9, 12);
     }
 
     [Fact]
@@ -55,7 +55,7 @@ public class PathTests
                 }
             }
         }
-        Building mine = sim.Debug.PlaceBuilding(BuildingType.Mine, 21, 21, Facing.North);
+        Building mine = sim.Debug.PlaceBuilding(BuildingType.Mine, 20, 20, Facing.North);
 
         Assert.Null(sim.FindPathBeside(new Vector3(40.5f, 0f, 40.5f), mine));
     }
