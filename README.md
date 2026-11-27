@@ -17,6 +17,9 @@ world. It grows in small, playable steps, and every stage should be a game you c
 
 ## The game
 
+![A busy town around the HQ: mines, smelters, a fission reactor, solar arrays, a shipyard, and
+factories between the sea and a forest](docs/images/showcase.png)
+
 Telaelus comes in two parts that share one story: you keep a fleet of ships fueled and supplied,
 and you use that fleet to explore and fight in space.
 
@@ -72,6 +75,9 @@ dotnet test src/Telaelus.Sim.Tests
 To run the game, launch Godot with `--path src/Telaelus`, or open that folder in the Godot editor.
 [CLAUDE.md](CLAUDE.md) has the full list of commands, including the integration tests and the
 scenario runner.
+
+The screenshot above comes from the `showcase` scenario. To refresh it, run that scenario windowed
+(see CLAUDE.md) and copy its `01-showcase.png` over `docs/images/showcase.png`.
 
 ## Read more
 

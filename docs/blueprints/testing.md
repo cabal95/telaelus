@@ -730,7 +730,11 @@ pausing it and stepping frame by frame.
   follow), `field-batches` (every built terrain tile has a field batch, and batches follow the
   tiles into another chunk), `perf-walk` (the standing performance benchmark: seed 2 at the widest
   zoom, nine clicks of walking for about 30 seconds; in the suite it is a smoke test of a long walk
-  across chunks that checks the walk ended where it should).
+  across chunks that checks the walk ended where it should), `showcase` (the README's screenshot:
+  a town of 55 buildings of 36 types on the demo save's world, placed providers first so the
+  Fission Reactor has its Water, every queueing processor given an order, Material Transfer done
+  and Steel Works running; after 20 seconds power, water, and sand are normal and the last
+  building is online, then a shot at zoom 50 that is copied to `docs/images/showcase.png` by hand).
 
 ### Live control channel
 

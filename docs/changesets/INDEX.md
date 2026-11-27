@@ -309,6 +309,8 @@ Newest last. One line each; open the file for the full spec.
   stamps it into the Godot project and presets, then restores them.
 - **2611262116-tag-releases** - A `v*` tag push publishes the tag's GitHub Release with the three build
   zips attached and generated notes, a prerelease for a prerelease tag.
+- **2611262141-readme-showcase** - A `showcase` scenario builds a busy, fully working town of 55
+  buildings of 36 types, and its screenshot heads the README's "The game" section.
 
 ## Adding a changeset
 
