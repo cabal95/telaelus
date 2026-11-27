@@ -30,6 +30,9 @@ jobs:
           key: godot-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('ci/godot-version.txt', 'ci/export.py') }}
       - name: Export script self-test
         run: python ci/export.py selftest
+      # Before anything is built or restored, as in the export job.
+      - name: Version
+        run: python ci/export.py version
       - name: Set up Godot
         run: python ci/export.py setup
       - name: Build

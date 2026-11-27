@@ -76,7 +76,8 @@ and manual runs.
   archive. On GitHub it writes `GODOT_EDITOR` for later steps.
 - `import` imports the project headless.
 - `export [--platform windows|macos|all]` imports, reads the version from MinVer
-  (`dotnet msbuild src/Telaelus/Telaelus.csproj -t:MinVer -getProperty:MinVerVersion`), exports each
+  (`dotnet msbuild src/Telaelus/Telaelus.csproj -restore -t:MinVer -getProperty:MinVerVersion`,
+  restoring first because the export job builds nothing before it), exports each
   preset with `--export-release`, and zips each into `dist/Telaelus-<version>-<platform>.zip`
   (`Telaelus-0.2.1-dev.5-windows-x64.zip`). For each export it stamps the version into
   `project.godot` (`application/config/version`) and the presets (Windows `file_version` and
@@ -84,7 +85,8 @@ and manual runs.
   `short_version` and `version` as `0.2.1`, since Apple allows at most three numbers), then puts
   both files back as they were, even on failure, so an export leaves no change in the working
   tree.
-- `selftest` checks the four- and three-number forms and the stamping, without Godot. The macOS export is already a zip, which keeps the app's executable
+- `selftest` checks the four- and three-number forms and the stamping, without Godot; `version`
+  prints the version. The macOS export is already a zip, which keeps the app's executable
   flag. A build without `Telaelus.dll` fails.
 - Godot's output is read from its `--log-file`, since the Windows editor prints nothing when its
   output is redirected.
@@ -100,7 +102,8 @@ actions.
 
 - Both jobs check out the whole history and its tags (`fetch-depth: 0`), which the version needs.
 - **test** (`ubuntu-latest`), on pushes to `main`, `v*` tags, pull requests, and by hand: run the
-  export script's self-test, set up Godot, `dotnet build Telaelus.slnx`, import, then the sim tests and the integration tests (with
+  export script's self-test and print the version (before anything is restored, as the export job
+  reads it), set up Godot, `dotnet build Telaelus.slnx`, import, then the sim tests and the integration tests (with
   `GODOT_EDITOR` from setup).
 - **export** (after test, only on `v*` tags and manual runs from the Actions tab, so pushes to
   `main` and pull requests only test): `export.py export --platform all`, then each build's zip

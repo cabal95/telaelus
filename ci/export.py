@@ -7,6 +7,7 @@ locally before it is pushed. See ci/README.md.
   python ci/export.py import                 import the project headless (after a C# build)
   python ci/export.py export [--platform P]  export builds into dist/ (P: windows, macos, all)
   python ci/export.py selftest               check the version helpers
+  python ci/export.py version                print the version builds get from the git tags
 
 Every command takes --editor PATH to use an installed editor instead of the downloaded one.
 """
@@ -153,8 +154,9 @@ def import_project(editor):
 
 
 def game_version():
-    """The version every C# project is built with (MinVer, from the git tags; builds.md)."""
-    result = subprocess.run(["dotnet", "msbuild", str(PROJECT / "Telaelus.csproj"), "-nologo", "-t:MinVer",
+    """The version every C# project is built with (MinVer, from the git tags; builds.md). It restores
+    first, since MinVer's target comes from its package and the export job builds nothing before."""
+    result = subprocess.run(["dotnet", "msbuild", str(PROJECT / "Telaelus.csproj"), "-nologo", "-restore", "-t:MinVer",
                              "-getProperty:MinVerVersion"], cwd=ROOT, capture_output=True, text=True)
     version = result.stdout.strip().splitlines()[-1] if result.returncode == 0 and result.stdout.strip() else ""
     if not re.fullmatch(r"\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?", version):
@@ -254,12 +256,14 @@ def selftest():
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("command", choices=["setup", "import", "export", "selftest"])
+    parser.add_argument("command", choices=["setup", "import", "export", "selftest", "version"])
     parser.add_argument("--platform", choices=["windows", "macos", "all"], default="all")
     parser.add_argument("--editor", help="an installed Godot .NET editor to use instead of the downloaded one")
     args = parser.parse_args()
     if args.command == "selftest":
         selftest()
+    elif args.command == "version":
+        print(game_version(), flush=True)
     elif args.command == "setup":
         setup(args.editor)
     elif args.command == "import":
