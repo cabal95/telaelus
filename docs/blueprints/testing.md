@@ -214,6 +214,8 @@ pausing it and stepping frame by frame.
   nothing above its tier; each tier's gateways built from the tier below; a tier N building making
   tier N items (Lithium excepted, and a level judged by the recipes it adds); each unlock project
   in the tier below the one it unlocks and paid in its own tier.
+- `VersionTests`: the sim assembly's informational version is MinVer's (`0.2.0` or `0.2.1-dev.5`)
+  and the commit, never the SDK's default `1.0.0`.
 - `ProcessSpeedTests`: each speed project's family, part, tier, place, and needs; a level 1 Mine
   at today's rate and 25% faster after Better Mining I; Better Mining II replacing I (150%, not
   175%); a Drill Rig with Better Mining I at 200%, gathering 3 units in a little over 12 s; a Deep
@@ -338,7 +340,8 @@ pausing it and stepping frame by frame.
     drawn frame as `NN-<label>.png`, taking one frame), `snapshot` (label; records state only).
   - Pause: `pause` `{}`, `resume` `{}`, and `step` `{ frames }` (see "Pause and frame stepping").
   - Check: `expect` with a snapshot path and exactly one of `equals`, `notEquals`, `gte`, `lte`,
-    `approx` (optional `tolerance`, default 0.001), or `exists`. Paths use dots and indexes
+    `approx` (optional `tolerance`, default 0.001), `exists`, or `matches` (a regular expression a
+    string value must match). Paths use dots and indexes
     (`build.ghost.width`, `fields[0].visibleModels`, `player.position[0]`). Numbers compare by
     value. `expect` reads a fresh snapshot.
 - Commands that take no frames run back to back in the same frame, so several inputs with no
@@ -435,7 +438,7 @@ pausing it and stepping frame by frame.
   `fields` (`id`, `type`, `mapCell`, `amount`, `stage`, `visibleModels`, `explored`, `growing`,
   `motherlode` or null);
   `app` (`loading`, `menu`, or `game`; before a game the snapshot is only `app`, `loading` (the
-  progress, 0 to 1), and `ui` with `open` (`mainMenu` on the menu) and `menu` (`title`, `buttons`:
+  progress, 0 to 1), and `ui` with `open` (`mainMenu` on the menu) and `menu` (`title`, `version` (the version label), `buttons`:
   the shown, enabled ones, `saves`: the main menu's save list (each `name`, `loadable`, and
   `outdated`) while it shows, else null, and `savesPrompt`, the list's question or null));
   `stockpile` (every resource); `capacity` (`power`, `water`, and `sand`, each with `supply`,
@@ -613,7 +616,7 @@ pausing it and stepping frame by frame.
   to one cycle; back in Queue mode, by clicking the Queue cell, with an empty queue; windowed screenshots making and holding),
   `refining` (a Steel Mill's Auto input picker and its note and recipe text; an Electrolyzer on
   Hydrogen feeding a Fuel Plant to Rocket Fuel; no ship bill on the top bar),
-  `menu` (the loading screen done and the menu showing its title and New Game, Demo, and Quit; `newGame`
+  `menu` (the loading screen done and the menu showing its title, its version label (matching "v0.2.0" or "v0.2.1-dev.5 (3b42f27)"), and New Game, Demo, and Quit; `newGame`
   going into a game, and a second replacing it with a fresh world; windowed screenshots of the menu
   and the game),
   `save-load` (Escape opening the game menu and standing the game still; Save Game saving "Save

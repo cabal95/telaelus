@@ -12,6 +12,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          # The whole history and its tags: the version comes from the latest v* tag (MinVer).
+          fetch-depth: 0
       - uses: actions/setup-dotnet@v6
         with:
           # net8.0 for the projects; 9.0 to read Telaelus.slnx.
@@ -25,6 +28,8 @@ jobs:
         with:
           path: .ci-cache
           key: godot-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('ci/godot-version.txt', 'ci/export.py') }}
+      - name: Export script self-test
+        run: python ci/export.py selftest
       - name: Set up Godot
         run: python ci/export.py setup
       - name: Build
@@ -42,6 +47,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          # The whole history and its tags: the version comes from the latest v* tag (MinVer).
+          fetch-depth: 0
       - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: |

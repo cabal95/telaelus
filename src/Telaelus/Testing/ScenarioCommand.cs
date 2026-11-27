@@ -40,7 +40,8 @@ public sealed class ScenarioCommand
         "gte",
         "lte",
         "approx",
-        "exists"
+        "exists",
+        "matches"
     };
 
     /// <summary>Parses a step object. Throws <see cref="FormatException"/> when invalid.</summary>

@@ -31,6 +31,11 @@ planned multiplayer feasible.
     (disabled with no saves; it shows the save list (`SaveList`, as in the load dialog) under a
     "Load Game" title in place of the buttons, with Back), **Demo** (shown when the demo save is in
     the game; it loads it, saving.md), and **Quit**. Options is planned before Quit. Escape does nothing on the menu.
+    The game's version sits in the bottom-left corner, `BodySize` in `TextDim`
+    (`AppRoot.VersionLabel`): "v0.2.0" for a release, "v0.2.1-dev.5 (3b42f27)" for a development
+    build. `AppRoot.GameVersion` ("0.2.1-dev.5") and `AppRoot.GameCommit` ("3b42f27") are read
+    once from the game assembly's informational version, which the build stamps from the git tags
+    (builds.md).
   - **Game:** New Game (`AppRoot.NewGame(seed)`) frees the menu, or a game already in play, and
     creates a `GameRoot` with a new world (`--seed=<n>`, else the scenario seed for a scenario run,
     else random; `AppRoot.ReadSeed`), handing it the shared pictures (`GameRoot.Initialize`), and

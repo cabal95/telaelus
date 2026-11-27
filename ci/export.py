@@ -6,11 +6,13 @@ locally before it is pushed. See ci/README.md.
   python ci/export.py setup                  download the Godot .NET editor and the templates
   python ci/export.py import                 import the project headless (after a C# build)
   python ci/export.py export [--platform P]  export builds into dist/ (P: windows, macos, all)
+  python ci/export.py selftest               check the version helpers
 
 Every command takes --editor PATH to use an installed editor instead of the downloaded one.
 """
 
 import argparse
+import contextlib
 import os
 import platform
 import re
@@ -151,29 +153,66 @@ def import_project(editor):
 
 
 def game_version():
-    source = (PROJECT / "Presentation" / "AppRoot.cs").read_text(encoding="utf-8")
-    match = re.search(r'GameVersion = "([^"]+)"', source)
-    return match.group(1) if match else "0.0.0"
+    """The version every C# project is built with (MinVer, from the git tags; builds.md)."""
+    result = subprocess.run(["dotnet", "msbuild", str(PROJECT / "Telaelus.csproj"), "-nologo", "-t:MinVer",
+                             "-getProperty:MinVerVersion"], cwd=ROOT, capture_output=True, text=True)
+    version = result.stdout.strip().splitlines()[-1] if result.returncode == 0 and result.stdout.strip() else ""
+    if not re.fullmatch(r"\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?", version):
+        sys.exit(f"could not read the version from MinVer:\n{result.stdout}{result.stderr}")
+    return version
 
 
-def commit():
+def numeric_version(version, parts):
+    """The version as numbers only, for the fields Windows and macOS take: MAJOR.MINOR.PATCH, and
+    with four parts the commit count of a dev prerelease last (0.2.1-dev.5 is 0.2.1.5)."""
+    core, _, pre = version.partition("-")
+    numbers = core.split(".")
+    if parts == 4:
+        height = pre.split(".")[-1] if pre.startswith("dev.") else "0"
+        numbers.append(height if height.isdigit() else "0")
+    return ".".join(numbers)
+
+
+def stamp(text, key, value):
+    """Sets every `key="..."` line in a Godot config file's text to value."""
+    return re.sub(rf'^{re.escape(key)}=".*"$', f'{key}="{value}"', text, flags=re.MULTILINE)
+
+
+@contextlib.contextmanager
+def stamped_version(version):
+    """Writes the version into project.godot and the export presets for one export, and puts both
+    files back as they were afterwards, even on failure."""
+    project_file = PROJECT / "project.godot"
+    presets_file = PROJECT / "export_presets.cfg"
+    originals = {path: path.read_bytes() for path in (project_file, presets_file)}
     try:
-        return subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=ROOT, capture_output=True,
-                              text=True, check=True).stdout.strip()
-    except (OSError, subprocess.CalledProcessError):
-        return "local"
+        project = originals[project_file].decode("utf-8")
+        project = project.replace('config/name="Telaelus"\n', f'config/name="Telaelus"\nconfig/version="{version}"\n', 1)
+        presets = originals[presets_file].decode("utf-8")
+        for key in ("application/file_version", "application/product_version"):
+            presets = stamp(presets, key, numeric_version(version, 4))
+        for key in ("application/short_version", "application/version"):
+            presets = stamp(presets, key, numeric_version(version, 3))
+        project_file.write_bytes(project.encode("utf-8"))
+        presets_file.write_bytes(presets.encode("utf-8"))
+        yield
+    finally:
+        for path, data in originals.items():
+            path.write_bytes(data)
 
 
 def export(editor, platforms):
     import_project(editor)
     DIST.mkdir(exist_ok=True)
-    stem = f"Telaelus-{game_version()}-{commit()}"
+    version = game_version()
+    stem = f"Telaelus-{version}"
     for key in platforms:
         for preset, _, output, suffix in PRESETS[key]:
             folder = DIST / suffix
             shutil.rmtree(folder, ignore_errors=True)
             folder.mkdir()
-            run_godot(editor, "--export-release", preset, str(folder / output))
+            with stamped_version(version):
+                run_godot(editor, "--export-release", preset, str(folder / output))
             archive = DIST / f"{stem}-{suffix}.zip"
             archive.unlink(missing_ok=True)
             if output.endswith(".zip"):
@@ -194,13 +233,34 @@ def check_build(archive):
             sys.exit(f"{archive.name} has no Telaelus.dll: the C# build did not run (see Godot's log above)")
 
 
+def selftest():
+    cases = [
+        ("0.2.0", 4, "0.2.0.0"),
+        ("0.2.0", 3, "0.2.0"),
+        ("0.2.1-dev.5", 4, "0.2.1.5"),
+        ("0.2.1-dev.5", 3, "0.2.1"),
+        ("0.3.0-beta.1", 4, "0.3.0.0"),
+        ("0.0.0-dev.0", 4, "0.0.0.0"),
+    ]
+    for version, parts, expected in cases:
+        actual = numeric_version(version, parts)
+        if actual != expected:
+            sys.exit(f"numeric_version({version!r}, {parts}) is {actual!r}, expected {expected!r}")
+    text = 'application/file_version="0.0.0.0"\napplication/short_version="0.0.0"\n'
+    if stamp(text, "application/file_version", "0.2.1.5") != 'application/file_version="0.2.1.5"\napplication/short_version="0.0.0"\n':
+        sys.exit("stamp() did not set exactly its key")
+    print("selftest passed", flush=True)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("command", choices=["setup", "import", "export"])
+    parser.add_argument("command", choices=["setup", "import", "export", "selftest"])
     parser.add_argument("--platform", choices=["windows", "macos", "all"], default="all")
     parser.add_argument("--editor", help="an installed Godot .NET editor to use instead of the downloaded one")
     args = parser.parse_args()
-    if args.command == "setup":
+    if args.command == "selftest":
+        selftest()
+    elif args.command == "setup":
         setup(args.editor)
     elif args.command == "import":
         import_project(resolve_editor(args.editor))

@@ -880,6 +880,7 @@
         "approx": { "type": "number" },
         "tolerance": { "type": "number", "minimum": 0 },
         "exists": { "type": "boolean" },
+        "matches": { "type": "string", "description": "A regular expression a string value must match." },
         "comment": { "$ref": "#/definitions/comment" }
       },
       "oneOf": [
@@ -888,7 +889,8 @@
         { "required": ["gte"] },
         { "required": ["lte"] },
         { "required": ["approx"] },
-        { "required": ["exists"] }
+        { "required": ["exists"] },
+        { "required": ["matches"] }
       ]
     }
   }

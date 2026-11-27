@@ -807,6 +807,8 @@ public sealed class CommandExecutor
             "gte" => Compare(actual, expected, (a, e) => a >= e),
             "lte" => Compare(actual, expected, (a, e) => a <= e),
             "approx" => Compare(actual, expected, (a, e) => System.Math.Abs(a - e) <= tolerance),
+            "matches" => exists && actual is JsonValue value && value.TryGetValue(out string? text)
+                && System.Text.RegularExpressions.Regex.IsMatch(text, expected!.GetValue<string>()),
             _ => false
         };
 

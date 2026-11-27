@@ -21,8 +21,38 @@ public partial class AppRoot : Node
     /// <summary>The seed a scenario's game starts from when it names none, so every run begins the same.</summary>
     public const int ScenarioSeed = 1;
 
-    /// <summary>The game's version, written into saves.</summary>
-    public const string GameVersion = "0.1.0";
+    /// <summary>
+    /// The game's version, from the latest <c>v*</c> git tag at build time (MinVer; builds.md):
+    /// "0.2.0" on a tagged commit, "0.2.1-dev.5" five commits after it. Written into saves and shown
+    /// on the main menu.
+    /// </summary>
+    public static string GameVersion => BuildVersion.Version;
+
+    /// <summary>The short commit the game was built from ("3b42f27"), or empty when unknown.</summary>
+    public static string GameCommit => BuildVersion.Commit;
+
+    /// <summary>"v0.2.0" for a release, "v0.2.1-dev.5 (3b42f27)" for a development build.</summary>
+    public static string VersionLabel => "v" + GameVersion
+        + (GameVersion.Contains('-') && GameCommit.Length > 0 ? $" ({GameCommit})" : "");
+
+    // The assembly's informational version ("0.2.1-dev.5+3b42f27..."), split once.
+    private static readonly (string Version, string Commit) BuildVersion = ReadBuildVersion();
+
+    private static (string Version, string Commit) ReadBuildVersion()
+    {
+        string informational = typeof(AppRoot).Assembly
+            .GetCustomAttributes(typeof(System.Reflection.AssemblyInformationalVersionAttribute), false)
+            is [System.Reflection.AssemblyInformationalVersionAttribute attribute, ..]
+            ? attribute.InformationalVersion
+            : "0.0.0";
+        int plus = informational.IndexOf('+');
+        if (plus < 0)
+        {
+            return (informational, "");
+        }
+        string commit = informational[(plus + 1)..];
+        return (informational[..plus], commit.Length > 7 ? commit[..7] : commit);
+    }
 
     /// <summary>Frames the loading screen shows (over the save's thumbnail) before a loaded game is built.</summary>
     public const int LoadFrames = 2;

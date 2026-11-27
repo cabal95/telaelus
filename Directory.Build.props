@@ -1,0 +1,12 @@
+<Project>
+  <!-- Every project's version comes from the latest vMAJOR.MINOR.PATCH git tag (MinVer): the tag on
+       a tagged commit, else the next patch as a dev prerelease with the commit count (0.2.1-dev.5).
+       See docs/blueprints/builds.md. -->
+  <PropertyGroup>
+    <MinVerTagPrefix>v</MinVerTagPrefix>
+    <MinVerDefaultPreReleaseIdentifiers>dev</MinVerDefaultPreReleaseIdentifiers>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="MinVer" Version="6.0.0" PrivateAssets="all" />
+  </ItemGroup>
+</Project>

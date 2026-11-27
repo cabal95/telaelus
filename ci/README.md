@@ -14,9 +14,23 @@ python ci/export.py export
 `setup` downloads the Godot .NET editor for your machine (version in `godot-version.txt`) into
 `.ci-cache/`, set up self-contained so it never touches your own Godot settings, and pulls the
 three export templates the presets need out of Godot's template archive (a 1.1 GB download, once).
-`export` writes `dist/Telaelus-<version>-<commit>-windows-x64.zip`, `...-windows-arm64.zip`, and
+`export` writes `dist/Telaelus-<version>-windows-x64.zip`, `...-windows-arm64.zip`, and
 `...-macos.zip`. Add `--platform windows` or `--platform macos` for one, or `--editor <path>` to use
 an installed editor instead (its templates go where that editor looks for them).
+
+## Versions and releasing
+
+The version comes from the latest `vMAJOR.MINOR.PATCH` git tag (MinVer, set up in
+`Directory.Build.props`): `0.2.0` on a tagged commit, `0.2.1-dev.5` five commits after it. Every
+C# build stamps it, and `export` writes it into the Godot project and presets for the export only,
+then restores them. To release, tag the commit and push the tag:
+
+```bash
+git tag -a v0.2.0 -m "Telaelus 0.2.0"
+git push origin v0.2.0
+```
+
+The tag push runs the export job. `python ci/export.py selftest` checks the version helpers.
 
 ## The workflow in Docker
 

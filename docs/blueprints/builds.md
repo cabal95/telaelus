@@ -9,6 +9,27 @@ and manual runs.
 
 ## Current state
 
+### Versions
+
+- **A release is a git tag** `vMAJOR.MINOR.PATCH` (`v0.2.0`; a prerelease such as `v0.3.0-beta.1`
+  works too). Releasing is tagging a commit and pushing the tag, which runs the export job.
+- **Every C# project** (`Telaelus`, `Telaelus.Sim`, and the test projects) takes its version from
+  the tags at build time through [MinVer](https://github.com/adamralph/minver), added to all of
+  them by `Directory.Build.props` at the repo root (tag prefix `v`, prerelease identifier `dev`):
+
+  | Build | Version |
+  |---|---|
+  | On a tagged commit | the tag: `0.2.0` |
+  | Commits after a tag | the next patch, `dev`, and the commit count: `0.2.1-dev.5` |
+  | No tag reachable | `0.0.0-dev.0` (with a MinVer warning) |
+
+  The SDK adds the commit to the informational version (`0.2.1-dev.5+3b42f27...`). `dotnet
+  build`, the Godot editor's build, and the export's build all stamp the same version, which the
+  game shows on its main menu and writes into saves (presentation.md, saving.md).
+- **The Godot project** carries no version of its own: `project.godot` has no
+  `application/config/version` and the presets keep `0.0.0.0` and `0.0.0`. The export stamps them
+  (below).
+
 ### Export presets
 
 `src/Telaelus/export_presets.cfg`:
@@ -21,9 +42,11 @@ and manual runs.
 
 - Release exports leave out the debug-only scenario runner and control channel
   (`OS.IsDebugBuild`).
-- The Windows presets do not edit the executable's resources (no `rcedit`), so the exe has
-  Godot's icon and version info.
-- The macOS bundle identifier is `com.telaelus.game`, version 0.1.0.
+- The Windows presets edit the executable's resources (`application/modify_resources`), which
+  Godot 4.7 does itself, with no `rcedit` or Wine: the exe's file and product version are the
+  stamped version (`0.2.1.5`) and its product name and description "Telaelus". The project has no
+  icon of its own, so the exe keeps Godot's.
+- The macOS bundle identifier is `com.telaelus.game`; its version is stamped at export.
 - Every preset includes `assets/saves/*.save` (`include_filter`): the demo save (saving.md), a file
   Godot does not import and would otherwise leave out.
 - The project imports both S3TC/BPTC textures (`rendering/textures/vram_compression/import_s3tc_bptc`,
@@ -52,9 +75,16 @@ and manual runs.
   (`windows_release_x86_64.exe`, `windows_release_arm64.exe`, `macos.zip`) from the template
   archive. On GitHub it writes `GODOT_EDITOR` for later steps.
 - `import` imports the project headless.
-- `export [--platform windows|macos|all]` imports, exports each preset with `--export-release`,
-  and zips each into `dist/Telaelus-<version>-<commit>-<platform>.zip` (the version is
-  `AppRoot.GameVersion`). The macOS export is already a zip, which keeps the app's executable
+- `export [--platform windows|macos|all]` imports, reads the version from MinVer
+  (`dotnet msbuild src/Telaelus/Telaelus.csproj -t:MinVer -getProperty:MinVerVersion`), exports each
+  preset with `--export-release`, and zips each into `dist/Telaelus-<version>-<platform>.zip`
+  (`Telaelus-0.2.1-dev.5-windows-x64.zip`). For each export it stamps the version into
+  `project.godot` (`application/config/version`) and the presets (Windows `file_version` and
+  `product_version` as four numbers, `0.2.1.5`, the last the dev commit count or 0; macOS
+  `short_version` and `version` as `0.2.1`, since Apple allows at most three numbers), then puts
+  both files back as they were, even on failure, so an export leaves no change in the working
+  tree.
+- `selftest` checks the four- and three-number forms and the stamping, without Godot. The macOS export is already a zip, which keeps the app's executable
   flag. A build without `Telaelus.dll` fails.
 - Godot's output is read from its `--log-file`, since the Windows editor prints nothing when its
   output is redirected.
@@ -68,13 +98,14 @@ and manual runs.
 upload-artifact v7), all on Node.js 24, and the script for everything Godot; no third-party Godot
 actions.
 
-- **test** (`ubuntu-latest`), on pushes to `main`, `v*` tags, pull requests, and by hand: set up
-  Godot, `dotnet build Telaelus.slnx`, import, then the sim tests and the integration tests (with
+- Both jobs check out the whole history and its tags (`fetch-depth: 0`), which the version needs.
+- **test** (`ubuntu-latest`), on pushes to `main`, `v*` tags, pull requests, and by hand: run the
+  export script's self-test, set up Godot, `dotnet build Telaelus.slnx`, import, then the sim tests and the integration tests (with
   `GODOT_EDITOR` from setup).
 - **export** (after test, only on `v*` tags and manual runs from the Actions tab, so pushes to
   `main` and pull requests only test): `export.py export --platform all`, then each build's zip
   uploaded as is (`archive: false`), so the artifact is named after the zip
-  (`Telaelus-<version>-<commit>-<platform>.zip`) and a download is that zip itself, kept 14 days.
+  (`Telaelus-<version>-<platform>.zip`) and a download is that zip itself, kept 14 days.
   The macOS zip must be ours: a zip GitHub makes drops the app's executable flag.
 - The build has no warnings. `.editorconfig` sets `end_of_line = lf` for C#, matching
   `.gitattributes`; without it the formatter expects CRLF on Windows and warns on Windows only.
@@ -93,4 +124,5 @@ actions.
 
 ## Related
 
-- testing.md (the tests the workflow runs), presentation.md (`AppRoot.GameVersion`).
+- testing.md (the tests the workflow runs), presentation.md (`AppRoot.GameVersion` and the main
+  menu's version label), saving.md (the version in a save's header).

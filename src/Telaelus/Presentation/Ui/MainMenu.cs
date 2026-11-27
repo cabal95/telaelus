@@ -18,6 +18,10 @@ public partial class MainMenu : Node
     public const string Title = "Telaelus";
 
     private readonly List<Button> _buttons = new();
+    private Label? _version;
+
+    /// <summary>The version label's text (for the snapshot).</summary>
+    public string? VersionText => _version?.Text;
 
     public event Action? NewGameRequested;
     public event Action? DemoRequested;
@@ -79,6 +83,16 @@ public partial class MainMenu : Node
         column.OffsetRight = -48f;
         column.AddThemeConstantOverride("separation", UiTheme.Padding);
         layer.Root.AddChild(column);
+
+        // The version in the bottom-left corner.
+        _version = UiTheme.MakeLabel(AppRoot.VersionLabel, UiTheme.BodySize);
+        _version.AddThemeColorOverride("font_color", UiTheme.TextDim);
+        _version.SetAnchorsPreset(Control.LayoutPreset.BottomLeft);
+        _version.GrowVertical = Control.GrowDirection.Begin;
+        _version.OffsetLeft = UiTheme.Padding;
+        _version.OffsetBottom = -UiTheme.Padding;
+        _version.MouseFilter = Control.MouseFilterEnum.Ignore;
+        layer.Root.AddChild(_version);
 
         Label title = UiTheme.MakeLabel(Title, UiTheme.TitleSize * 2);
         column.AddChild(title);

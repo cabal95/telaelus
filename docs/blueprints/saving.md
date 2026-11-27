@@ -50,7 +50,7 @@ Game; in a game, Escape opens the game menu (Resume, Save Game, Load Game, Train
 
 - `SaveFormat` (`src/Telaelus.Sim/SaveFormat.cs`) writes a `SaveFile` as gzip-compressed JSON
   (`System.Text.Json`, enums by name): a `SaveHeader` (the save version, the game's version
-  (`AppRoot.GameVersion`), the save time, play time in game seconds, the world seed, ships
+  (`AppRoot.GameVersion`, the build's version from the git tags), the save time, play time in game seconds, the world seed, ships
   launched, and buildings), the sim's `SaveData`, and the presentation's object.
 - **Versioned:** the header's `SaveVersion` is the save's version; a file without one is version 0
   (every save from before save versions, which had a `FormatVersion` instead, now ignored).

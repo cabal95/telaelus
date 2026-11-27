@@ -7,6 +7,7 @@
     { "expect": "loading", "equals": 1 },
     { "expect": "ui.open", "equals": "mainMenu" },
     { "expect": "ui.menu.title", "equals": "Telaelus" },
+    { "comment": "The version from the git tags: v0.2.0, or v0.2.1-dev.5 (3b42f27) between tags.", "expect": "ui.menu.version", "matches": "^v\\d+\\.\\d+\\.\\d+(-[0-9A-Za-z.]+ \\([0-9a-f]{7}\\))?$" },
     { "expect": "ui.menu.buttons", "equals": ["New Game", "Demo", "Quit"] },
     { "wait": 30 },
     { "screenshot": "menu" },

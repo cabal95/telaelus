@@ -33,6 +33,7 @@ public static class StateSnapshot
                         ? new JsonObject
                         {
                             ["title"] = MainMenu.Title,
+                            ["version"] = menu.VersionText,
                             ["buttons"] = new JsonArray(menu.ButtonTexts.Select(t => (JsonNode)t).ToArray()),
                             ["saves"] = Saves(menu.SaveRows),
                             ["savesPrompt"] = menu.SavesPrompt

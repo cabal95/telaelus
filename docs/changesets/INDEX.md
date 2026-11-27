@@ -304,6 +304,9 @@ Newest last. One line each; open the file for the full spec.
 - **2611262034-process-speed-research** - Eight speed research projects (Better Mining, Logging, Smelting, and Drilling,
   two steps each, +25% then +50%) and speed as parts added to a 100% level 1 base, scaled by any
   shortage, shown in the detail panel's Speed entry.
+- **2611262051-git-tag-versioning** - The version comes from the latest `v*` git tag: MinVer
+  stamps every C# project, the game reads it for saves and a main menu label, and the export
+  stamps it into the Godot project and presets, then restores them.
 
 ## Adding a changeset
 
