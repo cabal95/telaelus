@@ -8,6 +8,8 @@ locally before it is pushed. See ci/README.md.
   python ci/export.py export [--platform P]  export builds into dist/ (P: windows, macos, all)
   python ci/export.py selftest               check the version helpers
   python ci/export.py version                print the version builds get from the git tags
+  python ci/export.py release                attach dist/'s zips to the GitHub Release of the tag
+                                             in GITHUB_REF_NAME (CI, with GH_TOKEN)
 
 Every command takes --editor PATH to use an installed editor instead of the downloaded one.
 """
@@ -235,6 +237,38 @@ def check_build(archive):
             sys.exit(f"{archive.name} has no Telaelus.dll: the C# build did not run (see Godot's log above)")
 
 
+def release_title(tag):
+    """"Telaelus 0.2.0" for tag v0.2.0."""
+    return f"Telaelus {tag.removeprefix('v')}"
+
+
+def is_prerelease(tag):
+    """A tag with a prerelease part (v0.3.0-beta.1) is a prerelease."""
+    return "-" in tag
+
+
+def release():
+    """Creates the GitHub Release for the tag being built with dist/'s zips attached, or, when it
+    already exists (a re-run), uploads the zips over the old ones and leaves its notes alone."""
+    tag = os.environ.get("GITHUB_REF_NAME", "")
+    if not re.fullmatch(r"v\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?", tag):
+        sys.exit(f"not a release tag: {tag!r} (GITHUB_REF_NAME)")
+    zips = sorted(DIST.glob("*.zip"))
+    prefix = f"Telaelus-{tag.removeprefix('v')}-"
+    if not zips or any(not z.name.startswith(prefix) for z in zips):
+        sys.exit(f"dist/ must hold only {prefix}*.zip for {tag}: {[z.name for z in zips]}")
+    files = [str(z) for z in zips]
+    exists = subprocess.run(["gh", "release", "view", tag], cwd=ROOT, capture_output=True).returncode == 0
+    if exists:
+        command = ["gh", "release", "upload", tag, *files, "--clobber"]
+    else:
+        command = ["gh", "release", "create", tag, *files, "--title", release_title(tag), "--generate-notes"]
+        if is_prerelease(tag):
+            command.append("--prerelease")
+    subprocess.run(command, cwd=ROOT, check=True)
+    print(f"{'updated' if exists else 'created'} release {tag} with {', '.join(z.name for z in zips)}", flush=True)
+
+
 def selftest():
     cases = [
         ("0.2.0", 4, "0.2.0.0"),
@@ -251,12 +285,16 @@ def selftest():
     text = 'application/file_version="0.0.0.0"\napplication/short_version="0.0.0"\n'
     if stamp(text, "application/file_version", "0.2.1.5") != 'application/file_version="0.2.1.5"\napplication/short_version="0.0.0"\n':
         sys.exit("stamp() did not set exactly its key")
+    if release_title("v0.2.0") != "Telaelus 0.2.0":
+        sys.exit(f"release_title('v0.2.0') is {release_title('v0.2.0')!r}")
+    if is_prerelease("v0.2.0") or not is_prerelease("v0.3.0-beta.1"):
+        sys.exit("is_prerelease() is wrong for v0.2.0 or v0.3.0-beta.1")
     print("selftest passed", flush=True)
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("command", choices=["setup", "import", "export", "selftest", "version"])
+    parser.add_argument("command", choices=["setup", "import", "export", "selftest", "version", "release"])
     parser.add_argument("--platform", choices=["windows", "macos", "all"], default="all")
     parser.add_argument("--editor", help="an installed Godot .NET editor to use instead of the downloaded one")
     args = parser.parse_args()
@@ -264,6 +302,8 @@ def main():
         selftest()
     elif args.command == "version":
         print(game_version(), flush=True)
+    elif args.command == "release":
+        release()
     elif args.command == "setup":
         setup(args.editor)
     elif args.command == "import":

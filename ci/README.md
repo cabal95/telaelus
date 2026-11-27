@@ -30,7 +30,8 @@ git tag -a v0.2.0 -m "Telaelus 0.2.0"
 git push origin v0.2.0
 ```
 
-The tag push runs the export job. `python ci/export.py version` prints the version a build gets,
+The tag push runs the export job, which publishes the tag's release on the repository's Releases
+page with the three zips attached (and keeps them as run artifacts for 14 days). `python ci/export.py version` prints the version a build gets,
 and `python ci/export.py selftest` checks the version helpers.
 
 ## The workflow in Docker

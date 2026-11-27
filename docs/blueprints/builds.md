@@ -85,8 +85,9 @@ and manual runs.
   `short_version` and `version` as `0.2.1`, since Apple allows at most three numbers), then puts
   both files back as they were, even on failure, so an export leaves no change in the working
   tree.
-- `selftest` checks the four- and three-number forms and the stamping, without Godot; `version`
-  prints the version. The macOS export is already a zip, which keeps the app's executable
+- `selftest` checks the four- and three-number forms, the stamping, and the release title and
+  prerelease rule, without Godot; `version` prints the version; `release` publishes the tag's
+  GitHub Release in CI (the workflow, below). The macOS export is already a zip, which keeps the app's executable
   flag. A build without `Telaelus.dll` fails.
 - Godot's output is read from its `--log-file`, since the Windows editor prints nothing when its
   output is redirected.
@@ -108,7 +109,13 @@ actions.
 - **export** (after test, only on `v*` tags and manual runs from the Actions tab, so pushes to
   `main` and pull requests only test): `export.py export --platform all`, then each build's zip
   uploaded as is (`archive: false`), so the artifact is named after the zip
-  (`Telaelus-<version>-<platform>.zip`) and a download is that zip itself, kept 14 days.
+  (`Telaelus-<version>-<platform>.zip`) and a download is that zip itself, kept 14 days. On a
+  tag push it then publishes the tag's **GitHub Release** (`export.py release`, with the job's
+  token and `contents: write`): "Telaelus 0.2.0" for `v0.2.0`, the three zips attached as they
+  are, GitHub's generated notes (commits and pull requests since the previous release, editable
+  afterwards), and marked a prerelease when the tag has a prerelease part (`v0.3.0-beta.1`). A
+  re-run uploads the zips over the old ones (`--clobber`) and leaves the notes. `release` refuses
+  unless `dist/` holds only the tag's version's zips. Manual runs make artifacts only.
   The macOS zip must be ours: a zip GitHub makes drops the app's executable flag.
 - The build has no warnings. `.editorconfig` sets `end_of_line = lf` for C#, matching
   `.gitattributes`; without it the formatter expects CRLF on Windows and warns on Windows only.

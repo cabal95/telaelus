@@ -307,6 +307,8 @@ Newest last. One line each; open the file for the full spec.
 - **2611262051-git-tag-versioning** - The version comes from the latest `v*` git tag: MinVer
   stamps every C# project, the game reads it for saves and a main menu label, and the export
   stamps it into the Godot project and presets, then restores them.
+- **2611262116-tag-releases** - A `v*` tag push publishes the tag's GitHub Release with the three build
+  zips attached and generated notes, a prerelease for a prerelease tag.
 
 ## Adding a changeset
 

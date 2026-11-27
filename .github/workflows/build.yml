@@ -48,6 +48,9 @@ jobs:
     needs: test
     if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
+    # To create the tag's GitHub Release and attach the zips (the last step).
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v7
         with:
@@ -91,3 +94,9 @@ jobs:
           path: dist/*-macos.zip
           archive: false
           retention-days: 14
+      # A tag push publishes its GitHub Release with the three zips (gh, preinstalled on the runner).
+      - name: Release
+        if: ${{ startsWith(github.ref, 'refs/tags/v') && !env.ACT }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python ci/export.py release
