@@ -1485,7 +1485,7 @@ BUILDINGS = {"refinery": refinery,
 
 
 # ---- Level models -----------------------------------------------------------------------------
-# One 4 x 4 model per level of each building family (docs/changesets/future/building-levels.md),
+# One 4 x 4 model per level of each building family (docs/changesets/completed/2611261944-leveled-buildings.md),
 # named <family>_<level>. Refits stand today's model, scaled up a little (1.2x from 2 x 2, 1.1x
 # from 3 x 3), on the 4 x 4 plot with yard dressing; each family keeps its accent, and a powered
 # level adds a power pole.

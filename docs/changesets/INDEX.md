@@ -10,15 +10,6 @@ rules are in ../development.md.)
 
 Parked plans, not approved; see `future/`.
 
-- **tier-rework** - The tier rework plan: phases 1 (2611261421-tier-model) and 2
-  (2611261445-tier-pickers) are done; phase 3 is planned in building-levels.
-- **building-levels** - Buildings merged into leveled families (Mine, Lumber Camp, Water Pump, Sand
-  Collector, Oil Well, Smelter, Kiln) at 4 x 4, each level unlocked by research and upgraded in
-  place; deep levels working the cells around them; research tree back to one screen with tier
-  sections; process speed research. Save version (2611261642-save-version), research tree
-  sections (2611261650-research-tree-sections), level models (2611261712-level-models), and
-  leveled buildings with deep levels (2611261944-leveled-buildings), and process speed research
-  (2611262034-process-speed-research) done.
 - **graphics-settings** - A player graphics settings panel: the renderer (Forward+ or Mobile, on
   restart, with a first-launch default by GPU), display mode, render scale with FSR upscaling,
   vsync, and a frame cap, kept in a settings file in the player's data folder.

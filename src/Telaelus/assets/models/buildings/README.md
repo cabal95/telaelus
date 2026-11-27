@@ -59,7 +59,7 @@ Props used with buildings (not buildings themselves):
 
 ## Level models
 
-One 4 x 4 model per level of each leveled building family (docs/changesets/future/building-levels.md),
+One 4 x 4 model per level of each leveled building family (docs/changesets/completed/2611261944-leveled-buildings.md),
 named `<family>_<level>`. Each family keeps its accent, and a powered level adds a power pole.
 Refits stand today's model, scaled 1.2x from 2 x 2 or 1.1x from 3 x 3, on the plot with yard
 dressing. `BuildingModels` loads `<family>_<level>` for a leveled building; the
