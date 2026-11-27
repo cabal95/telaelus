@@ -9,6 +9,11 @@ Telaelus blends two Roman deities: **Tellus**, the earth, and **Caelus**, the sk
 Caelus is the sky god and the husband of Terra, the earth, who is identified with Tellus. The game
 follows the same path: build up on a planet's surface, then take to the sky.
 
+## Download
+
+To play the latest version, download it from the
+[Releases page](https://github.com/cabal95/telaelus/releases/latest).
+
 ## A learning project
 
 Telaelus is a learning project first and a playable game second. It exists to learn game
