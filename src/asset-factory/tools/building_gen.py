@@ -1488,12 +1488,473 @@ BUILDINGS = {"mine": mine, "lumber_camp": lumber_camp, "smelter": smelter, "refi
              "bridge_pier": bridge_pier}
 
 
+# ---- Level models -----------------------------------------------------------------------------
+# One 4 x 4 model per level of each building family (docs/changesets/future/building-levels.md),
+# named <family>_<level>. Refits stand today's model, scaled up a little (1.2x from 2 x 2, 1.1x
+# from 3 x 3), on the 4 x 4 plot with yard dressing; each family keeps its accent, and a powered
+# level adds a power pole.
+
+LEVEL = half(4)
+PAD = 0.03
+
+
+def _plot(m, mat, side="stone_dark", top="stone"):
+    """The 4 x 4 plot under a level model: a low pad over the whole footprint."""
+    box(m, mat(side), -LEVEL, 0, -LEVEL, LEVEL, PAD, LEVEL, mat_top=mat(top))
+
+
+def _place(m, mat, fn, scale, x=0.0, z=0.0):
+    """Today's model `fn`, scaled about its base centre and set at (x, z) on the plot."""
+    part, mats = fn()
+    m.extend(part.scaled(scale).translated((x, PAD, z)))
+    mat.mats.update(mats)
+
+
+def _heap(m, mat, key, x, z, r, h):
+    spike(m, mat(key), (x, PAD, z), (x, PAD + h, z), r, segs=7)
+
+
+def _log_pile(m, mat, x, z, length=0.8, r=0.09):
+    """Three logs lying along X, two below and one on top, centred at (x, z)."""
+    for y, dz in ((r, -r * 1.15), (r, r * 1.15), (r * 2.8, 0.0)):
+        cylinder(m, mat("bark"), (x - length / 2, PAD + y, z + dz), (x + length / 2, PAD + y, z + dz), r, segs=7,
+                 mat_cap=mat("log_end"))
+
+
+def _crates(m, mat, x, z):
+    box(m, mat("wood"), x - 0.22, PAD, z - 0.18, x + 0.12, PAD + 0.3, z + 0.16, mat_top=mat("wood", 1.1))
+    box(m, mat("wood_dark"), x + 0.14, PAD, z - 0.14, x + 0.38, PAD + 0.22, z + 0.12, mat_top=mat("wood"))
+
+
+def _pipe(m, mat, pts, r=0.08, band=None):
+    """A pipe through the points, with an accent band on its first run when `band` is given."""
+    for a, b in zip(pts, pts[1:]):
+        cylinder(m, mat("metal_dark"), a, b, r, segs=8)
+    if band:
+        a, b = pts[0], pts[1]
+        mid = tuple(a[i] + (b[i] - a[i]) * 0.45 for i in range(3))
+        end = tuple(a[i] + (b[i] - a[i]) * 0.55 for i in range(3))
+        cylinder(m, mat(band), mid, end, r + 0.02, segs=8)
+
+
+def mine_1():
+    """Today's Mine, 1.2x, toward the back of a stone plot; its rails run on to the front edge past
+    a second ore cart, between two ore heaps."""
+    m, mat = Mesh(), Materials()
+    _plot(m, mat)
+    _place(m, mat, mine, 1.2, z=0.55)
+    for x in (-0.18, 0.18):
+        box(m, mat("metal_dark"), x - 0.025, PAD, -LEVEL, x + 0.025, PAD + 0.04, -0.5)
+    box(m, mat("mine_accent"), -0.27, PAD + 0.08, -1.55, 0.27, PAD + 0.36, -1.15, mat_top=mat("iron_rust"))
+    _heap(m, mat, "rock", -1.25, -1.2, 0.42, 0.45)
+    _heap(m, mat, "iron_rust", 1.2, -1.3, 0.38, 0.4)
+    return m, mat.mats
+
+
+def mine_2():
+    """Today's Drill Rig, 1.1x, on the plot, with an ore heap at the front."""
+    m, mat = Mesh(), Materials()
+    _plot(m, mat)
+    _place(m, mat, drill_rig, 1.1, z=0.25)
+    _heap(m, mat, "iron_rust", -1.35, -1.55, 0.35, 0.38)
+    return m, mat.mats
+
+
+def mine_3():
+    """Today's Deep Mine, already 4 x 4."""
+    return deep_mine()
+
+
+def lumber_camp_1():
+    """Today's Lumber Camp at 0.75x, toward the back of a muddy plot, with a small log pile and a
+    sawhorse at the front."""
+    m, mat = Mesh(), Materials()
+    _plot(m, mat, "wood_dark", "mud")
+    _place(m, mat, lumber_camp, 0.75, z=0.6)
+    _log_pile(m, mat, -0.9, -1.2, 0.7, 0.08)
+    for x in (0.7, 1.2):
+        cylinder(m, mat("wood_dark"), (x, PAD, -1.4), (x, PAD + 0.3, -1.2), 0.03, segs=4)
+        cylinder(m, mat("wood_dark"), (x, PAD, -1.0), (x, PAD + 0.3, -1.2), 0.03, segs=4)
+    cylinder(m, mat("wood"), (0.65, PAD + 0.3, -1.2), (1.25, PAD + 0.3, -1.2), 0.04, segs=5)
+    return m, mat.mats
+
+
+def lumber_camp_2():
+    """Today's Lumber Camp, 1.2x, with a larger log yard at the front and a power pole."""
+    m, mat = Mesh(), Materials()
+    _plot(m, mat, "wood_dark", "mud")
+    _place(m, mat, lumber_camp, 1.2, z=0.6)
+    _log_pile(m, mat, -0.95, -1.25, 1.0)
+    _log_pile(m, mat, 0.6, -1.4, 0.9)
+    power_pole(m, mat, 1.65, 1.65)
+    return m, mat.mats
+
+
+def lumber_camp_3():
+    """Today's Lumber Mill, 1.1x, with stacked lumber at the front."""
+    m, mat = Mesh(), Materials()
+    _plot(m, mat, "wood_dark", "mud")
+    _place(m, mat, lumber_mill, 1.1, z=0.3)
+    for k in range(4):
+        y = PAD + k * 0.09
+        box(m, mat("wood", 1.1 if k % 2 else 1.0), -1.6 + k * 0.03, y, -1.85, -0.55 - k * 0.03, y + 0.08, -1.45,
+            mat_top=mat("wood", 1.2))
+    return m, mat.mats
+
+
+def _pump_house(m, mat, s, z0):
+    """Today's Water Pump house at scale `s`, its front wall at z0: plank walls, a door, a blue roof."""
+    box(m, mat("wood"), -0.65 * s, PAD, z0, 0.65 * s, PAD + 0.65 * s, z0 + 0.85 * s)
+    box(m, mat("shadow"), -0.18 * s, PAD, z0 - 0.01, 0.18 * s, PAD + 0.45 * s, z0)
+    prism_roof(m, mat("water_accent"), -0.75 * s, 0.75 * s, z0 - 0.1 * s, z0 + 0.95 * s, PAD + 0.65 * s,
+               PAD + 1.0 * s, mat_gable=mat("wood"))
+
+
+def _valve(m, mat, x, z, s=1.0):
+    cylinder(m, mat("metal_dark"), (x, PAD, z), (x, PAD + 0.42 * s, z), 0.05 * s, segs=6)
+    cylinder(m, mat("water_accent"), (x, PAD + 0.44 * s, z - 0.07 * s), (x, PAD + 0.44 * s, z), 0.17 * s, segs=10)
+
+
+def water_pump_1():
+    """Today's Water Pump at 0.75x in the middle of the plot, its intake pipe running out of the
+    front down to the water at the front edge, and a hand-wheel valve."""
+    m, mat = Mesh(), Materials()
+    _plot(m, mat)
+    s = 0.75
+    _pump_house(m, mat, s, -0.2)
+    y = PAD + 0.3
+    _pipe(m, mat, [(0.32, y, -0.2), (0.32, y, -1.7), (0.32, PAD, -1.82)], 0.06, band="water_accent")
+    _valve(m, mat, -0.35, -0.8, s)
+    _crates(m, mat, -1.2, 1.2)
+    return m, mat.mats
+
+
+def water_pump_2():
+    """Today's Water Pump at 1.2x, with two intake pipes leaving its side walls, one at each end,
+    running to the water at the front edge; a valve and a power pole."""
+    m, mat = Mesh(), Materials()
+    _plot(m, mat)
+    s = 1.2
+    z0 = 0.0
+    _pump_house(m, mat, s, z0)
+    y = PAD + 0.4
+    for side in (-1, 1):
+        wall = side * 0.65 * s
+        _pipe(m, mat, [(wall, y, 0.5), (side * 1.35, y, 0.5), (side * 1.35, y, -1.65), (side * 1.35, PAD, -1.78)],
+              0.08, band="water_accent")
+    _valve(m, mat, 0.0, -0.9)
+    power_pole(m, mat, 1.65, 1.65)
+    return m, mat.mats
+
+
+def water_pump_3():
+    """A pump hall like today's Pumping Station, with four intake pipes out of its front edge to the
+    water, its door moved to the left side wall, a water tank at the back, and a power pole."""
+    m, mat = Mesh(), Materials()
+    _plot(m, mat)
+    x0, x1, z0, z1 = -1.55, 0.6, -0.85, 0.75
+    box(m, mat("stone"), x0, PAD, z0, x1, PAD + 1.0, z1, mat_top=mat("metal"))
+    box(m, mat("water_accent"), x0 - 0.02, PAD + 0.72, z0 - 0.02, x1 + 0.02, PAD + 0.82, z1 + 0.02)
+    box(m, mat("shadow"), x0 - 0.01, PAD, -0.25, x0, PAD + 0.6, 0.2)
+    y = PAD + 0.42
+    for x in (-1.3, -0.75, -0.2, 0.35):
+        _pipe(m, mat, [(x, y, z0), (x, y, -1.65), (x, PAD, -1.77)], 0.09, band="water_accent")
+    cylinder(m, mat("metal"), (1.2, PAD, 1.1), (1.2, PAD + 1.6, 1.1), 0.52, segs=12)
+    cylinder(m, mat("water_accent"), (1.2, PAD + 1.05, 1.1), (1.2, PAD + 1.25, 1.1), 0.53, segs=12)
+    spike(m, mat("metal", 1.1), (1.2, PAD + 1.6, 1.1), (1.2, PAD + 1.78, 1.1), 0.52, segs=12)
+    cylinder(m, mat("metal_dark"), (x1, PAD + 0.6, 0.5), (0.75, PAD + 0.6, 0.85), 0.06, segs=6)
+    box(m, mat("power_accent"), 0.9, PAD, -0.5, 1.3, PAD + 0.4, -0.15, mat_top=mat("metal_dark"))
+    power_pole(m, mat, 1.65, -1.65)
+    return m, mat.mats
+
+
+def sand_collector_1():
+    """Today's Sand Collector at 0.75x on a sand plot, over a small pile."""
+    m, mat = Mesh(), Materials()
+    _plot(m, mat, "sand", "sand")
+    _place(m, mat, sand_collector, 0.75, z=0.3)
+    _heap(m, mat, "sand", 1.1, -1.2, 0.4, 0.3)
+    return m, mat.mats
+
+
+def sand_collector_2():
+    """Today's Sand Collector at 1.2x, a tilted sieve frame on legs beside it, and a power pole."""
+    m, mat = Mesh(), Materials()
+    _plot(m, mat, "sand", "sand")
+    _place(m, mat, sand_collector, 1.2, x=-0.35, z=0.35)
+    # the sieve: a mesh screen tilted down to the front on four legs, sand heaped under its foot
+    for x in (0.85, 1.6):
+        cylinder(m, mat("wood_dark"), (x, PAD, -0.9), (x, PAD + 0.45, -0.9), 0.04, segs=5)
+        cylinder(m, mat("wood_dark"), (x, PAD, 0.3), (x, PAD + 0.95, 0.3), 0.04, segs=5)
+    quad(m, mat("metal"), (0.8, PAD + 0.47, -0.95), (1.65, PAD + 0.47, -0.95), (1.65, PAD + 0.97, 0.35),
+         (0.8, PAD + 0.97, 0.35), (0, 0.93, -0.36))
+    for x0, x1 in ((0.78, 0.84), (1.61, 1.67)):
+        box(m, mat("sand_accent"), x0, PAD + 0.44, -0.97, x1, PAD + 0.5, 0.37)
+    _heap(m, mat, "sand", 1.22, -1.35, 0.45, 0.35)
+    power_pole(m, mat, -1.65, -1.65)
+    return m, mat.mats
+
+
+def sand_collector_3():
+    """Today's Sand Dredge at 1.1x on the sand plot."""
+    m, mat = Mesh(), Materials()
+    _plot(m, mat, "sand", "sand")
+    _place(m, mat, sand_dredge, 1.1, z=0.1)
+    return m, mat.mats
+
+
+def _oil_stain(m, mat, x, z, r):
+    cylinder(m, mat("oil"), (x, PAD, z), (x, PAD + 0.005, z), r, segs=14, mat_cap=mat("oil"))
+
+
+def oil_well_1():
+    """Today's Oil Well at 1.2x on an oil-stained plot, with a second, smaller tank."""
+    m, mat = Mesh(), Materials()
+    _plot(m, mat, "stone_dark", "stone")
+    _oil_stain(m, mat, 0.0, -0.55, 0.6)
+    _place(m, mat, oil_well, 1.2, z=0.2)
+    cylinder(m, mat("metal"), (-1.25, PAD, 1.1), (-1.25, PAD + 0.55, 1.1), 0.24, segs=10)
+    cylinder(m, mat("oil_well_accent"), (-1.25, PAD + 0.35, 1.1), (-1.25, PAD + 0.43, 1.1), 0.25, segs=10)
+    return m, mat.mats
+
+
+def _derrick(m, mat, top, base, bands):
+    legs = [(-base, -base), (base, -base), (base, base), (-base, base)]
+    for x, z in legs:
+        cylinder(m, mat("metal_dark"), (x, PAD, z), (x * 0.25, top, z * 0.25), 0.05, segs=5)
+    for y in bands:
+        s = base - (y - PAD) / (top - PAD) * base * 0.75
+        for i in range(4):
+            (ax, az), (bx, bz) = legs[i], legs[(i + 1) % 4]
+            cylinder(m, mat("oil_well_accent"), (ax / base * s, y, az / base * s), (bx / base * s, y, bz / base * s),
+                     0.03, segs=4)
+    box(m, mat("oil_well_accent"), -0.22, top - 0.05, -0.22, 0.22, top + 0.13, 0.22, mat_top=mat("metal_dark"))
+
+
+def oil_well_2():
+    """A simplified Deep Well: a shorter derrick over the wellhead on an oil-stained pad, one tank,
+    and a power pole."""
+    m, mat = Mesh(), Materials()
+    _plot(m, mat, "stone_dark", "stone")
+    _oil_stain(m, mat, 0.0, 0.0, 0.9)
+    _derrick(m, mat, 2.2, 0.6, (0.8, 1.5))
+    cylinder(m, mat("metal"), (0, PAD, 0), (0, PAD + 0.4, 0), 0.16, segs=8, mat_cap=mat("metal_dark"))
+    cylinder(m, mat("metal"), (1.25, PAD, 1.05), (1.25, PAD + 0.8, 1.05), 0.38, segs=12)
+    cylinder(m, mat("oil_well_accent"), (1.25, PAD + 0.5, 1.05), (1.25, PAD + 0.62, 1.05), 0.39, segs=12, caps=False)
+    _pipe(m, mat, [(0.15, PAD + 0.25, 0.1), (1.25, PAD + 0.25, 0.1), (1.25, PAD + 0.25, 0.67)], 0.04)
+    power_pole(m, mat, -1.65, -1.65, 1.5)
+    return m, mat.mats
+
+
+def oil_well_3():
+    """Today's Deep Well, already 4 x 4."""
+    return deep_well()
+
+
+def _smelter_block(m, mat, s, ox, oz, chimney=True):
+    """Today's Smelter furnace block at scale `s`, centred at (ox, oz): stepped stone with the red
+    band, a glowing mouth in the front, and (optionally) its chimney at the back right."""
+    def X(v):
+        return ox + v * s
+
+    def Z(v):
+        return oz + v * s
+
+    def Y(v):
+        return PAD + v * s
+    box(m, mat("stone"), X(-1.15), PAD, Z(-1.05), X(1.15), Y(1.0), Z(1.2), mat_top=mat("stone", 0.9))
+    box(m, mat("smelter_accent"), X(-1.17), Y(0.75), Z(-1.07), X(1.17), Y(0.9), Z(1.22))
+    box(m, mat("stone", 0.92), X(-0.85), Y(1.0), Z(-0.65), X(0.85), Y(1.4), Z(0.95))
+    box(m, mat("stone_dark"), X(-0.5), PAD, Z(-1.18), X(0.5), Y(0.65), Z(-1.05))
+    quad(m, mat("furnace_glow"), (X(-0.36), Y(0.04), Z(-1.181)), (X(0.36), Y(0.04), Z(-1.181)),
+         (X(0.36), Y(0.5), Z(-1.181)), (X(-0.36), Y(0.5), Z(-1.181)), (0, 0, -1))
+    if chimney:
+        cylinder(m, mat("stone_dark"), (X(0.6), Y(1.0), Z(0.6)), (X(0.6), Y(2.1), Z(0.6)), 0.28 * s, segs=8)
+        cylinder(m, mat("smelter_accent"), (X(0.6), Y(1.85), Z(0.6)), (X(0.6), Y(1.95), Z(0.6)), 0.31 * s, segs=8)
+        cylinder(m, mat("shadow"), (X(0.6), Y(2.1), Z(0.6)), (X(0.6), Y(2.101), Z(0.6)), 0.2 * s, segs=8)
+
+
+def smelter_1():
+    """Today's Smelter at 1.1x on the plot, its ore heap at the front left, a coal pile and crates."""
+    m, mat = Mesh(), Materials()
+    _plot(m, mat, "stone_dark", "stone")
+    _smelter_block(m, mat, 1.1, 0.0, 0.3)
+    _heap(m, mat, "rock", -1.25, -1.45, 0.38, 0.42)
+    _heap(m, mat, "coal", 1.2, -1.45, 0.38, 0.36)
+    return m, mat.mats
+
+
+def _casting_shed(m, mat, x0, x1, z0, z1, skylights=False):
+    """The Steel Mill's casting shed beside the furnace: metal walls with the steel-blue band, under a
+    blue gabled roof, or (skylights) the Aluminum Smelter's saw-tooth glass roof."""
+    h = 0.85
+    box(m, mat("metal"), x0, PAD, z0, x1, PAD + h, z1, mat_top=mat("metal_dark"))
+    box(m, mat("steel_accent"), x0 - 0.02, PAD + 0.6, z0 - 0.02, x1 + 0.02, PAD + 0.7, z1 + 0.02)
+    box(m, mat("shadow"), x0 + 0.15, PAD, z0 - 0.01, x1 - 0.15, PAD + 0.55, z0)
+    if not skylights:
+        prism_roof(m, mat("steel_accent"), x0 - 0.05, x1 + 0.05, z0 - 0.05, z1 + 0.05, PAD + h, PAD + h + 0.35,
+                   mat_gable=mat("metal"))
+        return
+    n = 4
+    for k in range(n):
+        za = z0 + (z1 - z0) * k / n
+        zb = z0 + (z1 - z0) * (k + 0.6) / n
+        zc = z0 + (z1 - z0) * (k + 1) / n
+        quad(m, mat("aluminum_accent"), (x0, PAD + h, za), (x1, PAD + h, za), (x1, PAD + h + 0.3, zb),
+             (x0, PAD + h + 0.3, zb), (0, 0.8, -0.6))
+        quad(m, mat("glass"), (x0, PAD + h + 0.3, zb), (x1, PAD + h + 0.3, zb), (x1, PAD + h, zc), (x0, PAD + h, zc),
+             (0, 0.6, 0.8))
+
+
+def _converter(m, mat, x, z):
+    """The Steel Mill's converter, tipped toward the front on two posts, glowing in its mouth."""
+    for dx in (-0.4, 0.4):
+        box(m, mat("metal_dark"), x + dx - 0.06, PAD, z - 0.06, x + dx + 0.06, PAD + 0.75, z + 0.06)
+    cylinder(m, mat("metal_dark"), (x, PAD + 0.95, z + 0.2), (x, PAD + 0.6, z - 0.35), 0.32, segs=10,
+             mat_cap=mat("furnace_glow"))
+    cylinder(m, mat("steel_accent"), (x, PAD + 0.8, z - 0.06), (x, PAD + 0.76, z - 0.12), 0.34, segs=10, caps=False)
+
+
+def smelter_2():
+    """Steel Mill: the Smelter's block with its chimney, a casting shed beside it under a blue roof,
+    the converter glowing in front of the shed, billets, and a power pole."""
+    m, mat = Mesh(), Materials()
+    _plot(m, mat, "stone_dark", "stone")
+    _smelter_block(m, mat, 0.95, -0.45, 0.45)
+    _casting_shed(m, mat, 0.85, 1.85, -0.35, 1.8)
+    _converter(m, mat, 1.35, -1.05)
+    for k in range(2):
+        y = PAD + k * 0.12
+        box(m, mat("steel"), -1.6, y, -1.85 + k * 0.05, -0.7, y + 0.11, -1.45, mat_top=mat("steel_light"))
+    power_pole(m, mat, -1.6, 1.65)
+    return m, mat.mats
+
+
+def smelter_3():
+    """Electric Smelter: the Steel Mill level with its chimney replaced by a round arc furnace and
+    three electrodes on the block, the shed under the Aluminum Smelter's skylight roof, ingots."""
+    m, mat = Mesh(), Materials()
+    _plot(m, mat, "stone_dark", "stone")
+    s, ox, oz = 0.95, -0.45, 0.45
+    _smelter_block(m, mat, s, ox, oz, chimney=False)
+    top = PAD + 1.4 * s
+    cx, cz = ox, oz + 0.15 * s
+    cylinder(m, mat("metal_dark"), (cx, top, cz), (cx, top + 0.35, cz), 0.55, segs=14)
+    cylinder(m, mat("furnace_accent"), (cx, top + 0.22, cz), (cx, top + 0.3, cz), 0.56, segs=14, caps=False)
+    spike(m, mat("metal"), (cx, top + 0.35, cz), (cx, top + 0.5, cz), 0.55, segs=14)
+    for k in range(3):
+        a = 2 * math.pi * k / 3 + 0.5
+        x, z = cx + math.cos(a) * 0.22, cz + math.sin(a) * 0.22
+        cylinder(m, mat("coal"), (x, top + 0.4, z), (x, top + 1.25, z), 0.07, segs=6)
+        cylinder(m, mat("furnace_accent"), (x, top + 0.95, z), (x, top + 1.02, z), 0.09, segs=6)
+    _casting_shed(m, mat, 0.85, 1.85, -0.35, 1.8, skylights=True)
+    _converter(m, mat, 1.35, -1.05)
+    for k in range(3):
+        y = PAD + k * 0.09
+        box(m, mat("aluminum_accent"), -1.6 + k * 0.04, y, -1.85, -0.75 - k * 0.04, y + 0.08, -1.45,
+            mat_top=mat("aluminum_light"))
+    power_pole(m, mat, -1.6, 1.65)
+    return m, mat.mats
+
+
+def _dome(m, mat, x, z, s=1.0):
+    """One of the Charcoal Kiln's brick beehive domes, its door to the front and a vent on top."""
+    r = 0.36 * s
+    cylinder(m, mat("kiln_accent"), (x, PAD, z), (x, PAD + 0.33 * s, z), r, segs=12, caps=False)
+    spike(m, mat("kiln_accent", 0.9), (x, PAD + 0.33 * s, z), (x, PAD + 0.77 * s, z), r, segs=12)
+    cylinder(m, mat("stone_dark"), (x, PAD + 0.73 * s, z), (x, PAD + 0.83 * s, z), 0.06 * s, segs=6,
+             mat_cap=mat("shadow"))
+    box(m, mat("shadow"), x - 0.12 * s, PAD, z - r - 0.01, x + 0.12 * s, PAD + 0.25 * s, z - r + 0.02)
+
+
+def kiln_1():
+    """Today's Charcoal Kiln at 1.2x toward the back of the plot, a log pile and a charcoal heap at
+    the front."""
+    m, mat = Mesh(), Materials()
+    _plot(m, mat, "stone_dark", "mud")
+    _place(m, mat, charcoal_kiln, 1.2, z=0.55)
+    _log_pile(m, mat, -1.0, -1.35, 0.9)
+    _heap(m, mat, "charcoal", 1.15, -1.35, 0.4, 0.3)
+    return m, mat.mats
+
+
+def kiln_2():
+    """Cement Kiln: the two domes at the back left, a short rotary kiln drum on piers down the
+    right, sloping to its glowing firing end at the front, a small preheater stack behind it, a
+    clinker pile, and logs."""
+    m, mat = Mesh(), Materials()
+    _plot(m, mat, "stone_dark", "mud")
+    for x in (-1.3, -0.45):
+        _dome(m, mat, x, 1.0, 1.2)
+    box(m, mat("concrete"), 0.55, PAD, 0.95, 1.6, PAD + 1.3, 1.8, mat_top=mat("concrete_dark"))
+    box(m, mat("cement_accent"), 0.53, PAD + 1.0, 0.93, 1.62, PAD + 1.1, 1.82)
+    cylinder(m, mat("concrete_dark"), (1.4, PAD + 1.3, 1.6), (1.4, PAD + 2.0, 1.6), 0.13, segs=8)
+    cylinder(m, mat("shadow"), (1.4, PAD + 2.0, 1.6), (1.4, PAD + 2.001, 1.6), 0.08, segs=8)
+    a, b = (1.05, PAD + 0.95, 0.95), (1.05, PAD + 0.5, -1.35)
+    cylinder(m, mat("cement_accent", 0.85), a, b, 0.32, segs=14, mat_cap=mat("metal_dark"))
+    for t in (0.25, 0.7):
+        p = tuple(a[i] + (b[i] - a[i]) * t for i in range(3))
+        q = tuple(a[i] + (b[i] - a[i]) * (t + 0.03) for i in range(3))
+        cylinder(m, mat("metal_dark"), p, q, 0.36, segs=14, caps=False)
+        box(m, mat("concrete_dark"), 0.8, PAD, p[2] - 0.12, 1.3, p[1] - 0.3, p[2] + 0.12)
+    cylinder(m, mat("furnace_glow"), (1.05, PAD + 0.5, -1.36), (1.05, PAD + 0.47, -1.42), 0.22, segs=12)
+    _heap(m, mat, "concrete_dark", 0.2, -1.5, 0.35, 0.4)
+    _log_pile(m, mat, -1.1, -1.3, 0.8)
+    return m, mat.mats
+
+
+def kiln_3():
+    """Tile Kiln: one dome at the back left, the red brick tunnel kiln from today's Tile Kiln
+    shortened to fit, its chimney at the back, its car track out to the front with a car of tiles,
+    tile stacks, and a power pole."""
+    m, mat = Mesh(), Materials()
+    _plot(m, mat, "stone_dark", "mud")
+    _dome(m, mat, -1.3, 1.25, 1.1)
+    cx, r, za, zb = 0.6, 0.72, -1.0, 1.45
+    n = 8
+    for k in range(n):
+        a0 = math.pi * k / n
+        a1 = math.pi * (k + 1) / n
+        p0 = (math.cos(a0) * r + cx, PAD + math.sin(a0) * r)
+        p1 = (math.cos(a1) * r + cx, PAD + math.sin(a1) * r)
+        quad(m, mat("kiln_accent", 1.0 if k % 2 else 0.9), (p0[0], p0[1], za), (p1[0], p1[1], za),
+             (p1[0], p1[1], zb), (p0[0], p0[1], zb), (math.cos((a0 + a1) / 2), math.sin((a0 + a1) / 2), 0))
+    for z, sgn in ((za, -1), (zb, 1)):
+        pts = [(math.cos(math.pi * k / n) * r + cx, PAD + math.sin(math.pi * k / n) * r, z) for k in range(n + 1)]
+        for k in range(n):
+            m.tri(mat("brick", 0.8), (cx, PAD, z), pts[k], pts[k + 1], outward=(0, 0, sgn))
+    box(m, mat("furnace_glow"), cx - 0.25, PAD, za - 0.01, cx + 0.25, PAD + 0.4, za)
+    cylinder(m, mat("brick", 0.85), (1.55, PAD, 1.5), (1.55, PAD + 2.0, 1.5), 0.18, segs=8)
+    cylinder(m, mat("shadow"), (1.55, PAD + 2.0, 1.5), (1.55, PAD + 2.001, 1.5), 0.12, segs=8)
+    for x in (cx - 0.2, cx + 0.2):
+        box(m, mat("metal_dark"), x - 0.02, PAD, -LEVEL, x + 0.02, PAD + 0.03, za)
+    box(m, mat("metal_dark"), cx - 0.32, PAD + 0.04, -1.7, cx + 0.32, PAD + 0.18, -1.2, mat_top=mat("ceramic"))
+    for k in range(3):
+        box(m, mat("ceramic"), -1.6, PAD + k * 0.08, -1.75 + k * 0.03, -0.75, PAD + 0.07 + k * 0.08, -1.15 + k * 0.03,
+            mat_top=mat("ceramic", 1.05))
+    power_pole(m, mat, -1.65, 0.0)
+    return m, mat.mats
+
+
+LEVELS = {"mine_1": mine_1, "mine_2": mine_2, "mine_3": mine_3,
+          "lumber_camp_1": lumber_camp_1, "lumber_camp_2": lumber_camp_2, "lumber_camp_3": lumber_camp_3,
+          "water_pump_1": water_pump_1, "water_pump_2": water_pump_2, "water_pump_3": water_pump_3,
+          "sand_collector_1": sand_collector_1, "sand_collector_2": sand_collector_2,
+          "sand_collector_3": sand_collector_3,
+          "oil_well_1": oil_well_1, "oil_well_2": oil_well_2, "oil_well_3": oil_well_3,
+          "smelter_1": smelter_1, "smelter_2": smelter_2, "smelter_3": smelter_3,
+          "kiln_1": kiln_1, "kiln_2": kiln_2, "kiln_3": kiln_3}
+
+
 def build_all():
     for name, fn in BUILDINGS.items():
         m, mats = fn()
         # Roads and bridges are infrastructure; everything else a building (or one of its parts).
         folder = "infrastructure" if name.startswith(("road_", "bridge_")) else "buildings"
         m.write(folder + "/" + name, mats)
+    for name, fn in LEVELS.items():
+        m, mats = fn()
+        m.write("buildings/" + name, mats)
 
 
 if __name__ == "__main__":

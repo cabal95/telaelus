@@ -1,0 +1,33 @@
+newmtl wood_dark
+Kd 0.400 0.280 0.170
+
+newmtl mud
+Kd 0.380 0.320 0.220
+
+newmtl mud_110
+Kd 0.418 0.352 0.242
+
+newmtl wood
+Kd 0.580 0.410 0.240
+
+newmtl shadow
+Kd 0.080 0.070 0.070
+
+newmtl lumber_accent
+Kd 0.620 0.400 0.200
+
+newmtl wood_125
+Kd 0.725 0.512 0.300
+
+newmtl metal
+Kd 0.580 0.600 0.630
+
+newmtl bark
+Kd 0.450 0.320 0.210
+
+newmtl log_end
+Kd 0.800 0.660 0.450
+
+newmtl power_accent
+Kd 1.000 0.860 0.120
+

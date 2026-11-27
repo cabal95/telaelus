@@ -1,0 +1,40 @@
+newmtl stone_dark
+Kd 0.360 0.340 0.330
+
+newmtl mud
+Kd 0.380 0.320 0.220
+
+newmtl kiln_accent
+Kd 0.680 0.340 0.220
+
+newmtl kiln_accent_90
+Kd 0.612 0.306 0.198
+
+newmtl shadow
+Kd 0.080 0.070 0.070
+
+newmtl concrete
+Kd 0.660 0.660 0.640
+
+newmtl concrete_dark
+Kd 0.540 0.540 0.520
+
+newmtl cement_accent
+Kd 0.800 0.760 0.660
+
+newmtl cement_accent_85
+Kd 0.680 0.646 0.561
+
+newmtl metal_dark
+Kd 0.300 0.310 0.340
+
+newmtl furnace_glow
+Kd 1.000 0.550 0.180
+Ke 0.500 0.275 0.090
+
+newmtl bark
+Kd 0.450 0.320 0.210
+
+newmtl log_end
+Kd 0.800 0.660 0.450
+

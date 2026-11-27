@@ -193,6 +193,12 @@ Emissive materials glow at half their base color. Mountains keep their own stone
   Stone 0.9; Crude Oil is a flat pool about 0.05 high), trees 2.5 to 3.5 (by field size),
   mountains 3.2 to 3.5, buildings 1.2 to 2.2 (see buildings.md; the Deep Well's derrick about
   3.1 and the Deep Mine's headframe about 3.3), a truck 1.6 long, 0.8 wide, and about 0.85 tall.
+- **Leveled buildings** (the level models, `<family>_<level>`): every level of a family stands on
+  the same 4 x 4 plot, and the levels read as one building growing, not different buildings. Refits
+  scale today's model up a little (1.2x from 2 x 2, 1.1x from 3 x 3, never more than 20%) onto the
+  plot, the yard dressed with the family's props (ore heaps, log piles, sand, crates, pipes); a
+  level 1 smaller than today's is 0.75x. Each family keeps its accent through its levels, and a
+  powered level carries a power pole.
 - The tier-1 refining buildings are bigger than the tier-0 start and mostly long: Steel Mill (4 x
   6, a brick hall with a tipped converter and chimney at the back, a casting bay, billets at the
   front), Electrolyzer (4 x 5, two rows of cells, a rectifier house, an oxygen and a hydrogen tank

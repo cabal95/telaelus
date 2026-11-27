@@ -163,8 +163,8 @@ The level model changes saved buildings enough that old saves are not carried ov
    - upgrading in place (paying the difference);
    - the build menu's level choice and the detail panel's Upgrade action;
    - dropping the Air Separator.
-2. **Level models:** the new and refit models, with kept previews. This could land before phase
-   1, as models only.
+2. **Level models:** done (completed/2611261712-level-models.md); phase 1 switches to them and
+   removes the models they replace.
 3. **Deep levels:** the "around" work area (could fold into phase 1).
 4. **Research tree sections:** done (completed/2611261650-research-tree-sections.md).
 5. **Process speed research:** the speed model and the eight projects.

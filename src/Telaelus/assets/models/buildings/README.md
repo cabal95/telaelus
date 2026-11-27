@@ -75,3 +75,22 @@ Props used with buildings (not buildings themselves):
 | Ship engine | `ship_engine.glb` | the Shipyard's pad once an Engine is in storage (1.0 high) |
 | Ship hull ring | `ship_hull_ring.glb` | the Shipyard's pad, one per Hull Section in storage, up to 4 (1.0 high each) |
 | Ship nose | `ship_nose.glb` | the Shipyard's pad once a Control Module is in storage (1.6 high) |
+
+## Level models (not loaded yet)
+
+One 4 x 4 model per level of each leveled building family (docs/changesets/future/building-levels.md),
+named `<family>_<level>`. Each family keeps its accent, and a powered level adds a power pole.
+Refits stand today's model, scaled 1.2x from 2 x 2 or 1.1x from 3 x 3, on the plot with yard
+dressing. The game does not load these yet; the leveled buildings change switches to them and
+removes the models they replace. Kept previews: `previews/buildings/<family>_<level>.png` and the
+overview `previews/building_levels.png`.
+
+| Family | Level 1 | Level 2 | Level 3 |
+|---|---|---|---|
+| Mine | `mine_1`: the Mine at 1.2x, ore heaps, a second cart | `mine_2`: the Drill Rig at 1.1x | `mine_3`: the Deep Mine |
+| Lumber Camp | `lumber_camp_1`: the camp at 0.75x, a sawhorse | `lumber_camp_2`: the camp at 1.2x, a log yard, a power pole | `lumber_camp_3`: the Lumber Mill at 1.1x, stacked lumber |
+| Water Pump | `water_pump_1`: the pump house at 0.75x, one intake to the front | `water_pump_2`: the pump house at 1.2x, an intake from each side wall, a power pole | `water_pump_3`: a pump hall, four intakes out of its front, its door on the left wall, a tank, a power pole |
+| Sand Collector | `sand_collector_1`: the hopper at 0.75x | `sand_collector_2`: the hopper at 1.2x, a tilted sieve, a power pole | `sand_collector_3`: the Sand Dredge at 1.1x |
+| Oil Well | `oil_well_1`: the pumpjack at 1.2x, a second tank | `oil_well_2`: a shorter derrick, one tank, a power pole | `oil_well_3`: the Deep Well |
+| Smelter | `smelter_1`: the furnace block at 1.1x, ore and coal heaps | `smelter_2`: the block, a blue-roofed casting shed, the converter, billets, a power pole | `smelter_3`: the block with a round arc furnace and three electrodes in place of the chimney, the shed under a skylight roof, ingots |
+| Kiln | `kiln_1`: the Charcoal Kiln at 1.2x, logs, a charcoal heap | `kiln_2`: two domes, a short rotary drum, a preheater stack | `kiln_3`: one dome, a shortened tunnel kiln, a car track, tiles, a power pole |

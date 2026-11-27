@@ -197,8 +197,9 @@ previews in the same commit:
   drawn together may share one sheet named for the family (`previews/nature/iron_ore.png`) that
   shows every variant.
 - **Its family overview,** where one exists, at the top of `previews/`: `previews/items.png` (every resource item, in
-  `ResourceType` order, `--each 8 --size 160 --colors 256`) and the terrain arrangements
-  (`arrangement_<name>.png`, see below). Rerender the whole overview so it always shows every
+  `ResourceType` order, `--each 8 --size 160 --colors 256`), `previews/building_levels.png` (each
+  leveled building family's `<family>_1` to `_3` as a row, `--each 3 --size 300 --colors 256`), and
+  the terrain arrangements (`arrangement_<name>.png`, see below). Rerender the whole overview so it always shows every
   model of the family.
 - Render kept previews after the last change to the model, so the sheet matches what ships.
   Scratch renders made while iterating stay out of `previews/`.

@@ -15,8 +15,8 @@ Parked plans, not approved; see `future/`.
 - **building-levels** - Buildings merged into leveled families (Mine, Lumber Camp, Water Pump, Sand
   Collector, Oil Well, Smelter, Kiln) at 4 x 4, each level unlocked by research and upgraded in
   place; deep levels working the cells around them; research tree back to one screen with tier
-  sections; process speed research. Save version (2611261642-save-version) and research tree
-  sections (2611261650-research-tree-sections) done.
+  sections; process speed research. Save version (2611261642-save-version), research tree
+  sections (2611261650-research-tree-sections), and level models (2611261712-level-models) done.
 - **graphics-settings** - A player graphics settings panel: the renderer (Forward+ or Mobile, on
   restart, with a first-launch default by GPU), display mode, render scale with FSR upscaling,
   vsync, and a frame cap, kept in a settings file in the player's data folder.
@@ -301,6 +301,9 @@ Newest last. One line each; open the file for the full spec.
 - **2611261650-research-tree-sections** - The research tree is one screen again, a section per tier
   side by side (headed with the research that unlocks a locked tier, checked once complete), with
   prerequisite lines across sections, in place of its tier picker.
+- **2611261712-level-models** - 4 x 4 models for every level of the seven leveled building families
+  (`<family>_<level>`), refits scaled up a little and new upgrades, with a levels overview; not
+  loaded yet.
 
 ## Adding a changeset
 
